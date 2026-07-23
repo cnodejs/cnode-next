@@ -1,0 +1,22 @@
+import { Hono } from "hono";
+import { topicRoutes } from "./topic";
+import { replyRoutes } from "./reply";
+import { userRoutes } from "./user";
+import { messageRoutes } from "./message";
+import { collectRoutes } from "./collect";
+import { authRoutes } from "./auth";
+import { adminRoutes } from "./admin";
+import { communityRoutes } from "./community";
+
+const apiRoutes = new Hono();
+
+apiRoutes.route("/", topicRoutes);
+apiRoutes.route("/", replyRoutes);
+apiRoutes.route("/", userRoutes);
+apiRoutes.route("/", messageRoutes);
+apiRoutes.route("/", collectRoutes);
+apiRoutes.route("/", authRoutes);
+apiRoutes.route("/", adminRoutes);
+apiRoutes.route("/", communityRoutes);
+
+export { apiRoutes };
