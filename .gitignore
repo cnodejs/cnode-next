@@ -46,3 +46,4 @@ yarn-error.log*
 .turbo/
 .playwright-mcp/
 .codegraph/
+.react-router/
