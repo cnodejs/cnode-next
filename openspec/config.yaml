@@ -1,0 +1,32 @@
+schema: spec-driven
+
+context: |
+  Project: cnode-next — a full rewrite of the legacy CNode (nodeclub) forum.
+  Legacy code lives in ./nodeclub (Express + MongoDB + EJS, running in production
+  but low traffic) and ./egg-cnode (an incomplete Egg.js migration, never deployed,
+  used only as a business-logic reference).
+
+  New stack:
+    - Monorepo: pnpm workspace (no turborepo)
+    - Frontend (apps/web): React Router v8 in SSR mode, deployed to Cloudflare Workers via @cloudflare/vite-plugin, TailwindCSS + shadcn/ui
+    - Backend (apps/api): Hono on Node.js, deployed on a self-owned overseas server
+    - Database layer (packages/db): Drizzle ORM, SQLite for local dev, PostgreSQL for production
+    - Shared (packages/shared): API contract types, Zod schemas, constants, pure utils
+    - Cache/Session/Rate-limit: Redis (backend)
+    - Image storage: Alibaba Cloud OSS with mirror pull from Qiniu (progressive migration)
+    - Email: self-hosted SMTP (nodemailer), no third-party API
+    - Auth: cookie-based session (cross-subdomain .cnodejs.org) + GitHub OAuth + local accounts (bcryptjs, verify legacy hashes)
+    - Data migration: MongoDB → PostgreSQL one-time script, ObjectId → BIGINT (old links 404 acceptable)
+
+rules:
+  proposal:
+    - Keep proposals under 800 words
+    - Always include a "Non-goals" section
+    - Reference the legacy nodeclub/egg-cnode code by path when explaining what is being replaced
+  tasks:
+    - Group tasks into phases (MVP first, then feature-complete)
+    - Each task should be completable in under 2 hours
+    - Include verification steps where possible
+  design:
+    - Record not just the decision but the alternatives that were rejected and why
+    - Use Mermaid diagrams (not ASCII art) for architecture flows and data flows

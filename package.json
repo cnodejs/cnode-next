@@ -1,0 +1,28 @@
+{
+  "name": "cnode-next",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -n web,api -c blue,green \"pnpm --filter @cnode/web dev\" \"pnpm --filter @cnode/api dev\"",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "oxlint .",
+    "typecheck": "pnpm -r typecheck",
+    "db:push": "pnpm --filter @cnode/db db:push",
+    "db:push:pg": "pnpm --filter @cnode/db db:push:pg",
+    "db:seed": "pnpm --filter @cnode/db db:seed",
+    "db:generate": "pnpm --filter @cnode/db db:generate",
+    "format": "oxfmt ."
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "oxfmt": "^0.60.0",
+    "oxlint": "^1.75.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "packageManager": "pnpm@11.15.1"
+}
