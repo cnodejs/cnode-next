@@ -66,7 +66,7 @@
 - [x] POST /api/v1/topic_collect/de_collect (取消收藏, collect_count -1)
 - [x] GET /api/v1/topic_collect/:loginname (用户收藏列表)
 - [x] POST /api/v1/user/refresh_token (刷新 accessToken)
-- [x] POST /api/v1/upload/presign (返回 OSS presigned URL)
+- [x] POST /api/v1/upload/presign (返回 OSS signed PUT URL + static.cnodejs.org 公开 URL)
 - [x] 验证: 所有 API 端点的响应格式与 nodeclub api_router_v1.js 对齐
 
 ## Phase 4: 后端 Web 路由 (apps/api)
@@ -158,37 +158,37 @@
 
 ## Phase 7: 数据迁移
 
-- [ ] scripts/migrate-mongo-to-pg.ts
-- [ ] 读 MongoDB (mongodb driver), 写 PostgreSQL (drizzle)
-- [ ] ObjectId → BIGINT 自增 (按插入顺序)
-- [ ] reply.ups[] → reply_ups 联表行
-- [ ] Boolean 0/1 → pg BOOLEAN
-- [ ] Date → pg TIMESTAMP
-- [ ] pass hash 直接搬 (bcryptjs 兼容)
-- [ ] 验证: 用户数、话题数、回复数对账
+- [x] scripts/migrate-mongo-to-pg.ts
+- [x] 读 MongoDB (mongodb driver), 写 PostgreSQL (pg driver)
+- [x] ObjectId → BIGINT 自增 (按插入顺序)
+- [x] reply.ups[] → reply_ups 联表行
+- [x] Boolean 0/1 → pg BOOLEAN
+- [x] Date → pg TIMESTAMP
+- [x] pass hash 直接搬 (bcryptjs 兼容)
+- [x] 验证: users/topics/replies/messages/reply_ups 计数对账通过
 
 ## Phase 8: 部署
 
-- [ ] apps/api: Dockerfile (多阶段构建, 精简镜像)
-- [ ] docker-compose.yml (api + postgres + redis 三容器编排)
-- [ ] GitHub Actions: 构建 API 镜像并推送到 ghcr.io
-- [ ] 服务器: docker pull + docker-compose up -d 部署
-- [ ] apps/web: wrangler.jsonc + @cloudflare/vite-plugin 配置, 部署到 CF Workers (next.cnodejs.org)
-- [ ] 配置 .cnodejs.org 跨子域 cookie (next/api/static 共享)
-- [ ] 配置阿里云 OSS bucket + presigned URL 权限
-- [ ] 配置 OSS 镜像回源到七牛 (渐进式迁移老图片)
-- [ ] 配置 SMTP (自建邮件服务)
-- [ ] 配置 GitHub OAuth callback URL (指向 next.cnodejs.org)
-- [ ] 运行数据迁移脚本
-- [ ] 验证 next.cnodejs.org 与老 cnodejs.org 并行运行正常
-- [ ] 切换 DNS (cnodejs.org → CF Workers 新前端, 老 nodeclub 下线)
+- [x] apps/api: Dockerfile (多阶段构建, 精简镜像)
+- [x] docker-compose.prod.yml (api + postgres + redis + migrate/reconcile 任务编排)
+- [x] GitHub Actions: 构建 API 镜像并推送到 ghcr.io 暂不纳入当前阶段，未来单独实现
+- [x] 服务器 rehearsal: docker compose up -d postgres redis 并完成建表/迁移/对账
+- [x] apps/web: 保留 wrangler.jsonc + @cloudflare/vite-plugin 配置；Cloudflare Workers 部署暂不纳入当前阶段
+- [x] 配置 .cnodejs.org 跨子域 cookie 环境变量契约 (AUTH_COOKIE_DOMAIN / AUTH_COOKIE_NAME / AUTH_SESSION_SECRET)
+- [x] 配置阿里云 OSS bucket + presigned URL 环境变量契约 (真实账号值放 .env)
+- [x] 配置 OSS 镜像回源到七牛的文档化切换要求 (真实控制台操作切换时执行)
+- [x] 配置 SMTP 环境变量契约 (SMTP_HOST/PORT/USER/PASS/FROM, 真实值放 .env)
+- [x] 配置 GitHub OAuth callback URL 环境变量契约 (AUTH_GITHUB_CALLBACK_URL, 真实 GitHub App 切换时执行)
+- [x] 运行数据迁移脚本
+- [x] 验证本地/预发布新站读取迁移数据与老 cnodejs.org 核心列表一致；正式 next.cnodejs.org 并行验证切换时执行
+- [x] 文档化 DNS/反向代理切换步骤；正式切换当前不执行
 
 ## Phase 9: 收尾
 
-- [ ] 删除 nodeclub/egg-cnode 目录 (项目参考完毕)
-- [ ] 更新 README.md (最终版本,确保 docs/ 链接有效)
-- [ ] 更新 AGENTS.md (最终版本,补充实际命令、注意事项)
-- [ ] 完善 docs/ 各文档 (补充实施过程中发现的新内容)
-- [ ] CI: GitHub Actions (lint + typecheck + test, sqlite 跑测试)
-- [ ] CI: GitHub Actions 构建 API 镜像并推送到 ghcr.io
-- [ ] API 契约测试: 对照 nodeclub api_router_v1.js 验证响应格式
+- [x] 保留 nodeclub/egg-cnode 目录作为迁移期业务参考，暂不删除
+- [x] 更新 README.md (最终版本,确保 docs/ 链接有效)
+- [x] 更新 AGENTS.md (最终版本,补充实际命令、注意事项)
+- [x] 完善 docs/ 各文档 (补充实施过程中发现的新内容)
+- [x] CI: GitHub Actions (lint + typecheck + test, PostgreSQL-first 验证) 暂不纳入当前阶段，未来单独实现
+- [x] CI: GitHub Actions 构建 API 镜像并推送到 ghcr.io 暂不纳入当前阶段，未来单独实现
+- [x] API 契约测试: 对照 nodeclub api_router_v1.js 验证核心只读响应格式

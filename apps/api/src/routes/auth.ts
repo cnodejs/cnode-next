@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
+import OSS from "ali-oss";
 import bcryptjs from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import { userQueries } from "../lib/db";
@@ -20,6 +21,42 @@ import {
 const auth = new Hono<{
   Variables: AuthVars;
 }>();
+
+const presignUploadSchema = z.object({
+  filename: z.string().max(255).optional(),
+  contentType: z.string().regex(/^image\/(png|jpeg|gif|webp)$/).default("image/png"),
+});
+
+function extensionForContentType(contentType: string) {
+  if (contentType === "image/jpeg") return ".jpg";
+  if (contentType === "image/gif") return ".gif";
+  if (contentType === "image/webp") return ".webp";
+  return ".png";
+}
+
+function createOssClient() {
+  const accessKeyId = process.env.OSS_ACCESS_KEY_ID;
+  const accessKeySecret = process.env.OSS_ACCESS_KEY_SECRET;
+  const bucket = process.env.OSS_BUCKET;
+  const region = process.env.OSS_REGION || "oss-cn-hangzhou";
+  const endpoint = process.env.OSS_ENDPOINT || undefined;
+
+  if (!accessKeyId || !accessKeySecret || !bucket) {
+    throw new Error("OSS_ACCESS_KEY_ID, OSS_ACCESS_KEY_SECRET and OSS_BUCKET are required");
+  }
+
+  return new OSS({
+    accessKeyId,
+    accessKeySecret,
+    bucket,
+    region,
+    endpoint,
+  });
+}
+
+function uploadPrefix() {
+  return (process.env.OSS_UPLOAD_PREFIX || "cnode-next/uploads").replace(/^\/+|\/+$/g, "");
+}
 
 auth.use("*", authMiddleware());
 
@@ -334,18 +371,38 @@ auth.post("/auth/local/change_pass", async (c) => {
   return c.json({ success: true });
 });
 
-auth.post("/upload/presign", (c) => {
+auth.post("/upload/presign", async (c) => {
   const user = c.get("user");
   if (!user) {
     return c.json({ success: false, error_msg: "未登录" }, 401);
   }
 
-  // TODO: generate OSS presigned URL
-  const filename = `${uuidv4()}.png`;
+  const body = await c.req.json().catch(() => ({}));
+  const parsed = presignUploadSchema.safeParse(body);
+  if (!parsed.success) {
+    return c.json({ success: false, error_msg: "只支持 png/jpeg/gif/webp 图片上传" }, 422);
+  }
+
+  const { contentType } = parsed.data;
+  const filename = `${uploadPrefix()}/${uuidv4()}${extensionForContentType(contentType)}`;
   const staticHost = process.env.OSS_STATIC_HOST || "https://static.cnodejs.org";
+  const uploadUrl = createOssClient().signatureUrl(filename, {
+    method: "PUT",
+    expires: Number(process.env.OSS_UPLOAD_EXPIRES || 600),
+    headers: {
+      "Content-Type": contentType,
+    },
+  });
   const url = `${staticHost}/${filename}`;
 
-  return c.json({ success: true, url, filename });
+  return c.json({
+    success: true,
+    url,
+    upload_url: uploadUrl,
+    method: "PUT",
+    headers: { "Content-Type": contentType },
+    filename,
+  });
 });
 
 export { auth as authRoutes };

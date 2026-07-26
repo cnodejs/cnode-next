@@ -15,6 +15,7 @@
     "db:generate": "pnpm --filter @cnode/db db:generate",
     "migrate:mongo-to-pg": "tsx scripts/migrate-mongo-to-pg.ts",
     "migrate:reconcile": "tsx scripts/reconcile-migration.ts",
+    "verify:api-contract": "tsx scripts/verify-api-contract.ts",
     "format": "oxfmt ."
   },
   "devDependencies": {

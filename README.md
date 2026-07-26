@@ -1,14 +1,14 @@
 # cnode-next
 
-CNode 社区重写版本 — 前后端分离,部署在 Cloudflare Workers + 海外自有服务器。
+CNode 社区重写版本。当前阶段聚焦 MongoDB 到 PostgreSQL 迁移后的可运行验证，前端和 API 可在本地运行并连接 PostgreSQL 数据源。
 
 ## 技术栈
 
 | 层           | 技术                                                               |
 | ------------ | ------------------------------------------------------------------ |
-| 前端         | React Router v8 (SSR), Cloudflare Workers, TailwindCSS + shadcn/ui |
+| 前端         | React Router v8 (SSR), TailwindCSS + shadcn/ui                     |
 | 后端         | Hono (@hono/node-server), Node.js                                  |
-| 数据库       | PostgreSQL (生产), SQLite (本地开发)                               |
+| 数据库       | PostgreSQL                                                         |
 | ORM          | Drizzle ORM                                                        |
 | 缓存/Session | Redis                                                              |
 | 图片存储     | 阿里云 OSS (七牛镜像回源)                                          |
@@ -21,9 +21,11 @@ CNode 社区重写版本 — 前后端分离,部署在 Cloudflare Workers + 海�
 # 安装依赖
 pnpm install
 
-# 初始化本地 SQLite 数据库
-pnpm db:push
-pnpm db:seed
+# 准备 .env.local，并提供 PostgreSQL/Redis 连接地址
+cp .env.example .env.local
+
+# 初始化 PostgreSQL schema
+pnpm db:push:pg
 
 # 启动开发 (web + api 同时)
 pnpm dev
@@ -40,11 +42,11 @@ cnode-next/
 │   ├── web/          # React Router v8 (SSR, CF Workers)
 │   └── api/          # Hono API server
 ├── packages/
-│   ├── db/           # Drizzle schema (SQLite/pg 双 dialect)
+│   ├── db/           # Drizzle schema (PostgreSQL-first)
 │   └── shared/       # API 契约类型, Zod schemas, 常量
 ├── docs/             # 深入文档
 ├── openspec/         # OpenSpec 变更管理
-└── nodeclub/         # 老代码参考 (Phase 9 删除)
+└── nodeclub/         # 老代码参考
 ```
 
 ## 文档
@@ -59,4 +61,4 @@ cnode-next/
 
 ## 参考代码
 
-`nodeclub/` (Express + MongoDB) 和 `egg-cnode/` (Egg.js, 未完成) 是业务逻辑参考。新项目对照它们的逻辑实现,Phase 9 完成后删除。
+`nodeclub/` (Express + MongoDB) 和 `egg-cnode/` (Egg.js, 未完成) 是迁移期业务逻辑参考，当前阶段保留。

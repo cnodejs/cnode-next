@@ -6,9 +6,9 @@ cnode-next 是 CNode 社区的重写版本。老代码在 `nodeclub/` (Express +
 
 ## 技术栈
 
-- 前端: React Router v8 (SSR), Cloudflare Workers, TailwindCSS + shadcn/ui
+- 前端: React Router v8 (SSR), TailwindCSS + shadcn/ui
 - 后端: Hono (@hono/node-server), Node.js
-- 数据库: Drizzle ORM, SQLite (本地) / PostgreSQL (生产)
+- 数据库: Drizzle ORM, PostgreSQL-first
 - 共享: packages/db (schema), packages/shared (types, Zod, 常量)
 
 ## 目录约定
@@ -17,7 +17,7 @@ cnode-next 是 CNode 社区的重写版本。老代码在 `nodeclub/` (Express +
 | --------------- | ----------------------------------------- |
 | apps/web        | React Router v8 前端 (SSR, CF Workers)    |
 | apps/api        | Hono API server                           |
-| packages/db     | Drizzle schema 一份, SQLite/pg 双 dialect |
+| packages/db     | Drizzle schema, PostgreSQL-first          |
 | packages/shared | API 契约类型, Zod schemas, 常量, 纯函数   |
 
 ## 常用命令
@@ -28,8 +28,10 @@ pnpm build        # 构建所有包
 pnpm test         # 运行测试
 pnpm lint         # ESLint
 pnpm typecheck    # TypeScript 类型检查
-pnpm db:push      # 创建/更新本地 SQLite 表
+pnpm db:push:pg   # 创建/更新 PostgreSQL 表
 pnpm db:seed      # 灌入测试数据
+pnpm migrate:mongo-to-pg  # MongoDB 到 PostgreSQL 全量迁移
+pnpm migrate:reconcile    # 迁移后对账
 ```
 
 ## 代码风格约定

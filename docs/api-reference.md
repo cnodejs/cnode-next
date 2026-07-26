@@ -92,6 +92,16 @@ POST /api/v1/topics { "accesstoken": "xxx", ... }
 
 - Response: `{ success: true, data: TopicDTO[] }`
 
+### 上传
+
+#### POST /api/v1/upload/presign
+
+- Auth: 登录 cookie
+- Body: `{ "filename"?: string, "contentType": "image/png" | "image/jpeg" | "image/gif" | "image/webp" }`
+- Response: `{ success: true, url, upload_url, method: "PUT", headers, filename }`
+- `url` 使用 `OSS_STATIC_HOST`，默认 `https://static.cnodejs.org`
+- `filename` 默认带 `cnode-next/uploads/` 前缀，避免与历史上传文件冲突
+
 ## DTO 定义
 
 ### TopicDTO
@@ -107,3 +117,13 @@ POST /api/v1/topics { "accesstoken": "xxx", ... }
 - API 返回的 content 必须先经过 `linkUsers` (@username → 链接化) 再 markdown 渲染
 - 消息列表的 reply 字段必须包含 `id, content, ups, create_at`
 - message/count 返回 `{ success, data }` 格式,不是 `{ count }`
+
+## 契约烟测
+
+本仓库提供轻量只读契约烟测，覆盖匿名可验证的核心响应 shape：
+
+```bash
+APP_API_BASE_URL=http://localhost:3001 pnpm verify:api-contract
+```
+
+该脚本对照 legacy CNode API v1 的关键字段，检查 topics list、topic detail 和 user profile。设置 `API_ACCESS_TOKEN` 时会额外检查 message/count。需要写入数据的完整契约测试后续单独补充。

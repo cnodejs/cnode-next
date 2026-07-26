@@ -57,6 +57,7 @@ cnodejs.org          → 老 nodeclub (Express + MongoDB),保持运行
 next.cnodejs.org     → 新前端 (RRv8 SSR, CF Workers)
 api.cnodejs.org      → 新后端 API (Hono, 海外服务器)
 static.cnodejs.org   → 图片存储 (阿里云 OSS, 镜像回源七牛)
+static2.cnodejs.org  → 站点静态资源 CDN (logo/CSS/JS/public assets)
 ```
 
 新应用先在 `next.cnodejs.org` 上线,与老 nodeclub 并行运行。验证无误后,将 `cnodejs.org` DNS 切到新前端,老 nodeclub 下线。
