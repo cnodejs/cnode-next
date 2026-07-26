@@ -1,0 +1,14 @@
+.git
+.codegraph
+.env
+.env.*
+node_modules
+**/node_modules
+build
+**/build
+dist
+**/dist
+nodeclub
+migration-reports
+.pnpm-store
+*.log

@@ -7,34 +7,30 @@ WORKDIR /app
 
 FROM base AS deps
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
-COPY apps/api/package.json apps/api/package.json
+COPY apps/web/package.json apps/web/package.json
 COPY packages/db/package.json packages/db/package.json
 COPY packages/shared/package.json packages/shared/package.json
 RUN pnpm install --store-dir=$PNPM_STORE_DIR --frozen-lockfile --config.verify-store-integrity=false
 
 FROM deps AS build
-COPY apps/api apps/api
+ARG VITE_APP_API_BASE_URL=https://api.cnodejs.org
+ENV VITE_APP_API_BASE_URL=$VITE_APP_API_BASE_URL
+COPY apps/web apps/web
 COPY packages/db packages/db
 COPY packages/shared packages/shared
-COPY scripts scripts
-
-FROM deps AS migration
-COPY apps/api apps/api
-COPY packages/db packages/db
-COPY packages/shared packages/shared
-COPY scripts scripts
+RUN pnpm --filter @cnode/web build
 
 FROM base AS runtime
 ENV NODE_ENV=production
 COPY --from=deps /app/node_modules /app/node_modules
-COPY --from=deps /app/apps/api/node_modules /app/apps/api/node_modules
+COPY --from=deps /app/apps/web/node_modules /app/apps/web/node_modules
 COPY --from=deps /app/packages/db/node_modules /app/packages/db/node_modules
 COPY --from=deps /app/packages/shared/node_modules /app/packages/shared/node_modules
 COPY --from=build /app/package.json /app/pnpm-workspace.yaml /app/tsconfig.base.json ./
-COPY --from=build /app/apps/api/package.json /app/apps/api/package.json
-COPY --from=build /app/apps/api/src /app/apps/api/src
+COPY --from=build /app/apps/web/package.json /app/apps/web/package.json
+COPY --from=build /app/apps/web/build /app/apps/web/build
 COPY --from=build /app/packages/db /app/packages/db
 COPY --from=build /app/packages/shared /app/packages/shared
-COPY --from=build /app/scripts /app/scripts
-EXPOSE 3001
-CMD ["pnpm", "--filter", "@cnode/api", "exec", "tsx", "src/index.ts"]
+WORKDIR /app/apps/web
+EXPOSE 3000
+CMD ["pnpm", "start"]

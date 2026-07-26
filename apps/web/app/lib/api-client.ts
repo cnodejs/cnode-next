@@ -1,4 +1,10 @@
 export function getApiBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    return (import.meta as any).env?.VITE_APP_API_BASE_URL || "https://api.cnodejs.org";
+  }
+  if (typeof process !== "undefined" && process.env?.APP_API_INTERNAL_BASE_URL) {
+    return process.env.APP_API_INTERNAL_BASE_URL;
+  }
   if (typeof process !== "undefined" && process.env?.APP_API_BASE_URL) {
     return process.env.APP_API_BASE_URL;
   }

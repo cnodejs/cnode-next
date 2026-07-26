@@ -140,22 +140,25 @@ function cookieSecret() {
 }
 
 function setPendingGithubProfile(c: any, profile: PendingGithubProfile) {
-  setCookie(c, GITHUB_PENDING_COOKIE, Buffer.from(JSON.stringify(profile)).toString("base64url"), {
+  const domain = process.env.AUTH_COOKIE_DOMAIN || undefined;
+  setCookie(c as any, GITHUB_PENDING_COOKIE, Buffer.from(JSON.stringify(profile)).toString("base64url"), {
+    domain,
     path: "/",
     httpOnly: true,
     signed: true,
     secret: cookieSecret(),
     maxAge: 10 * 60,
     sameSite: "Lax",
-  });
+  } as any);
 }
 
 function clearPendingGithubProfile(c: any) {
-  deleteCookie(c, GITHUB_PENDING_COOKIE, { path: "/" });
+  const domain = process.env.AUTH_COOKIE_DOMAIN || undefined;
+  deleteCookie(c, GITHUB_PENDING_COOKIE, { domain, path: "/" });
 }
 
 function getPendingGithubProfile(c: any): PendingGithubProfile | null {
-  const raw = getCookie(c, GITHUB_PENDING_COOKIE, cookieSecret());
+  const raw = (getCookie as any)(c, GITHUB_PENDING_COOKIE, cookieSecret());
   if (!raw) return null;
   try {
     const parsed = JSON.parse(Buffer.from(raw, "base64url").toString("utf8"));

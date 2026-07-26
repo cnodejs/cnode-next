@@ -8,7 +8,7 @@
 
 ```bash
 # 服务器上
-docker compose -f docker-compose.prod.yml up -d postgres redis api
+docker compose -f docker-compose.prod.yml up -d postgres redis api web worker
 ```
 
 ### 服务编排
@@ -16,10 +16,28 @@ docker compose -f docker-compose.prod.yml up -d postgres redis api
 | 服务     | 镜像                             | 职责                                 |
 | -------- | -------------------------------- | ------------------------------------ |
 | api      | ghcr.io/<owner>/cnode-api:latest | Hono API server                      |
+| web      | cnode-next-web:latest            | React Router SSR frontend            |
+| worker   | ghcr.io/<owner>/cnode-api:latest | 内容巡检扫描任务和定时调度           |
 | postgres | postgres:18-bookworm             | PostgreSQL 数据库                    |
-| redis    | redis:7-bookworm                 | 缓存/session/限流                    |
+| redis    | redis:7-bookworm                 | 缓存/session/限流/worker 锁          |
 
 所有服务在 `cnode-internal` 内网通信。对外入口可由既有反向代理接入 API/Web，本变更不要求新增 Cloudflare Workers 部署。
+
+### 内容巡检 Worker
+
+`worker` 使用同一个 API 镜像，通过 `pnpm --filter @cnode/api worker:moderation` 启动。扫描任务按主键游标分批读取话题和回复，每批结束后写入巡检命中并休眠，避免一次性全库扫描影响线上请求。
+
+相关环境变量：
+
+```bash
+MODERATION_SCHEDULE_ENABLED=0       # 1 开启定时增量扫描
+MODERATION_SCHEDULE_INTERVAL_MS=3600000
+MODERATION_SCAN_BATCH_SIZE=200
+MODERATION_SCAN_THROTTLE_MS=500
+MODERATION_SCAN_MAX_BATCHES_PER_RUN=100
+```
+
+生产出现资源压力时，可先停止 `worker` 服务或调大 `MODERATION_SCAN_THROTTLE_MS`；`api` 和 `web` 不依赖 worker 常驻可用。
 
 ### 环境变量
 

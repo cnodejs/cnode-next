@@ -26,6 +26,49 @@ services:
       - legacy-cnode
     restart: unless-stopped
 
+  web:
+    image: ${CNODE_WEB_IMAGE:-cnode-next-web:latest}
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_APP_API_BASE_URL: ${VITE_APP_API_BASE_URL:-https://api.cnodejs.org}
+    env_file: .env
+    environment:
+      APP_API_INTERNAL_BASE_URL: http://api:3001
+      APP_API_BASE_URL: ${APP_API_BASE_URL:-https://api.cnodejs.org}
+    depends_on:
+      - api
+    networks:
+      - cnode-internal
+      - legacy-cnode
+    restart: unless-stopped
+
+  worker:
+    image: ${CNODE_API_IMAGE:-ghcr.io/cnodejs/cnode-api:latest}
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    env_file: .env
+    environment:
+      DB_DIALECT: pg
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-cnode}
+      DB_USER: ${POSTGRES_USER:-cnode}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["pnpm", "--filter", "@cnode/api", "worker:moderation"]
+    networks:
+      - cnode-internal
+    restart: unless-stopped
+
   migrate-schema:
     image: ${CNODE_API_IMAGE:-ghcr.io/cnodejs/cnode-api:latest}
     build:
