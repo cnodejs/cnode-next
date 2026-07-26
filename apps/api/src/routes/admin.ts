@@ -21,7 +21,7 @@ import {
   replies,
   users,
 } from "@cnode/db";
-import { and, eq, sql, desc, count } from "drizzle-orm";
+import { and, eq, sql, desc, count, inArray } from "drizzle-orm";
 import { adminRequired, modRequired, type AuthVars } from "../middleware/auth";
 import { invalidateWordCache } from "../lib/moderation";
 import {
@@ -612,17 +612,34 @@ admin.delete("/admin/keywords/:id", adminRequired(), async (c) => {
 admin.get("/admin/moderation", modRequired(), async (c) => {
   const pagination = getPagination(c, 100);
   const db = getDb();
-  const where = eq(moderationHits.status, "pending");
+  const status = c.req.query("status") || "pending";
+  const type = c.req.query("type") || "";
+  const conditions: any[] = [];
+  if (status !== "all") conditions.push(eq(moderationHits.status, status));
+  if (type === "topic" || type === "reply") conditions.push(eq(moderationHits.targetType, type));
+  const where = conditions.length === 0 ? undefined : conditions.length === 1 ? conditions[0] : and(...conditions);
+  let listQuery = db.select().from(moderationHits).$dynamic();
+  let totalQuery = db.select({ c: count() }).from(moderationHits).$dynamic();
+  if (where) {
+    listQuery = listQuery.where(where) as any;
+    totalQuery = totalQuery.where(where) as any;
+  }
   const [list, totalResult] = await Promise.all([
-    db
-      .select()
-      .from(moderationHits)
-      .where(where)
-      .orderBy(desc(moderationHits.scannedAt))
+    listQuery
+      .orderBy(desc(moderationHits.scannedAt), desc(moderationHits.targetId))
       .limit(pagination.limit)
       .offset(pagination.offset),
-    db.select({ c: count() }).from(moderationHits).where(where),
+    totalQuery,
   ]);
+  const summary = list.reduce(
+    (acc: any, hit: any) => {
+      acc.by_type[hit.targetType] = (acc.by_type[hit.targetType] || 0) + 1;
+      const keywords = Array.isArray(hit.keywords) ? hit.keywords : JSON.parse(hit.keywords || "[]");
+      for (const keyword of keywords) acc.by_keyword[keyword] = (acc.by_keyword[keyword] || 0) + 1;
+      return acc;
+    },
+    { by_type: {}, by_keyword: {} },
+  );
   return c.json({
     success: true,
     data: list.map((hit: any) => ({
@@ -640,7 +657,41 @@ admin.get("/admin/moderation", modRequired(), async (c) => {
     total: Number(totalResult[0]?.c || 0),
     page: pagination.page,
     limit: pagination.limit,
+    summary,
   });
+});
+
+admin.post("/admin/moderation/bulk", modRequired(), async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  const ids = Array.isArray(body.ids) ? body.ids.map(Number).filter((id: number) => id > 0).slice(0, 100) : [];
+  const action = String(body.action || "");
+  if (!ids.length) return c.json({ success: false, error_msg: "未选择巡检记录" }, 400);
+  if (!["confirm", "falsepositive", "ignore"].includes(action)) {
+    return c.json({ success: false, error_msg: "不支持的操作" }, 400);
+  }
+  const db = getDb();
+  const user = c.get("user")!;
+  const hits = await db.select().from(moderationHits).where(inArray(moderationHits.id, ids));
+  let handled = 0;
+  for (const hit of hits) {
+    const current = await handleModerationHit(hit.id, action as any, user.id);
+    if (!current) continue;
+    handled += 1;
+    if (action === "confirm") {
+      if (hit.targetType === "topic") {
+        await db.update(topics).set({ deleted: boolValue(true) } as any).where(eq(topics.id, hit.targetId));
+      } else if (hit.targetType === "reply") {
+        const reply = await replyQueries.getById(hit.targetId);
+        if (reply && !reply.deleted) {
+          await replyQueries.softDelete(reply.id);
+          await decrementScoreAndReplyCount(reply.authorId, 5, 1);
+          await topicQueries.decrementReplyCount(reply.topicId);
+        }
+      }
+    }
+  }
+  await auditQueries.log(user.id, user.loginname, `moderation_bulk_${action}`, { type: "moderation_hit" }, action, JSON.stringify({ ids, handled }));
+  return c.json({ success: true, handled });
 });
 
 admin.post("/admin/moderation/:id/:action", modRequired(), async (c) => {

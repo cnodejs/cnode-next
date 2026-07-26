@@ -60,11 +60,71 @@ async function main() {
   await resumeScanJob(job.id);
   jobs = await listScanJobs();
   assert(jobs[0].status === "pending", "should resume job");
+  const resumedJob = await claimNextScanJob();
+  assert(resumedJob?.id === job.id, "should reclaim resumed job");
+  await processScanBatch(resumedJob);
 
   const handled = await handleModerationHit(hits[0].id, "confirm", 99);
   assert(handled, "should handle moderation hit");
   const remainingHits = await listPendingHits();
   assert(remainingHits.length === 1, "handled hit should leave pending queue");
+
+  const bulkTopics = [];
+  for (let i = 0; i < 3; i += 1) {
+    const [bulkTopic] = await db.insert(topics).values({ title: `large scan ${i} VPN`, content: "bulk scan", authorId: 3, tab: "share", createAt: new Date().toISOString(), updateAt: new Date().toISOString() }).returning();
+    bulkTopics.push(bulkTopic);
+  }
+  const newestBulkTopic = bulkTopics.at(-1);
+  const largeJob = await createScanJob({ scope: "topics", mode: "historical", reason: "manual", keywordIds: [word.id], batchSize: 1, throttleMs: 0, maxBatchesPerRun: 1 });
+  const claimedLargeJob = await claimNextScanJob();
+  assert(claimedLargeJob?.id === largeJob.id, "should claim large scan job");
+  await processScanBatch(claimedLargeJob);
+  jobs = await listScanJobs();
+  let currentLargeJob = jobs.find((item: any) => item.id === largeJob.id);
+  assert(currentLargeJob?.status === "running", "large job should stay running between batches");
+  assert(Number(currentLargeJob.cursorTopicId || 0) === newestBulkTopic?.id, "historical topic scan should start from the newest topic");
+  const reclaimedLargeJob = await claimNextScanJob();
+  assert(reclaimedLargeJob?.id === largeJob.id, "should reclaim running large scan job");
+  for (let i = 0; i < 20; i += 1) {
+    const result = await processScanBatch(reclaimedLargeJob);
+    if (result.done) break;
+  }
+  jobs = await listScanJobs();
+  currentLargeJob = jobs.find((item: any) => item.id === largeJob.id);
+  assert(currentLargeJob?.status === "done", "large job should finish instead of getting stuck running");
+
+  const [olderReply] = await db.insert(replies).values({ content: "older reply VPN", topicId: topic.id, authorId: 4, createAt: new Date().toISOString(), updateAt: new Date().toISOString() }).returning();
+  const [newerReply] = await db.insert(replies).values({ content: "newer reply VPN", topicId: topic.id, authorId: 5, createAt: new Date().toISOString(), updateAt: new Date().toISOString() }).returning();
+  const replyJob = await createScanJob({ scope: "replies", mode: "historical", reason: "manual", keywordIds: [word.id], batchSize: 1, throttleMs: 0, maxBatchesPerRun: 1 });
+  const claimedReplyJob = await claimNextScanJob();
+  assert(claimedReplyJob?.id === replyJob.id, "should claim reply scan job");
+  await processScanBatch(claimedReplyJob);
+  jobs = await listScanJobs();
+  let currentReplyJob = jobs.find((item: any) => item.id === replyJob.id);
+  assert(Number(currentReplyJob.cursorReplyId || 0) === newerReply.id, "historical reply scan should start from the newest reply");
+  for (let i = 0; i < 20; i += 1) {
+    const result = await processScanBatch(claimedReplyJob);
+    if (result.done) break;
+  }
+  jobs = await listScanJobs();
+  currentReplyJob = jobs.find((item: any) => item.id === replyJob.id);
+  assert(currentReplyJob?.status === "done", "reply job should finish after newest-first scan");
+
+  const recoveryJob = await createScanJob({ scope: "topics", mode: "historical", reason: "manual", keywordIds: [word.id], cursorTopicId: topic.id, batchSize: 1, throttleMs: 0, maxBatchesPerRun: 1 });
+  const recoverySqlite = new Database(dbPath);
+  recoverySqlite.prepare("update moderation_scan_jobs set status = 'running', cursor_topic_id = ? where id = ?").run(topic.id, recoveryJob.id);
+  recoverySqlite.close();
+  const reclaimedRecoveryJob = await claimNextScanJob();
+  assert(reclaimedRecoveryJob?.id === recoveryJob.id, "should reclaim hanging running job");
+  assert(Number(reclaimedRecoveryJob.cursorTopicId || 0) === topic.id, "should resume from the saved topic cursor");
+  for (let i = 0; i < 20; i += 1) {
+    const result = await processScanBatch(reclaimedRecoveryJob);
+    if (result.done) break;
+  }
+  jobs = await listScanJobs();
+  const currentRecoveryJob = jobs.find((item: any) => item.id === recoveryJob.id);
+  assert(currentRecoveryJob?.status === "done", "reclaimed hanging job should finish");
+  assert(olderReply.id > 0, "older reply fixture should exist");
 
   await createScheduledScanJobIfNeeded();
   await createScheduledScanJobIfNeeded();

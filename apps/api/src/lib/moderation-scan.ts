@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, inArray, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, lt, ne, sql } from "drizzle-orm";
 import { moderationHits, moderationScanJobs, replies, topics } from "@cnode/db";
 import { getDb } from "./db";
 import { boolEq, boolValue } from "./db-compat";
@@ -43,6 +43,9 @@ function dateValue(value = new Date()) {
 }
 
 function jsonValue(value: unknown) {
+  if (process.env.DB_DIALECT === "pg" && value !== null && value !== undefined) {
+    return sql`${JSON.stringify(value)}::jsonb`;
+  }
   return process.env.DB_DIALECT === "pg" ? value : encodeJson(value);
 }
 
@@ -59,6 +62,14 @@ export async function releaseScanWorkerLock(owner: string) {
   const redis = getRedis() as any;
   const current = await redis.get(LOCK_KEY);
   if (current === owner) await redis.del(LOCK_KEY);
+}
+
+export async function extendScanWorkerLock(owner: string, ttlSeconds = 60) {
+  const redis = getRedis() as any;
+  const current = await redis.get(LOCK_KEY);
+  if (current !== owner) return false;
+  await redis.expire(LOCK_KEY, ttlSeconds);
+  return true;
 }
 
 export async function createScanJob(params: {
@@ -138,15 +149,15 @@ export async function claimNextScanJob() {
   const rows = await db
     .select()
     .from(moderationScanJobs)
-    .where(eq(moderationScanJobs.status, "pending"))
-    .orderBy(asc(moderationScanJobs.createAt))
+    .where(inArray(moderationScanJobs.status, ["running", "pending"]))
+    .orderBy(sql`case when ${moderationScanJobs.status} = 'running' then 0 else 1 end`, asc(moderationScanJobs.createAt))
     .limit(1);
   const job = rows[0];
   if (!job) return null;
   const [claimed] = await db
     .update(moderationScanJobs)
     .set({ status: "running", startedAt: dateValue(), updateAt: dateValue() } as any)
-    .where(and(eq(moderationScanJobs.id, job.id), eq(moderationScanJobs.status, "pending")))
+    .where(and(eq(moderationScanJobs.id, job.id), eq(moderationScanJobs.status, job.status)))
     .returning();
   return claimed || null;
 }
@@ -180,6 +191,22 @@ async function refreshJob(id: number) {
   return rows[0] || null;
 }
 
+async function updateScanJobProgress(id: number, topicResult: { scanned: number; hits: number; cursor: number }, replyResult: { scanned: number; hits: number; cursor: number }) {
+  const scanned = topicResult.scanned + replyResult.scanned;
+  const hits = topicResult.hits + replyResult.hits;
+  await getDb()
+    .update(moderationScanJobs)
+    .set({
+      cursorTopicId: topicResult.cursor,
+      cursorReplyId: replyResult.cursor,
+      scannedCount: sql`${moderationScanJobs.scannedCount} + ${scanned}`,
+      hitCount: sql`${moderationScanJobs.hitCount} + ${hits}`,
+      updateAt: dateValue(),
+    } as any)
+    .where(eq(moderationScanJobs.id, id));
+  return { scanned, hits };
+}
+
 async function wordsForJob(job: any) {
   const words = await loadWords();
   const ids = decodeJsonArray(job.keywordIds);
@@ -203,40 +230,44 @@ async function insertHit(data: {
   const keywords = data.hits.map((hit) => hit.word);
   const keywordIds = data.hits.map((hit) => hit.keywordId).filter((id): id is number => !!id);
   const dedupeKey = createHitDedupeKey(data.targetType, data.targetId, data.field, keywords.join("|"));
-  try {
-    await db
-      .insert(moderationHits)
-      .values({
-        scanJobId: data.scanJobId,
-        targetType: data.targetType,
-        targetId: data.targetId,
-        topicId: data.topicId ?? (data.targetType === "topic" ? data.targetId : null),
-        authorId: data.authorId ?? null,
-        field: data.field,
-        keywordIds: jsonValue(keywordIds),
-        keywords: jsonValue(keywords),
-        preview: data.preview,
-        dedupeKey,
-        status: "pending",
-        action: "none",
-        scannedAt: dateValue(),
-        createAt: dateValue(),
-        updateAt: dateValue(),
-      } as any)
-      .onConflictDoNothing();
-    return 1;
-  } catch {
-    return 0;
-  }
+  await db
+    .insert(moderationHits)
+    .values({
+      scanJobId: data.scanJobId,
+      targetType: data.targetType,
+      targetId: data.targetId,
+      topicId: data.topicId ?? (data.targetType === "topic" ? data.targetId : null),
+      authorId: data.authorId ?? null,
+      field: data.field,
+      keywordIds: jsonValue(keywordIds),
+      keywords: jsonValue(keywords),
+      preview: data.preview,
+      dedupeKey,
+      status: "pending",
+      action: "none",
+      scannedAt: dateValue(),
+      createAt: dateValue(),
+      updateAt: dateValue(),
+    } as any)
+    .onConflictDoNothing();
+  return 1;
 }
 
 async function scanTopicBatch(job: any, words: SensitiveWordEntry[]) {
   const db = getDb();
+  const cursor = Number(job.cursorTopicId || 0);
+  const historical = job.mode === "historical";
+  const conditions = [boolEq(topics.deleted, false), ne(topics.status, "draft")];
+  if (historical) {
+    if (cursor > 0) conditions.unshift(lt(topics.id, cursor));
+  } else {
+    conditions.unshift(gt(topics.id, cursor));
+  }
   const rows = await db
     .select({ id: topics.id, title: topics.title, content: topics.content, authorId: topics.authorId })
     .from(topics)
-    .where(and(gt(topics.id, Number(job.cursorTopicId || 0)), boolEq(topics.deleted, false), ne(topics.status, "draft")))
-    .orderBy(asc(topics.id))
+    .where(and(...conditions))
+    .orderBy(historical ? desc(topics.id) : asc(topics.id))
     .limit(Number(job.batchSize || DEFAULT_BATCH_SIZE));
   let hits = 0;
   for (const row of rows) {
@@ -259,17 +290,25 @@ async function scanTopicBatch(job: any, words: SensitiveWordEntry[]) {
       });
     }
   }
-  const lastId = rows.at(-1)?.id ?? Number(job.cursorTopicId || 0);
+  const lastId = rows.at(-1)?.id ?? cursor;
   return { scanned: rows.length, hits, cursor: lastId };
 }
 
 async function scanReplyBatch(job: any, words: SensitiveWordEntry[]) {
   const db = getDb();
+  const cursor = Number(job.cursorReplyId || 0);
+  const historical = job.mode === "historical";
+  const conditions = [boolEq(replies.deleted, false)];
+  if (historical) {
+    if (cursor > 0) conditions.unshift(lt(replies.id, cursor));
+  } else {
+    conditions.unshift(gt(replies.id, cursor));
+  }
   const rows = await db
     .select({ id: replies.id, topicId: replies.topicId, content: replies.content, authorId: replies.authorId })
     .from(replies)
-    .where(and(gt(replies.id, Number(job.cursorReplyId || 0)), boolEq(replies.deleted, false)))
-    .orderBy(asc(replies.id))
+    .where(and(...conditions))
+    .orderBy(historical ? desc(replies.id) : asc(replies.id))
     .limit(Number(job.batchSize || DEFAULT_BATCH_SIZE));
   let hits = 0;
   for (const row of rows) {
@@ -287,7 +326,7 @@ async function scanReplyBatch(job: any, words: SensitiveWordEntry[]) {
       preview: createHitPreview(content, fieldHits[0]?.index || 0),
     });
   }
-  const lastId = rows.at(-1)?.id ?? Number(job.cursorReplyId || 0);
+  const lastId = rows.at(-1)?.id ?? cursor;
   return { scanned: rows.length, hits, cursor: lastId };
 }
 
@@ -305,20 +344,13 @@ export async function processScanBatch(job: any) {
   const shouldScanReplies = scope === "replies" || scope === "all";
   const topicResult = shouldScanTopics ? await scanTopicBatch(current, words) : { scanned: 0, hits: 0, cursor: Number(current.cursorTopicId || 0) };
   const afterTopics = await refreshJob(current.id);
+  if (!afterTopics || afterTopics.status !== "running") {
+    const replyResult = { scanned: 0, hits: 0, cursor: Number(current.cursorReplyId || 0) };
+    const progress = await updateScanJobProgress(current.id, topicResult, replyResult);
+    return { done: true, ...progress };
+  }
   const replyResult = shouldScanReplies ? await scanReplyBatch(afterTopics || current, words) : { scanned: 0, hits: 0, cursor: Number(current.cursorReplyId || 0) };
-  const scanned = topicResult.scanned + replyResult.scanned;
-  const hits = topicResult.hits + replyResult.hits;
-
-  await getDb()
-    .update(moderationScanJobs)
-    .set({
-      cursorTopicId: topicResult.cursor,
-      cursorReplyId: replyResult.cursor,
-      scannedCount: sql`${moderationScanJobs.scannedCount} + ${scanned}`,
-      hitCount: sql`${moderationScanJobs.hitCount} + ${hits}`,
-      updateAt: dateValue(),
-    } as any)
-    .where(eq(moderationScanJobs.id, current.id));
+  const { scanned, hits } = await updateScanJobProgress(current.id, topicResult, replyResult);
 
   const done = (!shouldScanTopics || topicResult.scanned === 0) && (!shouldScanReplies || replyResult.scanned === 0);
   if (done) await finishScanJob(current.id);
