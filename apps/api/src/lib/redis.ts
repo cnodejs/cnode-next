@@ -1,3 +1,4 @@
+import Redis from "ioredis";
 import { MockRedis } from "./mock-redis";
 import type { MockRedis as MockRedisType } from "./mock-redis";
 
@@ -11,8 +12,6 @@ export function getRedis(): RedisClient {
   const hasRedis = process.env.REDIS_HOST && process.env.REDIS_PORT;
 
   if (hasRedis) {
-    // Lazy load ioredis only when needed
-    const { Redis } = require("ioredis") as typeof import("ioredis");
     const instance = new Redis({
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
