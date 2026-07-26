@@ -40,7 +40,7 @@
 - [x] 5.1 重写 `Layout.tsx` 的 `HeaderUserArea`:用 `DropdownMenu` 包头像,修 outside-click 与 Escape
 - [x] 5.2 重写 `Layout.tsx` 的 `MobileNav`:用 `Sheet`(侧拉或底部),从 `useUIStore` 读开闭
 - [x] 5.3 重写 `admin/users.tsx` 的重置密码 Modal 为 `Dialog`
-- ] 5.4 重写 `routes/_index.tsx` 的 Tab 切换为 `Tabs`(或 `TabsList`/`TabsTrigger`)
+- [x] 5.4 重写 `routes/_index.tsx` 的 Tab 切换为 `Tabs`(或 `TabsList`/`TabsTrigger`)
 - [x] 5.5 重写 `routes/admin/settings.tsx` 的 tab 为 `Tabs`
 - [x] 5.6 重写所有 admin route 的 `<table>` 为 shadcn `Table` 组件组合
 - [x] 5.7 验证:点击 DropdownMenu 外部关闭;Dialog 打开后 Tab 循环在 Dialog 内;Sheet 滑入/滑出动画正常
