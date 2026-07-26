@@ -10,5 +10,6 @@ export default defineConfig({
     user: process.env.DB_USER || "cnode",
     password: process.env.DB_PASSWORD || "",
     database: process.env.DB_NAME || "cnode",
+    ssl: false,
   },
 });

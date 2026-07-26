@@ -8,17 +8,20 @@ const community = new Hono();
 
 community.get("/sidebar/home", async (c) => {
   const db = getDb();
+  const isPg = process.env.DB_DIALECT === "pg";
+  const replyNotDeleted = isPg ? sql`${replies.deleted} = false` : eq(replies.deleted, 0);
+  const topicNotDeleted = isPg ? sql`${topics.deleted} = false` : eq(topics.deleted, 0);
   const [latestRepliesRaw, noReplyTopicsRaw, topUsersRaw] = await Promise.all([
     db
       .select()
       .from(replies)
-      .where(eq(replies.deleted, 0))
+      .where(replyNotDeleted)
       .orderBy(desc(replies.createAt))
       .limit(5),
     db
       .select()
       .from(topics)
-      .where(sql`${topics.deleted} = 0 and ${topics.replyCount} = 0`)
+      .where(sql`${topicNotDeleted} and ${topics.replyCount} = 0`)
       .orderBy(desc(topics.createAt))
       .limit(5),
     db.select().from(users).orderBy(desc(users.score)).limit(5),

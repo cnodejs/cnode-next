@@ -44,10 +44,10 @@
 - 理由：满足"本地跑完整流程"诉求，同时避免直接暴露线上 Mongo/Redis 端口。
 - 备选方案：直接公网开放数据库端口（风险高，不采用）。
 
-### Decision 6: 本地演练阶段强制只读源库权限
-- 选择：迁移彩排连接 Mongo 时使用只读账号。
-- 理由：防止本地误操作影响线上历史站点。
-- 备选方案：复用管理员账号（操作便利但风险不可接受）。
+### Decision 6: 本地演练阶段不得写入源库
+- 选择：迁移彩排不得对 Mongo 执行写入；若现有 Mongo 未启用认证，则通过只读迁移脚本、目标库隔离和命令审查控制风险。
+- 理由：当前旧 Mongo 未启用认证，启用认证需要修改并重启生产 Mongo，属于额外生产变更；彩排阶段不引入该风险。
+- 备选方案：启用 Mongo 认证并创建只读账号（权限更强，但需要生产变更）。
 
 ## Risks / Trade-offs
 
@@ -55,13 +55,13 @@
 - [映射缺陷导致最终数据偏差] -> 每次全量后执行固定对账清单并抽样登录/内容链路。
 - [误在宿主机执行命令连错库] -> 所有运行手册命令显式使用 `docker compose run/exec`。
 - [并行期测试写入被覆盖造成误判] -> 在内测说明中声明"测试数据非最终"并定时重置。
-- [本地演练误写线上数据] -> 线上 Mongo 使用只读账号，迁移脚本默认禁写源库。
+- [本地演练误写线上数据] -> 迁移脚本只读取 Mongo，所有写入仅指向演练 PostgreSQL；不启用 Mongo auth 时通过命令审查和目标库隔离降低风险。
 - [远程链路抖动导致迁移中断] -> 支持分批读取、断点重跑和迁移结果幂等覆盖。
 
 ## Migration Plan
 
 ### Phase A: 预同步与环境就绪
-1. 在本地准备演练目标环境（compose 或独立 PG），并配置远程只读源库连接参数。
+1. 在本地准备演练目标环境（compose 或独立 PG），并配置远程源库连接参数。
 2. 启动 compose 基础服务（postgres、redis、api 运行所需网络）。
 3. 在 compose 内执行建表命令（Drizzle push pg）。
 4. 运行一次全量迁移并完成首轮对账。
@@ -83,7 +83,7 @@
 目的：在正式切换前，从本地开发机完成“远程读源 + 本地/预发布写目标”的全流程彩排。
 
 统一前置约束：
-- 远程 Mongo 必须使用只读账号。
+- 迁移流程不得写入远程 Mongo；如远程 Mongo 未启用认证，不要求为彩排单独启用只读账号。
 - 不暴露数据库公网端口。
 - 目标库必须是演练库（非生产目标库）。
 
@@ -111,7 +111,7 @@ docker compose ps
 docker compose run --rm api pnpm db:push:pg
 
 docker compose run --rm \
-  -e MONGO_URI=mongodb://<readonly-user>:<readonly-pass>@host.docker.internal:37017/node_club \
+  -e MONGO_URI=mongodb://host.docker.internal:37017/${MONGO_DB} \
   api pnpm tsx scripts/migrate-mongo-to-pg.ts
 ```
 

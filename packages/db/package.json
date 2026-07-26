@@ -21,6 +21,7 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "drizzle-orm": "^0.39.0",
+    "pg": "^8.13.0",
     "uuid": "^11.0.0"
   },
   "devDependencies": {
@@ -34,7 +35,6 @@
     "typescript": "^5.7.0"
   },
   "optionalDependencies": {
-    "better-sqlite3": "^11.0.0",
-    "pg": "^8.13.0"
+    "better-sqlite3": "^11.0.0"
   }
 }

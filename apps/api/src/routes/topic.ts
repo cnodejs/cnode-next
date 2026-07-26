@@ -31,7 +31,7 @@ topic.get("/topics", async (c) => {
 
   const query: any = {};
   if (!tab || tab === "all") {
-    // default: exclude job and dev
+    query.excludeTabs = ["job", "dev"];
   } else if (tab === "good") {
     query.good = 1;
   } else {

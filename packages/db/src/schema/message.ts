@@ -3,6 +3,7 @@ import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 import {
   pgTable,
   serial,
+  integer as pgInteger,
   text as pgText,
   boolean as pgBoolean,
   timestamp,
@@ -22,10 +23,10 @@ export const messages = sqliteTable("messages", {
 export const messagesPg = pgTable("messages", {
   id: serial("id").primaryKey(),
   type: pgText("type"),
-  masterId: serial("master_id").notNull(),
-  authorId: serial("author_id").notNull(),
-  topicId: serial("topic_id"),
-  replyId: serial("reply_id"),
+  masterId: pgInteger("master_id").notNull(),
+  authorId: pgInteger("author_id").notNull(),
+  topicId: pgInteger("topic_id"),
+  replyId: pgInteger("reply_id"),
   hasRead: pgBoolean("has_read").default(false),
   createAt: timestamp("create_at").defaultNow(),
 });

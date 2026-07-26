@@ -156,16 +156,22 @@ export const topicQueries = {
 
   async getByQuery(where: any, opt?: any) {
     const db = getDb();
+    const isPg = process.env.DB_DIALECT === "pg";
     let q = db.select().from(topics).$dynamic();
     const conditions = [];
     if (where.deleted !== undefined) {
-      conditions.push(eq(topics.deleted, where.deleted));
+      conditions.push(isPg ? sql`${topics.deleted} = ${Boolean(where.deleted)}` : eq(topics.deleted, where.deleted));
     }
     if (where.tab) {
       conditions.push(eq(topics.tab, where.tab));
     }
+    if (where.excludeTabs?.length) {
+      conditions.push(
+        sql`(${topics.tab} is null or (${topics.tab} <> ${where.excludeTabs[0]} and ${topics.tab} <> ${where.excludeTabs[1]}))`,
+      );
+    }
     if (where.good !== undefined) {
-      conditions.push(eq(topics.good, where.good));
+      conditions.push(isPg ? sql`${topics.good} = ${Boolean(where.good)}` : eq(topics.good, where.good));
     }
     if (where.authorId !== undefined) {
       conditions.push(eq(topics.authorId, where.authorId));
@@ -175,7 +181,7 @@ export const topicQueries = {
     }
     const limit = opt?.limit || 20;
     const offset = opt?.offset || 0;
-    return q.limit(limit).offset(offset);
+    return q.orderBy(desc(topics.top), desc(topics.lastReplyAt)).limit(limit).offset(offset);
   },
 
   async newAndSave(title: string, content: string, tab: string, authorId: number) {

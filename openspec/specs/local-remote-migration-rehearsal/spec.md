@@ -1,5 +1,8 @@
-## ADDED Requirements
+# local-remote-migration-rehearsal Specification
 
+## Purpose
+TBD - created by archiving change staged-mongo-pg-cutover-runbook. Update Purpose after archive.
+## Requirements
 ### Requirement: Local rehearsal SHALL support remote legacy source access
 The migration rehearsal workflow MUST allow operators to run migration from a local machine while sourcing data from the remote legacy host.
 
@@ -11,12 +14,12 @@ The migration rehearsal workflow MUST allow operators to run migration from a lo
 - **WHEN** local rehearsal migration completes
 - **THEN** operators MUST be able to run local functional verification against the migrated target environment
 
-### Requirement: Remote source access SHALL be read-only
-Local rehearsal access to legacy source systems MUST enforce read-only access for source data.
+### Requirement: Remote source access SHALL NOT write source data
+Local rehearsal access to legacy source systems MUST avoid writes to source data.
 
-#### Scenario: Source credential scope
-- **WHEN** rehearsal credentials are provisioned for legacy MongoDB
-- **THEN** those credentials MUST NOT permit write, update, or delete operations on source collections
+#### Scenario: Source access scope
+- **WHEN** rehearsal source access is configured for legacy MongoDB
+- **THEN** operators MUST confirm the migration flow does not require source writes or production Mongo authentication changes
 
 #### Scenario: Migration script behavior
 - **WHEN** migration rehearsal executes

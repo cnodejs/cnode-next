@@ -5,6 +5,7 @@ import {
   serial,
   text as pgText,
   integer as pgInteger,
+  bigint,
   boolean as pgBoolean,
   timestamp,
 } from "drizzle-orm/pg-core";
@@ -70,7 +71,7 @@ export const usersPg = pgTable("users", {
   receiveReplyMail: pgBoolean("receive_reply_mail").default(false),
   receiveAtMail: pgBoolean("receive_at_mail").default(false),
   retrieveKey: pgText("retrieve_key"),
-  retrieveTime: pgInteger("retrieve_time"),
+  retrieveTime: bigint("retrieve_time", { mode: "number" }),
   createAt: timestamp("create_at").defaultNow(),
   updateAt: timestamp("update_at").defaultNow(),
 });

@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
-import { pgTable, serial, boolean as pgBoolean, timestamp, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, integer as pgInteger, timestamp, primaryKey } from "drizzle-orm/pg-core";
 import { replies } from "./reply";
 import { users } from "./user";
 
@@ -24,8 +24,8 @@ export const replyUps = sqliteTable(
 export const replyUpsPg = pgTable(
   "reply_ups",
   {
-    replyId: serial("reply_id").notNull(),
-    userId: serial("user_id").notNull(),
+    replyId: pgInteger("reply_id").notNull(),
+    userId: pgInteger("user_id").notNull(),
     createAt: timestamp("create_at").defaultNow(),
   },
   (table) => ({

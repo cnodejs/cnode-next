@@ -1,10 +1,12 @@
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
-import Database from "better-sqlite3";
 import { Pool } from "pg";
 import * as schema from "./schema/index";
 import { mkdirSync } from "fs";
+import { createRequire } from "module";
 import { dirname, resolve } from "path";
+
+const require = createRequire(import.meta.url);
 
 const dialect = process.env.DB_DIALECT || "sqlite";
 
@@ -28,6 +30,7 @@ export function createDb() {
   if (dir) {
     mkdirSync(dir, { recursive: true });
   }
+  const Database = require("better-sqlite3") as typeof import("better-sqlite3");
   const sqlite = new Database(dbPath);
   sqlite.pragma("journal_mode = WAL");
   sqlite.pragma("foreign_keys = ON");
