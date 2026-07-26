@@ -1,4 +1,6 @@
 import { Layout } from "~/components/Layout";
+import { FormPage } from "~/components/PageShell";
+import { Card, CardContent } from "~/components/ui/card";
 import { apiFetch } from "~/lib/api-client";
 import { useSearchParams, useNavigate } from "react-router";
 import { useState, useEffect } from "react";
@@ -43,25 +45,29 @@ export default function ActiveAccount() {
 
   return (
     <Layout>
-      <div className="max-w-sm mx-auto text-center py-12">
-        {status === "loading" && <p className="text-muted-foreground">正在激活账号...</p>}
-        {status === "success" && (
-          <>
-            <CheckCircle className="h-8 w-8 mx-auto mb-2 text-primary" />
-            <p className="text-primary mb-2">{message}</p>
-            <p className="text-sm text-muted-foreground">即将跳转到登录页...</p>
-          </>
-        )}
-        {status === "error" && (
-          <>
-            <XCircle className="h-8 w-8 mx-auto mb-2 text-destructive" />
-            <p className="text-destructive mb-4">{message}</p>
-            <a href="/signin" className="text-sm text-primary hover:underline">
-              返回登录
-            </a>
-          </>
-        )}
-      </div>
+      <FormPage>
+        <Card className="text-center">
+          <CardContent className="py-12">
+            {status === "loading" && <p className="text-muted-foreground">正在激活账号...</p>}
+            {status === "success" && (
+              <>
+                <CheckCircle className="mx-auto mb-2 h-8 w-8 text-primary" />
+                <p className="mb-2 text-primary">{message}</p>
+                <p className="text-sm text-muted-foreground">即将跳转到登录页...</p>
+              </>
+            )}
+            {status === "error" && (
+              <>
+                <XCircle className="mx-auto mb-2 h-8 w-8 text-destructive" />
+                <p className="mb-4 text-destructive">{message}</p>
+                <a href="/signin" className="text-sm text-primary hover:underline">
+                  返回登录
+                </a>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </FormPage>
     </Layout>
   );
 }

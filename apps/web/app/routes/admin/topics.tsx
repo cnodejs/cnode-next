@@ -103,6 +103,7 @@ export default function AdminTopics({ loaderData }: any) {
             <TableRow>
               <TableHead className="w-8">
                 <Checkbox
+                  aria-label="选择全部话题"
                   checked={selected.length === topics.length && topics.length > 0}
                   onCheckedChange={(checked) =>
                     setSelected(checked ? topics.map((t: any) => t.id) : [])
@@ -121,6 +122,7 @@ export default function AdminTopics({ loaderData }: any) {
               <TableRow key={t.id}>
                 <TableCell>
                   <Checkbox
+                    aria-label={`选择话题 ${t.title}`}
                     checked={selected.includes(t.id)}
                     onCheckedChange={() => toggleSelect(t.id)}
                   />

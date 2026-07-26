@@ -12,7 +12,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
             "group toast group-[.toaster]:bg-popover group-[.toaster]:text-popover-foreground group-[.toaster]:border-cnode-green/20 group-[.toaster]:shadow-floating",
           description: "group-[.toast]:text-muted-foreground",
           actionButton: "group-[.toast]:bg-cnode-ink group-[.toast]:text-white",
-          cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+          cancelButton: "group-[.toast]:bg-cnode-soft group-[.toast]:text-cnode-ink",
         },
       }}
       {...props}

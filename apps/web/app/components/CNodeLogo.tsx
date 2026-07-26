@@ -19,7 +19,10 @@ export function CNodeLogo({ to = "/", admin = false, compact = false, className 
     >
       <span className="inline-flex h-10 items-start pt-[3px]">
         {compact ? (
-          <span className="text-sm font-black tracking-tight text-cnode-green">CNode</span>
+          <>
+            <img src={CNODE_LOGO_DARK} alt="CNode" className="block h-7 w-auto max-w-[88px] dark:hidden" />
+            <img src={CNODE_LOGO_LIGHT} alt="CNode" className="hidden h-7 w-auto max-w-[88px] dark:block" />
+          </>
         ) : (
           <>
             <img src={CNODE_LOGO_DARK} alt="CNode" className="block h-7 w-auto min-w-[118px] dark:hidden" />

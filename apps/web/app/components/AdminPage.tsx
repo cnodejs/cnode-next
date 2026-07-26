@@ -54,9 +54,9 @@ export function AdminPanel({
   contentClassName?: string;
 }) {
   return (
-    <Card className={cn("overflow-hidden", className)}>
+    <Card className={cn("overflow-hidden border-cnode-green/15 shadow-card", className)}>
       {(title || description || action) && (
-        <CardHeader className="flex-row items-start justify-between gap-4 border-b border-border/80 bg-surface-subtle">
+        <CardHeader className="flex-row items-start justify-between gap-4 border-b border-cnode-green/15 bg-surface-subtle">
           <div className="space-y-1.5">
             {title && <CardTitle className="text-base">{title}</CardTitle>}
             {description && <p className="text-sm text-muted-foreground">{description}</p>}
@@ -73,7 +73,7 @@ export function AdminPanel({
 
 export function AdminToolbar({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("flex flex-col gap-3 border-b border-border/80 bg-card p-4 sm:flex-row sm:items-center sm:justify-between", className)}>
+    <div className={cn("flex flex-col gap-3 border-b border-cnode-green/15 bg-card p-4 sm:flex-row sm:items-center sm:justify-between", className)}>
       {children}
     </div>
   );
@@ -81,7 +81,7 @@ export function AdminToolbar({ children, className }: { children: React.ReactNod
 
 export function AdminMetricCard({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <Card className="overflow-hidden border-cnode-ink/10 bg-card">
+    <Card className="overflow-hidden border-cnode-green/15 bg-card">
       <CardContent className="p-4">
         <div className="text-xs font-medium text-muted-foreground">{label}</div>
         <div className="mt-2 text-2xl font-semibold tracking-tight text-cnode-ink">{value}</div>

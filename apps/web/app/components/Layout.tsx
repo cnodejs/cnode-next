@@ -54,7 +54,8 @@ function Header() {
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-xl">
       <PageContainer className="flex h-16 items-center justify-between">
         <div className="flex min-w-0 items-center gap-3 md:gap-4">
-          <CNodeLogo />
+          <CNodeLogo className="hidden sm:inline-flex" />
+          <CNodeLogo compact className="sm:hidden" />
           <button
             type="button"
             onClick={() => setCommandOpen(true)}
@@ -144,9 +145,11 @@ export function HeaderUserArea() {
     return (
       <Link
         to="/signin"
-        className="inline-flex h-9 items-center rounded-lg px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        className="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-sm text-muted-foreground transition-colors hover:bg-cnode-soft hover:text-cnode-ink sm:px-3"
+        aria-label="登录"
       >
-        登录
+        <User className="h-4 w-4 sm:hidden" />
+        <span className="hidden sm:inline">登录</span>
       </Link>
     );
   }
@@ -248,6 +251,10 @@ export function HeaderUserArea() {
 }
 
 function MobileNavTrigger() {
+  const user = useAuthStore((s) => s.user);
+  const rootData = useRouteLoaderData("root") as { user: any } | undefined;
+  const effectiveUser = user || rootData?.user;
+
   return (
     <div className="md:hidden">
       <Sheet>
@@ -256,35 +263,84 @@ function MobileNavTrigger() {
             <Menu className="h-5 w-5" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="bottom" className="pb-[env(safe-area-inset-bottom)]">
-          <SheetHeader>
+        <SheetContent side="bottom" className="max-h-[82vh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+          <SheetHeader className="text-left">
             <SheetTitle>导航</SheetTitle>
           </SheetHeader>
-          <nav className="grid grid-cols-4 gap-2 py-2">
+          <nav className="grid grid-cols-2 gap-2 py-3">
             <Link
-              to="/getstart"
-              className="flex flex-col items-center gap-1 rounded-lg p-2 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              to="/search"
+              className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
             >
-              <HelpCircle className="h-5 w-5" /> 入门
+              <Search className="h-5 w-5 text-primary" /> 搜索
             </Link>
             <Link
               to="/topic/create"
-              className="flex flex-col items-center text-xs text-muted-foreground"
+              className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
             >
-              <Pencil className="h-5 w-5" /> 发帖
+              <Pencil className="h-5 w-5 text-primary" /> 发布话题
+            </Link>
+            <Link
+              to="/getstart"
+              className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
+            >
+              <HelpCircle className="h-5 w-5 text-primary" /> 新手指南
+            </Link>
+            <Link
+              to="/api"
+              className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
+            >
+              <Code className="h-5 w-5 text-primary" /> API
             </Link>
             <Link
               to="/my/messages"
-              className="flex flex-col items-center text-xs text-muted-foreground"
+              className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
             >
-              <Bell className="h-5 w-5" /> 消息
+              <Bell className="h-5 w-5 text-primary" /> 消息
+            </Link>
+            <Link
+              to="/faq"
+              className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
+            >
+              <HelpCircle className="h-5 w-5 text-primary" /> FAQ
             </Link>
             <Link
               to="/about"
-              className="flex flex-col items-center gap-1 rounded-lg p-2 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
             >
-              <Info className="h-5 w-5" /> 关于
+              <Info className="h-5 w-5 text-primary" /> 关于
             </Link>
+            {effectiveUser ? (
+              <>
+                <Link
+                  to={`/user/${effectiveUser.loginname}`}
+                  className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
+                >
+                  <User className="h-5 w-5 text-primary" /> 我的主页
+                </Link>
+                <Link
+                  to="/setting"
+                  className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
+                >
+                  <Settings className="h-5 w-5 text-primary" /> 设置
+                </Link>
+                {(effectiveUser.is_admin || effectiveUser.is_mod) && (
+                  <Link
+                    to="/admin"
+                    className="col-span-2 flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
+                  >
+                    <Shield className="h-5 w-5 text-primary" /> 管理后台
+                  </Link>
+                )}
+              </>
+            ) : (
+              <Link
+                to="/signin"
+                className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
+              >
+                <User className="h-5 w-5 text-primary" /> 登录
+              </Link>
+            )}
           </nav>
         </SheetContent>
       </Sheet>

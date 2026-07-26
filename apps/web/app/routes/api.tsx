@@ -1,6 +1,7 @@
 import { Layout } from "~/components/Layout";
 import { ContentPage } from "~/components/PageShell";
 import { Card, CardContent } from "~/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "~/components/ui/table";
 
 const endpoints = [
   ["GET", "/api/v1/topics", "话题列表，支持 page、limit、tab。"],
@@ -29,17 +30,25 @@ export default function ApiDocs() {
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="overflow-x-auto p-0">
-            <table className="w-full text-sm">
-              <thead className="bg-surface-subtle text-left text-muted-foreground">
-                <tr><th className="p-4">Method</th><th className="p-4">Endpoint</th><th className="p-4">说明</th></tr>
-              </thead>
-              <tbody className="divide-y divide-border">
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Method</TableHead>
+                  <TableHead>Endpoint</TableHead>
+                  <TableHead>说明</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {endpoints.map(([method, path, desc]) => (
-                  <tr key={path}><td className="p-4 font-semibold text-primary">{method}</td><td className="p-4 font-mono">{path}</td><td className="p-4 text-muted-foreground">{desc}</td></tr>
+                  <TableRow key={`${method}:${path}`}>
+                    <TableCell className="font-semibold text-primary">{method}</TableCell>
+                    <TableCell className="font-mono">{path}</TableCell>
+                    <TableCell className="text-muted-foreground">{desc}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       </ContentPage>

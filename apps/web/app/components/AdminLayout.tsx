@@ -53,7 +53,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [commandOpen, setCommandOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#f7f8f5] text-foreground dark:bg-background">
+    <div className="min-h-screen bg-surface-subtle text-foreground dark:bg-background">
       <header className="sticky top-0 z-40 border-b border-cnode-ink/10 bg-background/90 backdrop-blur-xl">
         <PageContainer className="flex h-16 items-center justify-between">
           <div className="flex min-w-0 items-center gap-4">

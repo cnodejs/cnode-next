@@ -57,6 +57,7 @@ export default function AdminSettings() {
               <div className="flex items-center gap-2">
                 <Checkbox
                   id="allow_signup"
+                  aria-label="开放注册"
                   checked={config.allow_signup}
                   onCheckedChange={(v) => setConfig({ ...config, allow_signup: !!v })}
                 />
