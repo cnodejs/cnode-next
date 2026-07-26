@@ -1,63 +1,104 @@
 # Development
 
-本文档描述本地开发环境的搭建和调试。
+本文档描述 cnode-next 当前开发与迁移验证环境。
 
 ## 前置条件
 
-- Node.js >= 22.0.0
+- Node.js >= 24.0.0
 - pnpm >= 11.0.0
+- PostgreSQL 与 Redis
 
-## 快速开始
+当前阶段采用 PostgreSQL-first：开发、迁移验证和功能烟测都以 PostgreSQL 为准。SQLite 代码路径仅作为历史兼容，不再作为默认开发或验收路径。
+
+## 环境文件
+
+复制模板并填写本地值：
 
 ```bash
-# 安装依赖
+cp .env.example .env.local
+```
+
+`.env.local` 用于本地敏感配置，已被 `.gitignore` 忽略，不要提交。
+
+API 启动时会先加载根目录 `.env`，再加载根目录 `.env.local` 覆盖本地值。Web 如需覆盖 API 地址，可使用 `apps/web/.env.local`。
+
+## PostgreSQL/Redis 连接
+
+研发需要提供可访问的 PostgreSQL/Redis 连接地址。这个地址可以来自本地 docker-compose，也可以来自 SSH 隧道映射后的本地端口；对应用来说只是 `DB_HOST` / `DB_PORT` 的区别。
+
+如果需要完整隔离环境，自行启动 PostgreSQL/Redis：
+
+```bash
+docker compose -f docker-compose.prod.yml up -d postgres redis
+```
+
+`.env.local` 示例：
+
+```bash
+DB_DIALECT=pg
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_NAME=cnode_rehearsal
+DB_USER=cnode
+DB_PASSWORD=<local-password>
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+```
+
+如果使用 SSH 隧道连接远程 rehearsal PostgreSQL，不要开放数据库公网端口，只需要把隧道映射到本地端口，再把 `.env.local` 中的 `DB_PORT` 改成映射端口：
+
+```bash
+ssh -fN -L 127.0.0.1:15432:<remote-postgres-host-or-container-ip>:5432 <ssh-host>
+```
+
+```bash
+DB_HOST=127.0.0.1
+DB_PORT=15432
+```
+
+`apps/web/.env.local` 示例：
+
+```bash
+APP_API_BASE_URL=http://localhost:3001
+```
+
+建表并启动：
+
+```bash
 pnpm install
-
-# 初始化本地 SQLite 数据库
-pnpm db:push
-pnpm db:seed
-
-# 启动开发服务
+pnpm db:push:pg
 pnpm dev
 ```
 
-- Web: http://localhost:5173
-- API: http://localhost:3001
-
-## 零外部依赖
-
-本地开发不需要 PostgreSQL / Redis / Cloudflare:
-
-- SQLite 文件在 `.local/dev.db`
-- Redis 本地可选 (或用内存 Map 替代)
-- 邮件本地不发送 (console.log)
-- KV 通过 wrangler.jsonc 的 local bindings 模拟
-
-## 数据库
-
-### 切换 dialect
-
-本地默认用 SQLite,通过环境变量切换:
+验证：
 
 ```bash
-# SQLite (默认)
-DB_DIALECT=sqlite
-
-# PostgreSQL
-DB_DIALECT=pg DB_HOST=localhost DB_PORT=5432 DB_NAME=cnode DB_USER=cnode DB_PASSWORD=xxx
+curl -fsS 'http://localhost:3001/api/v1/topics?limit=1&tab=all'
+curl -fsS 'http://localhost:5173/'
 ```
 
-### 常用命令
+## 常用命令
 
 ```bash
-pnpm db:push        # 创建/更新本地 SQLite 表
-pnpm db:push:pg     # 创建/更新 PostgreSQL 表
-pnpm db:seed        # 灌入测试数据
-pnpm db:generate    # 生成 migration 文件
+pnpm db:push:pg              # 创建/更新 PostgreSQL 表
+pnpm db:seed                 # 灌入测试数据
+pnpm migrate:mongo-to-pg     # 从 Mongo 迁移到 PostgreSQL
+pnpm migrate:reconcile       # 迁移后对账
+pnpm dev                     # 启动 Web + API
 ```
 
-## 调试
+## 烟测路径
 
-- Web: Vite dev server,支持 HMR
-- API: `tsx watch` 模式,文件变更自动重启
-- 日志: API 使用 console,Web 使用浏览器 DevTools
+- 首页：`http://localhost:5173/`
+- 话题详情：`http://localhost:5173/topic/<id>`
+- 用户页：`http://localhost:5173/user/<loginname>`
+- API 列表：`http://localhost:3001/api/v1/topics?limit=1&tab=all`
+
+## Future Work
+
+以下能力不属于当前变更范围，后续单独提案实现：
+
+- GitHub Actions CI required checks
+- Codespaces/devcontainer
+- Branch protection
+- Release gate / release environment protection
