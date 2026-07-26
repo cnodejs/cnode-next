@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+
+if [ "${SKIP_GITLEAKS:-}" = "1" ]; then
+  echo "[gitleaks] WARNING: SKIP_GITLEAKS=1 set; skipping pre-commit secret scan. This is a risk operation." >&2
+  exit 0
+fi
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "[gitleaks] gitleaks is required for commits." >&2
+  echo "[gitleaks] Install it, then retry. See docs/security.md." >&2
+  exit 1
+fi
+
+if git diff --cached --quiet --exit-code; then
+  exit 0
+fi
+
+echo "[gitleaks] scanning staged changes..."
+pnpm secrets:scan:staged

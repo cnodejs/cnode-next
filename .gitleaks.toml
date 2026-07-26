@@ -1,0 +1,48 @@
+title = "cnode-next gitleaks config"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Repository files that intentionally contain secret-like patterns"
+paths = [
+  '''(^|/)\.gitleaks\.toml$''',
+  '''(^|/)pnpm-lock\.yaml$''',
+]
+
+[[rules]]
+id = "alibaba-cloud-access-key-id"
+description = "Alibaba Cloud AccessKey ID"
+regex = '''\bLTAI[A-Za-z0-9]{12,30}\b'''
+tags = ["alibaba", "aliyun", "oss", "key"]
+
+[[rules]]
+id = "cnode-sensitive-env"
+description = "CNode sensitive environment variable assignment"
+regex = '''(?i)\b(AUTH_SESSION_SECRET|GITHUB_CLIENT_SECRET|GITHUB_ACCESS_TOKEN|SMTP_PASS|SMTP_PASSWORD|OSS_ACCESS_KEY_SECRET|OSS_SECRET_ACCESS_KEY|DB_PASSWORD|DATABASE_URL|POSTGRES_URL|REDIS_PASSWORD|REDIS_URL)\b[ \t]*[:=][ \t]*['"]?([^$'"\s#][^'"\s#]{7,})'''
+secretGroup = 2
+entropy = 3.5
+keywords = [
+  "AUTH_SESSION_SECRET",
+  "GITHUB_CLIENT_SECRET",
+  "GITHUB_ACCESS_TOKEN",
+  "SMTP_PASS",
+  "SMTP_PASSWORD",
+  "OSS_ACCESS_KEY_SECRET",
+  "OSS_SECRET_ACCESS_KEY",
+  "DB_PASSWORD",
+  "DATABASE_URL",
+  "POSTGRES_URL",
+  "REDIS_PASSWORD",
+  "REDIS_URL",
+]
+tags = ["cnode", "env", "secret"]
+
+[[rules.allowlists]]
+description = "Placeholder values in examples and docs"
+condition = "OR"
+regexTarget = "match"
+regexes = [
+  '''(?i)(your|example|placeholder|changeme|change-me|local-dev-secret|dummy|test|xxx|<[^>]+>)''',
+  '''\$\{[^}]+\}''',
+]
