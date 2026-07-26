@@ -23,14 +23,15 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     return { topics: cached.data, page, tab, limit, total: cached.total, kv };
   }
 
-  const res = await apiFetch<{ success: boolean; data: any[] }>(
+  const res = await apiFetch<{ success: boolean; data: any[]; total?: number }>(
     `/api/v1/topics?page=${page}&limit=${limit}&tab=${tab}`,
   );
 
   const topics = res.success ? res.data : [];
-  await kvSet(kv, cacheKey, { data: topics, total: topics.length }, 60);
+  const total = res.success ? res.total ?? topics.length : 0;
+  await kvSet(kv, cacheKey, { data: topics, total }, 60);
 
-  return { topics, page, tab, limit, total: topics.length, kv };
+  return { topics, page, tab, limit, total, kv };
 }
 
 const TABS = [

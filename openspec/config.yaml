@@ -10,13 +10,19 @@ context: |
     - Monorepo: pnpm workspace (no turborepo)
     - Frontend (apps/web): React Router v8 in SSR mode, deployed to Cloudflare Workers via @cloudflare/vite-plugin, TailwindCSS + shadcn/ui
     - Backend (apps/api): Hono on Node.js, deployed on a self-owned overseas server
-    - Database layer (packages/db): Drizzle ORM, SQLite for local dev, PostgreSQL for production
+    - Database layer (packages/db): Drizzle ORM, PostgreSQL-first for development and production
     - Shared (packages/shared): API contract types, Zod schemas, constants, pure utils
     - Cache/Session/Rate-limit: Redis (backend)
     - Image storage: Alibaba Cloud OSS with mirror pull from Qiniu (progressive migration)
     - Email: self-hosted SMTP (nodemailer), no third-party API
     - Auth: cookie-based session (cross-subdomain .cnodejs.org) + GitHub OAuth + local accounts (bcryptjs, verify legacy hashes)
     - Data migration: MongoDB → PostgreSQL one-time script, ObjectId → BIGINT (old links 404 acceptable)
+
+  语言：中文（简体）
+  所有 OpenSpec proposal、design、tasks、spec delta 必须使用简体中文撰写。
+  技术名词、代码路径、API 路由、环境变量、命令可以保留英文原文。
+  需求描述必须明确对应 legacy nodeclub 线上行为，避免使用模糊的“优化”“完善”“增强”。
+  若有功能不再迁移，必须在 Non-goals 或设计决策中写明废弃原因和线上兼容策略。
 
 rules:
   proposal:

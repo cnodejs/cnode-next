@@ -9,6 +9,7 @@ import { TimeAgo } from "~/components/TimeAgo";
 import { apiFetch } from "~/lib/api-client";
 import { requireUser } from "~/lib/auth";
 import { getAvatarFallback, getAvatarUrl } from "~/lib/brand";
+import { useAuthStore } from "~/lib/stores/auth-store";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -26,9 +27,13 @@ export async function loader({ request }: Route.LoaderArgs) {
     success: boolean;
     data: { has_read_messages: any[]; hasnot_read_messages: any[] };
   }>("/api/v1/messages", { headers: { cookie } });
+  const unread = res.success ? res.data.hasnot_read_messages || [] : [];
+  if (unread.length > 0) {
+    await apiFetch("/api/v1/message/mark_all", { method: "POST", headers: { cookie } });
+  }
   return {
     readMsgs: res.success ? res.data.has_read_messages || [] : [],
-    unreadMsgs: res.success ? res.data.hasnot_read_messages || [] : [],
+    unreadMsgs: unread,
   };
 }
 
@@ -36,12 +41,15 @@ export default function Messages({ loaderData }: Route.ComponentProps) {
   const { readMsgs: initialRead, unreadMsgs: initialUnread } = loaderData as any;
   const [readMsgs, setReadMsgs] = useState<any[]>(initialRead || []);
   const [unreadMsgs, setUnreadMsgs] = useState<any[]>(initialUnread || []);
+  const setUnreadCount = useAuthStore((s) => s.setUnreadCount);
+  const fetchUnread = useAuthStore((s) => s.fetchUnread);
   const { revalidate } = useRevalidator();
 
   useEffect(() => {
     setReadMsgs(initialRead || []);
     setUnreadMsgs(initialUnread || []);
-  }, [initialRead, initialUnread]);
+    fetchUnread();
+  }, [initialRead, initialUnread, fetchUnread]);
 
   const markOneRead = async (msgId: string) => {
     const res = await apiFetch<{ success: boolean }>(`/api/v1/message/mark_one/${msgId}`, {
@@ -51,7 +59,9 @@ export default function Messages({ loaderData }: Route.ComponentProps) {
       const msg = unreadMsgs.find((item) => item.id === msgId);
       setUnreadMsgs((items) => items.filter((item) => item.id !== msgId));
       if (msg) setReadMsgs((items) => [{ ...msg, has_read: true }, ...items]);
+      setUnreadCount(Math.max(0, unreadMsgs.length - 1));
       toast.success("已标记已读");
+      fetchUnread();
       revalidate();
     }
   };
@@ -61,7 +71,9 @@ export default function Messages({ loaderData }: Route.ComponentProps) {
     if (res.success) {
       setReadMsgs((items) => [...unreadMsgs.map((msg) => ({ ...msg, has_read: true })), ...items]);
       setUnreadMsgs([]);
+      setUnreadCount(0);
       toast.success("已全部标记已读");
+      fetchUnread();
       revalidate();
     }
   };

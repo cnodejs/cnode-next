@@ -2,17 +2,19 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { replyQueries, topicQueries, userQueries } from "../lib/db";
-import { linkUsers } from "@cnode/shared";
-import { SCORES } from "@cnode/shared";
-import { incrementScoreAndReplyCount } from "../lib/score";
+import { decrementScoreAndReplyCount, incrementScoreAndReplyCount } from "../lib/score";
 import { sendMessageToMentionUsers } from "../lib/at";
 import { sendReplyMessage, sendReply2Message } from "../lib/message";
 import { checkContent } from "../lib/moderation";
+import { perUserPerDay } from "../middleware/rate-limit";
 import type { AuthVars } from "../middleware/auth";
 
 const reply = new Hono<{
   Variables: AuthVars;
 }>();
+
+const CREATE_REPLY_SCORE = 5;
+const CREATE_REPLY_PER_DAY = 1000;
 
 const createReplySchema = z.object({
   accesstoken: z.string().optional(),
@@ -32,7 +34,11 @@ async function requestUser(c: any, accesstoken?: string) {
   return userQueries.getByToken(accesstoken);
 }
 
-reply.post("/topic/:topic_id/replies", zValidator("json", createReplySchema), async (c) => {
+reply.post(
+  "/topic/:topic_id/replies",
+  zValidator("json", createReplySchema),
+  perUserPerDay("create_reply", CREATE_REPLY_PER_DAY, true),
+  async (c) => {
   const user = c.get("user");
   if (!user) {
     return c.json({ success: false, error_msg: "未登录" }, 401);
@@ -64,7 +70,7 @@ reply.post("/topic/:topic_id/replies", zValidator("json", createReplySchema), as
   const newReply = await replyQueries.newAndSave(content, topicId, user.id, replyId);
 
   await topicQueries.updateLastReply(topicId, newReply.id);
-  await incrementScoreAndReplyCount(user.id, SCORES.CREATE_REPLY, 1);
+  await incrementScoreAndReplyCount(user.id, CREATE_REPLY_SCORE, 1);
 
   // Send reply message to topic author
   if (topicData.authorId !== user.id) {
@@ -72,6 +78,7 @@ reply.post("/topic/:topic_id/replies", zValidator("json", createReplySchema), as
   }
 
   // Send reply2 message if replying to a reply
+  const mentionExcludes = [topicData.authorId];
   if (replyId) {
     const parentReply = await replyQueries.getById(replyId);
     if (
@@ -80,16 +87,18 @@ reply.post("/topic/:topic_id/replies", zValidator("json", createReplySchema), as
       parentReply.authorId !== topicData.authorId
     ) {
       await sendReply2Message(parentReply.authorId, user.id, topicId, newReply.id);
+      mentionExcludes.push(parentReply.authorId);
     }
   }
 
   // Process @mentions
   const topicAuthor = await userQueries.getById(topicData.authorId);
   const newContent = content.replace(`@${topicAuthor?.loginname} `, "");
-  await sendMessageToMentionUsers(newContent, topicId, user.id, newReply.id);
+  await sendMessageToMentionUsers(newContent, topicId, user.id, newReply.id, mentionExcludes);
 
-  return c.json({ success: true, reply_id: String(newReply.id) });
-});
+    return c.json({ success: true, reply_id: String(newReply.id) });
+  },
+);
 
 reply.get("/reply/:id", async (c) => {
   const user = await requestUser(c, c.req.query("accesstoken"));
@@ -157,6 +166,32 @@ reply.post("/reply/:id/edit", zValidator("json", editReplySchema), async (c) => 
   await sendMessageToMentionUsers(body.content, topicData.id, user.id, replyId);
 
   return c.json({ success: true, reply_id: String(replyId) });
+});
+
+reply.post("/reply/:id/delete", async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  const user = await requestUser(c, body.accesstoken || c.req.query("accesstoken"));
+  if (!user) {
+    return c.json({ success: false, error_msg: "未登录" }, 401);
+  }
+
+  const replyId = Number(c.req.param("id"));
+  const replyData = await replyQueries.getById(replyId);
+  if (!replyData) {
+    return c.json({ success: false, error_msg: "评论不存在" }, 404);
+  }
+  if (replyData.deleted) {
+    return c.json({ success: false, error_msg: "评论已删除" }, 422);
+  }
+  if (replyData.authorId !== user.id && !c.get("isAdmin")) {
+    return c.json({ success: false, error_msg: "无权限删除" }, 403);
+  }
+
+  await replyQueries.softDelete(replyId);
+  await decrementScoreAndReplyCount(replyData.authorId, CREATE_REPLY_SCORE, 1);
+  await topicQueries.decrementReplyCount(replyData.topicId);
+
+  return c.json({ success: true, status: "success" });
 });
 
 reply.post("/reply/:reply_id/ups", async (c) => {

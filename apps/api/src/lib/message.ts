@@ -4,6 +4,13 @@ import type { MessageDTO } from "@cnode/shared";
 import { eq, and, desc, inArray } from "drizzle-orm";
 import { userQueries, topicQueries, replyQueries } from "./db";
 import { boolEq, boolValue } from "./db-compat";
+import { excerptMarkdown } from "./format";
+import { sendAtNotifyMail, sendReplyNotifyMail } from "./mail";
+
+function topicUrl(topicId: number, replyId?: number) {
+  const base = process.env.APP_WEB_BASE_URL || "https://cnodejs.org";
+  return `${base.replace(/\/+$/g, "")}/topic/${topicId}${replyId ? `#${replyId}` : ""}`;
+}
 
 export async function sendReplyMessage(
   masterId: number,
@@ -22,6 +29,19 @@ export async function sendReplyMessage(
     replyId,
     createAt: new Date().toISOString(),
   });
+  const [master, topic, reply] = await Promise.all([
+    userQueries.getById(masterId),
+    topicQueries.getById(topicId),
+    replyQueries.getById(replyId),
+  ]);
+  if (master?.receiveReplyMail && master.email && topic) {
+    await sendReplyNotifyMail(
+      master.email,
+      topic.title || "CNode 话题",
+      excerptMarkdown(reply?.content || "", 160),
+      topicUrl(topicId, replyId),
+    );
+  }
 }
 
 export async function sendReply2Message(
@@ -43,12 +63,7 @@ export async function sendReply2Message(
   });
 }
 
-export async function sendAtMessage(
-  masterId: number,
-  authorId: number,
-  topicId: number,
-  replyId: number,
-) {
+export async function sendAtMessage(masterId: number, authorId: number, topicId: number, replyId: number, content = "") {
   if (masterId === authorId) return;
 
   const db = getDb();
@@ -60,6 +75,15 @@ export async function sendAtMessage(
     replyId,
     createAt: new Date().toISOString(),
   });
+  const [master, topic] = await Promise.all([userQueries.getById(masterId), topicQueries.getById(topicId)]);
+  if (master?.receiveAtMail && master.email && topic) {
+    await sendAtNotifyMail(
+      master.email,
+      topic.title || "CNode 话题",
+      excerptMarkdown(content, 160),
+      topicUrl(topicId, replyId || undefined),
+    );
+  }
 }
 
 export async function getMessageRelations(msg: typeof messages.$inferSelect) {

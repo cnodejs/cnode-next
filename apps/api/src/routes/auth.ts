@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import OSS from "ali-oss";
 import bcryptjs from "bcryptjs";
 import { Buffer } from "node:buffer";
@@ -18,10 +19,13 @@ import {
   authMiddleware,
   type AuthVars,
 } from "../middleware/auth";
+import { perIpPerDay } from "../middleware/rate-limit";
 
 const auth = new Hono<{
   Variables: AuthVars;
 }>();
+
+const CREATE_USER_PER_IP = 1000;
 
 const presignUploadSchema = z.object({
   filename: z.string().max(255).optional(),
@@ -110,7 +114,57 @@ const resetPassSchema = z.object({
     .regex(/[0-9]/),
 });
 
+const githubCreateSchema = z.object({
+  isnew: z.boolean().optional(),
+  name: z.string().optional(),
+  pass: z.string().optional(),
+});
+
 const RETRIEVE_KEY_TTL = 24 * 60 * 60 * 1000;
+const GITHUB_PENDING_COOKIE = "github_profile";
+
+type PendingGithubProfile = {
+  id: string;
+  login: string;
+  email: string;
+  avatarUrl?: string;
+  accessToken: string;
+};
+
+function webBaseUrl() {
+  return process.env.APP_WEB_BASE_URL || "http://localhost:5173";
+}
+
+function cookieSecret() {
+  return process.env.AUTH_SESSION_SECRET || "local-dev-secret";
+}
+
+function setPendingGithubProfile(c: any, profile: PendingGithubProfile) {
+  setCookie(c, GITHUB_PENDING_COOKIE, Buffer.from(JSON.stringify(profile)).toString("base64url"), {
+    path: "/",
+    httpOnly: true,
+    signed: true,
+    secret: cookieSecret(),
+    maxAge: 10 * 60,
+    sameSite: "Lax",
+  });
+}
+
+function clearPendingGithubProfile(c: any) {
+  deleteCookie(c, GITHUB_PENDING_COOKIE, { path: "/" });
+}
+
+function getPendingGithubProfile(c: any): PendingGithubProfile | null {
+  const raw = getCookie(c, GITHUB_PENDING_COOKIE, cookieSecret());
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(Buffer.from(raw, "base64url").toString("utf8"));
+    if (!parsed.id || !parsed.login || !parsed.email || !parsed.accessToken) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
 
 auth.post("/auth/local/login", zValidator("json", signinSchema), async (c) => {
   const { name, pass } = c.req.valid("json");
@@ -137,7 +191,11 @@ auth.post("/auth/local/login", zValidator("json", signinSchema), async (c) => {
   return c.json({ success: true });
 });
 
-auth.post("/auth/local/signup", zValidator("json", signupSchema), async (c) => {
+auth.post(
+  "/auth/local/signup",
+  perIpPerDay("create_user_per_ip", CREATE_USER_PER_IP, true),
+  zValidator("json", signupSchema),
+  async (c) => {
   const { loginname, pass, email } = c.req.valid("json");
 
   const existingByLogin = await userQueries.getByLoginName(loginname.toLowerCase());
@@ -168,8 +226,9 @@ auth.post("/auth/local/signup", zValidator("json", signupSchema), async (c) => {
     await sendActiveMail(email, retrieveKey);
   }
 
-  return c.json({ success: true, message: "注册成功,请查收邮件激活账号" });
-});
+    return c.json({ success: true, message: "注册成功,请查收邮件激活账号" });
+  },
+);
 
 auth.get("/auth/local/active_account", async (c) => {
   const key = c.req.query("key");
@@ -295,7 +354,7 @@ auth.get("/auth/github/callback", async (c) => {
     }
 
     if (!email) {
-      return c.json({ success: false, error_msg: "no_github_email" }, 400);
+      return c.redirect(`${webBaseUrl()}/auth/github/no-email`);
     }
 
     let user = await userQueries.getByGithubId(String(profile.id));
@@ -308,29 +367,19 @@ auth.get("/auth/github/callback", async (c) => {
         avatar: profile.avatar_url,
       });
     } else {
-      const existingByEmail = await userQueries.getByEmail(email);
-      if (existingByEmail) {
-        return c.json({ success: false, error_msg: "github_email_exists" }, 409);
-      }
-
-      user = await userQueries.newAndSave({
-        loginname: profile.login,
-        pass: await bcryptjs.hash(uuidv4(), 10),
+      setPendingGithubProfile(c, {
+        id: String(profile.id),
+        login: profile.login,
         email,
-        avatar: profile.avatar_url,
-        active: true,
+        avatarUrl: profile.avatar_url,
+        accessToken: ghAccessToken,
       });
-      await userQueries.updateGithubInfo(user.id, {
-        githubId: String(profile.id),
-        githubUsername: profile.login,
-        githubAccessToken: ghAccessToken,
-      });
+      return c.redirect(`${webBaseUrl()}/auth/github/new`);
     }
 
     setSessionCookie(c, user.id);
     const redirectPath = c.req.query("redirect") || "/";
-    const webBase = process.env.APP_WEB_BASE_URL || "http://localhost:5173";
-    return c.redirect(`${webBase}${redirectPath}`);
+    return c.redirect(`${webBaseUrl()}${redirectPath}`);
   } catch (err) {
     console.error("[github oauth] error:", err);
     return c.json(
@@ -339,6 +388,68 @@ auth.get("/auth/github/callback", async (c) => {
     );
   }
 });
+
+auth.get("/auth/github/pending", async (c) => {
+  const profile = getPendingGithubProfile(c);
+  if (!profile) return c.json({ success: false, error_msg: "GitHub 登录状态已过期" }, 401);
+  const existingByEmail = await userQueries.getByEmail(profile.email);
+  return c.json({
+    success: true,
+    data: {
+      loginname: profile.login,
+      email: profile.email,
+      avatar_url: profile.avatarUrl,
+      email_exists: !!existingByEmail,
+    },
+  });
+});
+
+auth.post(
+  "/auth/github/create",
+  perIpPerDay("create_user_per_ip", CREATE_USER_PER_IP, true),
+  zValidator("json", githubCreateSchema),
+  async (c) => {
+  const profile = getPendingGithubProfile(c);
+  if (!profile) return c.json({ success: false, error_msg: "GitHub 登录状态已过期，请重新授权" }, 401);
+
+  const body = c.req.valid("json");
+  let user: Awaited<ReturnType<typeof userQueries.getById>> | null = null;
+
+  if (body.isnew) {
+    const loginname = profile.login.toLowerCase();
+    const existingByLogin = await userQueries.getByLoginName(loginname);
+    if (existingByLogin) return c.json({ success: false, error_msg: "GitHub 用户名已被使用，请关联老账号" }, 422);
+    const existingByEmail = await userQueries.getByEmail(profile.email);
+    if (existingByEmail) return c.json({ success: false, error_msg: "该邮箱已注册，请关联老账号" }, 422);
+
+    user = await userQueries.newAndSave({
+      loginname,
+      pass: await bcryptjs.hash(uuidv4(), 10),
+      email: profile.email,
+      avatar: profile.avatarUrl,
+      active: true,
+    });
+  } else {
+    const loginname = (body.name || "").trim().toLowerCase();
+    const pass = body.pass || "";
+    if (!loginname || !pass) return c.json({ success: false, error_msg: "账号名或密码错误" }, 403);
+    user = await userQueries.getByLoginName(loginname);
+    if (!user || !user.pass) return c.json({ success: false, error_msg: "账号名或密码错误" }, 403);
+    const equal = await bcryptjs.compare(pass, user.pass);
+    if (!equal) return c.json({ success: false, error_msg: "账号名或密码错误" }, 403);
+  }
+
+  await userQueries.updateGithubInfo(user.id, {
+    githubId: profile.id,
+    githubUsername: profile.login,
+    githubAccessToken: profile.accessToken,
+    avatar: profile.avatarUrl,
+  });
+  clearPendingGithubProfile(c);
+  setSessionCookie(c, user.id);
+    return c.json({ success: true });
+  },
+);
 
 auth.post("/auth/signout", (c) => {
   clearSessionCookie(c);

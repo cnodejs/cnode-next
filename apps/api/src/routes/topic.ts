@@ -3,25 +3,20 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import _ from "lodash";
 import { topicQueries, userQueries, replyQueries } from "../lib/db";
-import { linkUsers } from "@cnode/shared";
-import { SCORES } from "@cnode/shared";
 import { incrementScoreAndTopicCount } from "../lib/score";
 import { sendMessageToMentionUsers } from "../lib/at";
 import { checkContent } from "../lib/moderation";
 import { excerptMarkdown, userSummary } from "../lib/format";
+import { renderMarkdown } from "../lib/markdown";
+import { perUserPerDay } from "../middleware/rate-limit";
 import type { AuthVars } from "../middleware/auth";
 
 const topic = new Hono<{
   Variables: AuthVars;
 }>();
 
-const allTabs = ["share", "ask", "job"];
-
-function renderContent(content: string, mdrender: boolean): string {
-  if (!mdrender) return content;
-  // TODO: markdown render
-  return linkUsers(content);
-}
+const CREATE_TOPIC_SCORE = 5;
+const CREATE_TOPIC_PER_DAY = 1000;
 
 topic.get("/topics", async (c) => {
   const page = Math.max(1, Number(c.req.query("page")) || 1);
@@ -43,6 +38,7 @@ topic.get("/topics", async (c) => {
     limit,
     offset: (page - 1) * limit,
   });
+  const total = await topicQueries.countByQuery(query);
 
   const data = await Promise.all(
     topicsList.map(async (t) => {
@@ -51,7 +47,7 @@ topic.get("/topics", async (c) => {
         id: String(t.id),
         author_id: String(t.authorId),
         tab: t.tab,
-        content: renderContent(t.content, mdrender),
+        content: renderMarkdown(t.content, mdrender),
         title: t.title,
         last_reply_at: t.lastReplyAt,
         good: !!t.good,
@@ -64,7 +60,7 @@ topic.get("/topics", async (c) => {
     }),
   );
 
-  return c.json({ success: true, data });
+  return c.json({ success: true, data, total });
 });
 
 topic.get("/topic/:id", async (c) => {
@@ -112,7 +108,7 @@ topic.get("/topic/:id", async (c) => {
       return {
         id: String(r.id),
         author: userSummary(replyAuthor),
-        content: renderContent(r.content, mdrender),
+        content: renderMarkdown(r.content, mdrender),
         ups,
         create_at: r.createAt,
         reply_id: r.replyId ? String(r.replyId) : null,
@@ -135,7 +131,7 @@ topic.get("/topic/:id", async (c) => {
     id: String(topicData.id),
     author_id: String(topicData.authorId),
     tab: topicData.tab,
-    content: renderContent(topicData.content, mdrender),
+    content: renderMarkdown(topicData.content, mdrender),
     title: topicData.title,
     last_reply_at: topicData.lastReplyAt,
     good: !!topicData.good,
@@ -158,7 +154,11 @@ const createTopicSchema = z.object({
   content: z.string().min(1),
 });
 
-topic.post("/topics", zValidator("json", createTopicSchema), async (c) => {
+topic.post(
+  "/topics",
+  zValidator("json", createTopicSchema),
+  perUserPerDay("create_topic", CREATE_TOPIC_PER_DAY, true),
+  async (c) => {
   const user = c.get("user");
   if (!user) {
     return c.json({ success: false, error_msg: "未登录" }, 401);
@@ -185,11 +185,12 @@ topic.post("/topics", zValidator("json", createTopicSchema), async (c) => {
   }
 
   const newTopic = await topicQueries.newAndSave(title, content, tab, user.id);
-  await incrementScoreAndTopicCount(user.id, SCORES.CREATE_TOPIC, 1);
+  await incrementScoreAndTopicCount(user.id, CREATE_TOPIC_SCORE, 1);
   await sendMessageToMentionUsers(content, newTopic.id, user.id);
 
-  return c.json({ success: true, topic_id: String(newTopic.id) });
-});
+    return c.json({ success: true, topic_id: String(newTopic.id) });
+  },
+);
 
 const updateTopicSchema = z.object({
   accesstoken: z.string().optional(),

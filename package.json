@@ -16,6 +16,7 @@
     "migrate:mongo-to-pg": "tsx scripts/migrate-mongo-to-pg.ts",
     "migrate:reconcile": "tsx scripts/reconcile-migration.ts",
     "verify:api-contract": "tsx scripts/verify-api-contract.ts",
+    "verify:web-url-parity": "tsx scripts/verify-web-url-parity.ts",
     "format": "oxfmt .",
     "secrets:scan": "gitleaks git --config .gitleaks.toml --redact --no-banner",
     "secrets:scan:staged": "gitleaks git --config .gitleaks.toml --redact --no-banner --pre-commit --staged",

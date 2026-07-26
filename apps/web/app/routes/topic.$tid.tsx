@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import type { Route } from "../../.react-router/types/app/routes/+types/topic.$tid";
 import { Link, useRevalidator } from "react-router";
 import { toast } from "sonner";
-import { MessageSquare, Star, ThumbsUp } from "lucide-react";
+import { MessageSquare, Star, ThumbsUp, Trash2 } from "lucide-react";
 import { Layout } from "~/components/Layout";
 import { MarkdownView } from "~/components/MarkdownView";
 import { TimeAgo } from "~/components/TimeAgo";
@@ -26,7 +26,7 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
   if (cached) return { topic: cached, kv, currentUser };
 
   const cookie = request.headers.get("cookie") || "";
-  const res = await apiFetch<{ success: boolean; data: any }>(`/api/v1/topic/${tid}`, {
+  const res = await apiFetch<{ success: boolean; data: any }>(`/api/v1/topic/${tid}?mdrender=false`, {
     headers: { cookie },
   });
   if (!res.success) return { topic: null, kv, currentUser };
@@ -354,6 +354,7 @@ function ReplyItem({
 }) {
   const author = reply.author;
   const [upping, setUpping] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const { revalidate } = useRevalidator();
 
   async function toggleUp() {
@@ -379,7 +380,25 @@ function ReplyItem({
     }
   }
 
+  async function deleteReply() {
+    if (!currentUser) return;
+    if (!confirm("确认删除这条回复?")) return;
+    setDeleting(true);
+    const res = await apiFetch<{ success: boolean; error_msg?: string }>(`/api/v1/reply/${reply.id}/delete`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    }).catch(() => ({ success: false, error_msg: "删除失败" }));
+    setDeleting(false);
+    if (res.success) {
+      toast.success("回复已删除");
+      revalidate();
+    } else {
+      toast.error(res.error_msg || "删除失败");
+    }
+  }
+
   const upCount = Array.isArray(reply.ups) ? reply.ups.length : 0;
+  const canDelete = currentUser && (currentUser.is_admin || currentUser.loginname === author?.loginname);
   return (
     <Card id={reply.id} className="scroll-mt-24 overflow-hidden">
       <div className="flex items-center gap-3 border-b border-border/80 bg-surface-subtle px-4 py-3 sm:px-5">
@@ -426,6 +445,18 @@ function ReplyItem({
               <Button type="button" variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={onReply}>
                 <MessageSquare className="h-3 w-3" /> 回复
               </Button>
+              {canDelete && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2 text-xs text-destructive hover:text-destructive"
+                  onClick={deleteReply}
+                  disabled={deleting}
+                >
+                  <Trash2 className="h-3 w-3" /> {deleting ? "删除中" : "删除"}
+                </Button>
+              )}
             </div>
           </div>
         </div>

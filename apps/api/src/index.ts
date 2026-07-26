@@ -5,6 +5,7 @@ import { logger } from "hono/logger";
 import { cors } from "hono/cors";
 import { errorHandler } from "./middleware/error";
 import { authMiddleware, type AuthVars } from "./middleware/auth";
+import { ipBanMiddleware } from "./middleware/ip-ban";
 import { apiRoutes } from "./routes/index";
 
 const app = new Hono<{
@@ -21,6 +22,7 @@ app.use(
 );
 app.use("*", errorHandler());
 app.use("*", authMiddleware());
+app.use("*", ipBanMiddleware());
 
 app.route("/api/v1", apiRoutes);
 

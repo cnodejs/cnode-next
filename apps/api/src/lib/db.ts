@@ -12,7 +12,7 @@ import {
   ipBans,
   siteSettings,
 } from "@cnode/db";
-import { eq, and, desc, inArray, sql } from "drizzle-orm";
+import { eq, and, desc, inArray, sql, count } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { boolEq, boolValue } from "./db-compat";
 
@@ -191,6 +191,34 @@ export const topicQueries = {
     return q.orderBy(desc(topics.top), desc(topics.lastReplyAt)).limit(limit).offset(offset);
   },
 
+  async countByQuery(where: any) {
+    const db = getDb();
+    let q = db.select({ c: count() }).from(topics).$dynamic();
+    const conditions = [];
+    if (where.deleted !== undefined) {
+      conditions.push(boolEq(topics.deleted, !!where.deleted));
+    }
+    if (where.tab) {
+      conditions.push(eq(topics.tab, where.tab));
+    }
+    if (where.excludeTabs?.length) {
+      conditions.push(
+        sql`(${topics.tab} is null or (${topics.tab} <> ${where.excludeTabs[0]} and ${topics.tab} <> ${where.excludeTabs[1]}))`,
+      );
+    }
+    if (where.good !== undefined) {
+      conditions.push(boolEq(topics.good, !!where.good));
+    }
+    if (where.authorId !== undefined) {
+      conditions.push(eq(topics.authorId, where.authorId));
+    }
+    if (conditions.length > 0) {
+      q = q.where(conditions.length === 1 ? conditions[0] : and(...conditions)) as any;
+    }
+    const result = await q;
+    return Number(result[0]?.c || 0);
+  },
+
   async newAndSave(title: string, content: string, tab: string, authorId: number) {
     const db = getDb();
     const now = new Date().toISOString();
@@ -205,7 +233,11 @@ export const topicQueries = {
     const db = getDb();
     await db
       .update(topics)
-      .set({ lastReplyId: replyId, lastReplyAt: new Date().toISOString() })
+      .set({
+        lastReplyId: replyId,
+        lastReplyAt: new Date().toISOString(),
+        replyCount: sql`${topics.replyCount} + 1`,
+      })
       .where(eq(topics.id, topicId));
   },
 
@@ -229,7 +261,15 @@ export const topicQueries = {
     const db = getDb();
     await db
       .update(topics)
-      .set({ collectCount: sql`${topics.collectCount} - 1` })
+      .set({ collectCount: sql`case when ${topics.collectCount} - 1 < 0 then 0 else ${topics.collectCount} - 1 end` })
+      .where(eq(topics.id, id));
+  },
+
+  async decrementReplyCount(id: number) {
+    const db = getDb();
+    await db
+      .update(topics)
+      .set({ replyCount: sql`case when ${topics.replyCount} - 1 < 0 then 0 else ${topics.replyCount} - 1 end` })
       .where(eq(topics.id, id));
   },
 
@@ -289,6 +329,11 @@ export const replyQueries = {
       .update(replies)
       .set({ content, updateAt: new Date().toISOString() } as any)
       .where(eq(replies.id, id));
+  },
+
+  async softDelete(id: number) {
+    const db = getDb();
+    await db.update(replies).set({ deleted: boolValue(true) } as any).where(eq(replies.id, id));
   },
 
   async getUpsByReplyIds(replyIds: number[]) {

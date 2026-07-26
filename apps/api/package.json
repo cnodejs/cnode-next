@@ -21,6 +21,7 @@
     "hono": "^4.6.0",
     "ioredis": "^5.4.0",
     "lodash": "^4.18.1",
+    "micromark": "4.0.2",
     "nodemailer": "^7.0.0",
     "undici": "^8.8.0",
     "uuid": "^11.0.0",

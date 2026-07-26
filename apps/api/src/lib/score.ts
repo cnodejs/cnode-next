@@ -41,8 +41,8 @@ export async function decrementScoreAndTopicCount(
   await db
     .update(users)
     .set({
-      score: sql`${users.score} - ${score}`,
-      topicCount: sql`${users.topicCount} - ${topicCount}`,
+      score: sql`case when ${users.score} - ${score} < 0 then 0 else ${users.score} - ${score} end`,
+      topicCount: sql`case when ${users.topicCount} - ${topicCount} < 0 then 0 else ${users.topicCount} - ${topicCount} end`,
     })
     .where(eq(users.id, userId));
 }
@@ -56,8 +56,8 @@ export async function decrementScoreAndReplyCount(
   await db
     .update(users)
     .set({
-      score: sql`${users.score} - ${score}`,
-      replyCount: sql`${users.replyCount} - ${replyCount}`,
+      score: sql`case when ${users.score} - ${score} < 0 then 0 else ${users.score} - ${score} end`,
+      replyCount: sql`case when ${users.replyCount} - ${replyCount} < 0 then 0 else ${users.replyCount} - ${replyCount} end`,
     })
     .where(eq(users.id, userId));
 }
@@ -74,6 +74,6 @@ export async function decrementCollectTopicCount(userId: number) {
   const db = getDb();
   await db
     .update(users)
-    .set({ collectTopicCount: sql`${users.collectTopicCount} - 1` })
+    .set({ collectTopicCount: sql`case when ${users.collectTopicCount} - 1 < 0 then 0 else ${users.collectTopicCount} - 1 end` })
     .where(eq(users.id, userId));
 }

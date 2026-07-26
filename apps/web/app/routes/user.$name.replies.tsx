@@ -5,6 +5,7 @@ import { Link } from "react-router";
 import { TimeAgo } from "~/components/TimeAgo";
 import { ContentPage } from "~/components/PageShell";
 import { UserHero, UserTabs } from "./user.$name";
+import { Pagination } from "~/components/Pagination";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 
 export function meta({ data }: Route.MetaArgs) {
@@ -12,15 +13,19 @@ export function meta({ data }: Route.MetaArgs) {
   return [{ title: `${data.loginname} 的回复 · CNode` }];
 }
 
-export async function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params, request }: Route.LoaderArgs) {
   const name = params.name!;
-  const res = await apiFetch<{ success: boolean; data: any }>(`/api/v1/user/${name}`);
-  const replies = res.success && res.data?.recent_replies ? res.data.recent_replies : [];
-  return { replies, user: res.success ? res.data : null, loginname: name };
+  const url = new URL(request.url);
+  const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
+  const limit = 50;
+  const res = await apiFetch<{ success: boolean; data: any[]; total?: number; user?: any }>(
+    `/api/v1/user/${name}/replies?page=${page}&limit=${limit}`,
+  );
+  return { replies: res.success ? res.data || [] : [], user: res.success ? res.user : null, loginname: name, page, limit, total: res.total || 0 };
 }
 
 export default function UserReplies({ loaderData }: Route.ComponentProps) {
-  const { replies, user, loginname } = loaderData as any;
+  const { replies, user, loginname, page, limit, total } = loaderData as any;
 
   return (
     <Layout>
@@ -53,6 +58,7 @@ export default function UserReplies({ loaderData }: Route.ComponentProps) {
             )}
           </CardContent>
         </Card>
+        <Pagination page={page} total={total} limit={limit} basePath={`/user/${loginname}/replies`} />
       </ContentPage>
     </Layout>
   );

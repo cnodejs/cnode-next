@@ -7,7 +7,7 @@ import {
   updateMessagesToRead,
   updateOneMessageToRead,
 } from "../lib/message";
-import { linkUsers } from "@cnode/shared";
+import { renderMarkdown } from "../lib/markdown";
 import type { AuthVars } from "../middleware/auth";
 
 const message = new Hono<{
@@ -64,7 +64,7 @@ message.get("/messages", async (c) => {
       reply: relations.reply
         ? {
             id: String(relations.reply.id),
-            content: mdrender ? linkUsers(relations.reply.content) : relations.reply.content,
+            content: renderMarkdown(relations.reply.content, mdrender),
             ups: [],
             create_at: relations.reply.createAt,
           }
@@ -72,10 +72,12 @@ message.get("/messages", async (c) => {
     };
   };
 
-  const [hasRead, hasUnread] = await Promise.all([
+  const [hasReadRaw, hasUnreadRaw] = await Promise.all([
     Promise.all(readMsgs.map(formatMessage)),
     Promise.all(unreadMsgs.map(formatMessage)),
   ]);
+  const hasRead = hasReadRaw.filter((msg: any) => msg.author?.loginname && msg.topic);
+  const hasUnread = hasUnreadRaw.filter((msg: any) => msg.author?.loginname && msg.topic);
 
   return c.json({
     success: true,
