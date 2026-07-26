@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import type { Route } from "../../.react-router/types/app/routes/+types/topic.$tid";
 import { Link, useRevalidator } from "react-router";
 import { toast } from "sonner";
-import { MessageSquare, Star } from "lucide-react";
+import { MessageSquare, Star, ThumbsUp } from "lucide-react";
 import { Layout } from "~/components/Layout";
 import { MarkdownView } from "~/components/MarkdownView";
 import { TimeAgo } from "~/components/TimeAgo";
@@ -21,13 +21,16 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
   const tid = params.tid!;
   const cacheKey = `topic:${tid}`;
   const kv = (context as any)?.cloudflare?.env?.KV;
-  const cached = await kvGet<any>(kv, cacheKey);
   const currentUser = await getCurrentUser(request);
+  const cached = currentUser ? null : await kvGet<any>(kv, cacheKey);
   if (cached) return { topic: cached, kv, currentUser };
 
-  const res = await apiFetch<{ success: boolean; data: any }>(`/api/v1/topic/${tid}`);
+  const cookie = request.headers.get("cookie") || "";
+  const res = await apiFetch<{ success: boolean; data: any }>(`/api/v1/topic/${tid}`, {
+    headers: { cookie },
+  });
   if (!res.success) return { topic: null, kv, currentUser };
-  await kvSet(kv, cacheKey, res.data, 60);
+  if (!currentUser) await kvSet(kv, cacheKey, res.data, 60);
   return { topic: res.data, kv, currentUser };
 }
 
@@ -80,7 +83,7 @@ export default function TopicDetail({ loaderData }: Route.ComponentProps) {
               />
             </CardContent>
           </Card>
-          <TopicActions topic={topic} />
+          <TopicActions topic={topic} currentUser={currentUser} />
           <ReplySection replies={topic.replies || []} topicId={topic.id} currentUser={currentUser} />
         </article>
       </ReadingGrid>
@@ -205,24 +208,34 @@ function TopicContext({ topic }: { topic: any }) {
   );
 }
 
-function TopicActions({ topic }: { topic: any }) {
+function TopicActions({ topic, currentUser }: { topic: any; currentUser: any }) {
   const [collecting, setCollecting] = useState(false);
+  const { revalidate } = useRevalidator();
 
-  async function collect() {
+  async function toggleCollect() {
+    if (!currentUser) {
+      toast.error("登录后即可收藏话题");
+      return;
+    }
     setCollecting(true);
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>("/api/v1/topic_collect/collect", {
+    const path = topic.is_collect ? "/api/v1/topic_collect/de_collect" : "/api/v1/topic_collect/collect";
+    const res = await apiFetch<{ success: boolean; error_msg?: string }>(path, {
       method: "POST",
       body: JSON.stringify({ topic_id: topic.id }),
-    }).catch(() => ({ success: false, error_msg: "收藏失败" }));
+    }).catch(() => ({ success: false, error_msg: topic.is_collect ? "取消收藏失败" : "收藏失败" }));
     setCollecting(false);
-    if (res.success) toast.success("已收藏话题");
-    else toast.error(res.error_msg || "收藏失败");
+    if (res.success) {
+      toast.success(topic.is_collect ? "已取消收藏" : "已收藏话题");
+      revalidate();
+    } else {
+      toast.error(res.error_msg || (topic.is_collect ? "取消收藏失败" : "收藏失败"));
+    }
   }
 
   return (
     <div className="flex flex-wrap gap-3">
-      <Button variant="outline" size="sm" onClick={collect} disabled={collecting}>
-        <Star className="h-4 w-4" /> {collecting ? "收藏中" : "收藏话题"}
+      <Button variant={topic.is_collect ? "default" : "outline"} size="sm" onClick={toggleCollect} disabled={collecting}>
+        <Star className="h-4 w-4" /> {collecting ? "处理中" : topic.is_collect ? "取消收藏" : "收藏话题"}
       </Button>
       <Button asChild variant="ghost" size="sm">
         <a href="#replies">
@@ -286,7 +299,7 @@ function ReplySection({
       ) : (
         <div className="space-y-3">
           {replies.map((reply, index) => (
-            <ReplyItem key={reply.id} reply={reply} floor={index + 1} onReply={() => startReply(reply)} />
+            <ReplyItem key={reply.id} reply={reply} floor={index + 1} currentUser={currentUser} onReply={() => startReply(reply)} />
           ))}
         </div>
       )}
@@ -328,8 +341,45 @@ function ReplySection({
   );
 }
 
-function ReplyItem({ reply, floor, onReply }: { reply: any; floor: number; onReply: () => void }) {
+function ReplyItem({
+  reply,
+  floor,
+  currentUser,
+  onReply,
+}: {
+  reply: any;
+  floor: number;
+  currentUser: any;
+  onReply: () => void;
+}) {
   const author = reply.author;
+  const [upping, setUpping] = useState(false);
+  const { revalidate } = useRevalidator();
+
+  async function toggleUp() {
+    if (!currentUser) {
+      toast.error("登录后即可点赞回复");
+      return;
+    }
+    setUpping(true);
+    const res: { success: boolean; action?: "up" | "down"; error_msg?: string } = await apiFetch<{
+      success: boolean;
+      action?: "up" | "down";
+      error_msg?: string;
+    }>(`/api/v1/reply/${reply.id}/ups`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    }).catch(() => ({ success: false, error_msg: "点赞失败" }));
+    setUpping(false);
+    if (res.success) {
+      toast.success(res.action === "down" ? "已取消点赞" : "已点赞");
+      revalidate();
+    } else {
+      toast.error(res.error_msg || "点赞失败");
+    }
+  }
+
+  const upCount = Array.isArray(reply.ups) ? reply.ups.length : 0;
   return (
     <Card id={reply.id} className="scroll-mt-24 overflow-hidden">
       <div className="flex items-center gap-3 border-b border-border/80 bg-surface-subtle px-4 py-3 sm:px-5">
@@ -362,9 +412,21 @@ function ReplyItem({ reply, floor, onReply }: { reply: any; floor: number; onRep
               </a>
             )}
             <MarkdownView content={reply.content} />
-            <Button type="button" variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={onReply}>
-              <MessageSquare className="h-3 w-3" /> 回复
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant={reply.is_uped ? "default" : "ghost"}
+                size="sm"
+                className="h-8 px-2 text-xs"
+                onClick={toggleUp}
+                disabled={upping}
+              >
+                <ThumbsUp className="h-3 w-3" /> {upping ? "处理中" : upCount > 0 ? `${upCount} 赞` : "赞"}
+              </Button>
+              <Button type="button" variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={onReply}>
+                <MessageSquare className="h-3 w-3" /> 回复
+              </Button>
+            </div>
           </div>
         </div>
       </CardContent>

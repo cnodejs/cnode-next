@@ -92,6 +92,13 @@ topic.get("/topic/:id", async (c) => {
 
   const author = await userQueries.getById(topicData.authorId);
   const repliesList = await replyQueries.getByTopicId(id);
+  const replyUps = await replyQueries.getUpsByReplyIds(repliesList.map((reply) => reply.id));
+  const upsByReplyId = new Map<number, string[]>();
+  for (const up of replyUps) {
+    const list = upsByReplyId.get(up.replyId) || [];
+    list.push(String(up.userId));
+    upsByReplyId.set(up.replyId, list);
+  }
 
   const replyMap = new Map(repliesList.map((reply) => [reply.id, reply]));
   const repliesData = await Promise.all(
@@ -101,11 +108,12 @@ topic.get("/topic/:id", async (c) => {
         ? replyMap.get(r.replyId) || (await replyQueries.getById(r.replyId))
         : null;
       const parentAuthor = parentReply ? await userQueries.getById(parentReply.authorId) : null;
+      const ups = upsByReplyId.get(r.id) || [];
       return {
         id: String(r.id),
         author: userSummary(replyAuthor),
         content: renderContent(r.content, mdrender),
-        ups: [],
+        ups,
         create_at: r.createAt,
         reply_id: r.replyId ? String(r.replyId) : null,
         reply_to: parentReply
@@ -116,10 +124,12 @@ topic.get("/topic/:id", async (c) => {
               deleted: !!parentReply.deleted,
             }
           : null,
-        is_uped: false,
+        is_uped: currentUser ? ups.includes(String(currentUser.id)) : false,
       };
     }),
   );
+
+  const isCollect = currentUser ? await topicQueries.isCollected(id, currentUser.id) : false;
 
   const result: any = {
     id: String(topicData.id),
@@ -135,10 +145,8 @@ topic.get("/topic/:id", async (c) => {
     create_at: topicData.createAt,
     author: userSummary(author),
     replies: repliesData,
-    is_collect: false,
+    is_collect: isCollect,
   };
-
-  // TODO: check is_collect if currentUser
 
   return c.json({ success: true, data: result });
 });
@@ -192,12 +200,16 @@ const updateTopicSchema = z.object({
 });
 
 topic.post("/topics/update", zValidator("json", updateTopicSchema), async (c) => {
-  const user = c.get("user");
+  const body = c.req.valid("json");
+  let user = c.get("user");
+  if (!user && body.accesstoken) {
+    user = await userQueries.getByToken(body.accesstoken);
+  }
   if (!user) {
     return c.json({ success: false, error_msg: "未登录" }, 401);
   }
 
-  const { topic_id, title, tab, content } = c.req.valid("json");
+  const { topic_id, title, tab, content } = body;
   const tid = Number(topic_id);
 
   const titleCheck = await checkContent(title);
@@ -216,7 +228,7 @@ topic.post("/topics/update", zValidator("json", updateTopicSchema), async (c) =>
   }
 
   const topicData = await topicQueries.getById(tid);
-  if (!topicData) {
+  if (!topicData || topicData.deleted) {
     return c.json({ success: false, error_msg: "话题不存在" }, 404);
   }
 
@@ -224,7 +236,11 @@ topic.post("/topics/update", zValidator("json", updateTopicSchema), async (c) =>
     return c.json({ success: false, error_msg: "无权限编辑" }, 403);
   }
 
-  // TODO: update topic
+  if (topicData.lock && !c.get("isAdmin")) {
+    return c.json({ success: false, error_msg: "话题已锁定" }, 403);
+  }
+
+  await topicQueries.updateTopic(tid, { title, tab, content });
   await sendMessageToMentionUsers(content, tid, user.id);
 
   return c.json({ success: true, topic_id: String(tid) });

@@ -3,6 +3,7 @@ import { messages } from "@cnode/db";
 import type { MessageDTO } from "@cnode/shared";
 import { eq, and, desc, inArray } from "drizzle-orm";
 import { userQueries, topicQueries, replyQueries } from "./db";
+import { boolEq, boolValue } from "./db-compat";
 
 export async function sendReplyMessage(
   masterId: number,
@@ -82,7 +83,7 @@ export async function getMessagesCount(userId: number) {
   const result = await db
     .select()
     .from(messages)
-    .where(and(eq(messages.masterId, userId), eq(messages.hasRead, 0)));
+    .where(and(eq(messages.masterId, userId), boolEq(messages.hasRead, false)));
   return result.length;
 }
 
@@ -91,7 +92,7 @@ export async function getReadMessagesByUserId(userId: number) {
   return db
     .select()
     .from(messages)
-    .where(and(eq(messages.masterId, userId), eq(messages.hasRead, 1)))
+    .where(and(eq(messages.masterId, userId), boolEq(messages.hasRead, true)))
     .orderBy(desc(messages.createAt))
     .limit(20);
 }
@@ -101,7 +102,7 @@ export async function getUnreadMessagesByUserId(userId: number) {
   return db
     .select()
     .from(messages)
-    .where(and(eq(messages.masterId, userId), eq(messages.hasRead, 0)))
+    .where(and(eq(messages.masterId, userId), boolEq(messages.hasRead, false)))
     .orderBy(desc(messages.createAt));
 }
 
@@ -110,11 +111,11 @@ export async function updateMessagesToRead(userId: number, msgIds: number[]) {
   const db = getDb();
   await db
     .update(messages)
-    .set({ hasRead: 1 })
+    .set({ hasRead: boolValue(true) } as any)
     .where(and(eq(messages.masterId, userId), inArray(messages.id, msgIds)));
 }
 
 export async function updateOneMessageToRead(msgId: number) {
   const db = getDb();
-  await db.update(messages).set({ hasRead: 1 }).where(eq(messages.id, msgId));
+  await db.update(messages).set({ hasRead: boolValue(true) } as any).where(eq(messages.id, msgId));
 }

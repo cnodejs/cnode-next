@@ -76,7 +76,7 @@ user.post("/user/refresh_token", async (c) => {
   }
 
   const newToken = uuidv4();
-  // TODO: update user.accessToken
+  await userQueries.updateAccessToken(currentUser.id, newToken);
 
   return c.json({ success: true, accessToken: newToken });
 });

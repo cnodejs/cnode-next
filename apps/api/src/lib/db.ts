@@ -3,6 +3,7 @@ import {
   users,
   topics,
   replies,
+  replyUps,
   messages,
   topicCollects,
   auditLogs,
@@ -13,6 +14,7 @@ import {
 } from "@cnode/db";
 import { eq, and, desc, inArray, sql } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
+import { boolEq, boolValue } from "./db-compat";
 
 let dbInstance: DB | null = null;
 
@@ -64,6 +66,12 @@ export const userQueries = {
     return result[0] || null;
   },
 
+  async getByRetrieveKey(key: string) {
+    const db = getDb();
+    const result = await db.select().from(users).where(eq(users.retrieveKey, key)).limit(1);
+    return result[0] || null;
+  },
+
   async newAndSave(params: {
     loginname: string;
     pass: string;
@@ -79,7 +87,7 @@ export const userQueries = {
         pass: params.pass,
         email: params.email,
         avatar: params.avatar || "",
-        active: params.active ? 1 : 0,
+        active: boolValue(!!params.active),
         accessToken: uuidv4(),
       })
       .returning();
@@ -104,7 +112,7 @@ export const userQueries = {
     await db.update(users).set({ pass: passhash }).where(eq(users.id, userId));
   },
 
-  async updateRetrieveKey(userId: number, key: string, time: number) {
+  async updateRetrieveKey(userId: number, key: string | null, time: number | null) {
     const db = getDb();
     await db
       .update(users)
@@ -114,7 +122,7 @@ export const userQueries = {
 
   async updateActive(userId: number) {
     const db = getDb();
-    await db.update(users).set({ active: 1 }).where(eq(users.id, userId));
+    await db.update(users).set({ active: boolValue(true) } as any).where(eq(users.id, userId));
   },
 
   async updateAccessToken(userId: number, token: string) {
@@ -140,9 +148,9 @@ export const userQueries = {
     if (params.signature !== undefined) updates.signature = params.signature;
     if (params.weibo !== undefined) updates.weibo = params.weibo;
     if (params.receive_reply_mail !== undefined)
-      updates.receiveReplyMail = params.receive_reply_mail ? 1 : 0;
+      updates.receiveReplyMail = boolValue(params.receive_reply_mail);
     if (params.receive_at_mail !== undefined)
-      updates.receiveAtMail = params.receive_at_mail ? 1 : 0;
+      updates.receiveAtMail = boolValue(params.receive_at_mail);
     await db.update(users).set(updates).where(eq(users.id, userId));
   },
 };
@@ -156,11 +164,10 @@ export const topicQueries = {
 
   async getByQuery(where: any, opt?: any) {
     const db = getDb();
-    const isPg = process.env.DB_DIALECT === "pg";
     let q = db.select().from(topics).$dynamic();
     const conditions = [];
     if (where.deleted !== undefined) {
-      conditions.push(isPg ? sql`${topics.deleted} = ${Boolean(where.deleted)}` : eq(topics.deleted, where.deleted));
+      conditions.push(boolEq(topics.deleted, !!where.deleted));
     }
     if (where.tab) {
       conditions.push(eq(topics.tab, where.tab));
@@ -171,7 +178,7 @@ export const topicQueries = {
       );
     }
     if (where.good !== undefined) {
-      conditions.push(isPg ? sql`${topics.good} = ${Boolean(where.good)}` : eq(topics.good, where.good));
+      conditions.push(boolEq(topics.good, !!where.good));
     }
     if (where.authorId !== undefined) {
       conditions.push(eq(topics.authorId, where.authorId));
@@ -225,6 +232,24 @@ export const topicQueries = {
       .set({ collectCount: sql`${topics.collectCount} - 1` })
       .where(eq(topics.id, id));
   },
+
+  async updateTopic(id: number, params: { title: string; tab: string; content: string }) {
+    const db = getDb();
+    await db
+      .update(topics)
+      .set({ ...params, updateAt: new Date().toISOString() } as any)
+      .where(eq(topics.id, id));
+  },
+
+  async isCollected(topicId: number, userId: number) {
+    const db = getDb();
+    const result = await db
+      .select()
+      .from(topicCollects)
+      .where(and(eq(topicCollects.topicId, topicId), eq(topicCollects.userId, userId)))
+      .limit(1);
+    return result.length > 0;
+  },
 };
 
 export const replyQueries = {
@@ -239,7 +264,7 @@ export const replyQueries = {
     return db
       .select()
       .from(replies)
-      .where(and(eq(replies.topicId, topicId), eq(replies.deleted, 0)));
+      .where(and(eq(replies.topicId, topicId), boolEq(replies.deleted, false)));
   },
 
   async getByAuthorId(authorId: number, opt?: any) {
@@ -256,6 +281,35 @@ export const replyQueries = {
       .values({ content, topicId, authorId, replyId, createAt: now, updateAt: now })
       .returning();
     return reply;
+  },
+
+  async updateContent(id: number, content: string) {
+    const db = getDb();
+    await db
+      .update(replies)
+      .set({ content, updateAt: new Date().toISOString() } as any)
+      .where(eq(replies.id, id));
+  },
+
+  async getUpsByReplyIds(replyIds: number[]) {
+    if (replyIds.length === 0) return [];
+    const db = getDb();
+    return db.select().from(replyUps).where(inArray(replyUps.replyId, replyIds));
+  },
+
+  async toggleUp(replyId: number, userId: number) {
+    const db = getDb();
+    const existing = await db
+      .select()
+      .from(replyUps)
+      .where(and(eq(replyUps.replyId, replyId), eq(replyUps.userId, userId)))
+      .limit(1);
+    if (existing.length > 0) {
+      await db.delete(replyUps).where(and(eq(replyUps.replyId, replyId), eq(replyUps.userId, userId)));
+      return "down" as const;
+    }
+    await db.insert(replyUps).values({ replyId, userId, createAt: new Date().toISOString() } as any);
+    return "up" as const;
   },
 };
 

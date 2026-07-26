@@ -20,6 +20,18 @@ const createReplySchema = z.object({
   reply_id: z.string().optional(),
 });
 
+const editReplySchema = z.object({
+  accesstoken: z.string().optional(),
+  content: z.string().min(1),
+});
+
+async function requestUser(c: any, accesstoken?: string) {
+  const user = c.get("user");
+  if (user) return user;
+  if (!accesstoken) return null;
+  return userQueries.getByToken(accesstoken);
+}
+
 reply.post("/topic/:topic_id/replies", zValidator("json", createReplySchema), async (c) => {
   const user = c.get("user");
   if (!user) {
@@ -79,8 +91,77 @@ reply.post("/topic/:topic_id/replies", zValidator("json", createReplySchema), as
   return c.json({ success: true, reply_id: String(newReply.id) });
 });
 
+reply.get("/reply/:id", async (c) => {
+  const user = await requestUser(c, c.req.query("accesstoken"));
+  if (!user) {
+    return c.json({ success: false, error_msg: "未登录" }, 401);
+  }
+
+  const replyId = Number(c.req.param("id"));
+  const replyData = await replyQueries.getById(replyId);
+  if (!replyData || replyData.deleted) {
+    return c.json({ success: false, error_msg: "评论不存在" }, 404);
+  }
+  const topicData = await topicQueries.getById(replyData.topicId);
+  if (!topicData || topicData.deleted) {
+    return c.json({ success: false, error_msg: "话题不存在" }, 404);
+  }
+  if (replyData.authorId !== user.id && !c.get("isAdmin")) {
+    return c.json({ success: false, error_msg: "无权限编辑" }, 403);
+  }
+
+  return c.json({
+    success: true,
+    data: {
+      id: String(replyData.id),
+      topic_id: String(replyData.topicId),
+      content: replyData.content,
+      create_at: replyData.createAt,
+      update_at: replyData.updateAt,
+    },
+  });
+});
+
+reply.post("/reply/:id/edit", zValidator("json", editReplySchema), async (c) => {
+  const body = c.req.valid("json");
+  const user = await requestUser(c, body.accesstoken);
+  if (!user) {
+    return c.json({ success: false, error_msg: "未登录" }, 401);
+  }
+
+  const replyId = Number(c.req.param("id"));
+  const replyData = await replyQueries.getById(replyId);
+  if (!replyData || replyData.deleted) {
+    return c.json({ success: false, error_msg: "评论不存在" }, 404);
+  }
+  const topicData = await topicQueries.getById(replyData.topicId);
+  if (!topicData || topicData.deleted) {
+    return c.json({ success: false, error_msg: "话题不存在" }, 404);
+  }
+  if (topicData.lock && !c.get("isAdmin")) {
+    return c.json({ success: false, error_msg: "话题已锁定" }, 403);
+  }
+  if (replyData.authorId !== user.id && !c.get("isAdmin")) {
+    return c.json({ success: false, error_msg: "无权限编辑" }, 403);
+  }
+
+  const contentCheck = await checkContent(body.content);
+  if (contentCheck.hit) {
+    return c.json(
+      { success: false, error_msg: `回复内容包含敏感词: ${contentCheck.words.join(", ")}` },
+      422,
+    );
+  }
+
+  await replyQueries.updateContent(replyId, body.content);
+  await sendMessageToMentionUsers(body.content, topicData.id, user.id, replyId);
+
+  return c.json({ success: true, reply_id: String(replyId) });
+});
+
 reply.post("/reply/:reply_id/ups", async (c) => {
-  const user = c.get("user");
+  const body = await c.req.json().catch(() => ({}));
+  const user = await requestUser(c, body.accesstoken || c.req.query("accesstoken"));
   if (!user) {
     return c.json({ success: false, error_msg: "未登录" }, 401);
   }
@@ -96,9 +177,8 @@ reply.post("/reply/:reply_id/ups", async (c) => {
     return c.json({ success: false, error_msg: "不能帮自己点赞" }, 403);
   }
 
-  // TODO: implement reply_ups insert/delete
-  // For now just return action
-  return c.json({ success: true, action: "up" });
+  const action = await replyQueries.toggleUp(replyId, user.id);
+  return c.json({ success: true, action });
 });
 
 export { reply as replyRoutes };

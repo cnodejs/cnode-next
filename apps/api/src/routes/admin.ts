@@ -14,6 +14,7 @@ import { topics, replies, users } from "@cnode/db";
 import { eq, sql, desc, count } from "drizzle-orm";
 import { adminRequired, modRequired, type AuthVars } from "../middleware/auth";
 import { invalidateWordCache } from "../lib/moderation";
+import { boolEq, boolValue } from "../lib/db-compat";
 
 const admin = new Hono<{
   Variables: AuthVars;
@@ -89,7 +90,7 @@ admin.get("/admin/recent-topics", adminRequired(), async (c) => {
   const recent = await db
     .select()
     .from(topics)
-    .where(eq(topics.deleted, 0))
+    .where(boolEq(topics.deleted, false))
     .orderBy(desc(topics.createAt))
     .limit(10);
   return c.json({
@@ -142,7 +143,7 @@ admin.post("/admin/topics/:action", adminRequired(), async (c) => {
     else if (action === "mute")
       await db.update(topics).set({ status: "muted" }).where(eq(topics.id, id));
     else if (action === "delete")
-      await db.update(topics).set({ deleted: 1 }).where(eq(topics.id, id));
+      await db.update(topics).set({ deleted: boolValue(true) } as any).where(eq(topics.id, id));
   }
   await auditQueries.log(
     user.id,
@@ -161,7 +162,7 @@ admin.post("/topic/:tid/top", adminRequired(), async (c) => {
   const db = getDb();
   await db
     .update(topics)
-    .set({ top: topic.top ? 0 : 1 })
+    .set({ top: boolValue(!topic.top) } as any)
     .where(eq(topics.id, tid));
   const user = c.get("user")!;
   await auditQueries.log(
@@ -181,7 +182,7 @@ admin.post("/topic/:tid/good", adminRequired(), async (c) => {
   const db = getDb();
   await db
     .update(topics)
-    .set({ good: topic.good ? 0 : 1 })
+    .set({ good: boolValue(!topic.good) } as any)
     .where(eq(topics.id, tid));
   const user = c.get("user")!;
   await auditQueries.log(
@@ -201,7 +202,7 @@ admin.post("/topic/:tid/lock", adminRequired(), async (c) => {
   const db = getDb();
   await db
     .update(topics)
-    .set({ lock: topic.lock ? 0 : 1 })
+    .set({ lock: boolValue(!topic.lock) } as any)
     .where(eq(topics.id, tid));
   const user = c.get("user")!;
   await auditQueries.log(
@@ -223,7 +224,7 @@ admin.post("/topic/:tid/delete", async (c) => {
   if (topic.authorId !== user.id && !c.get("isAdmin"))
     return c.json({ success: false, error_msg: "无权限" }, 403);
   const db = getDb();
-  await db.update(topics).set({ deleted: 1 }).where(eq(topics.id, tid));
+  await db.update(topics).set({ deleted: boolValue(true) } as any).where(eq(topics.id, tid));
   await db
     .update(users)
     .set({ score: sql`${users.score} - 5`, topicCount: sql`${users.topicCount} - 1` })
@@ -266,7 +267,7 @@ admin.post("/user/:name/block", adminRequired(), async (c) => {
   const userData = await userQueries.getByLoginName(name);
   if (!userData) return c.json({ success: false, error_msg: "用户不存在" }, 404);
   const db = getDb();
-  await db.update(users).set({ isBlock: 1 }).where(eq(users.id, userData.id));
+  await db.update(users).set({ isBlock: boolValue(true) } as any).where(eq(users.id, userData.id));
   const user = c.get("user")!;
   await auditQueries.log(
     user.id,
@@ -283,7 +284,7 @@ admin.post("/user/:name/unblock", adminRequired(), async (c) => {
   const userData = await userQueries.getByLoginName(name);
   if (!userData) return c.json({ success: false, error_msg: "用户不存在" }, 404);
   const db = getDb();
-  await db.update(users).set({ isBlock: 0 }).where(eq(users.id, userData.id));
+  await db.update(users).set({ isBlock: boolValue(false) } as any).where(eq(users.id, userData.id));
   const user = c.get("user")!;
   await auditQueries.log(
     user.id,
@@ -300,8 +301,8 @@ admin.post("/user/:name/delete_all", adminRequired(), async (c) => {
   const userData = await userQueries.getByLoginName(name);
   if (!userData) return c.json({ success: false, error_msg: "用户不存在" }, 404);
   const db = getDb();
-  await db.update(topics).set({ deleted: 1 }).where(eq(topics.authorId, userData.id));
-  await db.update(replies).set({ deleted: 1 }).where(eq(replies.authorId, userData.id));
+  await db.update(topics).set({ deleted: boolValue(true) } as any).where(eq(topics.authorId, userData.id));
+  await db.update(replies).set({ deleted: boolValue(true) } as any).where(eq(replies.authorId, userData.id));
   const user = c.get("user")!;
   await auditQueries.log(
     user.id,
@@ -320,7 +321,7 @@ admin.post("/user/set_star", adminRequired(), async (c) => {
   const userData = await userQueries.getByLoginName(name);
   if (!userData) return c.json({ success: false, error_msg: "用户不存在" }, 404);
   const db = getDb();
-  await db.update(users).set({ isStar: 1 }).where(eq(users.id, userData.id));
+  await db.update(users).set({ isStar: boolValue(true) } as any).where(eq(users.id, userData.id));
   return c.json({ success: true, message: "已设为达人" });
 });
 
@@ -331,7 +332,7 @@ admin.post("/user/cancel_star", adminRequired(), async (c) => {
   const userData = await userQueries.getByLoginName(name);
   if (!userData) return c.json({ success: false, error_msg: "用户不存在" }, 404);
   const db = getDb();
-  await db.update(users).set({ isStar: 0 }).where(eq(users.id, userData.id));
+  await db.update(users).set({ isStar: boolValue(false) } as any).where(eq(users.id, userData.id));
   return c.json({ success: true, message: "已取消达人" });
 });
 
@@ -360,7 +361,7 @@ admin.post("/user/:name/reset_password", adminRequired(), async (c) => {
 
 admin.get("/admin/bans/users", adminRequired(), async (c) => {
   const db = getDb();
-  const banned = await db.select().from(users).where(eq(users.isBlock, 1));
+  const banned = await db.select().from(users).where(boolEq(users.isBlock, true));
   return c.json({
     success: true,
     data: banned.map((u: any) => ({ id: u.id, loginname: u.loginname, is_block: true })),
@@ -484,7 +485,7 @@ admin.post("/admin/moderation/:id/:action", modRequired(), async (c) => {
   if (action === "restore") {
     await db.update(topics).set({ status: "published" }).where(eq(topics.id, id));
   } else if (action === "confirm") {
-    await db.update(topics).set({ deleted: 1 }).where(eq(topics.id, id));
+    await db.update(topics).set({ deleted: boolValue(true) } as any).where(eq(topics.id, id));
   } else if (action === "falsepositive") {
     await db.update(topics).set({ status: "published" }).where(eq(topics.id, id));
   }
@@ -616,7 +617,7 @@ admin.get("/search", async (c) => {
     const results = await db
       .select()
       .from(topics)
-      .where(sql`${topics.title} LIKE ${`%${q}%`} AND ${topics.deleted} = 0`)
+      .where(sql`${topics.title} LIKE ${`%${q}%`} AND ${topics.deleted} = ${boolValue(false)}`)
       .limit(20);
     return c.json({ success: true, data: results });
   }

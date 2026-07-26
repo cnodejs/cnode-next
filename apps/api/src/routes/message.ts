@@ -105,14 +105,21 @@ message.get("/message/count", async (c) => {
 });
 
 message.post("/message/mark_all", async (c) => {
-  const user = c.get("user");
-  if (!user) {
+  const body = await c.req.json().catch(() => ({}));
+  let currentUser = c.get("user");
+  const accesstoken = body.accesstoken || c.req.query("accesstoken");
+  if (accesstoken && !currentUser) {
+    const { userQueries } = await import("../lib/db");
+    currentUser = (await userQueries.getByToken(accesstoken)) || undefined;
+  }
+
+  if (!currentUser) {
     return c.json({ success: false, error_msg: "未登录" }, 401);
   }
 
-  const unread = await getUnreadMessagesByUserId(user.id);
+  const unread = await getUnreadMessagesByUserId(currentUser.id);
   await updateMessagesToRead(
-    user.id,
+    currentUser.id,
     unread.map((m) => m.id),
   );
 
@@ -123,8 +130,15 @@ message.post("/message/mark_all", async (c) => {
 });
 
 message.post("/message/mark_one/:msg_id", async (c) => {
-  const user = c.get("user");
-  if (!user) {
+  const body = await c.req.json().catch(() => ({}));
+  let currentUser = c.get("user");
+  const accesstoken = body.accesstoken || c.req.query("accesstoken");
+  if (accesstoken && !currentUser) {
+    const { userQueries } = await import("../lib/db");
+    currentUser = (await userQueries.getByToken(accesstoken)) || undefined;
+  }
+
+  if (!currentUser) {
     return c.json({ success: false, error_msg: "未登录" }, 401);
   }
 

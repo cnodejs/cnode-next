@@ -1,5 +1,9 @@
-## ADDED Requirements
+# comment-reply-experience Specification
 
+## Purpose
+
+定义话题详情页评论/回复体验的展示、引用、交互和可用性要求，确保评论流保持论坛式线性阅读、回复目标清晰、控件行为真实可用。
+## Requirements
 ### Requirement: 评论头像归一化
 
 评论作者 SHALL 使用可工作的 avatar URL 或确定性的品牌 fallback，数据通过 API/data shaping 的统一 `avatar_url` 字段提供。
@@ -61,3 +65,32 @@
 
 - **WHEN** 评论上显示“回复”按钮
 - **THEN** 点击它会启动定向回复行为，或提示登录并保留跳转意图。
+
+### Requirement: 评论支持点赞状态和切换
+
+评论 SHALL 在 API 提供数据时展示回复点赞数量和当前用户点赞状态。登录用户 SHALL 能在话题详情页切换点赞/取消点赞。
+
+#### Scenario: 回复展示点赞状态
+
+- **WHEN** 某条回复存在一个或多个 `ups`
+- **THEN** 回复项展示点赞数量
+- **AND** 如果 `is_uped` 为 true，点赞控件以选中状态或等价方式表达当前状态
+
+#### Scenario: 登录用户点赞回复
+
+- **WHEN** 登录用户点击一条尚未点赞的回复
+- **THEN** Web app 调用 `POST /api/v1/reply/:reply_id/ups`
+- **AND** 成功收到 `action: "up"` 后刷新或更新可见状态
+
+#### Scenario: 登录用户取消点赞回复
+
+- **WHEN** 登录用户点击一条已经点赞的回复
+- **THEN** Web app 调用 `POST /api/v1/reply/:reply_id/ups`
+- **AND** 成功收到 `action: "down"` 后刷新或更新可见状态
+
+#### Scenario: 匿名用户尝试点赞回复
+
+- **WHEN** 匿名用户尝试点赞回复
+- **THEN** UI 提示登录或展示带说明的禁用态
+- **AND** 不展示静默失败的死控件
+

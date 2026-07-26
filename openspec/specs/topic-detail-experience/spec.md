@@ -1,5 +1,9 @@
-## ADDED Requirements
+# topic-detail-experience Specification
 
+## Purpose
+
+定义话题详情页的阅读布局、上下文信息、正文展示和状态处理要求，确保迁移后的话题内容在桌面和移动端都具备清晰层级、可读排版和可用交互。
+## Requirements
 ### Requirement: Topic 详情 reading layout
 
 Topic 详情页 SHALL 根据 viewport 使用 reading layout，包含中间 topic 内容和上下文 rails。
@@ -71,3 +75,28 @@ Topic 详情 SHALL 为 loading、not-found、deleted、locked、no-reply 和 una
 - **WHEN** topic 被锁定
 - **THEN** 页面在 topic header 附近展示锁定提示
 - **AND** 回复编辑器被替换为解释性的 disabled state。
+
+### Requirement: 话题详情必须暴露收藏状态控制
+
+话题详情 SHALL 展示当前登录用户是否已收藏该话题，并 SHALL 支持用户不离开页面即可收藏或取消收藏。
+
+#### Scenario: 当前用户未收藏话题
+
+- **WHEN** topic detail data 返回 `is_collect: false`
+- **THEN** action 区域展示收藏操作
+- **AND** 点击后调用收藏 API
+- **AND** 成功完成后刷新或更新可见状态
+
+#### Scenario: 当前用户已收藏话题
+
+- **WHEN** topic detail data 返回 `is_collect: true`
+- **THEN** action 区域展示已收藏/取消收藏操作
+- **AND** 点击后调用取消收藏 API
+- **AND** 成功完成后刷新或更新可见状态
+
+#### Scenario: 匿名用户尝试收藏
+
+- **WHEN** 匿名用户尝试收藏或取消收藏话题
+- **THEN** UI 提示登录或展示带说明的禁用态
+- **AND** 不展示静默失败的死控件
+

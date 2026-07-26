@@ -14,6 +14,19 @@ async function getJson(path: string) {
   return response.json() as Promise<any>;
 }
 
+async function postJson(path: string, body: Record<string, unknown> = {}) {
+  const response = await fetch(`${apiBase}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const json = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(`${path} returned ${response.status}: ${JSON.stringify(json)}`);
+  }
+  return json as any;
+}
+
 async function verifyTopics() {
   const json = await getJson("/api/v1/topics?limit=1&tab=all");
   required("topics.success", json.success);
@@ -35,6 +48,11 @@ async function verifyTopic(id: string) {
     required(`topic.data.${key}`, json.data[key]);
   }
   if (!Array.isArray(json.data.replies)) throw new Error("topic.data.replies must be an array");
+  for (const reply of json.data.replies) {
+    if (!Array.isArray(reply.ups)) throw new Error("topic.data.replies[].ups must be an array");
+    if (typeof reply.is_uped !== "boolean") throw new Error("topic.data.replies[].is_uped must be boolean");
+  }
+  return json.data;
 }
 
 async function verifyUser(loginname: string) {
@@ -59,11 +77,66 @@ async function verifyMessageCount() {
   if (typeof json.data !== "number") throw new Error("message.count.data must be a number");
 }
 
+async function verifyWritePaths(topic: any) {
+  const token = process.env.API_ACCESS_TOKEN;
+  if (!token || process.env.API_WRITE_SMOKE !== "1") {
+    console.log("skip write smoke: set API_WRITE_SMOKE=1 and API_ACCESS_TOKEN to enable");
+    return;
+  }
+
+  const topicId = process.env.API_TEST_TOPIC_ID || String(topic.id);
+  const topicJson = await getJson(`/api/v1/topic/${topicId}?accesstoken=${encodeURIComponent(token)}&mdrender=false`);
+  required("write.topic.success", topicJson.success);
+  const topicData = topicJson.data;
+
+  const updateTopic = await postJson("/api/v1/topics/update", {
+    accesstoken: token,
+    topic_id: String(topicData.id),
+    title: topicData.title,
+    tab: topicData.tab || "share",
+    content: topicData.content,
+  });
+  required("write.topics.update.success", updateTopic.success);
+
+  const collectPath = topicData.is_collect ? "/api/v1/topic_collect/de_collect" : "/api/v1/topic_collect/collect";
+  const restoreCollectPath = topicData.is_collect ? "/api/v1/topic_collect/collect" : "/api/v1/topic_collect/de_collect";
+  const collect = await postJson(collectPath, { accesstoken: token, topic_id: String(topicData.id) });
+  required("write.topic_collect.toggle.success", collect.success);
+  const restoreCollect = await postJson(restoreCollectPath, { accesstoken: token, topic_id: String(topicData.id) });
+  required("write.topic_collect.restore.success", restoreCollect.success);
+
+  const replyId = process.env.API_TEST_REPLY_ID || topicData.replies?.[0]?.id;
+  if (!replyId) {
+    console.log("skip reply edit/up smoke: no API_TEST_REPLY_ID and topic has no replies");
+    return;
+  }
+
+  const replyJson = await getJson(`/api/v1/reply/${replyId}?accesstoken=${encodeURIComponent(token)}`);
+  if (replyJson.success) {
+    const editReply = await postJson(`/api/v1/reply/${replyId}/edit`, {
+      accesstoken: token,
+      content: replyJson.data.content,
+    });
+    required("write.reply.edit.success", editReply.success);
+  } else {
+    console.log("skip reply edit smoke: token user cannot edit selected reply");
+  }
+
+  const up = await postJson(`/api/v1/reply/${replyId}/ups`, { accesstoken: token });
+  if (up.success) {
+    const down = await postJson(`/api/v1/reply/${replyId}/ups`, { accesstoken: token });
+    required("write.reply.ups.restore.success", down.success);
+  } else {
+    console.log(`skip reply ups restore: ${up.error_msg || "up failed"}`);
+  }
+}
+
 async function main() {
   const topic = await verifyTopics();
-  await verifyTopic(String(topic.id));
+  const fullTopic = await verifyTopic(String(topic.id));
   await verifyUser(topic.author.loginname);
   await verifyMessageCount();
+  await verifyWritePaths(fullTopic);
   console.log("api contract smoke passed");
 }
 

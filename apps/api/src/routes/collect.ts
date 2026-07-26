@@ -68,12 +68,15 @@ const collectSchema = z.object({
 });
 
 collect.post("/topic_collect/collect", zValidator("json", collectSchema), async (c) => {
-  const user = c.get("user");
+  const { topic_id, accesstoken } = c.req.valid("json");
+  let user = c.get("user");
+  if (!user && accesstoken) {
+    user = await userQueries.getByToken(accesstoken);
+  }
   if (!user) {
     return c.json({ success: false, error_msg: "未登录" }, 401);
   }
 
-  const { topic_id } = c.req.valid("json");
   const tid = Number(topic_id);
 
   const topicData = await topicQueries.getById(tid);
@@ -105,12 +108,15 @@ collect.post("/topic_collect/collect", zValidator("json", collectSchema), async 
 });
 
 collect.post("/topic_collect/de_collect", zValidator("json", collectSchema), async (c) => {
-  const user = c.get("user");
+  const { topic_id, accesstoken } = c.req.valid("json");
+  let user = c.get("user");
+  if (!user && accesstoken) {
+    user = await userQueries.getByToken(accesstoken);
+  }
   if (!user) {
     return c.json({ success: false, error_msg: "未登录" }, 401);
   }
 
-  const { topic_id } = c.req.valid("json");
   const tid = Number(topic_id);
 
   const topicData = await topicQueries.getById(tid);
@@ -119,6 +125,15 @@ collect.post("/topic_collect/de_collect", zValidator("json", collectSchema), asy
   }
 
   const db = getDb();
+  const existing = await db
+    .select()
+    .from(topicCollects)
+    .where(and(eq(topicCollects.userId, user.id), eq(topicCollects.topicId, tid)))
+    .limit(1);
+  if (existing.length === 0) {
+    return c.json({ success: false, error_msg: "尚未收藏该主题" });
+  }
+
   await db
     .delete(topicCollects)
     .where(and(eq(topicCollects.userId, user.id), eq(topicCollects.topicId, tid)));

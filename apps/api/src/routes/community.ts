@@ -1,16 +1,16 @@
 import { Hono } from "hono";
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, sql } from "drizzle-orm";
 import { replies, topics, users } from "@cnode/db";
 import { getDb, userQueries, topicQueries } from "../lib/db";
 import { excerptMarkdown, userSummary } from "../lib/format";
+import { boolEq } from "../lib/db-compat";
 
 const community = new Hono();
 
 community.get("/sidebar/home", async (c) => {
   const db = getDb();
-  const isPg = process.env.DB_DIALECT === "pg";
-  const replyNotDeleted = isPg ? sql`${replies.deleted} = false` : eq(replies.deleted, 0);
-  const topicNotDeleted = isPg ? sql`${topics.deleted} = false` : eq(topics.deleted, 0);
+  const replyNotDeleted = boolEq(replies.deleted, false);
+  const topicNotDeleted = boolEq(topics.deleted, false);
   const [latestRepliesRaw, noReplyTopicsRaw, topUsersRaw] = await Promise.all([
     db
       .select()
