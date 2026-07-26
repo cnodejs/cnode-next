@@ -1,10 +1,9 @@
 import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
-import type SMTPTransport from "nodemailer/smtp-transport";
 
-let transporter: Transporter<SMTPTransport.SMTPTransport> | null = null;
+let transporter: Transporter | null = null;
 
-function getTransporter(): Transporter<SMTPTransport.SMTPTransport> | null {
+function getTransporter(): Transporter | null {
   if (transporter) return transporter;
 
   const host = process.env.SMTP_HOST;
@@ -22,7 +21,7 @@ function getTransporter(): Transporter<SMTPTransport.SMTPTransport> | null {
     port,
     auth: user ? { user, pass } : undefined,
     ignoreTLS: true,
-  } as SMTPTransport.Options);
+  } as any);
 
   return transporter;
 }

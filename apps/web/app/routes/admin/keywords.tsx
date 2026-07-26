@@ -2,11 +2,12 @@ import { requireAdmin } from "~/lib/auth";
 import { AdminLayout } from "~/components/AdminLayout";
 import { apiFetch } from "~/lib/api-client";
 import { useState } from "react";
-import { useRevalidator } from "react-router";
+import { Form, useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { AdminPage, AdminPageHeader, AdminPanel, AdminToolbar } from "~/components/AdminPage";
+import { Pagination } from "~/components/Pagination";
 import {
   Table,
   TableBody,
@@ -22,15 +23,22 @@ export function meta() {
 
 export async function loader({ request }: any) {
   await requireAdmin(request);
+  const url = new URL(request.url);
+  const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
+  const limit = Math.min(100, Number(url.searchParams.get("limit")) || 50);
+  const q = url.searchParams.get("q") || "";
   const cookie = request.headers.get("cookie") || "";
-  const res = await apiFetch<{ success: boolean; data: any[] }>("/api/v1/admin/keywords", {
-    headers: { cookie },
-  });
-  return { keywords: res.success ? res.data || [] : [] };
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (q) params.set("q", q);
+  const res = await apiFetch<{ success: boolean; data: any[]; total?: number }>(
+    `/api/v1/admin/keywords?${params.toString()}`,
+    { headers: { cookie } },
+  );
+  return { keywords: res.success ? res.data || [] : [], total: res.total ?? 0, page, limit, q };
 }
 
 export default function AdminKeywords({ loaderData }: any) {
-  const { keywords } = loaderData;
+  const { keywords, total, page, limit, q } = loaderData;
   const [newWord, setNewWord] = useState("");
   const [bulkText, setBulkText] = useState("");
   const [showBulk, setShowBulk] = useState(false);
@@ -87,9 +95,14 @@ export default function AdminKeywords({ loaderData }: any) {
     <AdminLayout>
       <AdminPage>
         <AdminPageHeader title="敏感词管理" description="维护巡检词库，让内容审核有稳定、可追踪的判断依据。" />
-        <AdminPanel title="词库" description={`共 ${keywords.length} 个敏感词`}>
+        <AdminPanel title="词库" description={`当前显示 ${keywords.length} / ${total} 个敏感词`}>
           <AdminToolbar className="items-stretch sm:items-center">
-            <div className="flex w-full flex-col gap-2 sm:max-w-xl sm:flex-row">
+            <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <Form method="get" className="flex w-full gap-2 sm:max-w-sm">
+                <Input name="q" defaultValue={q} placeholder="搜索敏感词" className="flex-1" />
+                <Button type="submit" variant="outline">搜索</Button>
+              </Form>
+              <div className="flex w-full gap-2 sm:max-w-xl">
               <Input
                 value={newWord}
                 onChange={(e) => setNewWord(e.target.value)}
@@ -100,6 +113,7 @@ export default function AdminKeywords({ loaderData }: any) {
               <Button variant="outline" onClick={() => setShowBulk(!showBulk)}>
                 批量导入
               </Button>
+              </div>
             </div>
           </AdminToolbar>
           {showBulk && (
@@ -143,6 +157,9 @@ export default function AdminKeywords({ loaderData }: any) {
             ))}
           </TableBody>
           </Table>
+          <div className="px-4 pb-4">
+            <Pagination page={page} total={total} limit={limit} basePath="/admin/keywords" searchParams={{ ...(q ? { q } : {}) }} />
+          </div>
         </AdminPanel>
       </AdminPage>
     </AdminLayout>

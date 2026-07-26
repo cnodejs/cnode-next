@@ -23,8 +23,9 @@ export function getRedis(): RedisClient {
     client = {
       get: (key: string) => instance.get(key),
       set: (key: string, value: string, mode?: string, seconds?: number) =>
-        seconds !== undefined ? instance.set(key, value, mode!, seconds) : instance.set(key, value),
+        seconds !== undefined ? (instance.set as any)(key, value, mode, seconds) : instance.set(key, value),
       setex: (key: string, seconds: number, value: string) => instance.setex(key, seconds, value),
+      setnx: (key: string, value: string) => instance.setnx(key, value),
       incr: (key: string) => instance.incr(key),
       expire: (key: string, seconds: number) => instance.expire(key, seconds),
       del: (key: string) => instance.del(key),

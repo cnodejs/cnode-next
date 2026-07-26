@@ -10,14 +10,14 @@ export interface AuthVars {
 }
 
 export function setSessionCookie(
-  c: Parameters<Parameters<typeof createMiddleware>[0]>[0],
+  c: any,
   userId: number,
 ) {
   const cookieName = process.env.AUTH_COOKIE_NAME || "node_club";
   const domain = process.env.AUTH_COOKIE_DOMAIN || undefined;
   const secret = process.env.AUTH_SESSION_SECRET || "local-dev-secret";
   const token = `${userId}$$$$`;
-  setCookie(c, cookieName, token, {
+  setCookie(c as any, cookieName, token, {
     domain,
     path: "/",
     httpOnly: true,
@@ -25,10 +25,10 @@ export function setSessionCookie(
     secret,
     maxAge: 60 * 60 * 24 * 30,
     sameSite: "Lax",
-  });
+  } as any);
 }
 
-export function clearSessionCookie(c: Parameters<Parameters<typeof createMiddleware>[0]>[0]) {
+export function clearSessionCookie(c: any) {
   const cookieName = process.env.AUTH_COOKIE_NAME || "node_club";
   const domain = process.env.AUTH_COOKIE_DOMAIN || undefined;
   deleteCookie(c, cookieName, { domain, path: "/" });
@@ -40,7 +40,7 @@ export const authMiddleware = () =>
   }>(async (c, next) => {
     const cookieName = process.env.AUTH_COOKIE_NAME || "node_club";
     const secret = process.env.AUTH_SESSION_SECRET || "local-dev-secret";
-    const token = getCookie(c, cookieName, secret);
+  const token = (getCookie as any)(c, cookieName, secret);
 
     let user: AuthVars["user"] = null;
 

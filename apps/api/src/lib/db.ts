@@ -165,7 +165,7 @@ export const topicQueries = {
   async getByQuery(where: any, opt?: any) {
     const db = getDb();
     let q = db.select().from(topics).$dynamic();
-    const conditions = [];
+    const conditions: any[] = [];
     if (where.deleted !== undefined) {
       conditions.push(boolEq(topics.deleted, !!where.deleted));
     }
@@ -194,7 +194,7 @@ export const topicQueries = {
   async countByQuery(where: any) {
     const db = getDb();
     let q = db.select({ c: count() }).from(topics).$dynamic();
-    const conditions = [];
+    const conditions: any[] = [];
     if (where.deleted !== undefined) {
       conditions.push(boolEq(topics.deleted, !!where.deleted));
     }
@@ -400,6 +400,8 @@ export const keywordQueries = {
     await db
       .insert(sensitiveWords)
       .values({ word, category: category || null, createAt: new Date().toISOString() });
+    const result = await db.select().from(sensitiveWords).where(eq(sensitiveWords.word, word)).limit(1);
+    return result[0] || null;
   },
 
   async bulkAdd(words: { word: string; category?: string }[]) {

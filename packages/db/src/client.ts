@@ -10,9 +10,9 @@ const require = createRequire(import.meta.url);
 
 const dialect = process.env.DB_DIALECT || "sqlite";
 
-export type DB = ReturnType<typeof createDb>;
+export type DB = any;
 
-export function createDb() {
+export function createDb(): DB {
   if (dialect === "pg") {
     const host = process.env.DB_HOST;
     if (!host) {

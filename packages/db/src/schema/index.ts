@@ -9,3 +9,4 @@ export * from "./sensitive_word";
 export * from "./report";
 export * from "./ip_ban";
 export * from "./site_setting";
+export * from "./moderation_scan";

@@ -10,15 +10,69 @@ import {
   ipBanQueries,
   settingQueries,
 } from "../lib/db";
-import { topics, replies, users } from "@cnode/db";
-import { eq, sql, desc, count } from "drizzle-orm";
+import {
+  auditLogs,
+  ipBans,
+  moderationHits,
+  moderationScanJobs,
+  reports,
+  sensitiveWords,
+  topics,
+  replies,
+  users,
+} from "@cnode/db";
+import { and, eq, sql, desc, count } from "drizzle-orm";
 import { adminRequired, modRequired, type AuthVars } from "../middleware/auth";
 import { invalidateWordCache } from "../lib/moderation";
+import {
+  createScanJob,
+  handleModerationHit,
+  pauseScanJob,
+  pendingHitCount,
+  resumeScanJob,
+} from "../lib/moderation-scan";
 import { boolEq, boolValue } from "../lib/db-compat";
+import { decrementScoreAndReplyCount } from "../lib/score";
 
 const admin = new Hono<{
   Variables: AuthVars;
 }>();
+
+const topicActions = new Set(["top", "good", "mute", "delete"]);
+const ADMIN_DEFAULT_LIMIT = 50;
+const ADMIN_MAX_LIMIT = 100;
+
+type Pagination = {
+  page: number;
+  limit: number;
+  offset: number;
+};
+
+export function parseAdminPagination(query: { page?: string | null; limit?: string | null }, defaultLimit = ADMIN_DEFAULT_LIMIT): Pagination {
+  const page = Math.max(1, Number(query.page) || 1);
+  const requestedLimit = Number(query.limit) || defaultLimit;
+  const limit = Math.min(ADMIN_MAX_LIMIT, Math.max(1, requestedLimit));
+  return { page, limit, offset: (page - 1) * limit };
+}
+
+function getPagination(c: any, defaultLimit = ADMIN_DEFAULT_LIMIT): Pagination {
+  return parseAdminPagination({ page: c.req.query("page"), limit: c.req.query("limit") }, defaultLimit);
+}
+
+function paginated<T>(data: T[], total: number, pagination: Pagination) {
+  return {
+    success: true,
+    data,
+    total,
+    page: pagination.page,
+    limit: pagination.limit,
+  };
+}
+
+export function canRunTopicAction(action: string, isAdmin: boolean, isMod: boolean) {
+  if (!topicActions.has(action)) return false;
+  return action === "top" ? isMod : isAdmin;
+}
 
 // ── Stats / Overview ──
 
@@ -49,13 +103,7 @@ admin.get("/admin/stats", adminRequired(), async (c) => {
         .from(users)
         .where(sql`date(${users.createAt}) = ${today}`)
     )[0]?.c ?? 0;
-  const pendingReports =
-    (
-      await db
-        .select({ c: count() })
-        .from(replies)
-        .where(sql`1=1`)
-    )[0]?.c ?? 0;
+  const moderationPending = await pendingHitCount();
   return c.json({
     success: true,
     data: {
@@ -66,6 +114,7 @@ admin.get("/admin/stats", adminRequired(), async (c) => {
       todayReplies,
       todayUsers,
       pendingReports: 0,
+      moderationPending,
     },
   });
 });
@@ -101,13 +150,24 @@ admin.get("/admin/recent-topics", adminRequired(), async (c) => {
 
 // ── Topic management ──
 
-admin.get("/admin/topics", adminRequired(), async (c) => {
-  const limit = Math.min(100, Number(c.req.query("limit")) || 50);
+admin.get("/admin/topics", modRequired(), async (c) => {
+  const pagination = getPagination(c);
+  const q = c.req.query("q")?.trim();
   const db = getDb();
-  const list = await db.select().from(topics).limit(limit).orderBy(desc(topics.createAt));
-  return c.json({
-    success: true,
-    data: list.map((t: any) => ({
+  const where = q ? sql`${topics.title} LIKE ${`%${q}%`}` : undefined;
+  let listQuery = db.select().from(topics).$dynamic();
+  let totalQuery = db.select({ c: count() }).from(topics).$dynamic();
+  if (where) {
+    listQuery = listQuery.where(where) as any;
+    totalQuery = totalQuery.where(where) as any;
+  }
+  const [list, totalResult] = await Promise.all([
+    listQuery.orderBy(desc(topics.createAt)).limit(pagination.limit).offset(pagination.offset),
+    totalQuery,
+  ]);
+  return c.json(
+    paginated(
+      list.map((t: any) => ({
       id: t.id,
       title: t.title,
       tab: t.tab,
@@ -118,12 +178,21 @@ admin.get("/admin/topics", adminRequired(), async (c) => {
       reply_count: t.replyCount,
       visit_count: t.visitCount,
       create_at: t.createAt,
-    })),
-  });
+      })),
+      Number(totalResult[0]?.c || 0),
+      pagination,
+    ),
+  );
 });
 
-admin.post("/admin/topics/:action", adminRequired(), async (c) => {
+admin.post("/admin/topics/:action", modRequired(), async (c) => {
   const action = c.req.param("action");
+  if (!topicActions.has(action)) {
+    return c.json({ success: false, error_msg: "未知操作" }, 400);
+  }
+  if (!canRunTopicAction(action, c.get("isAdmin"), c.get("isMod"))) {
+    return c.json({ success: false, error_msg: "需要管理员权限" }, 403);
+  }
   const body = await c.req.json().catch(() => ({}));
   const ids: number[] = body.ids || [];
   if (ids.length === 0) return c.json({ success: false, error_msg: "no ids" }, 400);
@@ -155,7 +224,7 @@ admin.post("/admin/topics/:action", adminRequired(), async (c) => {
   return c.json({ success: true });
 });
 
-admin.post("/topic/:tid/top", adminRequired(), async (c) => {
+admin.post("/topic/:tid/top", modRequired(), async (c) => {
   const tid = Number(c.req.param("tid"));
   const topic = await topicQueries.getById(tid);
   if (!topic) return c.json({ success: false, error_msg: "话题不存在" }, 404);
@@ -242,12 +311,25 @@ admin.post("/topic/:tid/delete", async (c) => {
 // ── User management ──
 
 admin.get("/admin/users", adminRequired(), async (c) => {
-  const limit = Math.min(100, Number(c.req.query("limit")) || 50);
+  const pagination = getPagination(c);
+  const q = c.req.query("q")?.trim();
   const db = getDb();
-  const list = await db.select().from(users).limit(limit).orderBy(desc(users.createAt));
-  return c.json({
-    success: true,
-    data: list.map((u: any) => ({
+  const where = q
+    ? sql`(${users.loginname} LIKE ${`%${q}%`} OR ${users.email} LIKE ${`%${q}%`})`
+    : undefined;
+  let listQuery = db.select().from(users).$dynamic();
+  let totalQuery = db.select({ c: count() }).from(users).$dynamic();
+  if (where) {
+    listQuery = listQuery.where(where) as any;
+    totalQuery = totalQuery.where(where) as any;
+  }
+  const [list, totalResult] = await Promise.all([
+    listQuery.orderBy(desc(users.createAt)).limit(pagination.limit).offset(pagination.offset),
+    totalQuery,
+  ]);
+  return c.json(
+    paginated(
+      list.map((u: any) => ({
       id: u.id,
       loginname: u.loginname,
       email: u.email,
@@ -258,8 +340,11 @@ admin.get("/admin/users", adminRequired(), async (c) => {
       is_block: !!u.isBlock,
       active: !!u.active,
       create_at: u.createAt,
-    })),
-  });
+      })),
+      Number(totalResult[0]?.c || 0),
+      pagination,
+    ),
+  );
 });
 
 admin.post("/user/:name/block", adminRequired(), async (c) => {
@@ -360,17 +445,41 @@ admin.post("/user/:name/reset_password", adminRequired(), async (c) => {
 // ── Ban management ──
 
 admin.get("/admin/bans/users", adminRequired(), async (c) => {
+  const pagination = getPagination(c);
   const db = getDb();
-  const banned = await db.select().from(users).where(boolEq(users.isBlock, true));
-  return c.json({
-    success: true,
-    data: banned.map((u: any) => ({ id: u.id, loginname: u.loginname, is_block: true })),
-  });
+  const where = boolEq(users.isBlock, true);
+  const [banned, totalResult] = await Promise.all([
+    db
+      .select()
+      .from(users)
+      .where(where)
+      .orderBy(desc(users.createAt))
+      .limit(pagination.limit)
+      .offset(pagination.offset),
+    db.select({ c: count() }).from(users).where(where),
+  ]);
+  return c.json(
+    paginated(
+      banned.map((u: any) => ({ id: u.id, loginname: u.loginname, is_block: true })),
+      Number(totalResult[0]?.c || 0),
+      pagination,
+    ),
+  );
 });
 
 admin.get("/admin/bans/ips", adminRequired(), async (c) => {
-  const list = await ipBanQueries.list();
-  return c.json({ success: true, data: list });
+  const pagination = getPagination(c);
+  const db = getDb();
+  const [list, totalResult] = await Promise.all([
+    db
+      .select()
+      .from(ipBans)
+      .orderBy(desc(ipBans.createAt))
+      .limit(pagination.limit)
+      .offset(pagination.offset),
+    db.select({ c: count() }).from(ipBans),
+  ]);
+  return c.json(paginated(list, Number(totalResult[0]?.c || 0), pagination));
 });
 
 admin.post("/admin/bans/ips", adminRequired(), async (c) => {
@@ -392,8 +501,21 @@ admin.delete("/admin/bans/ips/:id", adminRequired(), async (c) => {
 // ── Report queue ──
 
 admin.get("/admin/reports", modRequired(), async (c) => {
-  const list = await reportQueries.list();
-  return c.json({ success: true, data: list });
+  const pagination = getPagination(c);
+  const status = c.req.query("status") || "pending";
+  const db = getDb();
+  const where = eq(reports.status, status);
+  const [list, totalResult] = await Promise.all([
+    db
+      .select()
+      .from(reports)
+      .where(where)
+      .orderBy(desc(reports.createAt))
+      .limit(pagination.limit)
+      .offset(pagination.offset),
+    db.select({ c: count() }).from(reports).where(where),
+  ]);
+  return c.json(paginated(list, Number(totalResult[0]?.c || 0), pagination));
 });
 
 admin.post("/admin/reports/:id/:action", modRequired(), async (c) => {
@@ -428,26 +550,53 @@ admin.post("/admin/reports", async (c) => {
 // ── Sensitive words ──
 
 admin.get("/admin/keywords", adminRequired(), async (c) => {
-  const list = await keywordQueries.list();
-  return c.json({ success: true, data: list });
+  const pagination = getPagination(c);
+  const q = c.req.query("q")?.trim();
+  const category = c.req.query("category")?.trim();
+  const db = getDb();
+  const conditions: any[] = [];
+  if (q) conditions.push(sql`${sensitiveWords.word} LIKE ${`%${q}%`}`);
+  if (category) conditions.push(eq(sensitiveWords.category, category));
+  const where = conditions.length === 0 ? undefined : conditions.length === 1 ? conditions[0] : and(...conditions);
+  let listQuery = db.select().from(sensitiveWords).$dynamic();
+  let totalQuery = db.select({ c: count() }).from(sensitiveWords).$dynamic();
+  if (where) {
+    listQuery = listQuery.where(where) as any;
+    totalQuery = totalQuery.where(where) as any;
+  }
+  const [list, totalResult] = await Promise.all([
+    listQuery.orderBy(desc(sensitiveWords.createAt)).limit(pagination.limit).offset(pagination.offset),
+    totalQuery,
+  ]);
+  return c.json(paginated(list, Number(totalResult[0]?.c || 0), pagination));
 });
 
 admin.post("/admin/keywords", adminRequired(), async (c) => {
   const body = await c.req.json().catch(() => ({}));
   if (!body.word) return c.json({ success: false, error_msg: "缺少 word" }, 400);
-  await keywordQueries.add(body.word, body.category);
+  const keyword = await keywordQueries.add(body.word, body.category);
   invalidateWordCache();
+  if (keyword?.id) {
+    await createScanJob({ scope: "all", mode: "historical", reason: "keyword_added", keywordIds: [keyword.id] });
+  }
   return c.json({ success: true });
 });
 
 admin.post("/admin/keywords/bulk", adminRequired(), async (c) => {
   const body = await c.req.json().catch(() => ({}));
   const words: string[] = body.words || [];
+  const keywordIds: number[] = [];
   for (const line of words) {
     const parts = line.split(",");
-    await keywordQueries.add(parts[0].trim(), parts[1]?.trim());
+    const word = parts[0].trim();
+    if (!word) continue;
+    const keyword = await keywordQueries.add(word, parts[1]?.trim());
+    if (keyword?.id) keywordIds.push(keyword.id);
   }
   invalidateWordCache();
+  if (keywordIds.length) {
+    await createScanJob({ scope: "all", mode: "historical", reason: "keyword_added", keywordIds });
+  }
   return c.json({ success: true, added: words.length });
 });
 
@@ -461,61 +610,139 @@ admin.delete("/admin/keywords/:id", adminRequired(), async (c) => {
 // ── Moderation / scan results ──
 
 admin.get("/admin/moderation", modRequired(), async (c) => {
-  // Scan results are stored in topics.replies with status=muted
+  const pagination = getPagination(c, 100);
   const db = getDb();
-  const mutedTopics = await db.select().from(topics).where(eq(topics.status, "muted"));
+  const where = eq(moderationHits.status, "pending");
+  const [list, totalResult] = await Promise.all([
+    db
+      .select()
+      .from(moderationHits)
+      .where(where)
+      .orderBy(desc(moderationHits.scannedAt))
+      .limit(pagination.limit)
+      .offset(pagination.offset),
+    db.select({ c: count() }).from(moderationHits).where(where),
+  ]);
   return c.json({
     success: true,
-    data: mutedTopics.map((t: any) => ({
-      id: t.id,
-      type: "topic",
-      target_id: t.id,
-      title: t.title,
-      scanned_at: t.updateAt,
-      keywords: [],
-      preview: t.content?.slice(0, 200),
+    data: list.map((hit: any) => ({
+      id: hit.id,
+      type: hit.targetType,
+      target_id: hit.targetId,
+      topic_id: hit.topicId,
+      author_id: hit.authorId,
+      field: hit.field,
+      scanned_at: hit.scannedAt,
+      keywords: Array.isArray(hit.keywords) ? hit.keywords : JSON.parse(hit.keywords || "[]"),
+      preview: hit.preview,
+      status: hit.status,
     })),
+    total: Number(totalResult[0]?.c || 0),
+    page: pagination.page,
+    limit: pagination.limit,
   });
 });
 
 admin.post("/admin/moderation/:id/:action", modRequired(), async (c) => {
   const id = Number(c.req.param("id"));
   const action = c.req.param("action");
-  const db = getDb();
-  if (action === "restore") {
-    await db.update(topics).set({ status: "published" }).where(eq(topics.id, id));
-  } else if (action === "confirm") {
-    await db.update(topics).set({ deleted: boolValue(true) } as any).where(eq(topics.id, id));
-  } else if (action === "falsepositive") {
-    await db.update(topics).set({ status: "published" }).where(eq(topics.id, id));
-  }
   const user = c.get("user")!;
+  if (!["confirm", "falsepositive", "ignore"].includes(action)) {
+    return c.json({ success: false, error_msg: "不支持的操作" }, 400);
+  }
+  const hit = await handleModerationHit(id, action as any, user.id);
+  if (!hit) return c.json({ success: false, error_msg: "巡检记录不存在" }, 404);
+  if (action === "confirm") {
+    if (hit.targetType === "topic") {
+      await getDb().update(topics).set({ deleted: boolValue(true) } as any).where(eq(topics.id, hit.targetId));
+    } else if (hit.targetType === "reply") {
+      const reply = await replyQueries.getById(hit.targetId);
+      if (reply && !reply.deleted) {
+        await replyQueries.softDelete(reply.id);
+        await decrementScoreAndReplyCount(reply.authorId, 5, 1);
+        await topicQueries.decrementReplyCount(reply.topicId);
+      }
+    }
+  }
   await auditQueries.log(
     user.id,
     user.loginname,
     `moderation_${action}`,
-    { type: "topic", id: String(id) },
+    { type: hit.targetType, id: String(hit.targetId) },
     action,
+    JSON.stringify({ hit_id: id, topic_id: hit.topicId }),
   );
+  return c.json({ success: true });
+});
+
+admin.get("/admin/moderation/jobs", adminRequired(), async (c) => {
+  const pagination = getPagination(c);
+  const db = getDb();
+  const [list, totalResult] = await Promise.all([
+    db
+      .select()
+      .from(moderationScanJobs)
+      .orderBy(desc(moderationScanJobs.createAt))
+      .limit(pagination.limit)
+      .offset(pagination.offset),
+    db.select({ c: count() }).from(moderationScanJobs),
+  ]);
+  return c.json(paginated(list, Number(totalResult[0]?.c || 0), pagination));
+});
+
+admin.post("/admin/moderation/jobs", adminRequired(), async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  const scope = ["topics", "replies", "all"].includes(body.scope) ? body.scope : "all";
+  const mode = body.mode === "incremental" ? "incremental" : "historical";
+  const job = await createScanJob({ scope, mode, reason: "manual" });
+  const user = c.get("user")!;
+  await auditQueries.log(user.id, user.loginname, "moderation_scan_create", { type: "scan_job", id: String(job.id) }, "created");
+  return c.json({ success: true, data: job });
+});
+
+admin.post("/admin/moderation/jobs/:id/:action", adminRequired(), async (c) => {
+  const id = Number(c.req.param("id"));
+  const action = c.req.param("action");
+  const user = c.get("user")!;
+  if (action === "pause") {
+    await pauseScanJob(id);
+  } else if (action === "resume") {
+    await resumeScanJob(id);
+  } else {
+    return c.json({ success: false, error_msg: "不支持的操作" }, 400);
+  }
+  await auditQueries.log(user.id, user.loginname, `moderation_scan_${action}`, { type: "scan_job", id: String(id) }, action);
   return c.json({ success: true });
 });
 
 // ── Audit log ──
 
 admin.get("/admin/audit", adminRequired(), async (c) => {
-  const limit = Math.min(100, Number(c.req.query("limit")) || 50);
-  const list = await auditQueries.getList(limit);
-  return c.json({
-    success: true,
-    data: list.map((log: any) => ({
+  const pagination = getPagination(c);
+  const db = getDb();
+  const [list, totalResult] = await Promise.all([
+    db
+      .select()
+      .from(auditLogs)
+      .orderBy(desc(auditLogs.createAt))
+      .limit(pagination.limit)
+      .offset(pagination.offset),
+    db.select({ c: count() }).from(auditLogs),
+  ]);
+  return c.json(
+    paginated(
+      list.map((log: any) => ({
       id: log.id,
       operator: log.operatorName,
       action: log.action,
       target: log.targetName || log.targetId,
       result: log.result,
       create_at: log.createAt,
-    })),
-  });
+      })),
+      Number(totalResult[0]?.c || 0),
+      pagination,
+    ),
+  );
 });
 
 // ── Settings ──

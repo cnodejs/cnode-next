@@ -173,7 +173,7 @@ user.get("/user/:loginname", async (c) => {
 
   // Recent replies: get replies by author, deduplicate topics, limit 5
   const userReplies = await replyQueries.getByAuthorId(userData.id, { limit: 20 });
-  const topicIds = [...new Set(userReplies.map((r) => r.topicId))].slice(0, 5);
+  const topicIds = [...new Set<number>(userReplies.map((r) => r.topicId))].slice(0, 5);
   const recentRepliesTopics = await Promise.all(topicIds.map((tid) => topicQueries.getById(tid)));
 
   const formatTopic = (t: any) => ({

@@ -1,12 +1,13 @@
 import { requireAdmin } from "~/lib/auth";
 import { AdminLayout } from "~/components/AdminLayout";
 import { apiFetch } from "~/lib/api-client";
-import { useRevalidator } from "react-router";
+import { Form, useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { EmptyState } from "~/components/EmptyState";
 import { AdminPage, AdminPageHeader, AdminPanel } from "~/components/AdminPage";
+import { Pagination } from "~/components/Pagination";
 
 export function meta() {
   return [{ title: "举报队列 · CNode Admin" }];
@@ -14,15 +15,20 @@ export function meta() {
 
 export async function loader({ request }: any) {
   await requireAdmin(request);
+  const url = new URL(request.url);
+  const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
+  const limit = Math.min(100, Number(url.searchParams.get("limit")) || 50);
+  const status = url.searchParams.get("status") || "pending";
   const cookie = request.headers.get("cookie") || "";
-  const res = await apiFetch<{ success: boolean; data: any[] }>("/api/v1/admin/reports", {
-    headers: { cookie },
-  });
-  return { reports: res.success ? res.data || [] : [] };
+  const res = await apiFetch<{ success: boolean; data: any[]; total?: number }>(
+    `/api/v1/admin/reports?page=${page}&limit=${limit}&status=${encodeURIComponent(status)}`,
+    { headers: { cookie } },
+  );
+  return { reports: res.success ? res.data || [] : [], total: res.total ?? 0, page, limit, status };
 }
 
 export default function AdminReports({ loaderData }: any) {
-  const { reports } = loaderData;
+  const { reports, total, page, limit, status } = loaderData;
   const { revalidate } = useRevalidator();
 
   const handleAction = async (id: number, action: string) => {
@@ -42,7 +48,15 @@ export default function AdminReports({ loaderData }: any) {
     <AdminLayout>
       <AdminPage>
         <AdminPageHeader title="举报队列" description="集中确认用户举报，区分违规内容和误报反馈。" />
-        <AdminPanel title="待处理举报" description={`共 ${reports.length} 条举报记录`} contentClassName="p-4">
+        <AdminPanel title="举报记录" description={`当前显示 ${reports.length} / ${total} 条举报记录`} contentClassName="p-4">
+          <Form method="get" className="mb-4 flex max-w-xs gap-2">
+            <select name="status" defaultValue={status} className="h-9 flex-1 rounded-md border border-input bg-background px-3 text-sm">
+              <option value="pending">待处理</option>
+              <option value="confirmed">已确认</option>
+              <option value="dismissed">已驳回</option>
+            </select>
+            <Button type="submit" variant="outline">筛选</Button>
+          </Form>
           {reports.length === 0 ? (
             <EmptyState message="暂无举报" />
           ) : (
@@ -77,6 +91,7 @@ export default function AdminReports({ loaderData }: any) {
               ))}
             </div>
           )}
+          <Pagination page={page} total={total} limit={limit} basePath="/admin/reports" searchParams={{ status }} />
         </AdminPanel>
       </AdminPage>
     </AdminLayout>

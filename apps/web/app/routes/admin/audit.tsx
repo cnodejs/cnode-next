@@ -1,9 +1,9 @@
 import { requireAdmin } from "~/lib/auth";
 import { AdminLayout } from "~/components/AdminLayout";
-import { useState, useEffect } from "react";
 import { apiFetch } from "~/lib/api-client";
 import { TimeAgo } from "~/components/TimeAgo";
 import { AdminPage, AdminPageHeader, AdminPanel } from "~/components/AdminPage";
+import { Pagination } from "~/components/Pagination";
 import {
   Table,
   TableBody,
@@ -17,18 +17,13 @@ export function meta() {
   return [{ title: "审计日志 · CNode Admin" }];
 }
 
-export default function AdminAudit() {
-  const [logs, setLogs] = useState<any[]>([]);
-  useEffect(() => {
-    apiFetch<{ success: boolean; data: any[] }>("/api/v1/admin/audit?limit=50").then((res) => {
-      if (res.success) setLogs(res.data || []);
-    });
-  }, []);
+export default function AdminAudit({ loaderData }: any) {
+  const { logs, total, page, limit } = loaderData;
   return (
     <AdminLayout>
       <AdminPage>
         <AdminPageHeader title="审计日志" description="记录后台关键操作，便于追溯审核和系统变更。" />
-        <AdminPanel title="最近操作" description={`显示最近 ${logs.length} 条记录`}>
+        <AdminPanel title="审计日志" description={`当前显示 ${logs.length} / ${total} 条记录`}>
           <Table>
           <TableHeader>
             <TableRow>
@@ -40,7 +35,7 @@ export default function AdminAudit() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {logs.map((log) => (
+            {logs.map((log: any) => (
               <TableRow key={log.id}>
                 <TableCell className="text-xs text-muted-foreground">
                   <TimeAgo date={log.create_at} />
@@ -53,6 +48,9 @@ export default function AdminAudit() {
             ))}
           </TableBody>
           </Table>
+          <div className="px-4 pb-4">
+            <Pagination page={page} total={total} limit={limit} basePath="/admin/audit" />
+          </div>
         </AdminPanel>
       </AdminPage>
     </AdminLayout>
@@ -61,5 +59,13 @@ export default function AdminAudit() {
 
 export async function loader({ request }: any) {
   await requireAdmin(request);
-  return {};
+  const url = new URL(request.url);
+  const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
+  const limit = Math.min(100, Number(url.searchParams.get("limit")) || 50);
+  const cookie = request.headers.get("cookie") || "";
+  const res = await apiFetch<{ success: boolean; data: any[]; total?: number }>(
+    `/api/v1/admin/audit?page=${page}&limit=${limit}`,
+    { headers: { cookie } },
+  );
+  return { logs: res.success ? res.data || [] : [], total: res.total ?? 0, page, limit };
 }

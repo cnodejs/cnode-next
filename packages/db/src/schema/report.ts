@@ -6,7 +6,6 @@ import {
   text as pgText,
   integer as pgInteger,
   timestamp,
-  boolean as pgBoolean,
 } from "drizzle-orm/pg-core";
 
 export const reports = sqliteTable("reports", {

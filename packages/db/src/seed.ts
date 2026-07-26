@@ -1,11 +1,17 @@
 import { createDb } from "./client";
-import { users, topics, replies } from "./schema/index";
+import { users, topics, replies, sensitiveWords } from "./schema/index";
 import bcryptjs from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
-import { sql } from "drizzle-orm";
+
+const defaultSensitiveWords = [
+  { word: "科学上网", category: "circumvention" },
+  { word: "VPN", category: "circumvention" },
+  { word: "机场", category: "circumvention" },
+  { word: "翻墙", category: "circumvention" },
+];
 
 async function seed() {
-  const db = createDb();
+  const db = createDb() as any;
 
   const adminPass = await bcryptjs.hash("admin123", 10);
   const userPass = await bcryptjs.hash("user1234", 10);
@@ -76,6 +82,15 @@ async function seed() {
     .get();
 
   console.log("seed: created reply, id=", reply?.id);
+
+  for (const item of defaultSensitiveWords) {
+    await db
+      .insert(sensitiveWords)
+      .values({ ...item, createAt: new Date().toISOString() })
+      .onConflictDoNothing();
+  }
+
+  console.log("seed: ensured default sensitive words, count=", defaultSensitiveWords.length);
 
   console.log("seed: done");
   process.exit(0);

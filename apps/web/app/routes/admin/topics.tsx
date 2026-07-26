@@ -1,8 +1,8 @@
-import { requireAdmin } from "~/lib/auth";
+import { requireMod } from "~/lib/auth";
 import { AdminLayout } from "~/components/AdminLayout";
 import { apiFetch } from "~/lib/api-client";
 import { useState } from "react";
-import { useRevalidator } from "react-router";
+import { Form, useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -10,6 +10,7 @@ import { Checkbox } from "~/components/ui/checkbox";
 import { TagBadge, StatusBadge } from "~/components/TagBadge";
 import { TimeAgo } from "~/components/TimeAgo";
 import { AdminPage, AdminPageHeader, AdminPanel, AdminToolbar } from "~/components/AdminPage";
+import { Pagination } from "~/components/Pagination";
 import {
   Table,
   TableBody,
@@ -24,17 +25,24 @@ export function meta() {
 }
 
 export async function loader({ request }: any) {
-  await requireAdmin(request);
+  const user = await requireMod(request);
+  const url = new URL(request.url);
+  const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
+  const limit = Math.min(100, Number(url.searchParams.get("limit")) || 50);
+  const q = url.searchParams.get("q") || "";
   const cookie = request.headers.get("cookie") || "";
-  const res = await apiFetch<{ success: boolean; data: any[] }>("/api/v1/admin/topics?limit=50", {
-    headers: { cookie },
-  });
-  return { topics: res.success ? res.data || [] : [] };
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (q) params.set("q", q);
+  const res = await apiFetch<{ success: boolean; data: any[]; total?: number; page?: number; limit?: number }>(
+    `/api/v1/admin/topics?${params.toString()}`,
+    { headers: { cookie } },
+  );
+  return { topics: res.success ? res.data || [] : [], total: res.total ?? 0, page, limit, q, user };
 }
 
 export default function AdminTopics({ loaderData }: any) {
-  const { topics } = loaderData;
-  const [search, setSearch] = useState("");
+  const { topics, total, page, limit, q, user } = loaderData;
+  const isAdmin = !!user?.is_admin;
   const [selected, setSelected] = useState<number[]>([]);
   const { revalidate } = useRevalidator();
 
@@ -61,40 +69,35 @@ export default function AdminTopics({ loaderData }: any) {
     }
   };
 
-  const filtered = topics.filter(
-    (t: any) =>
-      !search ||
-      t.title?.toLowerCase().includes(search.toLowerCase()) ||
-      t.author?.loginname?.toLowerCase().includes(search.toLowerCase()),
-  );
-
   return (
     <AdminLayout>
       <AdminPage>
         <AdminPageHeader title="话题管理" description="集中处理置顶、加精、隐藏和删除等内容运营动作。" />
-        <AdminPanel title="话题列表" description={`当前显示 ${filtered.length} / ${topics.length} 个话题`}>
+        <AdminPanel title="话题列表" description={`当前显示 ${topics.length} / ${total} 个话题`}>
           <AdminToolbar>
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="搜索标题/作者"
-              className="w-full sm:max-w-sm"
-            />
+            <Form method="get" className="flex w-full gap-2 sm:max-w-md">
+              <Input name="q" defaultValue={q} placeholder="搜索标题" className="flex-1" />
+              <Button type="submit" variant="outline">搜索</Button>
+            </Form>
             {selected.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 <span className="font-medium text-cnode-ink">已选 {selected.length} 项</span>
                 <Button size="sm" variant="outline" onClick={() => handleAction("top")}>
-                  置顶
+                  切换置顶
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => handleAction("good")}>
-                  加精
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => handleAction("mute")}>
-                  隐藏
-                </Button>
-                <Button size="sm" variant="destructive" onClick={() => handleAction("delete")}>
-                  删除
-                </Button>
+                {isAdmin && (
+                  <>
+                    <Button size="sm" variant="outline" onClick={() => handleAction("good")}>
+                      加精
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => handleAction("mute")}>
+                      隐藏
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => handleAction("delete")}>
+                      删除
+                    </Button>
+                  </>
+                )}
               </div>
             )}
           </AdminToolbar>
@@ -115,10 +118,11 @@ export default function AdminTopics({ loaderData }: any) {
               <TableHead>状态</TableHead>
               <TableHead>回复</TableHead>
               <TableHead>时间</TableHead>
+              <TableHead className="text-right">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((t: any) => (
+            {topics.map((t: any) => (
               <TableRow key={t.id}>
                 <TableCell>
                   <Checkbox
@@ -147,10 +151,18 @@ export default function AdminTopics({ loaderData }: any) {
                 <TableCell className="text-muted-foreground text-xs">
                   <TimeAgo date={t.create_at} />
                 </TableCell>
+                <TableCell className="text-right">
+                  <Button size="sm" variant="ghost" onClick={() => handleAction("top", t.id)}>
+                    切换置顶
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
           </Table>
+          <div className="px-4 pb-4">
+            <Pagination page={page} total={total} limit={limit} basePath="/admin/topics" searchParams={{ ...(q ? { q } : {}) }} />
+          </div>
         </AdminPanel>
       </AdminPage>
     </AdminLayout>

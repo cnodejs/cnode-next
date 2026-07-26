@@ -39,6 +39,12 @@ export class MockRedis {
     return this.set(key, value, "EX", seconds);
   }
 
+  async setnx(key: string, value: string): Promise<number> {
+    if (!this.isExpired(key) && this.store.has(key)) return 0;
+    this.store.set(key, { value, expireAt: null });
+    return 1;
+  }
+
   async incr(key: string): Promise<number> {
     const current = this.isExpired(key) ? 0 : Number(this.store.get(key)?.value ?? 0);
     const next = current + 1;

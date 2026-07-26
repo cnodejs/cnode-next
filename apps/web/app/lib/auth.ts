@@ -18,3 +18,9 @@ export async function requireAdmin(request: Request) {
   if (!user.is_admin) throw redirect("/");
   return user;
 }
+
+export async function requireMod(request: Request) {
+  const user = await requireUser(request);
+  if (!user.is_mod) throw redirect("/");
+  return user;
+}

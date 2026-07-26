@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, primaryKey as sqlitePrimaryKey } from "drizzle-orm/sqlite-core";
 import { pgTable, integer as pgInteger, timestamp, primaryKey } from "drizzle-orm/pg-core";
 import { replies } from "./reply";
 import { users } from "./user";
@@ -17,7 +17,7 @@ export const replyUps = sqliteTable(
     createAt: text("create_at").default(sql`(datetime('now'))`),
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.replyId, table.userId] }),
+    pk: sqlitePrimaryKey({ columns: [table.replyId, table.userId] }),
   }),
 );
 
