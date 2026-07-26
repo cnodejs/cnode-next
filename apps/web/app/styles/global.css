@@ -113,15 +113,6 @@
   }
 }
 
-.prose {
-  --tw-prose-body: var(--muted-foreground);
-  --tw-prose-headings: var(--foreground);
-  --tw-prose-links: var(--primary);
-  --tw-prose-code: var(--foreground);
-  --tw-prose-pre-bg: var(--muted);
-  --tw-prose-pre-code: var(--foreground);
-}
-
 html {
   scroll-behavior: smooth;
   scrollbar-gutter: stable;
@@ -133,21 +124,191 @@ html {
   }
 }
 
-.prose pre {
-  background-color: var(--muted);
+.markdown-body {
   color: var(--foreground);
+  line-height: 1.7;
 }
 
-.prose code::before,
-.prose code::after {
+.markdown-body > :first-child {
+  margin-top: 0;
+}
+
+.markdown-body > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  color: var(--foreground);
+  font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.markdown-body h1,
+.markdown-body h2 {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.45rem;
+}
+
+.markdown-body h1 {
+  font-size: 1.875rem;
+}
+
+.markdown-body h2 {
+  font-size: 1.5rem;
+}
+
+.markdown-body h3 {
+  font-size: 1.25rem;
+}
+
+.markdown-body h4 {
+  font-size: 1rem;
+}
+
+.markdown-body p,
+.markdown-body blockquote,
+.markdown-body ul,
+.markdown-body ol,
+.markdown-body dl,
+.markdown-body table,
+.markdown-body pre,
+.markdown-body details {
+  margin-bottom: 1rem;
+  margin-top: 0;
+}
+
+.markdown-body p,
+.markdown-body li {
+  color: color-mix(in srgb, var(--foreground) 86%, var(--muted-foreground));
+}
+
+.markdown-body a {
+  color: var(--primary);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.markdown-body a:hover {
+  color: var(--cnode-green-hover);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.markdown-body strong {
+  color: var(--foreground);
+  font-weight: 700;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 1.65rem;
+}
+
+.markdown-body li + li {
+  margin-top: 0.25rem;
+}
+
+.markdown-body li > p {
+  margin-bottom: 0.5rem;
+}
+
+.markdown-body blockquote {
+  border-left: 0.25rem solid var(--border);
+  color: var(--muted-foreground);
+  padding: 0 1rem;
+}
+
+.markdown-body blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body hr {
+  background-color: var(--border);
+  border: 0;
+  height: 0.25rem;
+  margin: 1.5rem 0;
+}
+
+.markdown-body code,
+.markdown-body tt {
+  background-color: color-mix(in srgb, var(--muted) 82%, var(--foreground) 8%);
+  border-radius: 0.375rem;
+  color: var(--foreground);
+  font-family:
+    ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.85em;
+  padding: 0.18em 0.38em;
+}
+
+.markdown-body code::before,
+.markdown-body code::after {
   content: none;
 }
 
-.prose :not(pre) > code {
-  background-color: var(--muted);
-  padding: 0.125rem 0.375rem;
-  border-radius: 0.25rem;
-  font-weight: 400;
+.markdown-body pre {
+  background-color: color-mix(in srgb, var(--muted) 88%, var(--foreground) 6%);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  color: var(--foreground);
+  overflow: auto;
+  padding: 1rem;
+}
+
+.markdown-body pre code {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  padding: 0;
+  white-space: pre;
+}
+
+.markdown-body table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
+  width: max-content;
+}
+
+.markdown-body table th,
+.markdown-body table td {
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.75rem;
+}
+
+.markdown-body table th {
+  background-color: var(--surface-subtle);
+  color: var(--foreground);
+  font-weight: 700;
+}
+
+.markdown-body table tr:nth-child(2n) td {
+  background-color: color-mix(in srgb, var(--surface-subtle) 72%, transparent);
+}
+
+.markdown-body img {
+  background-color: var(--card);
+  border-radius: 0.75rem;
+  box-shadow: 0 0 0 1px var(--border);
+  height: auto;
+  max-width: 100%;
+}
+
+.markdown-body input[type="checkbox"] {
+  margin-right: 0.4rem;
+  transform: translateY(0.08em);
 }
 
 .hljs {

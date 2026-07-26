@@ -35,14 +35,7 @@ export function MarkdownView({ content, className }: MarkdownViewProps) {
   return (
     <div
       className={cn(
-        "prose prose-sm max-w-none break-words",
-        "prose-headings:text-foreground prose-p:text-muted-foreground prose-a:text-primary",
-        "prose-strong:text-foreground prose-code:text-foreground prose-code:bg-muted prose-code:rounded prose-code:px-1 prose-code:py-0.5",
-        "prose-pre:bg-muted prose-pre:text-foreground",
-        "prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground",
-        "prose-ul:text-muted-foreground prose-ol:text-muted-foreground",
-        "prose-table:border-border prose-th:text-foreground prose-td:text-muted-foreground",
-        "prose-hr:border-border",
+        "markdown-body max-w-none break-words text-sm",
         className,
       )}
     >
@@ -63,6 +56,7 @@ export function MarkdownView({ content, className }: MarkdownViewProps) {
               {children}
             </h3>
           ),
+          img: ({ alt, ...props }) => <img alt={alt || ""} loading="lazy" decoding="async" {...props} />,
         }}
       >
         {content || ""}

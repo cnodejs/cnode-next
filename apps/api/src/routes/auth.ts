@@ -3,6 +3,7 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import OSS from "ali-oss";
 import bcryptjs from "bcryptjs";
+import { Buffer } from "node:buffer";
 import { v4 as uuidv4 } from "uuid";
 import { userQueries } from "../lib/db";
 import {
@@ -26,6 +27,9 @@ const presignUploadSchema = z.object({
   filename: z.string().max(255).optional(),
   contentType: z.string().regex(/^image\/(png|jpeg|gif|webp)$/).default("image/png"),
 });
+
+const allowedImageTypes = new Set(["image/png", "image/jpeg", "image/gif", "image/webp"]);
+const allowedImageExtensions = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp"]);
 
 function extensionForContentType(contentType: string) {
   if (contentType === "image/jpeg") return ".jpg";
@@ -56,6 +60,20 @@ function createOssClient() {
 
 function uploadPrefix() {
   return (process.env.OSS_UPLOAD_PREFIX || "cnode-next/uploads").replace(/^\/+|\/+$/g, "");
+}
+
+function staticUploadUrl(filename: string) {
+  const staticHost = process.env.OSS_STATIC_HOST || "https://static.cnodejs.org";
+  return `${staticHost.replace(/\/+$/g, "")}/${filename}`;
+}
+
+function safeOriginalName(name: string) {
+  return name.replace(/[/\\]/g, "").trim().slice(0, 255) || "image";
+}
+
+function extensionForFilename(name: string) {
+  const match = name.toLowerCase().match(/\.[a-z0-9]+$/);
+  return match?.[0] || "";
 }
 
 auth.use("*", authMiddleware());
@@ -91,6 +109,8 @@ const resetPassSchema = z.object({
     .regex(/[a-zA-Z]/)
     .regex(/[0-9]/),
 });
+
+const RETRIEVE_KEY_TTL = 24 * 60 * 60 * 1000;
 
 auth.post("/auth/local/login", zValidator("json", signinSchema), async (c) => {
   const { name, pass } = c.req.valid("json");
@@ -140,8 +160,8 @@ auth.post("/auth/local/signup", zValidator("json", signupSchema), async (c) => {
     active: false,
   });
 
-  // TODO: update retrieveKey on user, then send active mail
-  // For now, auto-activate in dev mode
+  await userQueries.updateRetrieveKey(user.id, retrieveKey, Date.now());
+
   if (process.env.APP_ENV === "development") {
     // Skip email in dev
   } else {
@@ -157,8 +177,14 @@ auth.get("/auth/local/active_account", async (c) => {
     return c.json({ success: false, error_msg: "无效的激活链接" }, 400);
   }
 
-  // TODO: find user by retrieve_key, set active=1
-  // For now just return success
+  const user = await userQueries.getByRetrieveKey(key);
+  if (!user) {
+    return c.json({ success: false, error_msg: "无效的激活链接" }, 400);
+  }
+
+  await userQueries.updateActive(user.id);
+  await userQueries.updateRetrieveKey(user.id, null, null);
+
   return c.json({ success: true, message: "账号已激活" });
 });
 
@@ -171,7 +197,7 @@ auth.post("/auth/local/search_pass", zValidator("json", searchPassSchema), async
   }
 
   const key = uuidv4();
-  // TODO: save retrieve_key and retrieve_time on user
+  await userQueries.updateRetrieveKey(user.id, key, Date.now());
 
   if (process.env.APP_ENV !== "development") {
     await sendResetPassMail(email, key);
@@ -183,8 +209,14 @@ auth.post("/auth/local/search_pass", zValidator("json", searchPassSchema), async
 auth.post("/auth/local/reset_pass", zValidator("json", resetPassSchema), async (c) => {
   const { key, psw } = c.req.valid("json");
 
-  // TODO: find user by retrieve_key, check retrieve_time, update pass
+  const user = await userQueries.getByRetrieveKey(key);
+  if (!user || !user.retrieveTime || Date.now() - Number(user.retrieveTime) > RETRIEVE_KEY_TTL) {
+    return c.json({ success: false, error_msg: "重置链接无效或已过期" }, 400);
+  }
+
   const passhash = await bcryptjs.hash(psw, 10);
+  await userQueries.updatePass(user.id, passhash);
+  await userQueries.updateRetrieveKey(user.id, null, null);
 
   return c.json({ success: true, message: "密码已重置" });
 });
@@ -385,7 +417,6 @@ auth.post("/upload/presign", async (c) => {
 
   const { contentType } = parsed.data;
   const filename = `${uploadPrefix()}/${uuidv4()}${extensionForContentType(contentType)}`;
-  const staticHost = process.env.OSS_STATIC_HOST || "https://static.cnodejs.org";
   const uploadUrl = createOssClient().signatureUrl(filename, {
     method: "PUT",
     expires: Number(process.env.OSS_UPLOAD_EXPIRES || 600),
@@ -393,7 +424,7 @@ auth.post("/upload/presign", async (c) => {
       "Content-Type": contentType,
     },
   });
-  const url = `${staticHost}/${filename}`;
+  const url = staticUploadUrl(filename);
 
   return c.json({
     success: true,
@@ -402,6 +433,48 @@ auth.post("/upload/presign", async (c) => {
     method: "PUT",
     headers: { "Content-Type": contentType },
     filename,
+  });
+});
+
+auth.post("/upload/image", async (c) => {
+  const user = c.get("user");
+  if (!user) {
+    return c.json({ success: false, error_msg: "未登录" }, 401);
+  }
+
+  const formData = await c.req.formData().catch(() => null);
+  const file = formData?.get("file");
+  if (!(file instanceof File)) {
+    return c.json({ success: false, error_msg: "请选择要上传的图片" }, 400);
+  }
+
+  if (!allowedImageTypes.has(file.type)) {
+    return c.json({ success: false, error_msg: "只支持 png/jpeg/gif/webp 图片上传" }, 422);
+  }
+
+  const originalName = safeOriginalName(file.name);
+  const originalExtension = extensionForFilename(originalName);
+  if (originalExtension && !allowedImageExtensions.has(originalExtension)) {
+    return c.json({ success: false, error_msg: "只支持 png/jpeg/gif/webp 图片上传" }, 422);
+  }
+
+  const maxSize = Number(process.env.OSS_UPLOAD_MAX_BYTES || 5 * 1024 * 1024);
+  if (file.size > maxSize) {
+    return c.json({ success: false, error_msg: "图片不能超过 5MB" }, 413);
+  }
+
+  const filename = `${uploadPrefix()}/${uuidv4()}${extensionForContentType(file.type)}`;
+  const buffer = Buffer.from(await file.arrayBuffer());
+  await createOssClient().put(filename, buffer, {
+    headers: {
+      "Content-Type": file.type,
+    },
+  });
+
+  return c.json({
+    success: true,
+    url: staticUploadUrl(filename),
+    filename: originalName,
   });
 });
 
