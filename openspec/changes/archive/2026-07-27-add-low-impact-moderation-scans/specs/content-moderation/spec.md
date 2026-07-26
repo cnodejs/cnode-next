@@ -1,46 +1,4 @@
-# content-moderation Specification
-
-## Purpose
-TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after archive.
-## Requirements
-### Requirement: 关键字过滤
-
-系统 MUST 在发帖和回复提交时对标题和内容进行关键字过滤,阻止包含敏感词的内容发布。
-
-#### Scenario: 发帖时命中敏感词
-
-- **WHEN** 用户提交新话题,标题或内容包含敏感词
-- **THEN** 拒绝发布,返回错误提示 "内容包含敏感词,请修改后重试"
-- **AND** 不写入数据库
-- **AND** 不触发积分/计数器变化
-
-#### Scenario: 回复时命中敏感词
-
-- **WHEN** 用户提交回复,内容包含敏感词
-- **THEN** 拒绝发布,返回错误提示
-- **AND** 不写入数据库
-
-#### Scenario: 编辑话题时命中敏感词
-
-- **WHEN** 用户编辑已有话题,新内容包含敏感词
-- **THEN** 拒绝修改,保留原内容
-
-### Requirement: 敏感词库管理
-
-系统 MUST 维护一个可配置的敏感词库,支持动态更新。
-
-#### Scenario: 敏感词存储
-
-- **WHEN** 系统启动或运行时
-- **THEN** 敏感词库从数据库或配置文件加载
-- **AND** 支持管理员通过接口动态增删敏感词
-
-#### Scenario: 敏感词匹配
-
-- **WHEN** 对文本进行敏感词检测
-- **THEN** 使用高效匹配算法 (如 DFA/AC 自动机),支持中英文混合匹配
-- **AND** 支持大小写不敏感匹配
-- **AND** 支持常见变体 (如拼音、拆字、全角半角),根据配置开启
+## MODIFIED Requirements
 
 ### Requirement: 定期巡检
 
@@ -70,6 +28,8 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 - **THEN** 系统 MUST 展示命中对象、命中敏感词、上下文预览、作者和扫描时间
 - **AND** 管理员 MUST 能够确认删除、标记误报或忽略命中
 
+## ADDED Requirements
+
 ### Requirement: 巡检命中记录
 
 系统 MUST 为每个敏感词扫描命中保存可复核记录，覆盖话题和回复两类内容。
@@ -86,13 +46,3 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 - **WHEN** 同一任务或后续任务再次扫描到同一对象命中同一敏感词
 - **THEN** 系统 MUST 避免创建重复的待处理命中记录
 - **AND** 已处理为误报的命中 MUST NOT 被同一敏感词反复加入待处理队列
-
-### Requirement: 敏感词匹配性能
-
-系统 MUST 在合理时间内完成大文本的敏感词检测,不阻塞正常发帖流程。
-
-#### Scenario: 大文本匹配
-
-- **WHEN** 对长篇帖子 (如 10000 字) 进行敏感词检测
-- **THEN** 匹配耗时 MUST 低于 100ms
-- **AND** 不阻塞请求超过合理时间
