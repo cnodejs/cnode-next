@@ -39,13 +39,15 @@ async function tick() {
     if (scheduledEnabled()) {
       await createScheduledScanJobIfNeeded();
     }
-    const job = await claimNextScanJob();
-    if (!job) return;
-    try {
-      await processJob(job, owner);
-    } catch (error) {
-      await failScanJob(job.id, error);
-      throw error;
+    while (await extendScanWorkerLock(owner)) {
+      const job = await claimNextScanJob();
+      if (!job) return;
+      try {
+        await processJob(job, owner);
+      } catch (error) {
+        await failScanJob(job.id, error);
+        throw error;
+      }
     }
   } finally {
     await releaseScanWorkerLock(owner);
