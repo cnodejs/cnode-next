@@ -7,6 +7,12 @@ export async function requireUser(request: Request) {
   return user;
 }
 
+export async function redirectIfAuthenticated(request: Request, to = "/") {
+  const user = await getCurrentUser(request);
+  if (user) throw redirect(to);
+  return null;
+}
+
 export async function requireAdmin(request: Request) {
   const user = await requireUser(request);
   if (!user.is_admin) throw redirect("/");

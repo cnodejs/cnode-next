@@ -20,6 +20,7 @@ import {
 } from "~/components/ui/form";
 import { CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { AuthShell } from "~/components/AuthShell";
+import { redirectIfAuthenticated } from "~/lib/auth";
 
 const signupFormSchema = signupSchema
   .extend({
@@ -34,6 +35,11 @@ type SignupValues = z.infer<typeof signupFormSchema>;
 
 export function meta() {
   return [{ title: "注册 · CNode" }];
+}
+
+export async function loader({ request }: { request: Request }) {
+  await redirectIfAuthenticated(request);
+  return null;
 }
 
 export default function Signup() {
