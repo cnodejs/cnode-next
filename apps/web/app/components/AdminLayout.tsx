@@ -55,7 +55,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-surface-subtle text-foreground dark:bg-background">
       <header className="sticky top-0 z-40 border-b border-cnode-ink/10 bg-background/90 backdrop-blur-xl">
-        <PageContainer className="flex h-16 items-center justify-between">
+        <PageContainer className="flex h-16 max-w-screen-2xl items-center justify-between">
           <div className="flex min-w-0 items-center gap-4">
             <CNodeLogo admin />
             <button
@@ -105,9 +105,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
       </header>
 
-      <PageContainer className="py-6">
+      <PageContainer className="max-w-screen-2xl py-6">
         <AdminMobileNav />
-        <div className="grid gap-6 md:grid-cols-[220px_1fr]">
+        <div className="grid min-w-0 gap-6 md:grid-cols-[220px_minmax(0,1fr)]">
           <aside className="hidden md:block">
             <AdminSideNav />
           </aside>

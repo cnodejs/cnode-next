@@ -65,15 +65,17 @@ export default function AdminReports({ loaderData }: any) {
                 <div key={r.id} className="rounded-2xl border border-border bg-background p-4">
                   <div className="mb-2 flex items-center gap-2 text-sm">
                 <Badge variant="destructive">{r.type}</Badge>
-                <span className="text-muted-foreground">{r.reporters?.length || 0} 人举报</span>
+                <span className="text-muted-foreground">{r.reporter_count || 0} 人举报</span>
+                <span className="text-muted-foreground">{r.target_type} #{r.target_id}</span>
                   </div>
                   <div className="mb-2 text-sm">
-                <a href={`/topic/${r.topic_id}`} className="font-medium text-cnode-ink hover:text-cnode-green">
-                  {r.topic_title}
+                <a href={r.topic_id ? `/topic/${r.topic_id}` : "#"} className="break-words font-medium text-cnode-ink hover:text-cnode-green">
+                  {r.topic_title || "目标内容已不可见"}
                 </a>
+                {r.target_type === "reply" && <p className="mt-1 break-words text-muted-foreground">{r.target_summary}</p>}
                   </div>
               {r.description && (
-                    <p className="mb-3 rounded-xl bg-surface-subtle p-3 text-sm text-muted-foreground">{r.description}</p>
+                    <p className="mb-3 rounded-xl bg-surface-subtle p-3 text-sm break-words text-muted-foreground">{r.description}</p>
               )}
                   <div className="flex flex-wrap gap-2">
                 <Button

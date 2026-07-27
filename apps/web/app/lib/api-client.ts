@@ -2,6 +2,7 @@ declare global {
   interface Window {
     __CNODE_CONFIG__?: {
       apiBaseUrl?: string;
+      turnstileSiteKey?: string;
     };
   }
 }

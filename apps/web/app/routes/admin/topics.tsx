@@ -101,7 +101,8 @@ export default function AdminTopics({ loaderData }: any) {
               </div>
             )}
           </AdminToolbar>
-          <Table>
+          <div className="overflow-x-auto">
+          <Table className="min-w-[980px]">
           <TableHeader>
             <TableRow>
               <TableHead className="w-8">
@@ -113,18 +114,18 @@ export default function AdminTopics({ loaderData }: any) {
                   }
                 />
               </TableHead>
-              <TableHead>标题</TableHead>
-              <TableHead>Tab</TableHead>
-              <TableHead>状态</TableHead>
-              <TableHead>回复</TableHead>
-              <TableHead>时间</TableHead>
-              <TableHead className="text-right">操作</TableHead>
+              <TableHead className="min-w-80">标题</TableHead>
+              <TableHead className="w-24">Tab</TableHead>
+              <TableHead className="w-32">状态</TableHead>
+              <TableHead className="w-20">回复</TableHead>
+              <TableHead className="w-32 whitespace-nowrap">时间</TableHead>
+              <TableHead className="w-32 text-right">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {topics.map((t: any) => (
               <TableRow key={t.id}>
-                <TableCell>
+                <TableCell className="max-w-lg">
                   <Checkbox
                     aria-label={`选择话题 ${t.title}`}
                     checked={selected.includes(t.id)}
@@ -134,7 +135,7 @@ export default function AdminTopics({ loaderData }: any) {
                 <TableCell>
                   <a
                     href={`/topic/${t.id}`}
-                    className="text-primary hover:underline truncate block max-w-xs"
+                    className="block truncate text-primary hover:underline"
                   >
                     {t.title}
                   </a>
@@ -148,7 +149,7 @@ export default function AdminTopics({ loaderData }: any) {
                   {t.deleted > 0 && <span className="text-destructive text-xs">已删除</span>}
                 </TableCell>
                 <TableCell>{t.reply_count}</TableCell>
-                <TableCell className="text-muted-foreground text-xs">
+                <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
                   <TimeAgo date={t.create_at} />
                 </TableCell>
                 <TableCell className="text-right">
@@ -160,6 +161,7 @@ export default function AdminTopics({ loaderData }: any) {
             ))}
           </TableBody>
           </Table>
+          </div>
           <div className="px-4 pb-4">
             <Pagination page={page} total={total} limit={limit} basePath="/admin/topics" searchParams={{ ...(q ? { q } : {}) }} />
           </div>

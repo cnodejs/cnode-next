@@ -8,8 +8,12 @@ function getTransporter(): Transporter | null {
 
   const host = process.env.SMTP_HOST;
   if (!host) {
-    console.log("[mail] SMTP_HOST not set, skipping email");
-    return null;
+    const message = "[mail] SMTP_HOST not set";
+    if (process.env.APP_ENV === "development") {
+      console.log(`${message}, skipping email in development`);
+      return null;
+    }
+    throw new Error(message);
   }
 
   const port = Number(process.env.SMTP_PORT) || 25;
@@ -55,8 +59,8 @@ export async function sendMail(data: MailData) {
 }
 
 export async function sendActiveMail(email: string, key: string) {
-  const host = process.env.APP_API_BASE_URL || "http://localhost:3001";
-  const url = `${host}/auth/local/active_account?key=${key}`;
+  const host = process.env.APP_WEB_BASE_URL || "http://localhost:5173";
+  const url = `${host.replace(/\/+$/g, "")}/active_account?key=${key}`;
 
   await sendMail({
     from: "cnode@localhost",
@@ -68,8 +72,8 @@ export async function sendActiveMail(email: string, key: string) {
 }
 
 export async function sendResetPassMail(email: string, key: string) {
-  const host = process.env.APP_API_BASE_URL || "http://localhost:3001";
-  const url = `${host}/reset_pass?key=${key}`;
+  const host = process.env.APP_WEB_BASE_URL || "http://localhost:5173";
+  const url = `${host.replace(/\/+$/g, "")}/reset_pass?key=${key}`;
 
   await sendMail({
     from: "cnode@localhost",

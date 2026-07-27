@@ -11,6 +11,7 @@ export async function loader({ request }: { request: Request }) {
     user,
     publicConfig: {
       apiBaseUrl: process.env.APP_API_BASE_URL || "https://api.cnodejs.org",
+      turnstileSiteKey: process.env.TURNSTILE_SITE_KEY || "",
     },
   };
 }

@@ -36,6 +36,9 @@ import {
 } from "../lib/moderation-scan";
 import { boolEq, boolValue } from "../lib/db-compat";
 import { decrementScoreAndReplyCount } from "../lib/score";
+import { isValidIpRule } from "../middleware/ip-ban";
+import { applyProgressivePenalty } from "../lib/penalty";
+import { userSummary } from "../lib/format";
 
 const admin = new Hono<{
   Variables: AuthVars;
@@ -44,6 +47,12 @@ const admin = new Hono<{
 const topicActions = new Set(["top", "good", "mute", "delete"]);
 const ADMIN_DEFAULT_LIMIT = 50;
 const ADMIN_MAX_LIMIT = 100;
+
+const createReportSchema = {
+  targetType: (value: unknown) => (value === "topic" || value === "reply" ? value : null),
+  type: (value: unknown) => (typeof value === "string" && value.trim() ? value.trim().slice(0, 50) : "other"),
+  description: (value: unknown) => (typeof value === "string" ? value.trim().slice(0, 1000) : undefined),
+};
 
 type Pagination = {
   page: number;
@@ -70,6 +79,61 @@ function paginated<T>(data: T[], total: number, pagination: Pagination) {
     page: pagination.page,
     limit: pagination.limit,
   };
+}
+
+function rejectSelfTarget(c: any, targetUser: { id: number }) {
+  const currentUser = c.get("user");
+  if (currentUser && currentUser.id === targetUser.id) {
+    return c.json({ success: false, error_msg: "不能对自己执行该操作" }, 422);
+  }
+  return null;
+}
+
+async function getReportTargetSummary(targetType: string, targetId: number) {
+  if (targetType === "topic") {
+    const topic = await topicQueries.getById(targetId);
+    if (!topic || topic.deleted) return null;
+    return {
+      target_type: "topic",
+      target_id: String(topic.id),
+      topic_id: String(topic.id),
+      title: topic.title,
+      summary: topic.title,
+    };
+  }
+  if (targetType === "reply") {
+    const reply = await replyQueries.getById(targetId);
+    if (!reply || reply.deleted) return null;
+    const topic = await topicQueries.getById(reply.topicId);
+    if (!topic || topic.deleted) return null;
+    return {
+      target_type: "reply",
+      target_id: String(reply.id),
+      topic_id: String(topic.id),
+      title: topic.title,
+      summary: reply.content.slice(0, 160),
+    };
+  }
+  return null;
+}
+
+async function hideReportTarget(targetType: string, targetId: number) {
+  const db = getDb();
+  if (targetType === "topic") {
+    const topic = await topicQueries.getById(targetId);
+    if (!topic || topic.deleted) return null;
+    await db.update(topics).set({ deleted: boolValue(true), status: "deleted" } as any).where(eq(topics.id, targetId));
+    return topic.authorId;
+  }
+  if (targetType === "reply") {
+    const reply = await replyQueries.getById(targetId);
+    if (!reply || reply.deleted) return null;
+    await replyQueries.softDelete(reply.id);
+    await decrementScoreAndReplyCount(reply.authorId, 5, 1);
+    await topicQueries.decrementReplyCount(reply.topicId);
+    return reply.authorId;
+  }
+  return null;
 }
 
 export function canRunTopicAction(action: string, isAdmin: boolean, isMod: boolean) {
@@ -107,6 +171,8 @@ admin.get("/admin/stats", adminRequired(), async (c) => {
         .where(sql`date(${users.createAt}) = ${today}`)
     )[0]?.c ?? 0;
   const moderationPending = await pendingHitCount();
+  const pendingReports =
+    (await db.select({ c: count() }).from(reports).where(eq(reports.status, "pending")))[0]?.c ?? 0;
   return c.json({
     success: true,
     data: {
@@ -116,7 +182,7 @@ admin.get("/admin/stats", adminRequired(), async (c) => {
       todayTopics,
       todayReplies,
       todayUsers,
-      pendingReports: 0,
+      pendingReports,
       moderationPending,
     },
   });
@@ -383,6 +449,8 @@ admin.post("/user/:name/block", adminRequired(), async (c) => {
   const name = c.req.param("name");
   const userData = await userQueries.getByLoginName(name);
   if (!userData) return c.json({ success: false, error_msg: "用户不存在" }, 404);
+  const selfError = rejectSelfTarget(c, userData);
+  if (selfError) return selfError;
   const db = getDb();
   await db.update(users).set({ isBlock: boolValue(true) } as any).where(eq(users.id, userData.id));
   const user = c.get("user")!;
@@ -400,6 +468,8 @@ admin.post("/user/:name/unblock", adminRequired(), async (c) => {
   const name = c.req.param("name");
   const userData = await userQueries.getByLoginName(name);
   if (!userData) return c.json({ success: false, error_msg: "用户不存在" }, 404);
+  const selfError = rejectSelfTarget(c, userData);
+  if (selfError) return selfError;
   const db = getDb();
   await db.update(users).set({ isBlock: boolValue(false) } as any).where(eq(users.id, userData.id));
   const user = c.get("user")!;
@@ -417,6 +487,8 @@ admin.post("/user/:name/mute", adminRequired(), async (c) => {
   const name = c.req.param("name");
   const userData = await userQueries.getByLoginName(name);
   if (!userData) return c.json({ success: false, error_msg: "用户不存在" }, 404);
+  const selfError = rejectSelfTarget(c, userData);
+  if (selfError) return selfError;
   const db = getDb();
   await db.update(users).set({ isMuted: boolValue(true) } as any).where(eq(users.id, userData.id));
   const user = c.get("user")!;
@@ -434,6 +506,8 @@ admin.post("/user/:name/unmute", adminRequired(), async (c) => {
   const name = c.req.param("name");
   const userData = await userQueries.getByLoginName(name);
   if (!userData) return c.json({ success: false, error_msg: "用户不存在" }, 404);
+  const selfError = rejectSelfTarget(c, userData);
+  if (selfError) return selfError;
   const db = getDb();
   await db.update(users).set({ isMuted: boolValue(false) } as any).where(eq(users.id, userData.id));
   const user = c.get("user")!;
@@ -451,6 +525,8 @@ admin.post("/user/:name/delete_all", adminRequired(), async (c) => {
   const name = c.req.param("name");
   const userData = await userQueries.getByLoginName(name);
   if (!userData) return c.json({ success: false, error_msg: "用户不存在" }, 404);
+  const selfError = rejectSelfTarget(c, userData);
+  if (selfError) return selfError;
   const db = getDb();
   await db
     .update(topics)
@@ -553,8 +629,10 @@ admin.get("/admin/bans/ips", adminRequired(), async (c) => {
 
 admin.post("/admin/bans/ips", adminRequired(), async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  const { ip, reason } = body;
+  const ip = typeof body.ip === "string" ? body.ip.trim() : "";
+  const reason = typeof body.reason === "string" ? body.reason.trim() : undefined;
   if (!ip) return c.json({ success: false, error_msg: "缺少 ip" }, 400);
+  if (!isValidIpRule(ip)) return c.json({ success: false, error_msg: "IP/CIDR 格式无效" }, 422);
   await ipBanQueries.add(ip, reason);
   const user = c.get("user")!;
   await auditQueries.log(user.id, user.loginname, "ban_ip", { type: "ip", name: ip }, "success");
@@ -564,6 +642,8 @@ admin.post("/admin/bans/ips", adminRequired(), async (c) => {
 admin.delete("/admin/bans/ips/:id", adminRequired(), async (c) => {
   const id = Number(c.req.param("id"));
   await ipBanQueries.remove(id);
+  const user = c.get("user")!;
+  await auditQueries.log(user.id, user.loginname, "unban_ip", { type: "ip", id: String(id) }, "success");
   return c.json({ success: true });
 });
 
@@ -584,14 +664,49 @@ admin.get("/admin/reports", modRequired(), async (c) => {
       .offset(pagination.offset),
     db.select({ c: count() }).from(reports).where(where),
   ]);
-  return c.json(paginated(list, Number(totalResult[0]?.c || 0), pagination));
+  const data = await Promise.all(
+    list.map(async (report: any) => {
+      const summary = await getReportTargetSummary(report.targetType, report.targetId);
+      const reporterCount =
+        (
+          await db
+            .select({ c: sql<number>`count(distinct ${reports.reporterId})` })
+            .from(reports)
+            .where(and(eq(reports.targetType, report.targetType), eq(reports.targetId, report.targetId), eq(reports.status, status)))
+        )[0]?.c ?? 0;
+      return {
+        id: report.id,
+        type: report.type,
+        description: report.description,
+        status: report.status,
+        reporter_count: Number(reporterCount),
+        target_type: report.targetType,
+        target_id: String(report.targetId),
+        topic_id: summary?.topic_id || null,
+        topic_title: summary?.title || "目标内容已不可见",
+        target_summary: summary?.summary || "目标内容已不可见",
+        create_at: report.createAt,
+      };
+    }),
+  );
+  return c.json(paginated(data, Number(totalResult[0]?.c || 0), pagination));
 });
 
 admin.post("/admin/reports/:id/:action", modRequired(), async (c) => {
   const id = Number(c.req.param("id"));
   const action = c.req.param("action");
+  if (!["confirm", "dismiss"].includes(action)) {
+    return c.json({ success: false, error_msg: "不支持的操作" }, 400);
+  }
   const user = c.get("user")!;
+  const db = getDb();
+  const report = (await db.select().from(reports).where(eq(reports.id, id)).limit(1))[0] as any;
+  if (!report) return c.json({ success: false, error_msg: "举报不存在" }, 404);
   await reportQueries.handle(id, user.id, action);
+  if (action === "confirm") {
+    const authorId = await hideReportTarget(report.targetType, report.targetId);
+    if (authorId) await applyProgressivePenalty(authorId, user.id, user.loginname, `report:${id}`);
+  }
   await auditQueries.log(
     user.id,
     user.loginname,
@@ -606,13 +721,40 @@ admin.post("/admin/reports", async (c) => {
   const user = c.get("user");
   if (!user) return c.json({ success: false, error_msg: "未登录" }, 401);
   const body = await c.req.json().catch(() => ({}));
+  const targetType = createReportSchema.targetType(body.targetType);
+  const targetId = Number(body.targetId);
+  if (!targetType || !targetId || Number.isNaN(targetId)) {
+    return c.json({ success: false, error_msg: "举报目标无效" }, 422);
+  }
+  const summary = await getReportTargetSummary(targetType, targetId);
+  if (!summary) return c.json({ success: false, error_msg: "举报目标不存在" }, 404);
   await reportQueries.create({
-    targetType: body.targetType,
-    targetId: body.targetId,
+    targetType,
+    targetId,
     reporterId: user.id,
-    type: body.type,
-    description: body.description,
+    type: createReportSchema.type(body.type),
+    description: createReportSchema.description(body.description),
   });
+  const db = getDb();
+  const threshold = Math.max(1, Number(await settingQueries.get("report_auto_hide_threshold", "3")) || 3);
+  const reporterCount =
+    (
+      await db
+        .select({ c: sql<number>`count(distinct ${reports.reporterId})` })
+        .from(reports)
+        .where(and(eq(reports.targetType, targetType), eq(reports.targetId, targetId), eq(reports.status, "pending")))
+    )[0]?.c ?? 0;
+  if (Number(reporterCount) >= threshold) {
+    await hideReportTarget(targetType, targetId);
+    await auditQueries.log(
+      user.id,
+      user.loginname,
+      "report_auto_hide",
+      { type: targetType, id: String(targetId), name: summary.title },
+      "success",
+      JSON.stringify({ reporter_count: Number(reporterCount), threshold }),
+    );
+  }
   return c.json({ success: true });
 });
 
@@ -757,6 +899,9 @@ admin.post("/admin/moderation/bulk", modRequired(), async (c) => {
           await topicQueries.decrementReplyCount(reply.topicId);
         }
       }
+      if (hit.authorId) {
+        await applyProgressivePenalty(hit.authorId, user.id, user.loginname, `moderation_hit:${hit.id}`);
+      }
     }
   }
   await auditQueries.log(user.id, user.loginname, `moderation_bulk_${action}`, { type: "moderation_hit" }, action, JSON.stringify({ ids, handled }));
@@ -773,17 +918,20 @@ admin.post("/admin/moderation/:id/:action", modRequired(), async (c) => {
   const hit = await handleModerationHit(id, action as any, user.id);
   if (!hit) return c.json({ success: false, error_msg: "巡检记录不存在" }, 404);
   if (action === "confirm") {
-    if (hit.targetType === "topic") {
-      await getDb().update(topics).set({ deleted: boolValue(true) } as any).where(eq(topics.id, hit.targetId));
-    } else if (hit.targetType === "reply") {
+      if (hit.targetType === "topic") {
+        await getDb().update(topics).set({ deleted: boolValue(true) } as any).where(eq(topics.id, hit.targetId));
+      } else if (hit.targetType === "reply") {
       const reply = await replyQueries.getById(hit.targetId);
       if (reply && !reply.deleted) {
         await replyQueries.softDelete(reply.id);
         await decrementScoreAndReplyCount(reply.authorId, 5, 1);
-        await topicQueries.decrementReplyCount(reply.topicId);
+          await topicQueries.decrementReplyCount(reply.topicId);
+        }
+      }
+      if (hit.authorId) {
+        await applyProgressivePenalty(hit.authorId, user.id, user.loginname, `moderation_hit:${hit.id}`);
       }
     }
-  }
   await auditQueries.log(
     user.id,
     user.loginname,
@@ -890,17 +1038,17 @@ admin.get("/admin/settings", adminRequired(), async (c) => {
       allow_signup: settings.allow_signup !== "false",
       new_user_min_hours: Number(settings.new_user_min_hours) || 24,
       new_user_min_replies: Number(settings.new_user_min_replies) || 3,
-      archive_days: Number(settings.archive_days) || 365,
       rate_topic: Number(settings.rate_topic) || 1000,
       rate_reply: Number(settings.rate_reply) || 1000,
-      rate_signup_ip: Number(settings.rate_signup_ip) || 1000,
     },
   });
 });
 
 admin.post("/admin/settings", adminRequired(), async (c) => {
   const body = await c.req.json().catch(() => ({}));
+  const allowedKeys = new Set(["allow_signup", "new_user_min_hours", "new_user_min_replies", "rate_topic", "rate_reply"]);
   for (const [key, value] of Object.entries(body)) {
+    if (!allowedKeys.has(key)) continue;
     await settingQueries.set(key, String(value));
   }
   const user = c.get("user")!;
@@ -979,9 +1127,35 @@ admin.get("/search", async (c) => {
     const results = await db
       .select()
       .from(topics)
-      .where(sql`${topics.title} LIKE ${`%${q}%`} AND ${topics.deleted} = ${boolValue(false)}`)
+      .where(
+        and(
+          sql`(${topics.title} LIKE ${`%${q}%`} OR ${topics.content} LIKE ${`%${q}%`})`,
+          boolEq(topics.deleted, false),
+          sql`${topics.status} != 'deleted'`,
+          sql`${topics.tab} NOT IN ('dev', 'test')`,
+        ),
+      )
+      .orderBy(desc(topics.lastReplyAt))
       .limit(20);
-    return c.json({ success: true, data: results });
+    const data: any[] = [];
+    for (const topic of results as any[]) {
+      const author = await userQueries.getById(topic.authorId);
+      if (author?.isBlock) continue;
+      data.push({
+        id: String(topic.id),
+        author_id: String(topic.authorId),
+        tab: topic.tab,
+        title: topic.title,
+        last_reply_at: topic.lastReplyAt,
+        good: !!topic.good,
+        top: !!topic.top,
+        reply_count: topic.replyCount,
+        visit_count: topic.visitCount,
+        create_at: topic.createAt,
+        author: userSummary(author),
+      });
+    }
+    return c.json({ success: true, data });
   }
   const searchUrls: Record<string, string> = {
     google: `https://www.google.com/search?q=site:cnodejs.org+${encodeURIComponent(q)}`,

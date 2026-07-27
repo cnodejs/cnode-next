@@ -2,7 +2,7 @@ import { and, asc, desc, eq, gt, inArray, lt, ne, sql } from "drizzle-orm";
 import { moderationHits, moderationScanJobs, replies, topics } from "@cnode/db";
 import { getDb } from "./db";
 import { boolEq, boolValue } from "./db-compat";
-import { createHitDedupeKey, createHitPreview, loadWords, matchContent, type SensitiveWordEntry } from "./moderation";
+import { createHitDedupeKey, createHitPreview, incrementSensitiveWordHits, loadWords, matchContent, type SensitiveWordEntry } from "./moderation";
 import { getRedis } from "./redis";
 
 export type ScanScope = "topics" | "replies" | "all";
@@ -261,6 +261,7 @@ async function insertHit(data: {
 }) {
   if (!data.hits.length) return 0;
   const db = getDb();
+  await incrementSensitiveWordHits(data.hits);
   const keywords = data.hits.map((hit) => hit.word);
   const keywordIds = data.hits.map((hit) => hit.keywordId).filter((id): id is number => !!id);
   const dedupeKey = createHitDedupeKey(data.targetType, data.targetId, data.field, keywords.join("|"));

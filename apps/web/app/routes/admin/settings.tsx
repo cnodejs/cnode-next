@@ -8,6 +8,7 @@ import { Checkbox } from "~/components/ui/checkbox";
 import { Label } from "~/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
 import { AdminPage, AdminPageHeader, AdminPanel } from "~/components/AdminPage";
+import { apiFetch } from "~/lib/api-client";
 
 export function meta() {
   return [{ title: "系统设置 · CNode Admin" }];
@@ -15,19 +16,21 @@ export function meta() {
 
 export async function loader({ request }: any) {
   await requireAdmin(request);
-  return {};
+  const cookie = request.headers.get("cookie") || "";
+  const res = await apiFetch<{ success: boolean; data: any }>("/api/v1/admin/settings", { headers: { cookie } });
+  return {
+    config: res.success ? res.data : {
+      allow_signup: true,
+      new_user_min_hours: 24,
+      new_user_min_replies: 3,
+      rate_topic: 1000,
+      rate_reply: 1000,
+    },
+  };
 }
 
-export default function AdminSettings() {
-  const [config, setConfig] = useState({
-    allow_signup: true,
-    new_user_min_hours: 24,
-    new_user_min_replies: 3,
-    archive_days: 365,
-    rate_topic: 1000,
-    rate_reply: 1000,
-    rate_signup_ip: 1000,
-  });
+export default function AdminSettings({ loaderData }: any) {
+  const [config, setConfig] = useState(loaderData.config);
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -47,9 +50,7 @@ export default function AdminSettings() {
       <Tabs defaultValue="registration" className="space-y-4">
         <TabsList className="h-auto flex-wrap justify-start bg-card p-1 shadow-card">
           <TabsTrigger value="registration">注册配置</TabsTrigger>
-          <TabsTrigger value="moderators">版主配置</TabsTrigger>
           <TabsTrigger value="newuser">新用户限制</TabsTrigger>
-          <TabsTrigger value="moderation">巡检配置</TabsTrigger>
           <TabsTrigger value="rate">限流配置</TabsTrigger>
         </TabsList>
         <TabsContent value="registration">
@@ -99,22 +100,6 @@ export default function AdminSettings() {
               </Button>
           </AdminPanel>
         </TabsContent>
-        <TabsContent value="moderation">
-          <AdminPanel title="巡检配置" description="控制自动归档和巡检相关策略" contentClassName="space-y-5 p-5">
-              <div className="space-y-2">
-                <Label>归档天数 (无回复自动锁定)</Label>
-                <Input
-                  type="number"
-                  value={config.archive_days}
-                  onChange={(e) => setConfig({ ...config, archive_days: Number(e.target.value) })}
-                  className="w-32"
-                />
-              </div>
-              <Button onClick={handleSave} disabled={saving}>
-                {saving ? "保存中..." : "保存"}
-              </Button>
-          </AdminPanel>
-        </TabsContent>
         <TabsContent value="rate">
           <AdminPanel title="限流配置" description="按用户维度限制每日发帖与回复频率" contentClassName="space-y-5 p-5">
               <div className="space-y-2">
@@ -140,17 +125,8 @@ export default function AdminSettings() {
               </Button>
           </AdminPanel>
         </TabsContent>
-        <TabsContent value="moderators">
-          <AdminPanel title="版主配置" description="后续用于按板块配置管理权限" contentClassName="p-5">
-            <div className="rounded-2xl border border-dashed border-border bg-surface-subtle p-6 text-sm text-muted-foreground">
-              版主管理功能开发中
-            </div>
-          </AdminPanel>
-        </TabsContent>
       </Tabs>
       </AdminPage>
     </AdminLayout>
   );
 }
-
-import { apiFetch } from "~/lib/api-client";

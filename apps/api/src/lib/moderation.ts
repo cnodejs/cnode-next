@@ -1,5 +1,6 @@
 import { getDb } from "./db";
 import { sensitiveWords } from "@cnode/db";
+import { eq, sql } from "drizzle-orm";
 
 export type SensitiveWordEntry = {
   id: number;
@@ -39,7 +40,17 @@ export function invalidateWordCache() {
 export async function checkContent(content: string): Promise<{ hit: boolean; words: string[] }> {
   const words = await loadWords();
   const hits = matchContent(content, words);
+  await incrementSensitiveWordHits(hits);
   return { hit: hits.length > 0, words: hits.map((hit) => hit.word) };
+}
+
+export async function incrementSensitiveWordHits(hits: ContentHit[]) {
+  const ids = [...new Set(hits.map((hit) => hit.keywordId).filter((id): id is number => !!id))];
+  if (!ids.length) return;
+  const db = getDb();
+  for (const id of ids) {
+    await db.update(sensitiveWords).set({ hitCount: sql`${sensitiveWords.hitCount} + 1` } as any).where(eq(sensitiveWords.id, id));
+  }
 }
 
 export function matchContent(content: string, words: SensitiveWordEntry[]): ContentHit[] {

@@ -31,7 +31,7 @@ export function meta() {
 }
 
 export async function loader({ request }: any) {
-  await requireAdmin(request);
+  const currentUser = await requireAdmin(request);
   const url = new URL(request.url);
   const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
   const limit = Math.min(100, Number(url.searchParams.get("limit")) || 50);
@@ -43,11 +43,11 @@ export async function loader({ request }: any) {
     `/api/v1/admin/users?${params.toString()}`,
     { headers: { cookie } },
   );
-  return { users: res.success ? res.data || [] : [], total: res.total ?? 0, page, limit, q };
+  return { users: res.success ? res.data || [] : [], total: res.total ?? 0, page, limit, q, currentUser };
 }
 
 export default function AdminUsers({ loaderData }: any) {
-  const { users: initialUsers, total, page, limit, q } = loaderData;
+  const { users: initialUsers, total, page, limit, q, currentUser } = loaderData;
   const [users] = useState<any[]>(initialUsers);
   const [resetTarget, setResetTarget] = useState<{ id: number; loginname: string } | null>(null);
   const [deleteAllTarget, setDeleteAllTarget] = useState<string | null>(null);
@@ -122,7 +122,8 @@ export default function AdminUsers({ loaderData }: any) {
               <Button type="submit" variant="outline">搜索</Button>
             </Form>
           </AdminToolbar>
-          <Table>
+          <div className="overflow-x-auto">
+          <Table className="min-w-[980px]">
           <TableHeader>
             <TableRow>
               <TableHead>用户</TableHead>
@@ -135,14 +136,16 @@ export default function AdminUsers({ loaderData }: any) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((u) => (
+            {users.map((u) => {
+              const isSelf = currentUser?.loginname === u.loginname || String(currentUser?.id || "") === String(u.id);
+              return (
               <TableRow key={u.id}>
-                <TableCell>
+                <TableCell className="max-w-48 break-all">
                   <a href={`/user/${u.loginname}`} className="text-primary hover:underline">
                     {u.loginname}
                   </a>
                 </TableCell>
-                <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                <TableCell className="max-w-64 break-all text-muted-foreground">{u.email}</TableCell>
                 <TableCell>{u.score}</TableCell>
                 <TableCell>{u.topic_count}</TableCell>
                 <TableCell>{u.reply_count}</TableCell>
@@ -153,22 +156,26 @@ export default function AdminUsers({ loaderData }: any) {
                     {!u.is_block && !u.is_muted && <Badge variant="success">正常</Badge>}
                   </div>
                 </TableCell>
-                <TableCell>
-                  <div className="flex gap-1">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleBlock(u.loginname, !u.is_block)}
-                    >
-                      {u.is_block ? "恢复可见" : "隐藏内容"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleMute(u.loginname, !u.is_muted)}
-                    >
-                      {u.is_muted ? "解除禁言" : "禁言"}
-                    </Button>
+                <TableCell className="w-80">
+                  <div className="flex flex-wrap gap-1">
+                    {!isSelf && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleBlock(u.loginname, !u.is_block)}
+                        >
+                          {u.is_block ? "恢复可见" : "隐藏内容"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleMute(u.loginname, !u.is_muted)}
+                        >
+                          {u.is_muted ? "解除禁言" : "禁言"}
+                        </Button>
+                      </>
+                    )}
                     <Button
                       size="sm"
                       variant="ghost"
@@ -176,20 +183,23 @@ export default function AdminUsers({ loaderData }: any) {
                     >
                       重置密码
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-destructive"
-                      onClick={() => setDeleteAllTarget(u.loginname)}
-                    >
-                      删除发言
-                    </Button>
+                    {!isSelf && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive"
+                        onClick={() => setDeleteAllTarget(u.loginname)}
+                      >
+                        删除发言
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+            );})}
           </TableBody>
           </Table>
+          </div>
           <div className="px-4 pb-4">
             <Pagination page={page} total={total} limit={limit} basePath="/admin/users" searchParams={{ ...(q ? { q } : {}) }} />
           </div>

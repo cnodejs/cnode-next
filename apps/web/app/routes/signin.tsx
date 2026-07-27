@@ -43,6 +43,8 @@ export default function Signin() {
     github_cancelled: "GitHub 授权已取消",
     github_failed: "GitHub 登录失败",
     no_github_email: "GitHub 账号未公开 Email",
+    github_state_invalid: "GitHub 登录状态校验失败，请重试",
+    github_bind_login_required: "请先登录后再绑定 GitHub",
   };
 
   const form = useForm<SigninValues>({
@@ -114,6 +116,11 @@ export default function Signin() {
                     </FormItem>
                   )}
                 />
+                <div className="text-right text-sm">
+                  <Link to="/search_pass" className="text-primary hover:underline">
+                    忘记密码?
+                  </Link>
+                </div>
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? "登录中..." : "登录"}
                 </Button>

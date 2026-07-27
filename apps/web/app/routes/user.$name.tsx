@@ -109,6 +109,7 @@ function UserHero({ user, currentUser }: { user: any; currentUser?: any }) {
   const [actionTarget, setActionTarget] = useState<"block" | "mute" | "delete_all" | null>(null);
   const { revalidate } = useRevalidator();
   const canManage = !!currentUser?.is_admin;
+  const isSelf = currentUser?.loginname === user.loginname;
 
   const actionConfig = actionTarget === "block"
     ? {
@@ -179,7 +180,7 @@ function UserHero({ user, currentUser }: { user: any; currentUser?: any }) {
           {user.is_block && <Badge variant="destructive">内容隐藏</Badge>}
           {user.is_muted && <Badge variant="destructive">已禁言</Badge>}
           <Badge className="w-fit">积分 {user.score || 0}</Badge>
-          {canManage && (
+          {canManage && !isSelf && (
             <>
               <Button type="button" variant={user.is_block ? "outline" : "destructive"} size="sm" onClick={() => setActionTarget("block")} disabled={submitting}>
                 {user.is_block ? "恢复内容可见" : "隐藏用户内容"}

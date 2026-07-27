@@ -2,7 +2,8 @@ import type { Route } from "../../.react-router/types/app/routes/+types/setting"
 import { Layout } from "~/components/Layout";
 import { apiFetch } from "~/lib/api-client";
 import { requireUser } from "~/lib/auth";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -54,6 +55,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function Setting({ loaderData }: Route.ComponentProps) {
   const { user } = loaderData as any;
+  const [params] = useSearchParams();
 
   const profileForm = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
@@ -74,10 +76,15 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
 
   const [tokenLoading, setTokenLoading] = useState(false);
 
+  useEffect(() => {
+    if (params.get("github") === "bound") toast.success("GitHub 已绑定");
+    if (params.get("error") === "github_already_bound") toast.error("该 GitHub 账号已绑定到其他用户");
+  }, [params]);
+
   const onProfileSubmit = async (values: ProfileValues) => {
     const res = await apiFetch<{ success: boolean; error_msg?: string }>(
       "/api/v1/auth/local/setting",
-      { method: "POST", body: JSON.stringify({ ...user, ...values }) },
+      { method: "POST", body: JSON.stringify(values) },
     );
     if (res.success) toast.success("设置已保存");
     else toast.error(res.error_msg || "保存失败");
@@ -124,6 +131,27 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <div className="min-w-0 space-y-6">
+        <Card>
+          <CardHeader className="border-b border-border/80 bg-surface-subtle">
+            <CardTitle>账号身份</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-6">
+            <div className="space-y-1 text-sm">
+              <div className="font-medium">邮箱</div>
+              <div className="break-all text-muted-foreground">{user?.email || "-"}</div>
+            </div>
+            <div className="space-y-2 text-sm">
+              <div className="font-medium">GitHub</div>
+              {user?.github_bound ? (
+                <div className="text-muted-foreground">已绑定 {user.github_username || "GitHub 账号"}</div>
+              ) : (
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/auth/github?intent=bind">绑定 GitHub</Link>
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader className="border-b border-border/80 bg-surface-subtle">
             <CardTitle>个人资料</CardTitle>
@@ -280,7 +308,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
               <CardHeader className="border-b border-cnode-green/20 bg-cnode-soft">
                 <CardTitle className="text-base">通知说明</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2 text-sm text-muted-foreground">
+              <CardContent className="space-y-2 p-6 text-sm text-muted-foreground">
                 <p>站内消息会展示在消息中心。</p>
                 <p>邮件通知取决于这里的两个偏好开关。</p>
               </CardContent>

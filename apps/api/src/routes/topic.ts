@@ -2,14 +2,16 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import _ from "lodash";
-import { topicQueries, userQueries, replyQueries } from "../lib/db";
+import { settingQueries, topicQueries, userQueries, replyQueries } from "../lib/db";
 import { incrementScoreAndTopicCount } from "../lib/score";
 import { sendMessageToMentionUsers } from "../lib/at";
 import { checkContent } from "../lib/moderation";
 import { excerptMarkdown, userSummary } from "../lib/format";
 import { renderMarkdown } from "../lib/markdown";
-import { perUserPerDay } from "../middleware/rate-limit";
+import { perUserPerDaySetting } from "../middleware/rate-limit";
 import type { AuthVars } from "../middleware/auth";
+import { ensureMuteNotExpired } from "../lib/penalty";
+import { requestIp, verifyTurnstile } from "../lib/turnstile";
 
 const topic = new Hono<{
   Variables: AuthVars;
@@ -18,6 +20,25 @@ const topic = new Hono<{
 const CREATE_TOPIC_SCORE = 5;
 const CREATE_TOPIC_PER_DAY = 1000;
 const INTERNAL_TABS = new Set(["dev", "test"]);
+
+async function assertNewUserCanCreateTopic(user: any) {
+  const minHours = Math.max(0, Number(await settingQueries.get("new_user_min_hours", "24")) || 24);
+  const minReplies = Math.max(0, Number(await settingQueries.get("new_user_min_replies", "3")) || 3);
+  const createdAt = user.createAt ? new Date(user.createAt).getTime() : Date.now();
+  const accountAgeHours = Math.floor((Date.now() - createdAt) / 3600000);
+  if (accountAgeHours < minHours || Number(user.replyCount || 0) < minReplies) {
+    return `新用户需要注册满 ${minHours} 小时且回复数达到 ${minReplies} 条后才能发帖`;
+  }
+  return null;
+}
+
+async function isNewUserForTopicGate(user: any) {
+  const minHours = Math.max(0, Number(await settingQueries.get("new_user_min_hours", "24")) || 24);
+  const minReplies = Math.max(0, Number(await settingQueries.get("new_user_min_replies", "3")) || 3);
+  const createdAt = user.createAt ? new Date(user.createAt).getTime() : Date.now();
+  const accountAgeHours = Math.floor((Date.now() - createdAt) / 3600000);
+  return accountAgeHours < minHours || Number(user.replyCount || 0) < minReplies;
+}
 
 topic.get("/topics", async (c) => {
   const page = Math.max(1, Number(c.req.query("page")) || 1);
@@ -157,22 +178,32 @@ const createTopicSchema = z.object({
   title: z.string().min(5).max(100),
   tab: z.enum(["share", "ask", "job"]),
   content: z.string().min(1),
+  turnstileToken: z.string().optional(),
 });
 
 topic.post(
   "/topics",
   zValidator("json", createTopicSchema),
-  perUserPerDay("create_topic", CREATE_TOPIC_PER_DAY, true),
+  perUserPerDaySetting("create_topic", "rate_topic", CREATE_TOPIC_PER_DAY, true),
   async (c) => {
-  const user = c.get("user");
+  let user = c.get("user");
   if (!user) {
     return c.json({ success: false, error_msg: "未登录" }, 401);
   }
+  user = await ensureMuteNotExpired(user);
   if (user.isMuted || user.isBlock) {
     return c.json({ success: false, error_msg: "您已被禁言" }, 403);
   }
+  const body = c.req.valid("json");
+  if ((await isNewUserForTopicGate(user)) && !(await verifyTurnstile(body.turnstileToken, requestIp(c)))) {
+    return c.json({ success: false, error_msg: "人机验证失败" }, 403);
+  }
+  const newUserError = await assertNewUserCanCreateTopic(user);
+  if (newUserError) {
+    return c.json({ success: false, error_msg: newUserError }, 403);
+  }
 
-  const { title, tab, content } = c.req.valid("json");
+  const { title, tab, content } = body;
 
   const titleCheck = await checkContent(title);
   if (titleCheck.hit) {

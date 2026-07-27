@@ -9,6 +9,7 @@ const rootDocument = await readFile(new URL("apps/web/app/root.tsx", root), "utf
 const uploadClient = await readFile(new URL("apps/web/app/lib/upload-client.ts", root), "utf8");
 const workflow = await readFile(new URL(".github/workflows/build-container-images.yml", root), "utf8");
 const docs = await readFile(new URL("docs/deployment.md", root), "utf8");
+const envExample = await readFile(new URL(".env.example", root), "utf8");
 
 const services = ["api", "web", "worker", "migrate-schema", "migrate-data", "reconcile"];
 for (const service of services) {
@@ -24,6 +25,8 @@ assert.doesNotMatch(compose, /VITE_APP_API_BASE_URL/, "compose must not pass bui
 assert.doesNotMatch(webDockerfile, /VITE_APP_API_BASE_URL/, "web Dockerfile must not use build-time API URL");
 assert.match(rootDocument, /__CNODE_CONFIG__/, "root document injects runtime public config");
 assert.match(rootDocument, /APP_API_BASE_URL/, "root document reads runtime APP_API_BASE_URL");
+assert.match(rootDocument, /TURNSTILE_SITE_KEY/, "root document exposes only Turnstile site key");
+assert.doesNotMatch(rootDocument, /TURNSTILE_SECRET_KEY/, "root document must not expose Turnstile secret");
 assert.match(apiClient, /window\.__CNODE_CONFIG__\?\.apiBaseUrl/, "browser api client reads runtime config");
 assert.doesNotMatch(apiClient, /VITE_APP_API_BASE_URL/, "api client must not read VITE API base");
 assert.match(uploadClient, /getApiBaseUrl\(\)/, "upload client reuses API base helper");
@@ -42,5 +45,11 @@ assert.match(docs, /docker compose -f docker-compose\.prod\.yml pull api web wor
 assert.match(docs, /up -d --no-build/, "docs include no-build deployment step");
 assert.match(docs, /APP_API_INTERNAL_BASE_URL/, "docs explain SSR internal API base");
 assert.match(docs, /APP_API_BASE_URL/, "docs explain browser runtime API base");
+assert.match(docs, /APP_WEB_BASE_URL=https:\/\/next\.cnodejs\.org/, "docs explain production Web base URL");
+assert.match(docs, /TURNSTILE_SITE_KEY/, "docs explain Turnstile site key");
+assert.match(docs, /TURNSTILE_SECRET_KEY/, "docs explain Turnstile secret key");
+assert.match(envExample, /APP_WEB_BASE_URL=/, ".env.example includes APP_WEB_BASE_URL");
+assert.match(envExample, /TURNSTILE_SITE_KEY=/, ".env.example includes Turnstile site key");
+assert.match(envExample, /TURNSTILE_SECRET_KEY=/, ".env.example includes Turnstile secret key");
 
 console.log("container image delivery checks passed");

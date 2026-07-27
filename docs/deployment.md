@@ -60,11 +60,19 @@ MODERATION_SCAN_MAX_BATCHES_PER_RUN=100
 Web API 地址分为服务端内网地址和浏览器公开地址：
 
 ```bash
+APP_WEB_BASE_URL=https://next.cnodejs.org        # 邮件链接、OAuth 返回和用户可点击入口使用的 Web 域名
 APP_API_INTERNAL_BASE_URL=http://api:3001      # React Router SSR loader 在 web 容器内访问 API
 APP_API_BASE_URL=https://api.cnodejs.org       # 注入到 HTML，供浏览器侧 apiFetch 和上传客户端使用
 ```
 
-`APP_API_INTERNAL_BASE_URL` 由生产 compose 设置为 `http://api:3001`。`APP_API_BASE_URL` 来自服务器 `.env`，Web 根文档会把它注入到 `window.__CNODE_CONFIG__.apiBaseUrl`。Web 镜像不使用 `VITE_APP_API_BASE_URL` 等构建时 API 地址，因此同一个 `ghcr.io/cnodejs/cnode-web:latest` 可在不同服务器环境复用。
+`APP_API_INTERNAL_BASE_URL` 由生产 compose 设置为 `http://api:3001`。`APP_API_BASE_URL` 来自服务器 `.env`，Web 根文档会把它注入到 `window.__CNODE_CONFIG__.apiBaseUrl`。`APP_WEB_BASE_URL` 用于账号激活、密码找回邮件链接和 OAuth 返回地址，必须指向 Web 站点而不是 API 域名。Web 镜像不使用 `VITE_APP_API_BASE_URL` 等构建时 API 地址，因此同一个 `ghcr.io/cnodejs/cnode-web:latest` 可在不同服务器环境复用。
+
+生产人机验证使用 Cloudflare Turnstile：
+
+```bash
+TURNSTILE_SITE_KEY=        # 可公开给前端
+TURNSTILE_SECRET_KEY=      # 仅 API 服务端使用，不得注入前端
+```
 
 ### 镜像构建
 
@@ -92,7 +100,7 @@ pnpm dev
 
 切换前需要完成：
 
-1. 配置生产 `.env`：cookie domain、SMTP、OSS、GitHub OAuth、PostgreSQL、Redis。
+1. 配置生产 `.env`：cookie domain、SMTP、OSS、GitHub OAuth、Turnstile、PostgreSQL、Redis。
 2. 执行最终 Mongo-to-PostgreSQL 全量迁移和对账。
 3. 验证新 API/Web 与老 `cnodejs.org` 并行运行正常。
 4. 按实际入口方案切换 DNS/反向代理。

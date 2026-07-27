@@ -24,30 +24,32 @@ export default function AdminAudit({ loaderData }: any) {
       <AdminPage>
         <AdminPageHeader title="审计日志" description="记录后台关键操作，便于追溯审核和系统变更。" />
         <AdminPanel title="审计日志" description={`当前显示 ${logs.length} / ${total} 条记录`}>
-          <Table>
+          <div className="overflow-x-auto">
+          <Table className="min-w-[760px]">
           <TableHeader>
             <TableRow>
-              <TableHead>时间</TableHead>
-              <TableHead>操作人</TableHead>
-              <TableHead>动作</TableHead>
+              <TableHead className="w-32 whitespace-nowrap">时间</TableHead>
+              <TableHead className="w-36">操作人</TableHead>
+              <TableHead className="w-44">动作</TableHead>
               <TableHead>目标</TableHead>
-              <TableHead>结果</TableHead>
+              <TableHead className="w-28">结果</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {logs.map((log: any) => (
               <TableRow key={log.id}>
-                <TableCell className="text-xs text-muted-foreground">
+                <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
                   <TimeAgo date={log.create_at} />
                 </TableCell>
-                <TableCell>{log.operator}</TableCell>
-                <TableCell>{log.action}</TableCell>
-                <TableCell>{log.target}</TableCell>
-                <TableCell className="font-medium text-cnode-ink">{log.result}</TableCell>
+                <TableCell className="break-all">{log.operator}</TableCell>
+                <TableCell className="break-all">{log.action}</TableCell>
+                <TableCell className="max-w-xl break-words">{log.target}</TableCell>
+                <TableCell className="whitespace-nowrap font-medium text-cnode-ink">{log.result}</TableCell>
               </TableRow>
             ))}
           </TableBody>
           </Table>
+          </div>
           <div className="px-4 pb-4">
             <Pagination page={page} total={total} limit={limit} basePath="/admin/audit" />
           </div>

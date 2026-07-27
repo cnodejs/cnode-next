@@ -131,9 +131,9 @@ export default function AdminMod({ loaderData }: any) {
               {jobs.map((job: any) => (
                 <div key={job.id} className="rounded-2xl border border-border bg-background p-4 text-sm">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="space-y-1">
+                    <div className="min-w-0 space-y-1">
                       <div className="font-medium">任务 #{job.id}</div>
-                      <div className="text-muted-foreground">
+                      <div className="break-words text-muted-foreground">
                         {job.scope} · {job.mode} · {job.reason} · {job.status}
                       </div>
                     </div>
@@ -154,7 +154,7 @@ export default function AdminMod({ loaderData }: any) {
                     <span>topic cursor {job.cursorTopicId || 0}</span>
                     <span>reply cursor {job.cursorReplyId || 0}</span>
                   </div>
-                  {job.error ? <div className="mt-2 text-destructive">{job.error}</div> : null}
+                  {job.error ? <div className="mt-2 break-words text-destructive">{job.error}</div> : null}
                 </div>
               ))}
             </div>
@@ -232,7 +232,7 @@ export default function AdminMod({ loaderData }: any) {
                       </Badge>
                     ))}
                   </div>
-                  <div className="mb-3 rounded-xl bg-surface-subtle p-3 text-sm text-muted-foreground">
+                  <div className="mb-3 rounded-xl bg-surface-subtle p-3 text-sm break-words text-muted-foreground">
                     {r.preview}
                   </div>
                   <div className="flex flex-wrap gap-2">

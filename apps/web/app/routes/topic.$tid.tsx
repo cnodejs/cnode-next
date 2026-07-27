@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import type { Route } from "../../.react-router/types/app/routes/+types/topic.$tid";
 import { Link, useRevalidator } from "react-router";
 import { toast } from "sonner";
-import { MessageSquare, Star, ThumbsUp, Trash2 } from "lucide-react";
+import { Flag, MessageSquare, Star, ThumbsUp, Trash2 } from "lucide-react";
 import { Layout } from "~/components/Layout";
 import { MarkdownView } from "~/components/MarkdownView";
 import { TimeAgo } from "~/components/TimeAgo";
@@ -24,6 +24,7 @@ import { apiFetch, getCurrentUser } from "~/lib/api-client";
 import { getAvatarFallback, getAvatarUrl, getTabLabel } from "~/lib/brand";
 import { kvGet, kvSet } from "~/lib/kv-cache";
 import { extractMarkdownHeadings } from "~/lib/markdown-headings";
+import { TurnstileWidget, getTurnstileToken } from "~/components/TurnstileWidget";
 
 export async function loader({ params, request, context }: Route.LoaderArgs) {
   const tid = params.tid!;
@@ -271,6 +272,7 @@ function TopicActions({ topic, currentUser }: { topic: any; currentUser: any }) 
           <MessageSquare className="h-4 w-4" /> 查看回复
         </a>
       </Button>
+      {currentUser && <ReportButton targetType="topic" targetId={topic.id} />}
       {canManage && (
         <>
           <Button type="button" variant="outline" size="sm" onClick={() => runTopicAction("top")} disabled={!!adminAction}>
@@ -329,7 +331,7 @@ function ReplySection({
     if (!content.trim()) return;
     const res = await apiFetch<{ success: boolean; error_msg?: string }>(`/api/v1/topic/${topicId}/replies`, {
       method: "POST",
-      body: JSON.stringify({ content, reply_id: targetReply?.id }),
+      body: JSON.stringify({ content, reply_id: targetReply?.id, turnstileToken: getTurnstileToken() }),
     });
     if (res.success) {
       toast.success("回复成功");
@@ -383,6 +385,7 @@ function ReplySection({
                 </div>
               )}
               <MarkdownEditor value={content} onChange={setContent} placeholder="支持 Markdown，建议贴出代码和错误信息" />
+              <TurnstileWidget />
               <Button type="submit" size="sm" disabled={!content.trim()}>
                 回复
               </Button>
@@ -507,6 +510,7 @@ function ReplyItem({
               <Button type="button" variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={onReply}>
                 <MessageSquare className="h-3 w-3" /> 回复
               </Button>
+              {currentUser && <ReportButton targetType="reply" targetId={reply.id} compact />}
               {canDelete && (
                 <Button
                   type="button"
@@ -542,5 +546,63 @@ function ReplyItem({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function ReportButton({ targetType, targetId, compact = false }: { targetType: "topic" | "reply"; targetId: string; compact?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const [type, setType] = useState("spam");
+  const [description, setDescription] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function submitReport() {
+    setSubmitting(true);
+    const res = await apiFetch<{ success: boolean; error_msg?: string }>("/api/v1/admin/reports", {
+      method: "POST",
+      body: JSON.stringify({ targetType, targetId, type, description }),
+    }).catch(() => ({ success: false, error_msg: "举报失败" }));
+    setSubmitting(false);
+    if (res.success) {
+      toast.success("举报已提交");
+      setDescription("");
+      setOpen(false);
+    } else {
+      toast.error(res.error_msg || "举报失败");
+    }
+  }
+
+  return (
+    <>
+      <Button type="button" variant="ghost" size="sm" className={compact ? "h-8 px-2 text-xs" : undefined} onClick={() => setOpen(true)}>
+        <Flag className={compact ? "h-3 w-3" : "h-4 w-4"} /> 举报
+      </Button>
+      <Dialog open={open} onOpenChange={(value) => !submitting && setOpen(value)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>举报内容</DialogTitle>
+            <DialogDescription>请选择举报类型，也可以补充说明，管理员会在后台处理。</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <select value={type} onChange={(event) => setType(event.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+              <option value="spam">垃圾广告</option>
+              <option value="attack">攻击辱骂</option>
+              <option value="irrelevant">无关内容</option>
+              <option value="other">其他</option>
+            </select>
+            <textarea
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              placeholder="可选说明"
+              rows={4}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={submitting}>取消</Button>
+            <Button type="button" onClick={submitReport} disabled={submitting}>{submitting ? "提交中" : "提交举报"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

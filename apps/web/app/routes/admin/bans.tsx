@@ -2,6 +2,7 @@ import { requireAdmin } from "~/lib/auth";
 import { AdminLayout } from "~/components/AdminLayout";
 import { apiFetch } from "~/lib/api-client";
 import { useRevalidator } from "react-router";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -49,6 +50,9 @@ export async function loader({ request }: any) {
 export default function AdminBans({ loaderData }: any) {
   const { bannedUsers, bannedUsersTotal, bannedIps, bannedIpsTotal, page, limit, tab } = loaderData;
   const { revalidate } = useRevalidator();
+  const [ip, setIp] = useState("");
+  const [reason, setReason] = useState("");
+  const [savingIp, setSavingIp] = useState(false);
 
   const handleUnblock = async (name: string) => {
     const res = await apiFetch<{ success: boolean; error_msg?: string }>(
@@ -63,6 +67,35 @@ export default function AdminBans({ loaderData }: any) {
     }
   };
 
+  const handleAddIp = async () => {
+    setSavingIp(true);
+    const res = await apiFetch<{ success: boolean; error_msg?: string }>("/api/v1/admin/bans/ips", {
+      method: "POST",
+      body: JSON.stringify({ ip, reason }),
+    }).catch(() => ({ success: false, error_msg: "添加失败" }));
+    setSavingIp(false);
+    if (res.success) {
+      toast.success("IP 规则已添加");
+      setIp("");
+      setReason("");
+      revalidate();
+    } else {
+      toast.error(res.error_msg || "添加失败");
+    }
+  };
+
+  const handleRemoveIp = async (id: number) => {
+    const res = await apiFetch<{ success: boolean; error_msg?: string }>(`/api/v1/admin/bans/ips/${id}`, {
+      method: "DELETE",
+    }).catch(() => ({ success: false, error_msg: "移除失败" }));
+    if (res.success) {
+      toast.success("IP 规则已移除");
+      revalidate();
+    } else {
+      toast.error(res.error_msg || "移除失败");
+    }
+  };
+
   return (
     <AdminLayout>
       <AdminPage>
@@ -74,7 +107,8 @@ export default function AdminBans({ loaderData }: any) {
         </TabsList>
         <TabsContent value="users">
           <AdminPanel title="用户封禁" description={`当前显示 ${bannedUsers.length} / ${bannedUsersTotal} 个禁言用户`}>
-            <Table>
+            <div className="overflow-x-auto">
+            <Table className="min-w-[560px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>用户</TableHead>
@@ -98,6 +132,7 @@ export default function AdminBans({ loaderData }: any) {
                 ))}
               </TableBody>
             </Table>
+            </div>
             <div className="px-4 pb-4">
               <Pagination page={page} total={bannedUsersTotal} limit={limit} basePath="/admin/bans" searchParams={{ tab: "users" }} />
             </div>
@@ -106,12 +141,14 @@ export default function AdminBans({ loaderData }: any) {
         <TabsContent value="ips">
           <AdminPanel title="IP 封禁" description={`当前显示 ${bannedIps.length} / ${bannedIpsTotal} 条 IP 规则`}>
             <AdminToolbar>
-              <Input placeholder="IP 或 CIDR (如 1.2.3.4 或 1.2.3.0/24)" className="w-full sm:max-w-md" />
-              <Button disabled title="IP 封禁添加接口尚未接入">
-                添加
+              <Input value={ip} onChange={(event) => setIp(event.target.value)} placeholder="IP 或 CIDR (如 1.2.3.4 或 1.2.3.0/24)" className="w-full sm:max-w-md" />
+              <Input value={reason} onChange={(event) => setReason(event.target.value)} placeholder="原因" className="w-full sm:max-w-sm" />
+              <Button onClick={handleAddIp} disabled={savingIp || !ip.trim()}>
+                {savingIp ? "添加中" : "添加"}
               </Button>
             </AdminToolbar>
-            <Table>
+            <div className="overflow-x-auto">
+            <Table className="min-w-[680px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>IP/段</TableHead>
@@ -122,10 +159,10 @@ export default function AdminBans({ loaderData }: any) {
               <TableBody>
                 {bannedIps.map((ip: any, i: number) => (
                   <TableRow key={i}>
-                    <TableCell>{ip.ip}</TableCell>
-                    <TableCell className="text-muted-foreground">{ip.reason}</TableCell>
+                    <TableCell className="break-all">{ip.ip}</TableCell>
+                    <TableCell className="break-words text-muted-foreground">{ip.reason}</TableCell>
                     <TableCell>
-                      <Button size="sm" variant="ghost" className="text-destructive">
+                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleRemoveIp(ip.id)}>
                         移除
                       </Button>
                     </TableCell>
@@ -133,6 +170,7 @@ export default function AdminBans({ loaderData }: any) {
                 ))}
               </TableBody>
             </Table>
+            </div>
             <div className="px-4 pb-4">
               <Pagination page={page} total={bannedIpsTotal} limit={limit} basePath="/admin/bans" searchParams={{ tab: "ips" }} />
             </div>

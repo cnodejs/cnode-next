@@ -12,6 +12,7 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { ContentPage } from "~/components/PageShell";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { TurnstileWidget, getTurnstileToken } from "~/components/TurnstileWidget";
 
 export function meta() {
   return [{ title: "发帖 · CNode" }];
@@ -36,7 +37,7 @@ export default function TopicCreate() {
       "/api/v1/topics",
       {
         method: "POST",
-        body: JSON.stringify({ title, tab, content }),
+        body: JSON.stringify({ title, tab, content, turnstileToken: getTurnstileToken() }),
       },
     );
     setSaving(false);
@@ -93,6 +94,7 @@ export default function TopicCreate() {
               placeholder="支持 Markdown 格式"
             />
           </div>
+          <TurnstileWidget />
           <Button type="submit" disabled={saving}>
             {saving ? "发布中..." : "发布"}
           </Button>

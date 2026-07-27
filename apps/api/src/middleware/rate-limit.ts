@@ -1,6 +1,6 @@
 import { createMiddleware } from "hono/factory";
 import { getCache } from "../lib/cache";
-import { userQueries } from "../lib/db";
+import { settingQueries, userQueries } from "../lib/db";
 
 const SECONDS_PER_DAY = 86400;
 
@@ -8,7 +8,7 @@ interface RateLimitOptions {
   identityName: string;
   name: string;
   identityFn: (c: any) => string | Promise<string>;
-  limitCount: number;
+  limitCount: number | (() => number | Promise<number>);
   showJson: boolean;
 }
 
@@ -29,30 +29,32 @@ function makePerDayLimiter(options: RateLimitOptions) {
     const cache = getCache();
     const count = await cache.incr(key, SECONDS_PER_DAY);
 
-    if (count > options.limitCount) {
+    const limitCount = typeof options.limitCount === "function" ? await options.limitCount() : options.limitCount;
+
+    if (count > limitCount) {
       c.status(403);
-      c.header("X-RateLimit-Limit", String(options.limitCount));
+      c.header("X-RateLimit-Limit", String(limitCount));
       c.header("X-RateLimit-Remaining", "0");
       if (options.showJson) {
         return c.json({
           success: false,
-          error_msg: `频率限制:当前操作每天可以进行 ${options.limitCount} 次`,
+          error_msg: `频率限制:当前操作每天可以进行 ${limitCount} 次`,
         });
       }
       return c.json({
         success: false,
-        error_msg: `频率限制:当前操作每天可以进行 ${options.limitCount} 次`,
+        error_msg: `频率限制:当前操作每天可以进行 ${limitCount} 次`,
       });
     }
 
-    c.header("X-RateLimit-Limit", String(options.limitCount));
-    c.header("X-RateLimit-Remaining", String(options.limitCount - count));
+    c.header("X-RateLimit-Limit", String(limitCount));
+    c.header("X-RateLimit-Remaining", String(limitCount - count));
 
     await next();
   });
 }
 
-export function perUserPerDay(name: string, limitCount: number, showJson = true) {
+export function perUserPerDay(name: string, limitCount: number | (() => number | Promise<number>), showJson = true) {
   return makePerDayLimiter({
     identityName: "peruserperday",
     name,
@@ -88,4 +90,12 @@ export function perIpPerDay(name: string, limitCount: number, showJson = true) {
     limitCount,
     showJson,
   });
+}
+
+export function perUserPerDaySetting(name: string, settingKey: string, defaultLimit: number, showJson = true) {
+  return perUserPerDay(
+    name,
+    async () => Math.max(1, Number(await settingQueries.get(settingKey, String(defaultLimit))) || defaultLimit),
+    showJson,
+  );
 }

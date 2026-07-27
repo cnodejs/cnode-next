@@ -130,7 +130,8 @@ export default function AdminKeywords({ loaderData }: any) {
               </Button>
             </div>
           )}
-          <Table>
+          <div className="overflow-x-auto">
+          <Table className="min-w-[560px]">
           <TableHeader>
             <TableRow>
               <TableHead>敏感词</TableHead>
@@ -141,7 +142,7 @@ export default function AdminKeywords({ loaderData }: any) {
           <TableBody>
             {keywords.map((kw: any) => (
               <TableRow key={kw.id}>
-                <TableCell>{kw.word}</TableCell>
+                <TableCell className="max-w-md break-all">{kw.word}</TableCell>
                 <TableCell className="text-muted-foreground">{kw.hit_count}</TableCell>
                 <TableCell>
                   <Button
@@ -157,6 +158,7 @@ export default function AdminKeywords({ loaderData }: any) {
             ))}
           </TableBody>
           </Table>
+          </div>
           <div className="px-4 pb-4">
             <Pagination page={page} total={total} limit={limit} basePath="/admin/keywords" searchParams={{ ...(q ? { q } : {}) }} />
           </div>

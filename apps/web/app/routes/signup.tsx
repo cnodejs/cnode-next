@@ -21,6 +21,7 @@ import {
 import { CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { AuthShell } from "~/components/AuthShell";
 import { redirectIfAuthenticated } from "~/lib/auth";
+import { TurnstileWidget, getTurnstileToken } from "~/components/TurnstileWidget";
 
 const signupFormSchema = signupSchema
   .extend({
@@ -39,12 +40,14 @@ export function meta() {
 
 export async function loader({ request }: { request: Request }) {
   await redirectIfAuthenticated(request);
-  return null;
+  const res = await apiFetch<{ success: boolean; data?: { allow_signup: boolean } }>("/api/v1/auth/config");
+  return { allowSignup: res.success ? res.data?.allow_signup !== false : true };
 }
 
-export default function Signup() {
+export default function Signup({ loaderData }: any) {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const allowSignup = loaderData.allowSignup;
 
   const form = useForm<SignupValues>({
     resolver: zodResolver(signupFormSchema),
@@ -62,6 +65,7 @@ export default function Signup() {
             loginname: values.loginname,
             pass: values.pass,
             email: values.email,
+            turnstileToken: getTurnstileToken(),
           }),
         },
       );
@@ -89,6 +93,7 @@ export default function Signup() {
             <CardTitle>注册</CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
+            {allowSignup ? (
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
@@ -144,11 +149,17 @@ export default function Signup() {
                     </FormItem>
                   )}
                 />
+                <TurnstileWidget />
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? "注册中..." : "注册"}
                 </Button>
               </form>
             </Form>
+            ) : (
+              <div className="rounded-xl border border-dashed border-border bg-surface-subtle p-6 text-center text-sm text-muted-foreground">
+                当前暂不开放注册。
+              </div>
+            )}
             <div className="mt-4 text-sm text-muted-foreground text-center">
               <Link to="/signin" className="text-primary hover:underline">
                 已有账号? 登录

@@ -6,8 +6,10 @@ import { decrementScoreAndReplyCount, incrementScoreAndReplyCount } from "../lib
 import { sendMessageToMentionUsers } from "../lib/at";
 import { sendReplyMessage, sendReply2Message } from "../lib/message";
 import { checkContent } from "../lib/moderation";
-import { perUserPerDay } from "../middleware/rate-limit";
+import { perUserPerDaySetting } from "../middleware/rate-limit";
 import type { AuthVars } from "../middleware/auth";
+import { ensureMuteNotExpired } from "../lib/penalty";
+import { requestIp, verifyTurnstile } from "../lib/turnstile";
 
 const reply = new Hono<{
   Variables: AuthVars;
@@ -20,6 +22,7 @@ const createReplySchema = z.object({
   accesstoken: z.string().optional(),
   content: z.string().min(1),
   reply_id: z.string().optional(),
+  turnstileToken: z.string().optional(),
 });
 
 const editReplySchema = z.object({
@@ -37,18 +40,23 @@ async function requestUser(c: any, accesstoken?: string) {
 reply.post(
   "/topic/:topic_id/replies",
   zValidator("json", createReplySchema),
-  perUserPerDay("create_reply", CREATE_REPLY_PER_DAY, true),
+  perUserPerDaySetting("create_reply", "rate_reply", CREATE_REPLY_PER_DAY, true),
   async (c) => {
-  const user = c.get("user");
+  let user = c.get("user");
   if (!user) {
     return c.json({ success: false, error_msg: "未登录" }, 401);
   }
+  user = await ensureMuteNotExpired(user);
   if (user.isMuted || user.isBlock) {
     return c.json({ success: false, error_msg: "您已被禁言" }, 403);
   }
 
   const topicId = Number(c.req.param("topic_id"));
-  const { content, reply_id } = c.req.valid("json");
+  const { content, reply_id, turnstileToken } = c.req.valid("json");
+
+  if (!(await verifyTurnstile(turnstileToken, requestIp(c)))) {
+    return c.json({ success: false, error_msg: "人机验证失败" }, 403);
+  }
 
   const contentCheck = await checkContent(content);
   if (contentCheck.hit) {

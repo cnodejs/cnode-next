@@ -6,7 +6,7 @@ import OSS from "ali-oss";
 import bcryptjs from "bcryptjs";
 import { Buffer } from "node:buffer";
 import { v4 as uuidv4 } from "uuid";
-import { userQueries } from "../lib/db";
+import { settingQueries, userQueries } from "../lib/db";
 import {
   sendActiveMail,
   sendResetPassMail,
@@ -20,6 +20,7 @@ import {
   type AuthVars,
 } from "../middleware/auth";
 import { perIpPerDay } from "../middleware/rate-limit";
+import { requestIp, verifyTurnstile } from "../lib/turnstile";
 
 const auth = new Hono<{
   Variables: AuthVars;
@@ -99,10 +100,12 @@ const signupSchema = z.object({
     .regex(/[a-zA-Z]/, "密码必须包含字母")
     .regex(/[0-9]/, "密码必须包含数字"),
   email: z.string().email(),
+  turnstileToken: z.string().optional(),
 });
 
 const searchPassSchema = z.object({
   email: z.string().email(),
+  turnstileToken: z.string().optional(),
 });
 
 const resetPassSchema = z.object({
@@ -122,6 +125,7 @@ const githubCreateSchema = z.object({
 
 const RETRIEVE_KEY_TTL = 24 * 60 * 60 * 1000;
 const GITHUB_PENDING_COOKIE = "github_profile";
+const GITHUB_OAUTH_COOKIE = "github_oauth_state";
 
 type PendingGithubProfile = {
   id: string;
@@ -129,6 +133,11 @@ type PendingGithubProfile = {
   email: string;
   avatarUrl?: string;
   accessToken: string;
+};
+
+type GithubOAuthState = {
+  state: string;
+  intent: "login" | "bind";
 };
 
 function webBaseUrl() {
@@ -169,6 +178,23 @@ function getPendingGithubProfile(c: any): PendingGithubProfile | null {
   }
 }
 
+function getGithubOAuthState(c: any): GithubOAuthState | null {
+  const raw = getCookie(c, GITHUB_OAUTH_COOKIE);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(decodeURIComponent(raw));
+    if (!parsed.state || !["login", "bind"].includes(parsed.intent)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function clearGithubOAuthState(c: any) {
+  const domain = process.env.AUTH_COOKIE_DOMAIN || undefined;
+  deleteCookie(c, GITHUB_OAUTH_COOKIE, { domain, path: "/" });
+}
+
 auth.post("/auth/local/login", zValidator("json", signinSchema), async (c) => {
   const { name, pass } = c.req.valid("json");
 
@@ -194,12 +220,24 @@ auth.post("/auth/local/login", zValidator("json", signinSchema), async (c) => {
   return c.json({ success: true });
 });
 
+auth.get("/auth/config", async (c) => {
+  const allowSignup = (await settingQueries.get("allow_signup", "true")) !== "false";
+  return c.json({ success: true, data: { allow_signup: allowSignup } });
+});
+
 auth.post(
   "/auth/local/signup",
   perIpPerDay("create_user_per_ip", CREATE_USER_PER_IP, true),
   zValidator("json", signupSchema),
   async (c) => {
-  const { loginname, pass, email } = c.req.valid("json");
+  const allowSignup = (await settingQueries.get("allow_signup", "true")) !== "false";
+  if (!allowSignup) {
+    return c.json({ success: false, error_msg: "当前暂不开放注册" }, 403);
+  }
+  const { loginname, pass, email, turnstileToken } = c.req.valid("json");
+  if (!(await verifyTurnstile(turnstileToken, requestIp(c)))) {
+    return c.json({ success: false, error_msg: "人机验证失败" }, 403);
+  }
 
   const existingByLogin = await userQueries.getByLoginName(loginname.toLowerCase());
   if (existingByLogin) {
@@ -251,7 +289,11 @@ auth.get("/auth/local/active_account", async (c) => {
 });
 
 auth.post("/auth/local/search_pass", zValidator("json", searchPassSchema), async (c) => {
-  const { email } = c.req.valid("json");
+  const { email, turnstileToken } = c.req.valid("json");
+
+  if (!(await verifyTurnstile(turnstileToken, requestIp(c)))) {
+    return c.json({ success: false, error_msg: "人机验证失败" }, 403);
+  }
 
   const user = await userQueries.getByEmail(email);
   if (!user) {
@@ -291,8 +333,15 @@ auth.get("/auth/github", (c) => {
 
 auth.get("/auth/github/callback", async (c) => {
   const code = c.req.query("code");
+  const state = c.req.query("state");
   if (!code) {
     return c.json({ success: false, error_msg: "missing code" }, 400);
+  }
+
+  const oauthState = getGithubOAuthState(c);
+  clearGithubOAuthState(c);
+  if (!state || !oauthState || state !== oauthState.state) {
+    return c.redirect(`${webBaseUrl()}/signin?error=github_state_invalid`);
   }
 
   const clientId = process.env.AUTH_GITHUB_CLIENT_ID;
@@ -361,6 +410,23 @@ auth.get("/auth/github/callback", async (c) => {
     }
 
     let user = await userQueries.getByGithubId(String(profile.id));
+
+    if (oauthState.intent === "bind") {
+      const currentUser = c.get("user");
+      if (!currentUser) {
+        return c.redirect(`${webBaseUrl()}/signin?error=github_bind_login_required`);
+      }
+      if (user && user.id !== currentUser.id) {
+        return c.redirect(`${webBaseUrl()}/setting?error=github_already_bound`);
+      }
+      await userQueries.updateGithubInfo(currentUser.id, {
+        githubId: String(profile.id),
+        githubUsername: profile.login,
+        githubAccessToken: ghAccessToken,
+        avatar: profile.avatar_url,
+      });
+      return c.redirect(`${webBaseUrl()}/setting?github=bound`);
+    }
 
     if (user) {
       await userQueries.updateGithubInfo(user.id, {
@@ -474,6 +540,8 @@ auth.get("/auth/me", async (c) => {
     data: {
       loginname: user.loginname,
       email: user.email,
+      github_username: user.githubUsername,
+      github_bound: !!user.githubId,
       url: user.url,
       location: user.location,
       signature: user.signature,

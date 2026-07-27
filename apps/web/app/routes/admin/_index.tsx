@@ -33,13 +33,14 @@ export default function AdminIndex({ loaderData }: any) {
     { label: "今日发帖", value: stats?.todayTopics ?? "-" },
     { label: "今日回复", value: stats?.todayReplies ?? "-" },
     { label: "今日注册", value: stats?.todayUsers ?? "-" },
+    { label: "待审举报", value: stats?.pendingReports ?? "-" },
     { label: "巡检待处理", value: stats?.moderationPending ?? "-" },
   ];
   return (
     <AdminLayout>
       <AdminPage>
       <AdminPageHeader title="管理概览" description="社区运行状态、近期内容和新用户的统一工作台。" />
-       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-7">
+       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-8">
         {statCards.map((card) => (
           <AdminMetricCard key={card.label} label={card.label} value={card.value} />
         ))}

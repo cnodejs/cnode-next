@@ -17,6 +17,8 @@ assert.equal(canRunTopicAction("delete", false, false), false, "regular users ca
 
 assert.match(adminRouteSource, /admin\.post\("\/user\/:name\/block", adminRequired\(\)/, "block requires admin");
 assert.match(adminRouteSource, /admin\.post\("\/user\/:name\/unblock", adminRequired\(\)/, "unblock requires admin");
+assert.match(adminRouteSource, /rejectSelfTarget\(c, userData\)/, "admin user actions reject self-targeting in API");
+assert.match(adminRouteSource, /不能对自己执行该操作/, "self-targeting returns an explicit error");
 assert.match(adminRouteSource, /admin\.post\("\/topic\/:tid\/good", modRequired\(\)/, "good toggle requires mod");
 assert.match(adminRouteSource, /admin\.post\("\/admin\/reply\/:rid\/delete", modRequired\(\)/, "reply delete requires mod");
 assert.match(adminRouteSource, /status: "deleted"/, "topic delete writes deleted status");
@@ -42,8 +44,9 @@ assert.match(communityRouteSource, /replyTopicVisible/, "latest replies filter d
 assert.match(communityRouteSource, /replyNotDeleted/, "latest replies filter deleted replies");
 
 assert.match(userPageSource, /currentUser\?\.is_admin/, "user page shows management only to admin");
-assert.match(userPageSource, /封禁用户/, "user page has block action");
-assert.match(userPageSource, /解禁用户/, "user page has unblock action");
+assert.match(userPageSource, /canManage && !isSelf/, "user page hides destructive self actions");
+assert.match(userPageSource, /隐藏用户内容/, "user page has block action");
+assert.match(userPageSource, /恢复内容可见/, "user page has unblock action");
 assert.match(topicPageSource, /currentUser\?\.is_mod/, "topic page shows content management only to mod or admin");
 assert.match(topicPageSource, /删除帖子/, "topic page has explicit delete-topic label");
 assert.match(topicPageSource, /置顶帖子/, "topic page has top action");
