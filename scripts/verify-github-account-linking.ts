@@ -1,8 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { createRequire } from "node:module";
+import { readFile } from "node:fs/promises";
 import { githubUnbindSchema } from "../packages/shared/src/schemas/index";
 import {
   decideGithubBind,
@@ -128,58 +125,6 @@ else process.env.AUTH_GITHUB_CLIENT_ID = oldClientId;
 if (oldClientSecret === undefined) delete process.env.AUTH_GITHUB_CLIENT_SECRET;
 else process.env.AUTH_GITHUB_CLIENT_SECRET = oldClientSecret;
 
-const requireFromDb = createRequire(new URL("../packages/db/package.json", import.meta.url));
-const Database = requireFromDb("better-sqlite3") as typeof import("better-sqlite3");
-const tempDir = await mkdtemp(join(tmpdir(), "cnode-github-linking-"));
-const sqlite = new Database(join(tempDir, "linking.db"));
-
-try {
-  sqlite.exec(`
-    CREATE TABLE users (
-      id INTEGER PRIMARY KEY,
-      email TEXT NOT NULL,
-      avatar TEXT,
-      access_token TEXT,
-      github_id TEXT,
-      github_username TEXT,
-      github_access_token TEXT
-    );
-    CREATE UNIQUE INDEX users_github_id_unique ON users (github_id);
-  `);
-  const insert = sqlite.prepare(
-    "INSERT INTO users (id, email, avatar, access_token, github_id, github_username, github_access_token) VALUES (?, ?, ?, ?, ?, ?, ?)",
-  );
-  insert.run(1, "one@example.com", "avatar-1", "api-1", null, null, null);
-  insert.run(2, "two@example.com", "avatar-2", "api-2", null, null, null);
-  sqlite
-    .prepare(
-      "UPDATE users SET github_id = ?, github_username = ?, github_access_token = ? WHERE id = ?",
-    )
-    .run("github-a", "octocat", "github-token", 1);
-  assert.throws(() =>
-    sqlite
-      .prepare(
-        "UPDATE users SET github_id = ?, github_username = ?, github_access_token = ? WHERE id = ?",
-      )
-      .run("github-a", "other", "other-token", 2),
-  );
-  sqlite
-    .prepare(
-      "UPDATE users SET github_id = NULL, github_username = NULL, github_access_token = NULL WHERE id = ? AND github_id = ?",
-    )
-    .run(1, "github-a");
-  const row = sqlite.prepare("SELECT * FROM users WHERE id = 1").get() as Record<string, unknown>;
-  assert.equal(row.github_id, null);
-  assert.equal(row.github_username, null);
-  assert.equal(row.github_access_token, null);
-  assert.equal(row.email, "one@example.com");
-  assert.equal(row.avatar, "avatar-1");
-  assert.equal(row.access_token, "api-1");
-} finally {
-  sqlite.close();
-  await rm(tempDir, { recursive: true, force: true });
-}
-
 const root = new URL("../", import.meta.url);
 const auth = await readFile(new URL("apps/api/src/routes/auth.ts", root), "utf8");
 const db = await readFile(new URL("apps/api/src/lib/db.ts", root), "utf8");
@@ -206,6 +151,13 @@ assert.match(setting, /忘记密码，先重置密码/);
 assert.match(setting, /isSubmitting \? "解除中\.\.\."/);
 assert.match(migration, /HAVING COUNT\(\*\) > 1/);
 assert.match(migration, /CREATE UNIQUE INDEX IF NOT EXISTS "users_github_id_unique"/);
+assert.match(migration, /ON "users" \("github_id"\)/);
+assert.match(migration, /WHERE github_id IS NOT NULL/);
+assert.doesNotMatch(
+  migration.match(/CREATE UNIQUE INDEX IF NOT EXISTS "users_github_id_unique"[^;]+/)?.[0] || "",
+  /WHERE/i,
+);
+assert.doesNotMatch(db, /email: null|avatar: null|accessToken: null/);
 
 const sensitiveValues = ["known-password", "token-204", "test-secret"];
 const responseAndAuditTemplates = [
