@@ -7,7 +7,7 @@
 ```mermaid
 graph TB
   subgraph CF [Cloudflare Workers]
-    WEB[apps/web<br/>React Router v8 SSR<br/>next.cnodejs.org<br/>@cloudflare/vite-plugin]
+    WEB[apps/web<br/>React Router v7 SSR<br/>next.cnodejs.org<br/>@cloudflare/vite-plugin]
     KV[(KV Binding<br/>页面缓存 TTL 60s)]
   end
 
@@ -43,7 +43,7 @@ graph TB
 
 cnode-next 使用 pnpm workspace 管理 monorepo,不引入 turborepo。包含 2 个应用和 2 个共享包:
 
-- `apps/web`: React Router v8 前端,通过 `@cloudflare/vite-plugin` 部署到 CF Workers
+- `apps/web`: React Router v7 前端,通过 `@cloudflare/vite-plugin` 部署到 CF Workers
 - `apps/api`: Hono API server,通过 docker-compose 部署在海外自有服务器
 - `packages/db`: Drizzle ORM schema (一份, SQLite/pg 双 dialect)
 - `packages/shared`: API 契约类型, Zod schemas, 常量, 纯函数
@@ -54,7 +54,7 @@ cnode-next 使用 pnpm workspace 管理 monorepo,不引入 turborepo。包含 2 
 
 ```
 cnodejs.org          → 老 nodeclub (Express + MongoDB),保持运行
-next.cnodejs.org     → 新前端 (RRv8 SSR, CF Workers)
+next.cnodejs.org     → 新前端 (React Router v7 SSR, CF Workers)
 api.cnodejs.org      → 新后端 API (Hono, 海外服务器)
 static.cnodejs.org   → 图片存储 (阿里云 OSS, 镜像回源七牛)
 static2.cnodejs.org  → 站点静态资源 CDN (logo/CSS/JS/public assets)

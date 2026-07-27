@@ -6,7 +6,7 @@ CNode 社区重写版本。当前阶段聚焦 MongoDB 到 PostgreSQL 迁移后�
 
 | 层           | 技术                                                               |
 | ------------ | ------------------------------------------------------------------ |
-| 前端         | React Router v8 (SSR), TailwindCSS + shadcn/ui                     |
+| 前端         | React Router v7 (SSR), Tailwind CSS v4 + shadcn/ui                 |
 | 后端         | Hono (@hono/node-server), Node.js                                  |
 | 数据库       | PostgreSQL                                                         |
 | ORM          | Drizzle ORM                                                        |
@@ -39,14 +39,13 @@ pnpm dev
 ```
 cnode-next/
 ├── apps/
-│   ├── web/          # React Router v8 (SSR, CF Workers)
+│   ├── web/          # React Router v7 (SSR, CF Workers)
 │   └── api/          # Hono API server
 ├── packages/
 │   ├── db/           # Drizzle schema (PostgreSQL-first)
 │   └── shared/       # API 契约类型, Zod schemas, 常量
 ├── docs/             # 深入文档
-├── openspec/         # OpenSpec 变更管理
-└── nodeclub/         # 老代码参考
+└── openspec/         # OpenSpec 变更管理
 ```
 
 ## 文档
@@ -61,4 +60,4 @@ cnode-next/
 
 ## 参考代码
 
-`nodeclub/` (Express + MongoDB) 和 `egg-cnode/` (Egg.js, 未完成) 是迁移期业务逻辑参考，当前阶段保留。
+`../nodeclub/` (Express + MongoDB) 和 `egg-cnode/` (Egg.js, 未完成) 是迁移期业务逻辑参考。`../nodeclub/` 不属于当前仓库，不参与 lint/test/build。

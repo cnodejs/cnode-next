@@ -1,3 +1,9 @@
+# web-ui-state Specification
+
+## Purpose
+
+定义 Web 前端全局客户端状态、主题状态、UI 开关、路由数据刷新和首屏数据归属要求，确保 React Router loader 与 zustand store 的职责边界清晰。
+
 ## Requirements
 
 ### Requirement: zustand 作为全局状态库
@@ -48,7 +54,7 @@
 
 ### Requirement: Mutation 后用 revalidate 替换 reload
 
-所有 mutation(创建/编辑/删除/封禁/标记已读/重置密码)成功后 MUST 调用 React Router v8 的 `useRevalidator().revalidate()` 重跑当前路由 loader,或调 store action 更新全局态,或二者结合。MUST NOT 使用 `window.location.reload()`。
+所有 mutation(创建/编辑/删除/封禁/标记已读/重置密码)成功后 MUST 调用 React Router v7 的 `useRevalidator().revalidate()` 重跑当前路由 loader,或调 store action 更新全局态,或二者结合。MUST NOT 使用 `window.location.reload()`。
 
 #### Scenario: 回复成功后局部刷新
 
