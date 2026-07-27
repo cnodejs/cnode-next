@@ -17,6 +17,7 @@ import { v4 as uuidv4 } from "uuid";
 import { boolEq, boolValue } from "./db-compat";
 
 let dbInstance: DB | null = null;
+const INTERNAL_TABS = ["dev", "test"];
 
 function getDb(): DB {
   if (!dbInstance) {
@@ -155,6 +156,32 @@ export const userQueries = {
   },
 };
 
+function topicConditions(where: any) {
+  const conditions: any[] = [];
+  if (where.deleted !== undefined) {
+    conditions.push(boolEq(topics.deleted, !!where.deleted));
+  }
+  if (where.tab) {
+    conditions.push(eq(topics.tab, where.tab));
+  }
+  if (where.excludeTabs?.length) {
+    conditions.push(sql`(${topics.tab} is null or ${topics.tab} not in (${sql.join(where.excludeTabs.map((tab: string) => sql`${tab}`), sql`, `)}))`);
+  }
+  if (where.good !== undefined) {
+    conditions.push(boolEq(topics.good, !!where.good));
+  }
+  if (where.authorId !== undefined) {
+    conditions.push(eq(topics.authorId, where.authorId));
+  }
+  if (where.publicVisible) {
+    conditions.push(boolEq(topics.deleted, false));
+    conditions.push(sql`coalesce(${topics.status}, 'published') <> 'deleted'`);
+    conditions.push(sql`(${topics.tab} is null or ${topics.tab} not in (${sql.join(INTERNAL_TABS.map((tab) => sql`${tab}`), sql`, `)}))`);
+    conditions.push(sql`exists (select 1 from ${users} where ${users.id} = ${topics.authorId} and ${boolEq(users.isBlock, false)})`);
+  }
+  return conditions;
+}
+
 export const topicQueries = {
   async getById(id: number) {
     const db = getDb();
@@ -165,24 +192,7 @@ export const topicQueries = {
   async getByQuery(where: any, opt?: any) {
     const db = getDb();
     let q = db.select().from(topics).$dynamic();
-    const conditions: any[] = [];
-    if (where.deleted !== undefined) {
-      conditions.push(boolEq(topics.deleted, !!where.deleted));
-    }
-    if (where.tab) {
-      conditions.push(eq(topics.tab, where.tab));
-    }
-    if (where.excludeTabs?.length) {
-      conditions.push(
-        sql`(${topics.tab} is null or (${topics.tab} <> ${where.excludeTabs[0]} and ${topics.tab} <> ${where.excludeTabs[1]}))`,
-      );
-    }
-    if (where.good !== undefined) {
-      conditions.push(boolEq(topics.good, !!where.good));
-    }
-    if (where.authorId !== undefined) {
-      conditions.push(eq(topics.authorId, where.authorId));
-    }
+    const conditions = topicConditions(where);
     if (conditions.length > 0) {
       q = q.where(conditions.length === 1 ? conditions[0] : and(...conditions)) as any;
     }
@@ -194,24 +204,7 @@ export const topicQueries = {
   async countByQuery(where: any) {
     const db = getDb();
     let q = db.select({ c: count() }).from(topics).$dynamic();
-    const conditions: any[] = [];
-    if (where.deleted !== undefined) {
-      conditions.push(boolEq(topics.deleted, !!where.deleted));
-    }
-    if (where.tab) {
-      conditions.push(eq(topics.tab, where.tab));
-    }
-    if (where.excludeTabs?.length) {
-      conditions.push(
-        sql`(${topics.tab} is null or (${topics.tab} <> ${where.excludeTabs[0]} and ${topics.tab} <> ${where.excludeTabs[1]}))`,
-      );
-    }
-    if (where.good !== undefined) {
-      conditions.push(boolEq(topics.good, !!where.good));
-    }
-    if (where.authorId !== undefined) {
-      conditions.push(eq(topics.authorId, where.authorId));
-    }
+    const conditions = topicConditions(where);
     if (conditions.length > 0) {
       q = q.where(conditions.length === 1 ? conditions[0] : and(...conditions)) as any;
     }
@@ -310,7 +303,12 @@ export const replyQueries = {
   async getByAuthorId(authorId: number, opt?: any) {
     const db = getDb();
     const limit = opt?.limit || 20;
-    return db.select().from(replies).where(eq(replies.authorId, authorId)).limit(limit);
+    return db
+      .select()
+      .from(replies)
+      .where(and(eq(replies.authorId, authorId), boolEq(replies.deleted, false)))
+      .orderBy(desc(replies.createAt))
+      .limit(limit);
   },
 
   async newAndSave(content: string, topicId: number, authorId: number, replyId?: number) {

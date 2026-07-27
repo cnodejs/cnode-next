@@ -50,6 +50,8 @@ export default function AdminUsers({ loaderData }: any) {
   const { users: initialUsers, total, page, limit, q } = loaderData;
   const [users] = useState<any[]>(initialUsers);
   const [resetTarget, setResetTarget] = useState<{ id: number; loginname: string } | null>(null);
+  const [deleteAllTarget, setDeleteAllTarget] = useState<string | null>(null);
+  const [deletingAll, setDeletingAll] = useState(false);
   const { revalidate } = useRevalidator();
 
   const handleBlock = async (name: string, block: boolean) => {
@@ -58,21 +60,37 @@ export default function AdminUsers({ loaderData }: any) {
       { method: "POST" },
     );
     if (res.success) {
-      toast.success(block ? "已禁言" : "已解禁");
+      toast.success(block ? "已隐藏用户内容" : "已恢复用户内容可见");
       revalidate();
     } else {
       toast.error(res.error_msg || "操作失败");
     }
   };
 
-  const handleDeleteAll = async (name: string) => {
-    if (!confirm(`确认删除 ${name} 的所有发言?`)) return;
+  const handleMute = async (name: string, mute: boolean) => {
     const res = await apiFetch<{ success: boolean; error_msg?: string }>(
-      `/api/v1/user/${name}/delete_all`,
+      `/api/v1/user/${name}/${mute ? "mute" : "unmute"}`,
       { method: "POST" },
     );
     if (res.success) {
+      toast.success(mute ? "已禁言" : "已解除禁言");
+      revalidate();
+    } else {
+      toast.error(res.error_msg || "操作失败");
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    if (!deleteAllTarget) return;
+    setDeletingAll(true);
+    const res = await apiFetch<{ success: boolean; error_msg?: string }>(
+      `/api/v1/user/${deleteAllTarget}/delete_all`,
+      { method: "POST" },
+    );
+    setDeletingAll(false);
+    if (res.success) {
       toast.success("已删除该用户所有发言");
+      setDeleteAllTarget(null);
       revalidate();
     } else {
       toast.error(res.error_msg || "删除失败");
@@ -96,7 +114,7 @@ export default function AdminUsers({ loaderData }: any) {
   return (
     <AdminLayout>
       <AdminPage>
-        <AdminPageHeader title="用户管理" description="查看社区用户状态，执行禁言、解禁、密码重置和清理操作。" />
+        <AdminPageHeader title="用户管理" description="查看社区用户状态，执行内容隐藏、禁言、密码重置和清理操作。" />
         <AdminPanel title="用户列表" description={`当前显示 ${users.length} / ${total} 个用户`}>
           <AdminToolbar>
             <Form method="get" className="flex w-full gap-2 sm:max-w-md">
@@ -129,11 +147,11 @@ export default function AdminUsers({ loaderData }: any) {
                 <TableCell>{u.topic_count}</TableCell>
                 <TableCell>{u.reply_count}</TableCell>
                 <TableCell>
-                  {u.is_block ? (
-                    <Badge variant="destructive">禁言</Badge>
-                  ) : (
-                    <Badge variant="success">正常</Badge>
-                  )}
+                  <div className="flex flex-wrap gap-1">
+                    {u.is_block && <Badge variant="destructive">内容隐藏</Badge>}
+                    {u.is_muted && <Badge variant="destructive">禁言</Badge>}
+                    {!u.is_block && !u.is_muted && <Badge variant="success">正常</Badge>}
+                  </div>
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
@@ -142,7 +160,14 @@ export default function AdminUsers({ loaderData }: any) {
                       variant="ghost"
                       onClick={() => handleBlock(u.loginname, !u.is_block)}
                     >
-                      {u.is_block ? "解禁" : "禁言"}
+                      {u.is_block ? "恢复可见" : "隐藏内容"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleMute(u.loginname, !u.is_muted)}
+                    >
+                      {u.is_muted ? "解除禁言" : "禁言"}
                     </Button>
                     <Button
                       size="sm"
@@ -155,7 +180,7 @@ export default function AdminUsers({ loaderData }: any) {
                       size="sm"
                       variant="ghost"
                       className="text-destructive"
-                      onClick={() => handleDeleteAll(u.loginname)}
+                      onClick={() => setDeleteAllTarget(u.loginname)}
                     >
                       删除发言
                     </Button>
@@ -168,6 +193,24 @@ export default function AdminUsers({ loaderData }: any) {
           <div className="px-4 pb-4">
             <Pagination page={page} total={total} limit={limit} basePath="/admin/users" searchParams={{ ...(q ? { q } : {}) }} />
           </div>
+          <Dialog open={!!deleteAllTarget} onOpenChange={(open) => !deletingAll && !open && setDeleteAllTarget(null)}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>确认删除用户所有发言</DialogTitle>
+                <DialogDescription>
+                  将删除 {deleteAllTarget} 的所有话题和回复，此操作会写入审计日志。请确认目标用户无误。
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setDeleteAllTarget(null)} disabled={deletingAll}>
+                  取消
+                </Button>
+                <Button type="button" variant="destructive" onClick={handleDeleteAll} disabled={deletingAll}>
+                  {deletingAll ? "删除中" : "确认删除所有发言"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </AdminPanel>
       </AdminPage>
 

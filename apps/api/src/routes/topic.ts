@@ -17,6 +17,7 @@ const topic = new Hono<{
 
 const CREATE_TOPIC_SCORE = 5;
 const CREATE_TOPIC_PER_DAY = 1000;
+const INTERNAL_TABS = new Set(["dev", "test"]);
 
 topic.get("/topics", async (c) => {
   const page = Math.max(1, Number(c.req.query("page")) || 1);
@@ -26,13 +27,13 @@ topic.get("/topics", async (c) => {
 
   const query: any = {};
   if (!tab || tab === "all") {
-    query.excludeTabs = ["job", "dev"];
+    query.excludeTabs = ["job"];
   } else if (tab === "good") {
     query.good = 1;
   } else {
     query.tab = tab;
   }
-  query.deleted = 0;
+  query.publicVisible = true;
 
   const topicsList = await topicQueries.getByQuery(query, {
     limit,
@@ -87,6 +88,9 @@ topic.get("/topic/:id", async (c) => {
   await topicQueries.incrementVisitCount(id);
 
   const author = await userQueries.getById(topicData.authorId);
+  if (!c.get("isAdmin") && (topicData.status === "deleted" || INTERNAL_TABS.has(topicData.tab || "") || author?.isBlock)) {
+    return c.json({ success: false, error_msg: "话题不存在" }, 404);
+  }
   const repliesList = await replyQueries.getByTopicId(id);
   const replyUps = await replyQueries.getUpsByReplyIds(repliesList.map((reply) => reply.id));
   const upsByReplyId = new Map<number, string[]>();
@@ -103,7 +107,8 @@ topic.get("/topic/:id", async (c) => {
       const parentReply = r.replyId
         ? replyMap.get(r.replyId) || (await replyQueries.getById(r.replyId))
         : null;
-      const parentAuthor = parentReply ? await userQueries.getById(parentReply.authorId) : null;
+      const visibleParentReply = parentReply && !parentReply.deleted ? parentReply : null;
+      const parentAuthor = visibleParentReply ? await userQueries.getById(visibleParentReply.authorId) : null;
       const ups = upsByReplyId.get(r.id) || [];
       return {
         id: String(r.id),
@@ -112,12 +117,12 @@ topic.get("/topic/:id", async (c) => {
         ups,
         create_at: r.createAt,
         reply_id: r.replyId ? String(r.replyId) : null,
-        reply_to: parentReply
+        reply_to: visibleParentReply
           ? {
-              id: String(parentReply.id),
+              id: String(visibleParentReply.id),
               author: userSummary(parentAuthor),
-              content_excerpt: excerptMarkdown(parentReply.content),
-              deleted: !!parentReply.deleted,
+              content_excerpt: excerptMarkdown(visibleParentReply.content),
+              deleted: false,
             }
           : null,
         is_uped: currentUser ? ups.includes(String(currentUser.id)) : false,
@@ -163,7 +168,7 @@ topic.post(
   if (!user) {
     return c.json({ success: false, error_msg: "未登录" }, 401);
   }
-  if (user.isBlock) {
+  if (user.isMuted || user.isBlock) {
     return c.json({ success: false, error_msg: "您已被禁言" }, 403);
   }
 

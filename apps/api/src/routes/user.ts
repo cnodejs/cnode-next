@@ -10,6 +10,22 @@ const user = new Hono<{
   Variables: AuthVars;
 }>();
 
+const INTERNAL_TABS = ["dev", "test"];
+
+function publicTopicWhere(extra?: any) {
+  return and(
+    boolEq(topics.deleted, false),
+    sql`coalesce(${topics.status}, 'published') <> 'deleted'`,
+    sql`(${topics.tab} is null or ${topics.tab} not in (${sql.join(INTERNAL_TABS.map((tab) => sql`${tab}`), sql`, `)}))`,
+    sql`exists (select 1 from ${users} where ${users.id} = ${topics.authorId} and ${boolEq(users.isBlock, false)})`,
+    ...(extra ? [extra] : []),
+  );
+}
+
+function publicTopicExists(topicId: any) {
+  return sql`exists (select 1 from ${topics} where ${topics.id} = ${topicId} and ${boolEq(topics.deleted, false)} and coalesce(${topics.status}, 'published') <> 'deleted' and (${topics.tab} is null or ${topics.tab} not in (${sql.join(INTERNAL_TABS.map((tab) => sql`${tab}`), sql`, `)})) and exists (select 1 from ${users} where ${users.id} = ${topics.authorId} and ${boolEq(users.isBlock, false)}))`;
+}
+
 function formatPublicUser(userData: any) {
   return {
     id: String(userData.id),
@@ -73,7 +89,7 @@ user.get("/user/:loginname/topics", async (c) => {
   if (!userData) return c.json({ success: false, error_msg: "用户不存在" }, 404);
 
   const db = getDb();
-  const where = and(eq(topics.authorId, userData.id), boolEq(topics.deleted, false));
+  const where = publicTopicWhere(eq(topics.authorId, userData.id));
   const [list, totalResult] = await Promise.all([
     db
       .select()
@@ -101,10 +117,11 @@ user.get("/user/:loginname/replies", async (c) => {
   if (!userData) return c.json({ success: false, error_msg: "用户不存在" }, 404);
 
   const db = getDb();
+  const visibleTopicExists = publicTopicExists(replies.topicId);
   const topicRows = await db
     .select({ topicId: replies.topicId, lastReplyAt: sql`max(${replies.createAt})` })
     .from(replies)
-    .where(and(eq(replies.authorId, userData.id), boolEq(replies.deleted, false)))
+    .where(and(eq(replies.authorId, userData.id), boolEq(replies.deleted, false), visibleTopicExists))
     .groupBy(replies.topicId)
     .orderBy(desc(sql`max(${replies.createAt})`))
     .limit(limit)
@@ -112,9 +129,9 @@ user.get("/user/:loginname/replies", async (c) => {
   const totalRows = await db
     .select({ c: sql<number>`count(distinct ${replies.topicId})` })
     .from(replies)
-    .where(and(eq(replies.authorId, userData.id), boolEq(replies.deleted, false)));
+    .where(and(eq(replies.authorId, userData.id), boolEq(replies.deleted, false), visibleTopicExists));
   const ids = topicRows.map((row: any) => row.topicId).filter(Boolean);
-  const topicList = ids.length > 0 ? await db.select().from(topics).where(inArray(topics.id, ids)) : [];
+  const topicList = ids.length > 0 ? await db.select().from(topics).where(publicTopicWhere(inArray(topics.id, ids))) : [];
   const byId = new Map(topicList.map((topic: any) => [topic.id, topic]));
   const ordered = ids.map((id) => byId.get(id)).filter(Boolean);
 
@@ -134,18 +151,22 @@ user.get("/user/:loginname/collections", async (c) => {
   if (!userData) return c.json({ success: false, error_msg: "用户不存在" }, 404);
 
   const db = getDb();
+  const visibleCollectWhere = and(
+    eq(topicCollects.userId, userData.id),
+    publicTopicExists(topicCollects.topicId),
+  );
   const [collects, totalResult] = await Promise.all([
     db
       .select()
       .from(topicCollects)
-      .where(eq(topicCollects.userId, userData.id))
+      .where(visibleCollectWhere)
       .orderBy(desc(topicCollects.createAt))
       .limit(limit)
       .offset((page - 1) * limit),
-    db.select({ c: count() }).from(topicCollects).where(eq(topicCollects.userId, userData.id)),
+    db.select({ c: count() }).from(topicCollects).where(visibleCollectWhere),
   ]);
   const ids = collects.map((doc) => doc.topicId);
-  const topicList = ids.length > 0 ? await db.select().from(topics).where(inArray(topics.id, ids)) : [];
+  const topicList = ids.length > 0 ? await db.select().from(topics).where(publicTopicWhere(inArray(topics.id, ids))) : [];
   const byId = new Map(topicList.map((topic: any) => [topic.id, topic]));
   const ordered = ids.map((id) => byId.get(id)).filter(Boolean);
 
@@ -167,14 +188,22 @@ user.get("/user/:loginname", async (c) => {
 
   // Recent topics (limit 15)
   const recentTopics = await topicQueries.getByQuery(
-    { authorId: userData.id, deleted: 0 },
+    { authorId: userData.id, publicVisible: true },
     { limit: 15, orderBy: undefined },
   );
 
   // Recent replies: get replies by author, deduplicate topics, limit 5
   const userReplies = await replyQueries.getByAuthorId(userData.id, { limit: 20 });
-  const topicIds = [...new Set<number>(userReplies.map((r) => r.topicId))].slice(0, 5);
-  const recentRepliesTopics = await Promise.all(topicIds.map((tid) => topicQueries.getById(tid)));
+  const replyTopicIds = [...new Set<number>(userReplies.map((r) => r.topicId))];
+  const replyTopics = await Promise.all(replyTopicIds.map((tid) => topicQueries.getById(tid)));
+  const recentRepliesTopics: any[] = [];
+  for (const topic of replyTopics) {
+    if (!topic || topic.deleted || topic.status === "deleted" || INTERNAL_TABS.includes(topic.tab || "")) continue;
+    const author = await userQueries.getById(topic.authorId);
+    if (author?.isBlock) continue;
+    recentRepliesTopics.push(topic);
+    if (recentRepliesTopics.length >= 5) break;
+  }
 
   const formatTopic = (t: any) => ({
     id: String(t.id),
@@ -192,8 +221,10 @@ user.get("/user/:loginname", async (c) => {
     topic_count: userData.topicCount || 0,
     reply_count: userData.replyCount || 0,
     collect_topic_count: userData.collectTopicCount || 0,
+    is_block: !!userData.isBlock,
+    is_muted: !!userData.isMuted || !!userData.isBlock,
     recent_topics: recentTopics.map(formatTopic),
-    recent_replies: recentRepliesTopics.filter(Boolean).map((t: any) => formatTopic(t)),
+    recent_replies: recentRepliesTopics.map((t: any) => formatTopic(t)),
   };
 
   return c.json({ success: true, data });
@@ -217,6 +248,8 @@ user.post("/accesstoken", async (c) => {
     loginname: userData.loginname,
     avatar_url: userData.avatar,
     id: String(userData.id),
+    is_block: !!userData.isBlock,
+    is_muted: !!userData.isMuted || !!userData.isBlock,
   });
 });
 

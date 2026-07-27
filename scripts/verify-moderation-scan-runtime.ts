@@ -39,6 +39,8 @@ async function main() {
     handleModerationHit,
     createScheduledScanJobIfNeeded,
     listScanJobs,
+    cancelScanJob,
+    runScanJobNow,
   } = await import("../apps/api/src/lib/moderation-scan");
 
   const db = createDb();
@@ -132,6 +134,34 @@ async function main() {
   const scheduledOpen = jobs.filter((item: any) => item.reason === "scheduled" && ["pending", "running", "paused"].includes(item.status));
   assert(scheduledOpen.length === 1, "should avoid duplicate scheduled jobs");
   assert(reply.id > 0, "reply fixture should exist");
+
+  const cancelledPending = await createScanJob({ scope: "topics", mode: "historical", reason: "manual", keywordIds: [word.id], batchSize: 1, throttleMs: 0 });
+  await cancelScanJob(cancelledPending.id);
+  const afterPendingCancelClaim = await claimNextScanJob();
+  assert(afterPendingCancelClaim?.id !== cancelledPending.id, "cancelled pending job should not be claimed");
+  if (afterPendingCancelClaim) await cancelScanJob(afterPendingCancelClaim.id);
+
+  const runNowJob = await createScanJob({ scope: "topics", mode: "historical", reason: "manual", keywordIds: [word.id], batchSize: 1, throttleMs: 0 });
+  await pauseScanJob(runNowJob.id);
+  const runnableJob = await runScanJobNow(runNowJob.id);
+  assert(runnableJob?.status === "pending", "run-now should make paused job pending");
+
+  const runningCancelJob = await createScanJob({ scope: "topics", mode: "historical", reason: "manual", keywordIds: [word.id], batchSize: 1, throttleMs: 0 });
+  const claimedCancelJob = await claimNextScanJob();
+  assert(claimedCancelJob?.id === runNowJob.id || claimedCancelJob?.id === runningCancelJob.id, "should claim an open job before cancellation check");
+  if (claimedCancelJob?.id === runNowJob.id) {
+    await cancelScanJob(runNowJob.id);
+    const nextClaimedCancelJob = await claimNextScanJob();
+    assert(nextClaimedCancelJob?.id === runningCancelJob.id, "should claim running-cancel fixture");
+    await cancelScanJob(nextClaimedCancelJob.id);
+    await processScanBatch(nextClaimedCancelJob);
+  } else {
+    await cancelScanJob(claimedCancelJob.id);
+    await processScanBatch(claimedCancelJob);
+  }
+  jobs = await listScanJobs();
+  const cancelledRunning = jobs.find((item: any) => item.id === runningCancelJob.id);
+  assert(cancelledRunning?.status === "cancelled", "cancelled running job should stay cancelled");
 
   await rm(dir, { recursive: true, force: true });
   console.log("moderation scan runtime verification passed");

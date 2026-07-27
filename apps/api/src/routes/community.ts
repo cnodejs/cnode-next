@@ -1,27 +1,32 @@
 import { Hono } from "hono";
-import { desc, sql } from "drizzle-orm";
+import { and, desc, sql } from "drizzle-orm";
 import { replies, topics, users } from "@cnode/db";
 import { getDb, userQueries, topicQueries } from "../lib/db";
 import { excerptMarkdown, userSummary } from "../lib/format";
 import { boolEq } from "../lib/db-compat";
 
 const community = new Hono();
+const INTERNAL_TABS = ["dev", "test"];
+
+function publicTopicSql(topicId: any = topics.id) {
+  return sql`${boolEq(topics.deleted, false)} and coalesce(${topics.status}, 'published') <> 'deleted' and (${topics.tab} is null or ${topics.tab} not in (${sql.join(INTERNAL_TABS.map((tab) => sql`${tab}`), sql`, `)})) and exists (select 1 from ${users} where ${users.id} = ${topics.authorId} and ${boolEq(users.isBlock, false)}) and ${topics.id} = ${topicId}`;
+}
 
 community.get("/sidebar/home", async (c) => {
   const db = getDb();
   const replyNotDeleted = boolEq(replies.deleted, false);
-  const topicNotDeleted = boolEq(topics.deleted, false);
+  const replyTopicVisible = sql`exists (select 1 from ${topics} where ${publicTopicSql(replies.topicId)})`;
   const [latestRepliesRaw, noReplyTopicsRaw, topUsersRaw] = await Promise.all([
     db
       .select()
       .from(replies)
-      .where(replyNotDeleted)
+      .where(and(replyNotDeleted, replyTopicVisible))
       .orderBy(desc(replies.createAt))
       .limit(5),
     db
       .select()
       .from(topics)
-      .where(sql`${topicNotDeleted} and ${topics.replyCount} = 0`)
+      .where(sql`${publicTopicSql()} and ${topics.replyCount} = 0`)
       .orderBy(desc(topics.createAt))
       .limit(5),
     db.select().from(users).orderBy(desc(users.score)).limit(5),

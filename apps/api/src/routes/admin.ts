@@ -26,10 +26,13 @@ import { adminRequired, modRequired, type AuthVars } from "../middleware/auth";
 import { invalidateWordCache } from "../lib/moderation";
 import {
   createScanJob,
+  cancelScanJob,
   handleModerationHit,
   pauseScanJob,
   pendingHitCount,
   resumeScanJob,
+  runScanJobNow,
+  triggerScanDrain,
 } from "../lib/moderation-scan";
 import { boolEq, boolValue } from "../lib/db-compat";
 import { decrementScoreAndReplyCount } from "../lib/score";
@@ -71,7 +74,7 @@ function paginated<T>(data: T[], total: number, pagination: Pagination) {
 
 export function canRunTopicAction(action: string, isAdmin: boolean, isMod: boolean) {
   if (!topicActions.has(action)) return false;
-  return action === "top" ? isMod : isAdmin;
+  return isMod || isAdmin;
 }
 
 // ── Stats / Overview ──
@@ -130,6 +133,7 @@ admin.get("/admin/recent-users", adminRequired(), async (c) => {
       avatar_url: u.avatar,
       create_at: u.createAt,
       is_block: !!u.isBlock,
+      is_muted: !!u.isMuted || !!u.isBlock,
     })),
   });
 });
@@ -212,7 +216,10 @@ admin.post("/admin/topics/:action", modRequired(), async (c) => {
     else if (action === "mute")
       await db.update(topics).set({ status: "muted" }).where(eq(topics.id, id));
     else if (action === "delete")
-      await db.update(topics).set({ deleted: boolValue(true) } as any).where(eq(topics.id, id));
+      await db
+        .update(topics)
+        .set({ deleted: boolValue(true), status: "deleted" } as any)
+        .where(eq(topics.id, id));
   }
   await auditQueries.log(
     user.id,
@@ -244,7 +251,7 @@ admin.post("/topic/:tid/top", modRequired(), async (c) => {
   return c.json({ success: true, message: topic.top ? "已取消置顶" : "已置顶" });
 });
 
-admin.post("/topic/:tid/good", adminRequired(), async (c) => {
+admin.post("/topic/:tid/good", modRequired(), async (c) => {
   const tid = Number(c.req.param("tid"));
   const topic = await topicQueries.getById(tid);
   if (!topic) return c.json({ success: false, error_msg: "话题不存在" }, 404);
@@ -290,10 +297,13 @@ admin.post("/topic/:tid/delete", async (c) => {
   const tid = Number(c.req.param("tid"));
   const topic = await topicQueries.getById(tid);
   if (!topic) return c.json({ success: false, error_msg: "话题不存在" }, 404);
-  if (topic.authorId !== user.id && !c.get("isAdmin"))
+  if (topic.authorId !== user.id && !c.get("isMod"))
     return c.json({ success: false, error_msg: "无权限" }, 403);
   const db = getDb();
-  await db.update(topics).set({ deleted: boolValue(true) } as any).where(eq(topics.id, tid));
+  await db
+    .update(topics)
+    .set({ deleted: boolValue(true), status: "deleted" } as any)
+    .where(eq(topics.id, tid));
   await db
     .update(users)
     .set({ score: sql`${users.score} - 5`, topicCount: sql`${users.topicCount} - 1` })
@@ -306,6 +316,27 @@ admin.post("/topic/:tid/delete", async (c) => {
     "success",
   );
   return c.json({ success: true, message: "话题已删除" });
+});
+
+admin.post("/admin/reply/:rid/delete", modRequired(), async (c) => {
+  const rid = Number(c.req.param("rid"));
+  const reply = await replyQueries.getById(rid);
+  if (!reply) return c.json({ success: false, error_msg: "回复不存在" }, 404);
+  if (reply.deleted) return c.json({ success: false, error_msg: "回复已删除" }, 422);
+  const topic = await topicQueries.getById(reply.topicId);
+  const db = getDb();
+  await db.update(replies).set({ deleted: boolValue(true) } as any).where(eq(replies.id, rid));
+  await decrementScoreAndReplyCount(reply.authorId, 5, 1);
+  await topicQueries.decrementReplyCount(reply.topicId);
+  const user = c.get("user")!;
+  await auditQueries.log(
+    user.id,
+    user.loginname,
+    "delete_reply",
+    { type: "reply", id: String(rid), name: topic?.title || String(reply.topicId) },
+    "success",
+  );
+  return c.json({ success: true, message: "回复已删除" });
 });
 
 // ── User management ──
@@ -338,6 +369,7 @@ admin.get("/admin/users", adminRequired(), async (c) => {
       topic_count: u.topicCount,
       reply_count: u.replyCount,
       is_block: !!u.isBlock,
+      is_muted: !!u.isMuted || !!u.isBlock,
       active: !!u.active,
       create_at: u.createAt,
       })),
@@ -361,7 +393,7 @@ admin.post("/user/:name/block", adminRequired(), async (c) => {
     { type: "user", id: String(userData.id), name },
     "success",
   );
-  return c.json({ success: true, message: "已禁言" });
+  return c.json({ success: true, message: "已隐藏该用户内容" });
 });
 
 admin.post("/user/:name/unblock", adminRequired(), async (c) => {
@@ -378,7 +410,41 @@ admin.post("/user/:name/unblock", adminRequired(), async (c) => {
     { type: "user", id: String(userData.id), name },
     "success",
   );
-  return c.json({ success: true, message: "已解禁" });
+  return c.json({ success: true, message: "已恢复该用户内容可见性" });
+});
+
+admin.post("/user/:name/mute", adminRequired(), async (c) => {
+  const name = c.req.param("name");
+  const userData = await userQueries.getByLoginName(name);
+  if (!userData) return c.json({ success: false, error_msg: "用户不存在" }, 404);
+  const db = getDb();
+  await db.update(users).set({ isMuted: boolValue(true) } as any).where(eq(users.id, userData.id));
+  const user = c.get("user")!;
+  await auditQueries.log(
+    user.id,
+    user.loginname,
+    "mute_user",
+    { type: "user", id: String(userData.id), name },
+    "success",
+  );
+  return c.json({ success: true, message: "已禁言" });
+});
+
+admin.post("/user/:name/unmute", adminRequired(), async (c) => {
+  const name = c.req.param("name");
+  const userData = await userQueries.getByLoginName(name);
+  if (!userData) return c.json({ success: false, error_msg: "用户不存在" }, 404);
+  const db = getDb();
+  await db.update(users).set({ isMuted: boolValue(false) } as any).where(eq(users.id, userData.id));
+  const user = c.get("user")!;
+  await auditQueries.log(
+    user.id,
+    user.loginname,
+    "unmute_user",
+    { type: "user", id: String(userData.id), name },
+    "success",
+  );
+  return c.json({ success: true, message: "已解除禁言" });
 });
 
 admin.post("/user/:name/delete_all", adminRequired(), async (c) => {
@@ -386,7 +452,10 @@ admin.post("/user/:name/delete_all", adminRequired(), async (c) => {
   const userData = await userQueries.getByLoginName(name);
   if (!userData) return c.json({ success: false, error_msg: "用户不存在" }, 404);
   const db = getDb();
-  await db.update(topics).set({ deleted: boolValue(true) } as any).where(eq(topics.authorId, userData.id));
+  await db
+    .update(topics)
+    .set({ deleted: boolValue(true), status: "deleted" } as any)
+    .where(eq(topics.authorId, userData.id));
   await db.update(replies).set({ deleted: boolValue(true) } as any).where(eq(replies.authorId, userData.id));
   const user = c.get("user")!;
   await auditQueries.log(
@@ -748,6 +817,7 @@ admin.post("/admin/moderation/jobs", adminRequired(), async (c) => {
   const job = await createScanJob({ scope, mode, reason: "manual" });
   const user = c.get("user")!;
   await auditQueries.log(user.id, user.loginname, "moderation_scan_create", { type: "scan_job", id: String(job.id) }, "created");
+  void triggerScanDrain().catch((error) => console.error("[moderation scan trigger]", error));
   return c.json({ success: true, data: job });
 });
 
@@ -759,6 +829,20 @@ admin.post("/admin/moderation/jobs/:id/:action", adminRequired(), async (c) => {
     await pauseScanJob(id);
   } else if (action === "resume") {
     await resumeScanJob(id);
+    void triggerScanDrain().catch((error) => console.error("[moderation scan trigger]", error));
+  } else if (action === "run") {
+    const job = await runScanJobNow(id);
+    if (!job) return c.json({ success: false, error_msg: "任务不存在" }, 404);
+    if (["done", "failed", "cancelled"].includes(job.status)) {
+      return c.json({ success: false, error_msg: "任务已结束，不能立即执行" }, 422);
+    }
+    void triggerScanDrain().catch((error) => console.error("[moderation scan trigger]", error));
+  } else if (action === "cancel") {
+    const job = await cancelScanJob(id);
+    if (!job) return c.json({ success: false, error_msg: "任务不存在" }, 404);
+    if (["done", "failed"].includes(job.status)) {
+      return c.json({ success: false, error_msg: "任务已结束，不能取消" }, 422);
+    }
   } else {
     return c.json({ success: false, error_msg: "不支持的操作" }, 400);
   }

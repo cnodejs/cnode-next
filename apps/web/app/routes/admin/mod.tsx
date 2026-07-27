@@ -10,6 +10,14 @@ import { Checkbox } from "~/components/ui/checkbox";
 import { EmptyState } from "~/components/EmptyState";
 import { AdminPage, AdminPageHeader, AdminPanel } from "~/components/AdminPage";
 import { Pagination } from "~/components/Pagination";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
 
 export function meta() {
   return [{ title: "巡检结果 · CNode Admin" }];
@@ -35,6 +43,8 @@ export async function loader({ request }: any) {
 export default function AdminMod({ loaderData }: any) {
   const { results, total, summary, jobs, page, limit, status, type } = loaderData;
   const [selected, setSelected] = useState<number[]>([]);
+  const [cancelJobId, setCancelJobId] = useState<number | null>(null);
+  const [jobUpdating, setJobUpdating] = useState<number | null>(null);
   const { revalidate } = useRevalidator();
 
   const toggleSelect = (id: number) => {
@@ -83,12 +93,15 @@ export default function AdminMod({ loaderData }: any) {
   };
 
   const updateJob = async (id: number, action: string) => {
+    setJobUpdating(id);
     const res = await apiFetch<{ success: boolean; error_msg?: string }>(
       `/api/v1/admin/moderation/jobs/${id}/${action}`,
       { method: "POST" },
     );
+    setJobUpdating(null);
     if (res.success) {
-      toast.success("任务已更新");
+      toast.success(action === "run" ? "已触发立即执行" : action === "cancel" ? "任务已取消" : "任务已更新");
+      if (action === "cancel") setCancelJobId(null);
       revalidate();
     } else {
       toast.error(res.error_msg || "更新任务失败");
@@ -127,6 +140,12 @@ export default function AdminMod({ loaderData }: any) {
                     <div className="flex gap-2">
                       {job.status === "running" ? <Button size="sm" variant="outline" onClick={() => updateJob(job.id, "pause")}>暂停</Button> : null}
                       {job.status === "paused" || job.status === "failed" ? <Button size="sm" variant="outline" onClick={() => updateJob(job.id, "resume")}>恢复</Button> : null}
+                      {job.status === "pending" || job.status === "paused" ? (
+                        <Button size="sm" variant="outline" onClick={() => updateJob(job.id, "run")} disabled={jobUpdating === job.id}>立即执行</Button>
+                      ) : null}
+                      {["pending", "paused", "running"].includes(job.status) ? (
+                        <Button size="sm" variant="destructive" onClick={() => setCancelJobId(job.id)} disabled={jobUpdating === job.id}>取消</Button>
+                      ) : null}
                     </div>
                   </div>
                   <div className="mt-3 grid gap-2 text-muted-foreground sm:grid-cols-4">
@@ -140,6 +159,24 @@ export default function AdminMod({ loaderData }: any) {
               ))}
             </div>
           )}
+          <Dialog open={cancelJobId !== null} onOpenChange={(open) => !jobUpdating && !open && setCancelJobId(null)}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>确认取消巡检任务</DialogTitle>
+                <DialogDescription>
+                  取消后该任务会停止继续扫描，不会删除已经生成的巡检命中记录。
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setCancelJobId(null)} disabled={jobUpdating !== null}>
+                  保留任务
+                </Button>
+                <Button type="button" variant="destructive" onClick={() => cancelJobId && updateJob(cancelJobId, "cancel")} disabled={jobUpdating !== null}>
+                  {jobUpdating ? "取消中" : "确认取消任务"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </AdminPanel>
         <AdminPanel title="待复核内容" description={`当前页 ${results.length} 条 / 共 ${total} 条`} contentClassName="p-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface-subtle p-3 text-sm">

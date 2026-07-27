@@ -77,7 +77,7 @@ export function userRequired() {
     if (!user) {
       return c.json({ success: false, error_msg: "未登录" }, 401);
     }
-    if (user.isBlock) {
+    if (user.isMuted || user.isBlock) {
       return c.json({ success: false, error_msg: "您已被禁言" }, 403);
     }
     await next();

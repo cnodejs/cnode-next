@@ -8,7 +8,7 @@ import { getRedis } from "./redis";
 export type ScanScope = "topics" | "replies" | "all";
 export type ScanMode = "historical" | "incremental";
 export type ScanReason = "keyword_added" | "manual" | "scheduled";
-export type ScanJobStatus = "pending" | "running" | "paused" | "done" | "failed";
+export type ScanJobStatus = "pending" | "running" | "paused" | "done" | "failed" | "cancelled";
 
 const DEFAULT_BATCH_SIZE = 200;
 const DEFAULT_THROTTLE_MS = 500;
@@ -162,6 +162,38 @@ export async function claimNextScanJob() {
   return claimed || null;
 }
 
+export async function runScanJobNow(id: number) {
+  const db = getDb();
+  const rows = await db.select().from(moderationScanJobs).where(eq(moderationScanJobs.id, id)).limit(1);
+  const job = rows[0];
+  if (!job) return null;
+  if (["done", "failed", "cancelled"].includes(job.status)) return job;
+  if (job.status === "paused") {
+    const [updated] = await db
+      .update(moderationScanJobs)
+      .set({ status: "pending", updateAt: dateValue() } as any)
+      .where(eq(moderationScanJobs.id, id))
+      .returning();
+    return updated || job;
+  }
+  await db.update(moderationScanJobs).set({ updateAt: dateValue() } as any).where(eq(moderationScanJobs.id, id));
+  return job;
+}
+
+export async function cancelScanJob(id: number) {
+  const db = getDb();
+  const rows = await db.select().from(moderationScanJobs).where(eq(moderationScanJobs.id, id)).limit(1);
+  const job = rows[0];
+  if (!job) return null;
+  if (["done", "failed", "cancelled"].includes(job.status)) return job;
+  const [updated] = await db
+    .update(moderationScanJobs)
+    .set({ status: "cancelled", finishedAt: dateValue(), updateAt: dateValue() } as any)
+    .where(and(eq(moderationScanJobs.id, id), inArray(moderationScanJobs.status, ["pending", "running", "paused"])))
+    .returning();
+  return updated || job;
+}
+
 export async function pauseScanJob(id: number) {
   const db = getDb();
   await db.update(moderationScanJobs).set({ status: "paused", updateAt: dateValue() } as any).where(eq(moderationScanJobs.id, id));
@@ -174,6 +206,8 @@ export async function resumeScanJob(id: number) {
 
 export async function failScanJob(id: number, error: unknown) {
   const db = getDb();
+  const current = await refreshJob(id);
+  if (current?.status === "cancelled") return;
   await db
     .update(moderationScanJobs)
     .set({ status: "failed", error: error instanceof Error ? error.message : String(error), finishedAt: dateValue(), updateAt: dateValue() } as any)
@@ -353,8 +387,47 @@ export async function processScanBatch(job: any) {
   const { scanned, hits } = await updateScanJobProgress(current.id, topicResult, replyResult);
 
   const done = (!shouldScanTopics || topicResult.scanned === 0) && (!shouldScanReplies || replyResult.scanned === 0);
-  if (done) await finishScanJob(current.id);
+  if (done) {
+    const latest = await refreshJob(current.id);
+    if (latest?.status === "running") await finishScanJob(current.id);
+  }
   return { done, scanned, hits };
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function drainScanQueue(owner: string, maxJobs = 20) {
+  let processed = 0;
+  while (processed < maxJobs && (await extendScanWorkerLock(owner))) {
+    const job = await claimNextScanJob();
+    if (!job) break;
+    const throttleMs = Number(job.throttleMs ?? process.env.MODERATION_SCAN_THROTTLE_MS ?? 500);
+    try {
+      while (await extendScanWorkerLock(owner)) {
+        const result = await processScanBatch(job);
+        if (result.done) break;
+        if (throttleMs > 0) await sleep(throttleMs);
+      }
+    } catch (error) {
+      await failScanJob(job.id, error);
+      throw error;
+    }
+    processed += 1;
+  }
+  return processed;
+}
+
+export async function triggerScanDrain() {
+  const owner = await acquireScanWorkerLock();
+  if (!owner) return false;
+  try {
+    await drainScanQueue(owner);
+    return true;
+  } finally {
+    await releaseScanWorkerLock(owner);
+  }
 }
 
 export async function handleModerationHit(id: number, action: "confirm" | "falsepositive" | "ignore", handlerId: number) {

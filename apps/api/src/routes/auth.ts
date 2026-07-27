@@ -482,6 +482,8 @@ auth.get("/auth/me", async (c) => {
       receive_at_mail: !!user.receiveAtMail,
       is_admin: isAdmin,
       is_mod: isMod,
+      is_muted: !!user.isMuted || !!user.isBlock,
+      is_block: !!user.isBlock,
     },
   });
 });

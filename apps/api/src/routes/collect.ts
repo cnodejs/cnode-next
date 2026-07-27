@@ -14,6 +14,14 @@ const collect = new Hono<{
   Variables: AuthVars;
 }>();
 
+const INTERNAL_TABS = new Set(["dev", "test"]);
+
+async function isPublicTopic(topicData: any) {
+  if (!topicData || topicData.deleted || topicData.status === "deleted" || INTERNAL_TABS.has(topicData.tab || "")) return false;
+  const author = await userQueries.getById(topicData.authorId);
+  return !author?.isBlock;
+}
+
 collect.get("/topic_collect/:loginname", async (c) => {
   const loginname = c.req.param("loginname");
   const userData = await userQueries.getByLoginName(loginname);
@@ -38,7 +46,7 @@ collect.get("/topic_collect/:loginname", async (c) => {
   const topics = await Promise.all(ids.map((id) => topicQueries.getById(id)));
 
   const data = await Promise.all(
-    topics.filter(Boolean).map(async (t: any) => {
+    (await Promise.all(topics.map(async (t: any) => ((await isPublicTopic(t)) ? t : null)))).filter(Boolean).map(async (t: any) => {
       const author = await userQueries.getById(t.authorId);
       return {
         id: String(t.id),
@@ -80,7 +88,7 @@ collect.post("/topic_collect/collect", zValidator("json", collectSchema), async 
   const tid = Number(topic_id);
 
   const topicData = await topicQueries.getById(tid);
-  if (!topicData) {
+  if (!(await isPublicTopic(topicData))) {
     return c.json({ success: false, error_msg: "话题不存在" }, 404);
   }
 
@@ -120,7 +128,7 @@ collect.post("/topic_collect/de_collect", zValidator("json", collectSchema), asy
   const tid = Number(topic_id);
 
   const topicData = await topicQueries.getById(tid);
-  if (!topicData) {
+  if (!(await isPublicTopic(topicData))) {
     return c.json({ success: false, error_msg: "话题不存在" }, 404);
   }
 

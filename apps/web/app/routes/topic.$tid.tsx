@@ -12,6 +12,14 @@ import { ReadingGrid } from "~/components/PageShell";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
 import { apiFetch, getCurrentUser } from "~/lib/api-client";
 import { getAvatarFallback, getAvatarUrl, getTabLabel } from "~/lib/brand";
 import { kvGet, kvSet } from "~/lib/kv-cache";
@@ -210,7 +218,10 @@ function TopicContext({ topic }: { topic: any }) {
 
 function TopicActions({ topic, currentUser }: { topic: any; currentUser: any }) {
   const [collecting, setCollecting] = useState(false);
+  const [adminAction, setAdminAction] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const { revalidate } = useRevalidator();
+  const canManage = !!currentUser?.is_mod;
 
   async function toggleCollect() {
     if (!currentUser) {
@@ -232,6 +243,24 @@ function TopicActions({ topic, currentUser }: { topic: any; currentUser: any }) 
     }
   }
 
+  async function runTopicAction(action: "delete" | "top" | "good") {
+    if (!canManage) return;
+    const actionLabel = action === "delete" ? "删除帖子" : action === "top" ? (topic.top ? "取消置顶" : "置顶") : topic.good ? "取消高亮" : "高亮";
+    setAdminAction(action);
+    const res: { success: boolean; message?: string; error_msg?: string } = await apiFetch<{ success: boolean; message?: string; error_msg?: string }>(`/api/v1/topic/${topic.id}/${action}`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    }).catch(() => ({ success: false, error_msg: `${actionLabel}失败` }));
+    setAdminAction(null);
+    if (res.success) {
+      toast.success(res.message || `${actionLabel}成功`);
+      if (action === "delete") setDeleteOpen(false);
+      revalidate();
+    } else {
+      toast.error(res.error_msg || `${actionLabel}失败`);
+    }
+  }
+
   return (
     <div className="flex flex-wrap gap-3">
       <Button variant={topic.is_collect ? "default" : "outline"} size="sm" onClick={toggleCollect} disabled={collecting}>
@@ -242,6 +271,37 @@ function TopicActions({ topic, currentUser }: { topic: any; currentUser: any }) 
           <MessageSquare className="h-4 w-4" /> 查看回复
         </a>
       </Button>
+      {canManage && (
+        <>
+          <Button type="button" variant="outline" size="sm" onClick={() => runTopicAction("top")} disabled={!!adminAction}>
+            {adminAction === "top" ? "处理中" : topic.top ? "取消置顶" : "置顶帖子"}
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={() => runTopicAction("good")} disabled={!!adminAction}>
+            {adminAction === "good" ? "处理中" : topic.good ? "取消高亮" : "高亮帖子"}
+          </Button>
+          <Button type="button" variant="destructive" size="sm" onClick={() => setDeleteOpen(true)} disabled={!!adminAction}>
+            <Trash2 className="h-4 w-4" /> {adminAction === "delete" ? "删除中" : "删除帖子"}
+          </Button>
+          <Dialog open={deleteOpen} onOpenChange={(open) => !adminAction && setDeleteOpen(open)}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>确认删除帖子</DialogTitle>
+                <DialogDescription>
+                  删除后帖子将从公开列表和详情页隐藏。目标帖子：{topic.title}
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setDeleteOpen(false)} disabled={!!adminAction}>
+                  取消
+                </Button>
+                <Button type="button" variant="destructive" onClick={() => runTopicAction("delete")} disabled={!!adminAction}>
+                  {adminAction === "delete" ? "删除中" : "确认删除帖子"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
     </div>
   );
 }
@@ -355,6 +415,7 @@ function ReplyItem({
   const author = reply.author;
   const [upping, setUpping] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const { revalidate } = useRevalidator();
 
   async function toggleUp() {
@@ -382,15 +443,16 @@ function ReplyItem({
 
   async function deleteReply() {
     if (!currentUser) return;
-    if (!confirm("确认删除这条回复?")) return;
     setDeleting(true);
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>(`/api/v1/reply/${reply.id}/delete`, {
+    const path = currentUser.is_mod ? `/api/v1/admin/reply/${reply.id}/delete` : `/api/v1/reply/${reply.id}/delete`;
+    const res = await apiFetch<{ success: boolean; error_msg?: string }>(path, {
       method: "POST",
       body: JSON.stringify({}),
     }).catch(() => ({ success: false, error_msg: "删除失败" }));
     setDeleting(false);
     if (res.success) {
       toast.success("回复已删除");
+      setDeleteOpen(false);
       revalidate();
     } else {
       toast.error(res.error_msg || "删除失败");
@@ -398,7 +460,7 @@ function ReplyItem({
   }
 
   const upCount = Array.isArray(reply.ups) ? reply.ups.length : 0;
-  const canDelete = currentUser && (currentUser.is_admin || currentUser.loginname === author?.loginname);
+  const canDelete = currentUser && (currentUser.is_mod || currentUser.loginname === author?.loginname);
   return (
     <Card id={reply.id} className="scroll-mt-24 overflow-hidden">
       <div className="flex items-center gap-3 border-b border-border/80 bg-surface-subtle px-4 py-3 sm:px-5">
@@ -451,12 +513,30 @@ function ReplyItem({
                   variant="ghost"
                   size="sm"
                   className="h-8 px-2 text-xs text-destructive hover:text-destructive"
-                  onClick={deleteReply}
+                  onClick={() => setDeleteOpen(true)}
                   disabled={deleting}
                 >
-                  <Trash2 className="h-3 w-3" /> {deleting ? "删除中" : "删除"}
+                  <Trash2 className="h-3 w-3" /> {deleting ? "删除中" : "删除回复"}
                 </Button>
               )}
+              <Dialog open={deleteOpen} onOpenChange={(open) => !deleting && setDeleteOpen(open)}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>确认删除回复</DialogTitle>
+                    <DialogDescription>
+                      删除后这条回复将从帖子详情回复列表隐藏，不会删除所属帖子。
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setDeleteOpen(false)} disabled={deleting}>
+                      取消
+                    </Button>
+                    <Button type="button" variant="destructive" onClick={deleteReply} disabled={deleting}>
+                      {deleting ? "删除中" : "确认删除回复"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </div>
