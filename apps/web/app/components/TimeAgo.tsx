@@ -14,8 +14,8 @@ export function TimeAgo({ date }: { date: string | Date | null | undefined }) {
     return () => clearInterval(timer);
   }, []);
 
-  if (!date) return <span>-</span>;
+  if (!date) return <span suppressHydrationWarning>-</span>;
   const value = dayjs(date);
-  if (!value.isValid()) return <span>-</span>;
-  return <span>{value.fromNow()}</span>;
+  if (!value.isValid()) return <span suppressHydrationWarning>-</span>;
+  return <span suppressHydrationWarning>{value.fromNow()}</span>;
 }
