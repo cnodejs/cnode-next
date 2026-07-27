@@ -12,6 +12,7 @@ declare global {
     turnstile?: {
       render: (element: HTMLElement, options: Record<string, unknown>) => string;
       remove: (widgetId: string) => void;
+      reset: (widgetId: string) => void;
     };
   }
 }
@@ -53,6 +54,7 @@ export function TurnstileWidget() {
     if (!siteKey || !containerRef.current) return;
     let cancelled = false;
     let widgetId: string | null = null;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
     loadTurnstileScript()
       .then(() => {
@@ -67,8 +69,14 @@ export function TurnstileWidget() {
           "expired-callback": () => {
             currentToken = "";
           },
-          "error-callback": () => {
+          "error-callback": (code: string) => {
             currentToken = "";
+            if (retryTimer) clearTimeout(retryTimer);
+            if (code.startsWith("600") || code.startsWith("300") || code === "200500") {
+              retryTimer = setTimeout(() => {
+                if (!cancelled && widgetId && window.turnstile) window.turnstile.reset(widgetId);
+              }, 3000);
+            }
           },
         });
       })
@@ -79,6 +87,7 @@ export function TurnstileWidget() {
     return () => {
       cancelled = true;
       currentToken = "";
+      if (retryTimer) clearTimeout(retryTimer);
       if (widgetId && window.turnstile) window.turnstile.remove(widgetId);
     };
   }, [siteKey]);
