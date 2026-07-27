@@ -3,12 +3,10 @@
 ## Purpose
 
 定义 cnode-next 作为 nodeclub 线上行为完全替代品之前必须通过的 URL、API、写入副作用和生产 smoke 验收矩阵。
-
 ## Requirements
-
 ### Requirement: nodeclub 线上替代验收矩阵
 
-系统 SHALL 在切换线上流量前通过 nodeclub online replacement 验收矩阵，证明公开 URL、API 契约、业务副作用和生产周边行为均可替代旧站。
+系统 SHALL 在切换线上流量前通过 nodeclub online replacement 验收矩阵，证明公开 URL、API 契约、业务副作用、生产周边行为和容器运行方式均可替代旧站。由于 legacy `nodeclub/`、MongoDB、Redis 和 cnode-next 服务同机运行，生产验收 MUST 确认 cnode-next 部署不会在服务器上执行镜像构建。
 
 #### Scenario: URL parity smoke
 
@@ -36,3 +34,18 @@
 - **THEN** 审计验证 score、topic_count、reply_count、collect_topic_count、reply_count、message count 与操作结果一致
 - **AND** 验证 Redis 限流 key 和 headers 可观测
 - **AND** 验证邮件发送路径可在测试 SMTP 或 stub transporter 下观测
+
+#### Scenario: production image source audit
+
+- **WHEN** 运维执行生产部署验收
+- **THEN** `api`、`web` 和 `worker` MUST 运行来自 `ghcr.io/cnodejs/*:latest` 的镜像
+- **AND** `docker-compose.prod.yml` MUST NOT 为生产服务定义 `build:`
+- **AND** 部署命令 MUST 使用 `docker compose pull` 和 `docker compose up -d --no-build`
+
+#### Scenario: runtime API configuration audit
+
+- **WHEN** 运维验证 Web 容器生产配置
+- **THEN** SSR API 请求 MUST 使用 `.env` 或 compose environment 提供的 `APP_API_INTERNAL_BASE_URL`
+- **AND** 浏览器侧 API 请求 MUST 使用 `.env` 提供的 `APP_API_BASE_URL`
+- **AND** Web 镜像 MUST NOT 因 API 域名变化而重新构建
+
