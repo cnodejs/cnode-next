@@ -1,5 +1,7 @@
-## ADDED Requirements
+## Purpose
 
+定义首页 sidebar 展示的社区信息模块、服务端数据来源、外部链接安全要求，以及桌面和移动端的响应式呈现行为。
+## Requirements
 ### Requirement: Sidebar 社区仪表盘
 
 首页 sidebar SHALL 作为社区仪表盘，包含参与入口、动态、榜单、合作伙伴和资源模块。
@@ -56,3 +58,26 @@ Sidebar SHALL 提供克制的合作品牌/赞助/广告位，并有清晰标签�
 
 - **WHEN** 首页在移动端渲染
 - **THEN** 发布/登录 CTA、最新回复、积分榜等关键模块在 topic feed 下方或紧凑布局中仍可访问。
+
+### Requirement: Sidebar 数据必须使用公开可见性规则
+
+首页 sidebar 的最新回复和无人回复模块 SHALL 使用与首页公开 feed 一致的可见性规则，不能显示内部 tab、已删除内容或被 block 用户创建的话题。仅处于 mute 状态的用户内容不应因此被隐藏。
+
+#### Scenario: 最新回复排除内部话题
+- **WHEN** 首页 sidebar 加载最新回复
+- **THEN** 最新回复 MUST 不包含所属话题 `tab=dev` 或 `tab=test` 的回复
+- **AND** 点击最新回复不得进入内部话题详情
+
+#### Scenario: 最新回复排除受限话题
+- **WHEN** 最新回复属于已删除话题或作者已被 block 的话题
+- **THEN** 该回复 MUST 不出现在最新回复模块
+
+#### Scenario: 无人回复排除内部和受限话题
+- **WHEN** 首页 sidebar 加载无人回复话题
+- **THEN** 无人回复列表 MUST 不包含 `dev/test` 话题
+- **AND** MUST 不包含已删除话题
+- **AND** MUST 不包含作者已被 block 的话题
+
+#### Scenario: mute 用户内容不从 sidebar 自动隐藏
+- **WHEN** 话题作者仅处于 mute 状态且未处于 block 状态
+- **THEN** 最新回复和无人回复模块 MUST 按普通公开规则决定是否展示该话题
