@@ -32,9 +32,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         />
         <Meta />
         <Links />
-        {publicConfig.turnstileSiteKey ? (
-          <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
-        ) : null}
       </head>
       <body>
         {children}
