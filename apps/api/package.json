@@ -7,6 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "test": "tsx --test test/mail-template.test.ts",
     "worker:moderation": "tsx src/worker/moderation-scan.ts",
     "typecheck": "tsc --noEmit"
   },
@@ -15,6 +16,7 @@
     "@cnode/shared": "workspace:*",
     "@hono/node-server": "^1.13.0",
     "@hono/zod-validator": "^0.4.0",
+    "@react-email/render": "2.1.0",
     "ali-oss": "^6.21.0",
     "bcryptjs": "^2.4.3",
     "dotenv": "^17.4.2",
@@ -24,6 +26,9 @@
     "lodash": "^4.18.1",
     "micromark": "4.0.2",
     "nodemailer": "^7.0.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-email": "6.9.1",
     "undici": "^8.8.0",
     "uuid": "^11.0.0",
     "zod": "^3.24.0"
@@ -33,6 +38,8 @@
     "@types/lodash": "^4.17.24",
     "@types/node": "^22.0.0",
     "@types/nodemailer": "^8.0.0",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.3",
     "@types/uuid": "^10.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0"

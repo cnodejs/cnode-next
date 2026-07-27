@@ -1,5 +1,11 @@
 import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
+import {
+  buildActiveMail,
+  buildAtNotifyMail,
+  buildReplyNotifyMail,
+  buildResetPassMail,
+} from "./mail-template";
 
 let transporter: Transporter | null = null;
 
@@ -59,28 +65,18 @@ export async function sendMail(data: MailData) {
 }
 
 export async function sendActiveMail(email: string, key: string) {
-  const host = process.env.APP_WEB_BASE_URL || "http://localhost:5173";
-  const url = `${host.replace(/\/+$/g, "")}/active_account?key=${key}`;
-
   await sendMail({
     from: "cnode@localhost",
     to: email,
-    subject: "CNode 账号激活",
-    text: `请点击以下链接激活你的账号: ${url}`,
-    html: `<p>请点击以下链接激活你的账号:</p><p><a href="${url}">${url}</a></p>`,
+    ...(await buildActiveMail(key)),
   });
 }
 
 export async function sendResetPassMail(email: string, key: string) {
-  const host = process.env.APP_WEB_BASE_URL || "http://localhost:5173";
-  const url = `${host.replace(/\/+$/g, "")}/reset_pass?key=${key}`;
-
   await sendMail({
     from: "cnode@localhost",
     to: email,
-    subject: "CNode 密码重置",
-    text: `请点击以下链接重置密码: ${url}`,
-    html: `<p>请点击以下链接重置密码:</p><p><a href="${url}">${url}</a></p>`,
+    ...(await buildResetPassMail(key)),
   });
 }
 
@@ -93,12 +89,7 @@ export async function sendReplyNotifyMail(
   await sendMail({
     from: "cnode@localhost",
     to: email,
-    subject: `CNode 新回复: ${topicTitle}`,
-    html: `
-      <p>你的话题 <a href="${topicUrl}">${topicTitle}</a> 有新回复:</p>
-      <blockquote>${replyContent}</blockquote>
-      <p><a href="${topicUrl}">查看话题</a></p>
-    `,
+    ...(await buildReplyNotifyMail(topicTitle, replyContent, topicUrl)),
   });
 }
 
@@ -111,11 +102,6 @@ export async function sendAtNotifyMail(
   await sendMail({
     from: "cnode@localhost",
     to: email,
-    subject: `CNode @提及: ${topicTitle}`,
-    html: `
-      <p>你在话题 <a href="${topicUrl}">${topicTitle}</a> 中被 @提及:</p>
-      <blockquote>${replyContent}</blockquote>
-      <p><a href="${topicUrl}">查看话题</a></p>
-    `,
+    ...(await buildAtNotifyMail(topicTitle, replyContent, topicUrl)),
   });
 }
