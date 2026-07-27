@@ -12,11 +12,24 @@ const app = new Hono<{
   Variables: AuthVars;
 }>();
 
+function allowedCorsOrigin(origin: string | undefined) {
+  const webBaseUrl = process.env.APP_WEB_BASE_URL || "http://localhost:5173";
+  const allowed = new Set([
+    webBaseUrl.replace(/\/+$/g, ""),
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://next.cnodejs.org",
+    "https://cnodejs.org",
+    "https://www.cnodejs.org",
+  ]);
+  return origin && allowed.has(origin) ? origin : webBaseUrl;
+}
+
 app.use("*", logger());
 app.use(
   "*",
   cors({
-    origin: (origin) => origin || "*",
+    origin: allowedCorsOrigin,
     credentials: true,
   }),
 );
