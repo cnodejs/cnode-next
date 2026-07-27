@@ -29,7 +29,10 @@ assert.doesNotMatch(apiClient, /VITE_APP_API_BASE_URL/, "api client must not rea
 assert.match(uploadClient, /getApiBaseUrl\(\)/, "upload client reuses API base helper");
 
 assert.match(workflow, /permissions:\s*[\s\S]*contents: read[\s\S]*packages: write/, "workflow grants minimal package permissions");
-assert.match(workflow, /docker\/login-action@v3/, "workflow logs in to GHCR");
+assert.match(workflow, /actions\/checkout@v5/, "workflow uses Node 24 compatible checkout action");
+assert.match(workflow, /docker\/setup-buildx-action@v4/, "workflow uses Node 24 compatible Buildx action");
+assert.match(workflow, /docker\/login-action@v4/, "workflow logs in to GHCR with Node 24 compatible action");
+assert.match(workflow, /docker\/build-push-action@v7/, "workflow uses Node 24 compatible build/push action");
 assert.match(workflow, /secrets\.GITHUB_TOKEN/, "workflow uses GITHUB_TOKEN");
 assert.match(workflow, /ghcr\.io\/cnodejs\/cnode-api:latest/, "workflow pushes API latest");
 assert.match(workflow, /ghcr\.io\/cnodejs\/cnode-web:latest/, "workflow pushes Web latest");
