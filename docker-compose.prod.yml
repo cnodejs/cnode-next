@@ -9,7 +9,7 @@ services:
       DB_NAME: ${POSTGRES_DB:-cnode}
       DB_USER: ${POSTGRES_USER:-cnode}
       DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
-      REDIS_HOST: redis
+      REDIS_HOST: cnode-next-redis-1
       REDIS_PORT: 6379
     depends_on:
       postgres:
@@ -46,7 +46,7 @@ services:
       DB_NAME: ${POSTGRES_DB:-cnode}
       DB_USER: ${POSTGRES_USER:-cnode}
       DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
-      REDIS_HOST: redis
+      REDIS_HOST: cnode-next-redis-1
       REDIS_PORT: 6379
     depends_on:
       postgres:
