@@ -17,7 +17,7 @@ export async function loader({ request }: { request: Request }) {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const data = useRouteLoaderData("root") as { publicConfig?: { apiBaseUrl?: string } } | undefined;
+  const data = useRouteLoaderData("root") as { publicConfig?: { apiBaseUrl?: string; turnstileSiteKey?: string } } | undefined;
   const publicConfig = data?.publicConfig || { apiBaseUrl: "https://api.cnodejs.org" };
 
   return (
@@ -32,6 +32,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         />
         <Meta />
         <Links />
+        {publicConfig.turnstileSiteKey ? (
+          <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
+        ) : null}
       </head>
       <body>
         {children}

@@ -10,12 +10,7 @@ export function TurnstileWidget() {
   const data = useRouteLoaderData("root") as RootData | undefined;
   const siteKey = data?.publicConfig?.turnstileSiteKey;
   if (!siteKey) return null;
-  return (
-    <>
-      <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
-      <div className="cf-turnstile" data-sitekey={siteKey} data-action="turnstile-spin-v2" />
-    </>
-  );
+  return <div className="cf-turnstile" data-sitekey={siteKey} data-action="turnstile-spin-v2" />;
 }
 
 export function getTurnstileToken() {
