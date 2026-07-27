@@ -7,10 +7,18 @@ import "~/styles/global.css";
 
 export async function loader({ request }: { request: Request }) {
   const user = await getCurrentUser(request);
-  return { user };
+  return {
+    user,
+    publicConfig: {
+      apiBaseUrl: process.env.APP_API_BASE_URL || "https://api.cnodejs.org",
+    },
+  };
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const data = useRouteLoaderData("root") as { publicConfig?: { apiBaseUrl?: string } } | undefined;
+  const publicConfig = data?.publicConfig || { apiBaseUrl: "https://api.cnodejs.org" };
+
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
@@ -27,6 +35,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <body>
         {children}
         <ScrollRestoration />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__CNODE_CONFIG__=${JSON.stringify(publicConfig).replace(/</g, "\\u003c")};`,
+          }}
+        />
         <Scripts />
         <Toaster />
       </body>

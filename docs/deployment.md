@@ -2,26 +2,40 @@
 
 本文档描述生产环境的部署方式。
 
+## 容器镜像发布
+
+GitHub Actions 负责在 GitHub runner 上构建并推送生产镜像到 GHCR：
+
+| 镜像 | Dockerfile |
+| ---- | ---------- |
+| `ghcr.io/cnodejs/cnode-api:latest` | `apps/api/Dockerfile` |
+| `ghcr.io/cnodejs/cnode-web:latest` | `apps/web/Dockerfile` |
+
+workflow 只构建和推送镜像，不保存服务器 SSH 凭据，不连接生产服务器，也不执行远程 `docker compose` 部署命令。
+
 ## 后端: docker-compose
 
 后端通过 docker-compose 编排,所有服务在海外服务器上运行:
 
 ```bash
 # 服务器上
-docker compose -f docker-compose.prod.yml up -d postgres redis api web worker
+docker compose -f docker-compose.prod.yml pull api web worker
+docker compose -f docker-compose.prod.yml up -d --no-build postgres redis api web worker
 ```
 
 ### 服务编排
 
 | 服务     | 镜像                             | 职责                                 |
 | -------- | -------------------------------- | ------------------------------------ |
-| api      | ghcr.io/<owner>/cnode-api:latest | Hono API server                      |
-| web      | cnode-next-web:latest            | React Router SSR frontend            |
-| worker   | ghcr.io/<owner>/cnode-api:latest | 内容巡检扫描任务和定时调度           |
+| api      | ghcr.io/cnodejs/cnode-api:latest | Hono API server                      |
+| web      | ghcr.io/cnodejs/cnode-web:latest | React Router SSR frontend            |
+| worker   | ghcr.io/cnodejs/cnode-api:latest | 内容巡检扫描任务和定时调度           |
 | postgres | postgres:18-bookworm             | PostgreSQL 数据库                    |
 | redis    | redis:7-bookworm                 | 缓存/session/限流/worker 锁          |
 
 所有服务在 `cnode-internal` 内网通信。对外入口可由既有反向代理接入 API/Web，本变更不要求新增 Cloudflare Workers 部署。
+
+生产 `docker-compose.prod.yml` 不包含应用服务 `build:` 配置。`api`、`worker`、`migrate-schema`、`migrate-data` 和 `reconcile` 通过 `CNODE_API_IMAGE` 覆盖 API 镜像，`web` 通过 `CNODE_WEB_IMAGE` 覆盖 Web 镜像。标准生产部署必须使用 `pull` 和 `up --no-build`，避免在同机运行的 legacy nodeclub、PostgreSQL 和 Redis 旁边执行 Docker build。
 
 ### 内容巡检 Worker
 
@@ -43,9 +57,26 @@ MODERATION_SCAN_MAX_BATCHES_PER_RUN=100
 
 所有敏感配置通过 `.env` 文件注入，不提交真实值。详见 `.env.example`。
 
+Web API 地址分为服务端内网地址和浏览器公开地址：
+
+```bash
+APP_API_INTERNAL_BASE_URL=http://api:3001      # React Router SSR loader 在 web 容器内访问 API
+APP_API_BASE_URL=https://api.cnodejs.org       # 注入到 HTML，供浏览器侧 apiFetch 和上传客户端使用
+```
+
+`APP_API_INTERNAL_BASE_URL` 由生产 compose 设置为 `http://api:3001`。`APP_API_BASE_URL` 来自服务器 `.env`，Web 根文档会把它注入到 `window.__CNODE_CONFIG__.apiBaseUrl`。Web 镜像不使用 `VITE_APP_API_BASE_URL` 等构建时 API 地址，因此同一个 `ghcr.io/cnodejs/cnode-web:latest` 可在不同服务器环境复用。
+
 ### 镜像构建
 
-`apps/api/Dockerfile` 提供 API 多阶段构建和 migration target。GitHub Actions 构建镜像与推送 ghcr.io 暂不纳入当前阶段，后续单独实现。
+`apps/api/Dockerfile` 和 `apps/web/Dockerfile` 只在 GitHub Actions 或显式本地构建时使用。生产服务器不通过 compose build 构建镜像。
+
+服务器执行 migration 或 reconcile 时同样使用已拉取的 API 镜像：
+
+```bash
+docker compose -f docker-compose.prod.yml --profile migrate run --rm migrate-schema
+docker compose -f docker-compose.prod.yml --profile migrate run --rm migrate-data
+docker compose -f docker-compose.prod.yml --profile migrate run --rm reconcile
+```
 
 ## 前端
 
@@ -67,7 +98,7 @@ pnpm dev
 4. 按实际入口方案切换 DNS/反向代理。
 5. 老 nodeclub 下线。
 
-CI、ghcr.io 镜像推送、Cloudflare Workers 发布和 release gate 属于后续单独提案。
+Cloudflare Workers 发布和 release gate 属于后续单独提案。
 
 ## 文件上传与静态域名
 

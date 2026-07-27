@@ -13,8 +13,6 @@ COPY packages/shared/package.json packages/shared/package.json
 RUN pnpm install --store-dir=$PNPM_STORE_DIR --frozen-lockfile --config.verify-store-integrity=false
 
 FROM deps AS build
-ARG VITE_APP_API_BASE_URL=https://api.cnodejs.org
-ENV VITE_APP_API_BASE_URL=$VITE_APP_API_BASE_URL
 COPY apps/web apps/web
 COPY packages/db packages/db
 COPY packages/shared packages/shared
