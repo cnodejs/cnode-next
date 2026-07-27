@@ -79,6 +79,9 @@ export const userQueries = {
     email: string;
     avatar?: string;
     active?: boolean;
+    githubId?: string;
+    githubUsername?: string;
+    githubAccessToken?: string;
   }) {
     const db = getDb();
     const [user] = await db
@@ -90,6 +93,9 @@ export const userQueries = {
         avatar: params.avatar || "",
         active: boolValue(!!params.active),
         accessToken: uuidv4(),
+        githubId: params.githubId,
+        githubUsername: params.githubUsername,
+        githubAccessToken: params.githubAccessToken,
       })
       .returning();
     return user;
@@ -108,6 +114,18 @@ export const userQueries = {
     await db.update(users).set(params).where(eq(users.id, userId));
   },
 
+  async clearGithubInfo(userId: number, githubId: string) {
+    const db = getDb();
+    return db.transaction(async (tx: DB) => {
+      const [updated] = await tx
+        .update(users)
+        .set({ githubId: null, githubUsername: null, githubAccessToken: null })
+        .where(and(eq(users.id, userId), eq(users.githubId, githubId)))
+        .returning({ id: users.id });
+      return !!updated;
+    });
+  },
+
   async updatePass(userId: number, passhash: string) {
     const db = getDb();
     await db.update(users).set({ pass: passhash }).where(eq(users.id, userId));
@@ -123,7 +141,10 @@ export const userQueries = {
 
   async updateActive(userId: number) {
     const db = getDb();
-    await db.update(users).set({ active: boolValue(true) } as any).where(eq(users.id, userId));
+    await db
+      .update(users)
+      .set({ active: boolValue(true) } as any)
+      .where(eq(users.id, userId));
   },
 
   async updateAccessToken(userId: number, token: string) {
@@ -165,7 +186,12 @@ function topicConditions(where: any) {
     conditions.push(eq(topics.tab, where.tab));
   }
   if (where.excludeTabs?.length) {
-    conditions.push(sql`(${topics.tab} is null or ${topics.tab} not in (${sql.join(where.excludeTabs.map((tab: string) => sql`${tab}`), sql`, `)}))`);
+    conditions.push(
+      sql`(${topics.tab} is null or ${topics.tab} not in (${sql.join(
+        where.excludeTabs.map((tab: string) => sql`${tab}`),
+        sql`, `,
+      )}))`,
+    );
   }
   if (where.good !== undefined) {
     conditions.push(boolEq(topics.good, !!where.good));
@@ -176,8 +202,15 @@ function topicConditions(where: any) {
   if (where.publicVisible) {
     conditions.push(boolEq(topics.deleted, false));
     conditions.push(sql`coalesce(${topics.status}, 'published') <> 'deleted'`);
-    conditions.push(sql`(${topics.tab} is null or ${topics.tab} not in (${sql.join(INTERNAL_TABS.map((tab) => sql`${tab}`), sql`, `)}))`);
-    conditions.push(sql`exists (select 1 from ${users} where ${users.id} = ${topics.authorId} and ${boolEq(users.isBlock, false)})`);
+    conditions.push(
+      sql`(${topics.tab} is null or ${topics.tab} not in (${sql.join(
+        INTERNAL_TABS.map((tab) => sql`${tab}`),
+        sql`, `,
+      )}))`,
+    );
+    conditions.push(
+      sql`exists (select 1 from ${users} where ${users.id} = ${topics.authorId} and ${boolEq(users.isBlock, false)})`,
+    );
   }
   return conditions;
 }
@@ -254,7 +287,9 @@ export const topicQueries = {
     const db = getDb();
     await db
       .update(topics)
-      .set({ collectCount: sql`case when ${topics.collectCount} - 1 < 0 then 0 else ${topics.collectCount} - 1 end` })
+      .set({
+        collectCount: sql`case when ${topics.collectCount} - 1 < 0 then 0 else ${topics.collectCount} - 1 end`,
+      })
       .where(eq(topics.id, id));
   },
 
@@ -262,7 +297,9 @@ export const topicQueries = {
     const db = getDb();
     await db
       .update(topics)
-      .set({ replyCount: sql`case when ${topics.replyCount} - 1 < 0 then 0 else ${topics.replyCount} - 1 end` })
+      .set({
+        replyCount: sql`case when ${topics.replyCount} - 1 < 0 then 0 else ${topics.replyCount} - 1 end`,
+      })
       .where(eq(topics.id, id));
   },
 
@@ -331,7 +368,10 @@ export const replyQueries = {
 
   async softDelete(id: number) {
     const db = getDb();
-    await db.update(replies).set({ deleted: boolValue(true) } as any).where(eq(replies.id, id));
+    await db
+      .update(replies)
+      .set({ deleted: boolValue(true) } as any)
+      .where(eq(replies.id, id));
   },
 
   async getUpsByReplyIds(replyIds: number[]) {
@@ -348,10 +388,14 @@ export const replyQueries = {
       .where(and(eq(replyUps.replyId, replyId), eq(replyUps.userId, userId)))
       .limit(1);
     if (existing.length > 0) {
-      await db.delete(replyUps).where(and(eq(replyUps.replyId, replyId), eq(replyUps.userId, userId)));
+      await db
+        .delete(replyUps)
+        .where(and(eq(replyUps.replyId, replyId), eq(replyUps.userId, userId)));
       return "down" as const;
     }
-    await db.insert(replyUps).values({ replyId, userId, createAt: new Date().toISOString() } as any);
+    await db
+      .insert(replyUps)
+      .values({ replyId, userId, createAt: new Date().toISOString() } as any);
     return "up" as const;
   },
 };
@@ -398,7 +442,11 @@ export const keywordQueries = {
     await db
       .insert(sensitiveWords)
       .values({ word, category: category || null, createAt: new Date().toISOString() });
-    const result = await db.select().from(sensitiveWords).where(eq(sensitiveWords.word, word)).limit(1);
+    const result = await db
+      .select()
+      .from(sensitiveWords)
+      .where(eq(sensitiveWords.word, word))
+      .limit(1);
     return result[0] || null;
   },
 

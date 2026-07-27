@@ -2,8 +2,10 @@ import type { Route } from "../../.react-router/types/app/routes/+types/setting"
 import { Layout } from "~/components/Layout";
 import { apiFetch } from "~/lib/api-client";
 import { requireUser } from "~/lib/auth";
+import { githubUnbindSchema, type GithubUnbindInput } from "@cnode/shared";
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link, useRevalidator, useSearchParams } from "react-router";
+import { Mail } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,6 +23,15 @@ import {
   FormDescription,
 } from "~/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Badge } from "~/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
 import { ContentPage } from "~/components/PageShell";
 
 const profileSchema = z.object({
@@ -56,6 +67,8 @@ export async function loader({ request }: Route.LoaderArgs) {
 export default function Setting({ loaderData }: Route.ComponentProps) {
   const { user } = loaderData as any;
   const [params] = useSearchParams();
+  const revalidator = useRevalidator();
+  const [unbindOpen, setUnbindOpen] = useState(false);
 
   const profileForm = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
@@ -74,12 +87,40 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
     defaultValues: { oldPass: "", newPass: "" },
   });
 
+  const unbindForm = useForm<GithubUnbindInput>({
+    resolver: zodResolver(githubUnbindSchema),
+    defaultValues: { password: "" },
+  });
+
   const [tokenLoading, setTokenLoading] = useState(false);
 
   useEffect(() => {
     if (params.get("github") === "bound") toast.success("GitHub 已绑定");
-    if (params.get("error") === "github_already_bound") toast.error("该 GitHub 账号已绑定到其他用户");
+    if (params.get("error") === "github_already_bound")
+      toast.error("该 GitHub 账号已绑定到其他用户");
+    if (params.get("error") === "github_different_account") {
+      toast.error("当前账号已绑定其他 GitHub 账号，请先解绑");
+    }
   }, [params]);
+
+  const handleUnbindOpenChange = (open: boolean) => {
+    setUnbindOpen(open);
+    if (!open) unbindForm.reset();
+  };
+
+  const onUnbindSubmit = async (values: GithubUnbindInput) => {
+    const res = await apiFetch<{ success: boolean; error_msg?: string }>(
+      "/api/v1/auth/github/unbind",
+      { method: "POST", body: JSON.stringify(values) },
+    );
+    if (!res.success) {
+      toast.error(res.error_msg || "解除绑定失败，请稍后重试");
+      return;
+    }
+    toast.success("GitHub 已解除绑定");
+    handleUnbindOpenChange(false);
+    revalidator.revalidate();
+  };
 
   const onProfileSubmit = async (values: ProfileValues) => {
     const res = await apiFetch<{ success: boolean; error_msg?: string }>(
@@ -126,184 +167,230 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
         <section className="rounded-3xl border border-cnode-green/20 bg-cnode-soft p-6 sm:p-8">
           <p className="text-sm font-medium text-primary">SETTINGS</p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">用户设置</h1>
-          <p className="mt-2 text-sm text-muted-foreground">维护个人资料、通知偏好、密码和 API Token。</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            维护个人资料、通知偏好、密码和 API Token。
+          </p>
         </section>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <div className="min-w-0 space-y-6">
-        <Card>
-          <CardHeader className="border-b border-border/80 bg-surface-subtle">
-            <CardTitle>账号身份</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 pt-6">
-            <div className="space-y-1 text-sm">
-              <div className="font-medium">邮箱</div>
-              <div className="break-all text-muted-foreground">{user?.email || "-"}</div>
-            </div>
-            <div className="space-y-2 text-sm">
-              <div className="font-medium">GitHub</div>
-              {user?.github_bound ? (
-                <div className="text-muted-foreground">已绑定 {user.github_username || "GitHub 账号"}</div>
-              ) : (
-                <Button asChild variant="outline" size="sm">
-                  <Link to="/auth/github?intent=bind">绑定 GitHub</Link>
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="border-b border-border/80 bg-surface-subtle">
-            <CardTitle>个人资料</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <Form {...profileForm}>
-              <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
-                <FormField
-                  control={profileForm.control}
-                  name="url"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>个人网站</FormLabel>
-                      <FormControl>
-                        <Input placeholder="https://" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+            <Card>
+              <CardHeader className="border-b border-border/80 bg-surface-subtle">
+                <CardTitle>账号身份</CardTitle>
+              </CardHeader>
+              <CardContent className="divide-y divide-border/70 p-0">
+                <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-cnode-soft text-cnode-ink">
+                      <Mail aria-hidden="true" className="size-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-medium">邮箱</span>
+                        <Badge variant="success">已设置</Badge>
+                      </div>
+                      <div className="mt-1 break-all text-sm text-muted-foreground">
+                        {user?.email || "-"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-cnode-ink text-white dark:bg-cnode-green dark:text-cnode-ink">
+                      <svg
+                        aria-hidden="true"
+                        className="size-5"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M12 .7a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2.23c-3.22.7-3.9-1.37-3.9-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.17.08 1.78 1.2 1.78 1.2 1.04 1.77 2.72 1.26 3.38.96.1-.75.4-1.26.74-1.55-2.57-.3-5.27-1.29-5.27-5.69 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.16 1.18a10.9 10.9 0 0 1 5.75 0c2.2-1.49 3.16-1.18 3.16-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.42-2.71 5.39-5.29 5.68.42.36.79 1.06.79 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .7Z" />
+                      </svg>
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-medium">GitHub</span>
+                        <Badge variant={user?.github_bound ? "success" : "outline"}>
+                          {user?.github_bound ? "已绑定" : "未绑定"}
+                        </Badge>
+                      </div>
+                      <div className="mt-1 break-all text-sm text-muted-foreground">
+                        {user?.github_bound
+                          ? user.github_username || "GitHub 账号"
+                          : "绑定后可使用 GitHub 快速登录"}
+                      </div>
+                    </div>
+                  </div>
+                  {user?.github_bound ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="self-start sm:self-auto"
+                      onClick={() => setUnbindOpen(true)}
+                    >
+                      解除绑定
+                    </Button>
+                  ) : (
+                    <Button asChild variant="outline" size="sm" className="self-start sm:self-auto">
+                      <Link to="/auth/github?intent=bind">绑定 GitHub</Link>
+                    </Button>
                   )}
-                />
-                <FormField
-                  control={profileForm.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>所在地</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={profileForm.control}
-                  name="signature"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>签名</FormLabel>
-                      <FormControl>
-                        <textarea
-                          className="w-full px-3 py-2 rounded-md border border-input bg-transparent text-sm"
-                          rows={2}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={profileForm.control}
-                  name="weibo"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>微博</FormLabel>
-                      <FormControl>
-                        <Input placeholder="https://weibo.com/xxx" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={profileForm.control}
-                  name="receive_reply_mail"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center gap-2 space-y-0">
-                      <FormControl>
-                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                      <FormLabel className="!text-muted-foreground font-normal">
-                        有人回复我的话题时邮件通知
-                      </FormLabel>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={profileForm.control}
-                  name="receive_at_mail"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center gap-2 space-y-0">
-                      <FormControl>
-                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                      <FormLabel className="!text-muted-foreground font-normal">
-                        有人 @我 时邮件通知
-                      </FormLabel>
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit">保存</Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="border-b border-border/80 bg-surface-subtle">
+                <CardTitle>个人资料</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <Form {...profileForm}>
+                  <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
+                    <FormField
+                      control={profileForm.control}
+                      name="url"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>个人网站</FormLabel>
+                          <FormControl>
+                            <Input placeholder="https://" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={profileForm.control}
+                      name="location"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>所在地</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={profileForm.control}
+                      name="signature"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>签名</FormLabel>
+                          <FormControl>
+                            <textarea
+                              className="w-full px-3 py-2 rounded-md border border-input bg-transparent text-sm"
+                              rows={2}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={profileForm.control}
+                      name="weibo"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>微博</FormLabel>
+                          <FormControl>
+                            <Input placeholder="https://weibo.com/xxx" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={profileForm.control}
+                      name="receive_reply_mail"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center gap-2 space-y-0">
+                          <FormControl>
+                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                          <FormLabel className="!text-muted-foreground font-normal">
+                            有人回复我的话题时邮件通知
+                          </FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={profileForm.control}
+                      name="receive_at_mail"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center gap-2 space-y-0">
+                          <FormControl>
+                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                          <FormLabel className="!text-muted-foreground font-normal">
+                            有人 @我 时邮件通知
+                          </FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit">保存</Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="border-b border-border/80 bg-surface-subtle">
-            <CardTitle>修改密码</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <Form {...passForm}>
-              <form onSubmit={passForm.handleSubmit(onPassSubmit)} className="space-y-4">
-                <FormField
-                  control={passForm.control}
-                  name="oldPass"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>当前密码</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="当前密码" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={passForm.control}
-                  name="newPass"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>新密码</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="至少8位,含字母和数字" {...field} />
-                      </FormControl>
-                      <FormDescription>密码需至少 8 位,包含字母和数字</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit">修改密码</Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="border-b border-border/80 bg-surface-subtle">
+                <CardTitle>修改密码</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <Form {...passForm}>
+                  <form onSubmit={passForm.handleSubmit(onPassSubmit)} className="space-y-4">
+                    <FormField
+                      control={passForm.control}
+                      name="oldPass"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>当前密码</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="当前密码" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={passForm.control}
+                      name="newPass"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>新密码</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="至少8位,含字母和数字" {...field} />
+                          </FormControl>
+                          <FormDescription>密码需至少 8 位,包含字母和数字</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit">修改密码</Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
           </div>
 
           <aside className="min-w-0 space-y-6 lg:sticky lg:top-24 lg:self-start">
-        <Card>
-          <CardHeader className="border-b border-border/80 bg-surface-subtle">
-            <CardTitle>API Token</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground mb-2">
-              刷新你的 accessToken,用于调用 CNode API
-            </p>
-            <Button variant="outline" onClick={handleRefreshToken} disabled={tokenLoading}>
-              {tokenLoading ? "刷新中..." : "刷新 Token"}
-            </Button>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="border-b border-border/80 bg-surface-subtle">
+                <CardTitle>API Token</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground mb-2">
+                  刷新你的 accessToken,用于调用 CNode API
+                </p>
+                <Button variant="outline" onClick={handleRefreshToken} disabled={tokenLoading}>
+                  {tokenLoading ? "刷新中..." : "刷新 Token"}
+                </Button>
+              </CardContent>
+            </Card>
             <Card className="border-cnode-green/20 bg-surface-subtle">
               <CardHeader className="border-b border-cnode-green/20 bg-cnode-soft">
                 <CardTitle className="text-base">通知说明</CardTitle>
@@ -316,6 +403,56 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
           </aside>
         </div>
       </ContentPage>
+      <Dialog open={unbindOpen} onOpenChange={handleUnbindOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>解除 GitHub 绑定</DialogTitle>
+            <DialogDescription>
+              解绑后将无法再使用 GitHub 登录。为保护账号安全，请输入当前 CNode 密码确认。
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...unbindForm}>
+            <form onSubmit={unbindForm.handleSubmit(onUnbindSubmit)} className="space-y-5">
+              <FormField
+                control={unbindForm.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>当前密码</FormLabel>
+                    <FormControl>
+                      <Input type="password" autoComplete="current-password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Link
+                to="/search_pass"
+                className="inline-flex text-sm font-medium text-primary hover:underline"
+              >
+                忘记密码，先重置密码
+              </Link>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={unbindForm.formState.isSubmitting}
+                  onClick={() => handleUnbindOpenChange(false)}
+                >
+                  取消
+                </Button>
+                <Button
+                  type="submit"
+                  variant="destructive"
+                  disabled={unbindForm.formState.isSubmitting}
+                >
+                  {unbindForm.formState.isSubmitting ? "解除中..." : "确认解除绑定"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }

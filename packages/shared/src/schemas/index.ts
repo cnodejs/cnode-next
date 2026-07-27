@@ -35,3 +35,11 @@ export const signinSchema = z.object({
   name: z.string().min(1),
   pass: z.string().min(1),
 });
+
+export const githubUnbindSchema = z
+  .object({
+    password: z.string().min(1, "请输入当前密码"),
+  })
+  .strict();
+
+export type GithubUnbindInput = z.infer<typeof githubUnbindSchema>;

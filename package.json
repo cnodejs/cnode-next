@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "concurrently -n web,api -c blue,green \"pnpm --filter @cnode/web dev\" \"pnpm --filter @cnode/api dev\"",
     "build": "pnpm -r build",
-    "test": "pnpm -r test",
+    "test": "pnpm -r test && pnpm verify:github-account-linking",
     "lint": "oxlint .",
     "typecheck": "pnpm -r typecheck",
     "db:push": "pnpm --filter @cnode/db db:push",
@@ -24,12 +24,18 @@
     "verify:moderation-scan:runtime": "tsx scripts/verify-moderation-scan-runtime.ts",
     "verify:public-content-visibility": "tsx scripts/verify-public-content-visibility.ts",
     "verify:topic-pin-management": "tsx scripts/verify-topic-pin-management.ts",
+    "verify:github-id-uniqueness": "tsx scripts/check-duplicate-github-ids.ts",
+    "verify:github-account-linking": "tsx scripts/verify-github-account-linking.ts",
     "verify:web-url-parity": "tsx scripts/verify-web-url-parity.ts",
     "format": "oxfmt .",
     "secrets:scan": "gitleaks git --config .gitleaks.toml --redact --no-banner",
     "secrets:scan:staged": "gitleaks git --config .gitleaks.toml --redact --no-banner --pre-commit --staged",
     "hooks:install": "husky",
     "prepare": "husky"
+  },
+  "dependencies": {
+    "mongodb": "^5.9.2",
+    "pg": "^8.22.0"
   },
   "devDependencies": {
     "@types/pg": "^8.20.0",
@@ -43,9 +49,5 @@
   "engines": {
     "node": ">=24.0.0"
   },
-  "packageManager": "pnpm@11.15.1",
-  "dependencies": {
-    "mongodb": "^5.9.2",
-    "pg": "^8.22.0"
-  }
+  "packageManager": "pnpm@11.15.1"
 }

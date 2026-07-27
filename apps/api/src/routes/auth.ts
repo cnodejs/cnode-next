@@ -6,7 +6,8 @@ import OSS from "ali-oss";
 import bcryptjs from "bcryptjs";
 import { Buffer } from "node:buffer";
 import { v4 as uuidv4 } from "uuid";
-import { settingQueries, userQueries } from "../lib/db";
+import { githubUnbindSchema } from "@cnode/shared";
+import { auditQueries, settingQueries, userQueries } from "../lib/db";
 import {
   sendActiveMail,
   sendResetPassMail,
@@ -19,8 +20,14 @@ import {
   authMiddleware,
   type AuthVars,
 } from "../middleware/auth";
-import { perIpPerDay } from "../middleware/rate-limit";
+import { perIpPerDay, perUserPerDay } from "../middleware/rate-limit";
 import { requestIp, verifyTurnstile } from "../lib/turnstile";
+import {
+  decideGithubBind,
+  executeGithubUnbind,
+  isGithubIdUniqueViolation,
+  revokeGithubToken,
+} from "../lib/github-account-linking";
 
 const auth = new Hono<{
   Variables: AuthVars;
@@ -30,7 +37,10 @@ const CREATE_USER_PER_IP = 1000;
 
 const presignUploadSchema = z.object({
   filename: z.string().max(255).optional(),
-  contentType: z.string().regex(/^image\/(png|jpeg|gif|webp)$/).default("image/png"),
+  contentType: z
+    .string()
+    .regex(/^image\/(png|jpeg|gif|webp)$/)
+    .default("image/png"),
 });
 
 const allowedImageTypes = new Set(["image/png", "image/jpeg", "image/gif", "image/webp"]);
@@ -150,15 +160,20 @@ function cookieSecret() {
 
 function setPendingGithubProfile(c: any, profile: PendingGithubProfile) {
   const domain = process.env.AUTH_COOKIE_DOMAIN || undefined;
-  setCookie(c as any, GITHUB_PENDING_COOKIE, Buffer.from(JSON.stringify(profile)).toString("base64url"), {
-    domain,
-    path: "/",
-    httpOnly: true,
-    signed: true,
-    secret: cookieSecret(),
-    maxAge: 10 * 60,
-    sameSite: "Lax",
-  } as any);
+  setCookie(
+    c as any,
+    GITHUB_PENDING_COOKIE,
+    Buffer.from(JSON.stringify(profile)).toString("base64url"),
+    {
+      domain,
+      path: "/",
+      httpOnly: true,
+      signed: true,
+      secret: cookieSecret(),
+      maxAge: 10 * 60,
+      sameSite: "Lax",
+    } as any,
+  );
 }
 
 function clearPendingGithubProfile(c: any) {
@@ -193,6 +208,40 @@ function getGithubOAuthState(c: any): GithubOAuthState | null {
 function clearGithubOAuthState(c: any) {
   const domain = process.env.AUTH_COOKIE_DOMAIN || undefined;
   deleteCookie(c, GITHUB_OAUTH_COOKIE, { domain, path: "/" });
+}
+
+async function logGithubAccountAction(
+  user: { id: number; loginname: string },
+  action: string,
+  result: string,
+  detail: Record<string, string | number | null>,
+) {
+  await auditQueries.log(
+    user.id,
+    user.loginname,
+    action,
+    { type: "user", id: String(user.id), name: user.loginname },
+    result,
+    JSON.stringify(detail),
+  );
+}
+
+async function rejectGithubBind(
+  c: any,
+  currentUser: { id: number; loginname: string },
+  githubId: string,
+  githubUsername: string,
+  accessToken: string,
+  error: "github_already_bound" | "github_different_account",
+) {
+  const revoke = await revokeGithubToken(accessToken);
+  await logGithubAccountAction(currentUser, "github_bind", "rejected", {
+    githubId,
+    githubUsername,
+    reason: error,
+    tokenRevoke: revoke.revoked ? revoke.reason : "failed",
+  });
+  return c.redirect(`${webBaseUrl()}/setting?error=${error}`);
 }
 
 auth.post("/auth/local/login", zValidator("json", signinSchema), async (c) => {
@@ -230,42 +279,42 @@ auth.post(
   perIpPerDay("create_user_per_ip", CREATE_USER_PER_IP, true),
   zValidator("json", signupSchema),
   async (c) => {
-  const allowSignup = (await settingQueries.get("allow_signup", "true")) !== "false";
-  if (!allowSignup) {
-    return c.json({ success: false, error_msg: "当前暂不开放注册" }, 403);
-  }
-  const { loginname, pass, email, turnstileToken } = c.req.valid("json");
-  if (!(await verifyTurnstile(turnstileToken, requestIp(c)))) {
-    return c.json({ success: false, error_msg: "人机验证失败" }, 403);
-  }
+    const allowSignup = (await settingQueries.get("allow_signup", "true")) !== "false";
+    if (!allowSignup) {
+      return c.json({ success: false, error_msg: "当前暂不开放注册" }, 403);
+    }
+    const { loginname, pass, email, turnstileToken } = c.req.valid("json");
+    if (!(await verifyTurnstile(turnstileToken, requestIp(c)))) {
+      return c.json({ success: false, error_msg: "人机验证失败" }, 403);
+    }
 
-  const existingByLogin = await userQueries.getByLoginName(loginname.toLowerCase());
-  if (existingByLogin) {
-    return c.json({ success: false, error_msg: "用户名已被使用" }, 422);
-  }
+    const existingByLogin = await userQueries.getByLoginName(loginname.toLowerCase());
+    if (existingByLogin) {
+      return c.json({ success: false, error_msg: "用户名已被使用" }, 422);
+    }
 
-  const existingByEmail = await userQueries.getByEmail(email);
-  if (existingByEmail) {
-    return c.json({ success: false, error_msg: "邮箱已被使用" }, 422);
-  }
+    const existingByEmail = await userQueries.getByEmail(email);
+    if (existingByEmail) {
+      return c.json({ success: false, error_msg: "邮箱已被使用" }, 422);
+    }
 
-  const passhash = await bcryptjs.hash(pass, 10);
-  const retrieveKey = uuidv4();
+    const passhash = await bcryptjs.hash(pass, 10);
+    const retrieveKey = uuidv4();
 
-  const user = await userQueries.newAndSave({
-    loginname: loginname.toLowerCase(),
-    pass: passhash,
-    email,
-    active: false,
-  });
+    const user = await userQueries.newAndSave({
+      loginname: loginname.toLowerCase(),
+      pass: passhash,
+      email,
+      active: false,
+    });
 
-  await userQueries.updateRetrieveKey(user.id, retrieveKey, Date.now());
+    await userQueries.updateRetrieveKey(user.id, retrieveKey, Date.now());
 
-  if (process.env.APP_ENV === "development") {
-    // Skip email in dev
-  } else {
-    await sendActiveMail(email, retrieveKey);
-  }
+    if (process.env.APP_ENV === "development") {
+      // Skip email in dev
+    } else {
+      await sendActiveMail(email, retrieveKey);
+    }
 
     return c.json({ success: true, message: "注册成功,请查收邮件激活账号" });
   },
@@ -374,7 +423,7 @@ auth.get("/auth/github/callback", async (c) => {
 
     const ghAccessToken = tokenData.access_token;
     if (!ghAccessToken) {
-      console.error("[github oauth] no access_token in response:", tokenData);
+      console.error("[github oauth] token response did not include an access token");
       return c.json({ success: false, error_msg: "no access_token" }, 400);
     }
 
@@ -387,7 +436,7 @@ auth.get("/auth/github/callback", async (c) => {
     const profile: any = await profileRes.json();
 
     if (!profile.id) {
-      console.error("[github oauth] profile error:", profile);
+      console.error("[github oauth] profile response did not include a user id");
       return c.json({ success: false, error_msg: "failed to get profile" }, 400);
     }
 
@@ -409,21 +458,64 @@ auth.get("/auth/github/callback", async (c) => {
       return c.redirect(`${webBaseUrl()}/auth/github/no-email`);
     }
 
-    let user = await userQueries.getByGithubId(String(profile.id));
+    const user = await userQueries.getByGithubId(String(profile.id));
 
     if (oauthState.intent === "bind") {
       const currentUser = c.get("user");
       if (!currentUser) {
+        await revokeGithubToken(ghAccessToken);
         return c.redirect(`${webBaseUrl()}/signin?error=github_bind_login_required`);
       }
-      if (user && user.id !== currentUser.id) {
-        return c.redirect(`${webBaseUrl()}/setting?error=github_already_bound`);
+      const decision = decideGithubBind(
+        currentUser.githubId,
+        String(profile.id),
+        user?.id ?? null,
+        currentUser.id,
+      );
+      if (decision === "reject-different") {
+        return rejectGithubBind(
+          c,
+          currentUser,
+          String(profile.id),
+          profile.login,
+          ghAccessToken,
+          "github_different_account",
+        );
       }
-      await userQueries.updateGithubInfo(currentUser.id, {
+      if (decision === "reject-occupied") {
+        return rejectGithubBind(
+          c,
+          currentUser,
+          String(profile.id),
+          profile.login,
+          ghAccessToken,
+          "github_already_bound",
+        );
+      }
+      try {
+        await userQueries.updateGithubInfo(currentUser.id, {
+          githubId: String(profile.id),
+          githubUsername: profile.login,
+          githubAccessToken: ghAccessToken,
+          avatar: profile.avatar_url,
+        });
+      } catch (error) {
+        if (isGithubIdUniqueViolation(error)) {
+          return rejectGithubBind(
+            c,
+            currentUser,
+            String(profile.id),
+            profile.login,
+            ghAccessToken,
+            "github_already_bound",
+          );
+        }
+        throw error;
+      }
+      await logGithubAccountAction(currentUser, "github_bind", "success", {
         githubId: String(profile.id),
         githubUsername: profile.login,
-        githubAccessToken: ghAccessToken,
-        avatar: profile.avatar_url,
+        mode: decision,
       });
       return c.redirect(`${webBaseUrl()}/setting?github=bound`);
     }
@@ -449,12 +541,9 @@ auth.get("/auth/github/callback", async (c) => {
     setSessionCookie(c, user.id);
     const redirectPath = c.req.query("redirect") || "/";
     return c.redirect(`${webBaseUrl()}${redirectPath}`);
-  } catch (err) {
-    console.error("[github oauth] error:", err);
-    return c.json(
-      { success: false, error_msg: err instanceof Error ? err.message : "github oauth failed" },
-      500,
-    );
+  } catch {
+    console.error("[github oauth] request failed");
+    return c.json({ success: false, error_msg: "GitHub 登录暂时不可用" }, 500);
   }
 });
 
@@ -478,44 +567,163 @@ auth.post(
   perIpPerDay("create_user_per_ip", CREATE_USER_PER_IP, true),
   zValidator("json", githubCreateSchema),
   async (c) => {
-  const profile = getPendingGithubProfile(c);
-  if (!profile) return c.json({ success: false, error_msg: "GitHub 登录状态已过期，请重新授权" }, 401);
+    const profile = getPendingGithubProfile(c);
+    if (!profile)
+      return c.json({ success: false, error_msg: "GitHub 登录状态已过期，请重新授权" }, 401);
 
-  const body = c.req.valid("json");
-  let user: Awaited<ReturnType<typeof userQueries.getById>> | null = null;
+    const body = c.req.valid("json");
+    let user: Awaited<ReturnType<typeof userQueries.getById>> | null = null;
 
-  if (body.isnew) {
-    const loginname = profile.login.toLowerCase();
-    const existingByLogin = await userQueries.getByLoginName(loginname);
-    if (existingByLogin) return c.json({ success: false, error_msg: "GitHub 用户名已被使用，请关联老账号" }, 422);
-    const existingByEmail = await userQueries.getByEmail(profile.email);
-    if (existingByEmail) return c.json({ success: false, error_msg: "该邮箱已注册，请关联老账号" }, 422);
+    if (body.isnew) {
+      const loginname = profile.login.toLowerCase();
+      const existingByLogin = await userQueries.getByLoginName(loginname);
+      if (existingByLogin)
+        return c.json({ success: false, error_msg: "GitHub 用户名已被使用，请关联老账号" }, 422);
+      const existingByEmail = await userQueries.getByEmail(profile.email);
+      if (existingByEmail)
+        return c.json({ success: false, error_msg: "该邮箱已注册，请关联老账号" }, 422);
 
-    user = await userQueries.newAndSave({
-      loginname,
-      pass: await bcryptjs.hash(uuidv4(), 10),
-      email: profile.email,
-      avatar: profile.avatarUrl,
-      active: true,
+      try {
+        user = await userQueries.newAndSave({
+          loginname,
+          pass: await bcryptjs.hash(uuidv4(), 10),
+          email: profile.email,
+          avatar: profile.avatarUrl,
+          active: true,
+          githubId: profile.id,
+          githubUsername: profile.login,
+          githubAccessToken: profile.accessToken,
+        });
+      } catch (error) {
+        if (isGithubIdUniqueViolation(error)) {
+          await revokeGithubToken(profile.accessToken);
+          clearPendingGithubProfile(c);
+          return c.json({ success: false, error_msg: "该 GitHub 账号已绑定到其他用户" }, 409);
+        }
+        throw error;
+      }
+    } else {
+      const loginname = (body.name || "").trim().toLowerCase();
+      const pass = body.pass || "";
+      if (!loginname || !pass)
+        return c.json({ success: false, error_msg: "账号名或密码错误" }, 403);
+      user = await userQueries.getByLoginName(loginname);
+      if (!user || !user.pass)
+        return c.json({ success: false, error_msg: "账号名或密码错误" }, 403);
+      const equal = await bcryptjs.compare(pass, user.pass);
+      if (!equal) return c.json({ success: false, error_msg: "账号名或密码错误" }, 403);
+      const occupyingUser = await userQueries.getByGithubId(profile.id);
+      const decision = decideGithubBind(
+        user.githubId,
+        profile.id,
+        occupyingUser?.id ?? null,
+        user.id,
+      );
+      if (decision === "reject-different") {
+        await revokeGithubToken(profile.accessToken);
+        clearPendingGithubProfile(c);
+        return c.json(
+          { success: false, error_msg: "当前账号已绑定其他 GitHub 账号，请先解绑" },
+          409,
+        );
+      }
+      if (decision === "reject-occupied") {
+        await revokeGithubToken(profile.accessToken);
+        clearPendingGithubProfile(c);
+        return c.json({ success: false, error_msg: "该 GitHub 账号已绑定到其他用户" }, 409);
+      }
+      try {
+        await userQueries.updateGithubInfo(user.id, {
+          githubId: profile.id,
+          githubUsername: profile.login,
+          githubAccessToken: profile.accessToken,
+          avatar: profile.avatarUrl,
+        });
+      } catch (error) {
+        if (isGithubIdUniqueViolation(error)) {
+          await revokeGithubToken(profile.accessToken);
+          clearPendingGithubProfile(c);
+          return c.json({ success: false, error_msg: "该 GitHub 账号已绑定到其他用户" }, 409);
+        }
+        throw error;
+      }
+    }
+
+    await logGithubAccountAction(user, "github_bind", "success", {
+      githubId: profile.id,
+      githubUsername: profile.login,
+      mode: body.isnew ? "new-user" : "existing-user",
     });
-  } else {
-    const loginname = (body.name || "").trim().toLowerCase();
-    const pass = body.pass || "";
-    if (!loginname || !pass) return c.json({ success: false, error_msg: "账号名或密码错误" }, 403);
-    user = await userQueries.getByLoginName(loginname);
-    if (!user || !user.pass) return c.json({ success: false, error_msg: "账号名或密码错误" }, 403);
-    const equal = await bcryptjs.compare(pass, user.pass);
-    if (!equal) return c.json({ success: false, error_msg: "账号名或密码错误" }, 403);
-  }
+    clearPendingGithubProfile(c);
+    setSessionCookie(c, user.id);
+    return c.json({ success: true });
+  },
+);
 
-  await userQueries.updateGithubInfo(user.id, {
-    githubId: profile.id,
-    githubUsername: profile.login,
-    githubAccessToken: profile.accessToken,
-    avatar: profile.avatarUrl,
-  });
-  clearPendingGithubProfile(c);
-  setSessionCookie(c, user.id);
+auth.post(
+  "/auth/github/unbind",
+  perUserPerDay("github_unbind", 10, true),
+  zValidator("json", githubUnbindSchema),
+  async (c) => {
+    const sessionUser = c.get("user");
+    if (!sessionUser) return c.json({ success: false, error_msg: "未登录" }, 401);
+
+    const user = await userQueries.getById(sessionUser.id);
+    if (!user) {
+      return c.json({ success: false, error_msg: "未登录" }, 401);
+    }
+    if (!user.githubId) {
+      return c.json({ success: false, error_msg: "当前账号未绑定 GitHub" }, 409);
+    }
+
+    const { password } = c.req.valid("json");
+    let result: Awaited<ReturnType<typeof executeGithubUnbind>>;
+    try {
+      result = await executeGithubUnbind(user, password, {
+        clearGithubInfo: userQueries.clearGithubInfo,
+        revokeToken: revokeGithubToken,
+        verifyPassword: bcryptjs.compare,
+      });
+    } catch {
+      await logGithubAccountAction(user, "github_unbind", "failed", {
+        githubId: user.githubId,
+        reason: "local-operation-failed",
+      });
+      return c.json({ success: false, error_msg: "解除绑定暂时失败，请稍后重试" }, 503);
+    }
+    if (!result.success && result.reason === "invalid-password") {
+      await logGithubAccountAction(user, "github_unbind", "rejected", {
+        githubId: user.githubId,
+        reason: "invalid-password",
+      });
+      return c.json(
+        { success: false, error_msg: "当前密码错误；如果你从未设置过密码，请先重置密码" },
+        403,
+      );
+    }
+    if (!result.success && result.reason === "revoke-failed") {
+      await logGithubAccountAction(user, "github_unbind", "failed", {
+        githubId: user.githubId,
+        reason: "token-revoke-failed",
+      });
+      return c.json({ success: false, error_msg: "GitHub 授权暂时无法撤销，请稍后重试" }, 503);
+    }
+    if (!result.success && result.reason === "binding-changed") {
+      await logGithubAccountAction(user, "github_unbind", "failed", {
+        githubId: user.githubId,
+        reason: "binding-changed",
+      });
+      return c.json({ success: false, error_msg: "GitHub 绑定状态已变化，请刷新后重试" }, 409);
+    }
+    if (!result.success) {
+      return c.json({ success: false, error_msg: "当前账号未绑定 GitHub" }, 409);
+    }
+
+    await logGithubAccountAction(user, "github_unbind", "success", {
+      githubId: user.githubId,
+      githubUsername: user.githubUsername,
+      tokenRevoke: result.tokenRevoke,
+    });
     return c.json({ success: true });
   },
 );
