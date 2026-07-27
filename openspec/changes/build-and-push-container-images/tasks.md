@@ -25,4 +25,4 @@
 - [x] 4.2 更新环境变量说明，明确 `APP_API_INTERNAL_BASE_URL` 用于 SSR 内网请求，`APP_API_BASE_URL` 用于浏览器运行时公开 API 地址。
 - [x] 4.3 运行 `pnpm --filter @cnode/web build`，确认 Web 镜像不需要 `VITE_APP_API_BASE_URL` 也能构建。
 - [x] 4.4 运行 `docker compose -f docker-compose.prod.yml config`，确认生产 compose 不包含应用服务 `build:`。
-- [ ] 4.5 首次推送后在远程服务器执行 `docker compose -f docker-compose.prod.yml pull api web worker` 和 `docker compose -f docker-compose.prod.yml up -d --no-build api web worker`，确认不会触发服务器本地构建。
+- [x] 4.5 首次推送后在远程服务器执行 `docker compose -f docker-compose.prod.yml pull api web worker` 和 `docker compose -f docker-compose.prod.yml up -d --no-build api web worker`，确认不会触发服务器本地构建。
