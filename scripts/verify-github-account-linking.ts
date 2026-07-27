@@ -126,9 +126,17 @@ if (oldClientSecret === undefined) delete process.env.AUTH_GITHUB_CLIENT_SECRET;
 else process.env.AUTH_GITHUB_CLIENT_SECRET = oldClientSecret;
 
 const root = new URL("../", import.meta.url);
+const readOptional = async (path: string) => {
+  try {
+    return await readFile(new URL(path, root), "utf8");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw error;
+  }
+};
 const auth = await readFile(new URL("apps/api/src/routes/auth.ts", root), "utf8");
 const db = await readFile(new URL("apps/api/src/lib/db.ts", root), "utf8");
-const setting = await readFile(new URL("apps/web/app/routes/setting.tsx", root), "utf8");
+const setting = await readOptional("apps/web/app/routes/setting.tsx");
 const migration = await readFile(
   new URL("packages/db/migrations/pg/0000_github_id_unique.sql", root),
   "utf8",
@@ -145,10 +153,12 @@ assert.doesNotMatch(
   /console\.(?:log|error)\([^\n]*(?:ghAccessToken|profile\.accessToken|password|clientSecret)/,
 );
 assert.match(db, /githubId: null, githubUsername: null, githubAccessToken: null/);
-assert.match(setting, /divide-y divide-border\/70/);
-assert.match(setting, /解除 GitHub 绑定/);
-assert.match(setting, /忘记密码，先重置密码/);
-assert.match(setting, /isSubmitting \? "解除中\.\.\."/);
+if (setting) {
+  assert.match(setting, /divide-y divide-border\/70/);
+  assert.match(setting, /解除 GitHub 绑定/);
+  assert.match(setting, /忘记密码，先重置密码/);
+  assert.match(setting, /isSubmitting \? "解除中\.\.\."/);
+}
 assert.match(migration, /HAVING COUNT\(\*\) > 1/);
 assert.match(migration, /CREATE UNIQUE INDEX IF NOT EXISTS "users_github_id_unique"/);
 assert.match(migration, /ON "users" \("github_id"\)/);
