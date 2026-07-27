@@ -57,7 +57,7 @@ export default function TopicDetail({ loaderData }: Route.ComponentProps) {
   if (!topic) {
     return (
       <Layout>
-        <Card className="mx-auto max-w-2xl text-center">
+        <Card className="w-full text-center">
           <CardContent className="space-y-3 py-12">
             <h1 className="text-xl font-semibold">话题不存在或已被删除</h1>
             <p className="text-sm text-muted-foreground">返回首页继续浏览社区最新内容。</p>
