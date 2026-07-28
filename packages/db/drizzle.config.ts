@@ -1,11 +1,15 @@
 import { defineConfig } from "drizzle-kit";
-import { resolve } from "path";
 
 export default defineConfig({
   schema: "./src/schema/index.ts",
-  out: "./migrations/sqlite",
-  dialect: "sqlite",
+  out: "./migrations/pg",
+  dialect: "postgresql",
   dbCredentials: {
-    url: resolve(process.cwd(), "../../.local/dev.db"),
+    host: process.env.DB_HOST || "localhost",
+    port: Number(process.env.DB_PORT) || 5432,
+    user: process.env.DB_USER || "cnode",
+    password: process.env.DB_PASSWORD || "",
+    database: process.env.DB_NAME || "cnode",
+    ssl: false,
   },
 });

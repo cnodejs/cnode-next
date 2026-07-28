@@ -1,8 +1,6 @@
 // Mock Redis for local development — in-memory implementation
 // Swap with real ioredis in production via REDIS_HOST env
 
-type TTLCallback = (err: Error | null, result: any) => void;
-
 interface CacheEntry {
   value: string;
   expireAt: number | null;

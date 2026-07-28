@@ -4,11 +4,20 @@
 
 ## 前置条件
 
+```mermaid
+flowchart TD
+  Install[pnpm install] --> Env[copy .env.example to .env.local]
+  Env --> Infra[PostgreSQL + Redis]
+  Infra --> Schema[pnpm db:push:pg]
+  Schema --> Dev[pnpm dev]
+  Dev --> Verify[pnpm verify before PR or release]
+```
+
 - Node.js >= 24.0.0
 - pnpm >= 11.0.0
 - PostgreSQL 与 Redis
 
-当前阶段采用 PostgreSQL-first：开发、迁移验证和功能烟测都以 PostgreSQL 为准。SQLite 代码路径仅作为历史兼容，不再作为默认开发或验收路径。
+项目采用 PostgreSQL-only：开发、测试、迁移验证、功能烟测、CI 和生产都以 PostgreSQL 为唯一数据库运行时。
 
 ## 环境文件
 
@@ -35,7 +44,6 @@ docker compose -f docker-compose.prod.yml up -d postgres redis
 `.env.local` 示例：
 
 ```bash
-DB_DIALECT=pg
 DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_NAME=cnode_rehearsal
@@ -79,13 +87,28 @@ curl -fsS 'http://localhost:5173/'
 
 ## 常用命令
 
+```mermaid
+graph LR
+  Verify[pnpm verify] --> Lint[pnpm lint]
+  Verify --> Types[pnpm typecheck]
+  Verify --> Test[pnpm test]
+  Verify --> Build[pnpm build]
+  Verify --> Spec[openspec validate --all --strict]
+  Verify --> Secrets[pnpm secrets:scan]
+```
+
 ```bash
+pnpm verify                  # 发布前完整验证门禁
 pnpm db:push:pg              # 创建/更新 PostgreSQL 表
 pnpm db:seed                 # 灌入测试数据
 pnpm migrate:mongo-to-pg     # 从 Mongo 迁移到 PostgreSQL
 pnpm migrate:reconcile       # 迁移后对账
 pnpm dev                     # 启动 Web + API
 ```
+
+提交前和发布前必须运行 `pnpm verify`。该命令覆盖 lint、typecheck、test、build、OpenSpec strict validate 和 secret scan；任一步失败都不得发布。
+
+API 变更还必须运行 `pnpm exec tsx scripts/verify-openapi-contract.ts`，并确认 `docs/api/openapi.yaml`、`docs/api-reference.md` 和 `apps/web/api-contract.manifest.json` 已同步。若 smoke 或契约验证暂未覆盖某个变更点，release readiness 记录必须明确列出覆盖差距。
 
 ## 烟测路径
 
@@ -101,4 +124,4 @@ pnpm dev                     # 启动 Web + API
 - GitHub Actions CI required checks
 - Codespaces/devcontainer
 - Branch protection
-- Release gate / release environment protection
+- Release environment protection

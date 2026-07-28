@@ -1,9 +1,17 @@
 services:
   api:
-    image: ${CNODE_API_IMAGE:-ghcr.io/cnodejs/cnode-api:latest}
-    env_file: .env
+    image: ${CNODE_API_IMAGE:?CNODE_API_IMAGE is required}
     environment:
-      DB_DIALECT: pg
+      APP_ADMINS: ${APP_ADMINS:-}
+      APP_ENV: ${APP_ENV:-production}
+      APP_WEB_BASE_URL: ${APP_WEB_BASE_URL:-https://next.cnodejs.org}
+      APP_API_BASE_URL: ${APP_API_BASE_URL:-https://api.cnodejs.org}
+      AUTH_SESSION_SECRET: ${AUTH_SESSION_SECRET:?AUTH_SESSION_SECRET is required}
+      AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-.cnodejs.org}
+      AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME:-node_club}
+      AUTH_GITHUB_CLIENT_ID: ${AUTH_GITHUB_CLIENT_ID:-}
+      AUTH_GITHUB_CLIENT_SECRET: ${AUTH_GITHUB_CLIENT_SECRET:-}
+      AUTH_GITHUB_CALLBACK_URL: ${AUTH_GITHUB_CALLBACK_URL:-}
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: ${POSTGRES_DB:-cnode}
@@ -11,13 +19,29 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       REDIS_HOST: cnode-next-redis-1
       REDIS_PORT: 6379
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-25}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-CNode}
+      OSS_ACCESS_KEY_ID: ${OSS_ACCESS_KEY_ID:-}
+      OSS_ACCESS_KEY_SECRET: ${OSS_ACCESS_KEY_SECRET:-}
+      OSS_BUCKET: ${OSS_BUCKET:-}
+      OSS_REGION: ${OSS_REGION:-oss-cn-hongkong}
+      OSS_ENDPOINT: ${OSS_ENDPOINT:-}
+      OSS_STATIC_HOST: ${OSS_STATIC_HOST:-https://static.cnodejs.org}
+      OSS_UPLOAD_PREFIX: ${OSS_UPLOAD_PREFIX:-cnode-next/uploads}
+      OSS_UPLOAD_EXPIRES: ${OSS_UPLOAD_EXPIRES:-600}
+      TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3001/api/v1/auth/config').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,9 +54,10 @@ services:
     restart: unless-stopped
 
   web:
-    image: ${CNODE_WEB_IMAGE:-ghcr.io/cnodejs/cnode-web:latest}
-    env_file: .env
+    image: ${CNODE_WEB_IMAGE:?CNODE_WEB_IMAGE is required}
     environment:
+      APP_ENV: ${APP_ENV:-production}
+      APP_WEB_BASE_URL: ${APP_WEB_BASE_URL:-https://next.cnodejs.org}
       APP_API_INTERNAL_BASE_URL: http://api:3001
       APP_API_BASE_URL: ${APP_API_BASE_URL:-https://api.cnodejs.org}
     depends_on:
@@ -44,10 +69,9 @@ services:
     restart: unless-stopped
 
   worker:
-    image: ${CNODE_API_IMAGE:-ghcr.io/cnodejs/cnode-api:latest}
-    env_file: .env
+    image: ${CNODE_API_IMAGE:?CNODE_API_IMAGE is required}
     environment:
-      DB_DIALECT: pg
+      APP_ENV: ${APP_ENV:-production}
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: ${POSTGRES_DB:-cnode}
@@ -55,6 +79,11 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       REDIS_HOST: cnode-next-redis-1
       REDIS_PORT: 6379
+      MODERATION_SCHEDULE_ENABLED: ${MODERATION_SCHEDULE_ENABLED:-0}
+      MODERATION_SCHEDULE_INTERVAL_MS: ${MODERATION_SCHEDULE_INTERVAL_MS:-3600000}
+      MODERATION_SCAN_BATCH_SIZE: ${MODERATION_SCAN_BATCH_SIZE:-200}
+      MODERATION_SCAN_THROTTLE_MS: ${MODERATION_SCAN_THROTTLE_MS:-500}
+      MODERATION_SCAN_MAX_BATCHES_PER_RUN: ${MODERATION_SCAN_MAX_BATCHES_PER_RUN:-100}
     depends_on:
       postgres:
         condition: service_healthy
@@ -66,10 +95,9 @@ services:
     restart: unless-stopped
 
   migrate-schema:
-    image: ${CNODE_API_IMAGE:-ghcr.io/cnodejs/cnode-api:latest}
-    env_file: .env
+    image: ${CNODE_API_IMAGE:?CNODE_API_IMAGE is required}
     environment:
-      DB_DIALECT: pg
+      APP_ENV: ${APP_ENV:-production}
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: ${POSTGRES_DB:-cnode}
@@ -86,15 +114,16 @@ services:
       - legacy-cnode
 
   migrate-data:
-    image: ${CNODE_API_IMAGE:-ghcr.io/cnodejs/cnode-api:latest}
-    env_file: .env
+    image: ${CNODE_API_IMAGE:?CNODE_API_IMAGE is required}
     environment:
-      DB_DIALECT: pg
+      APP_ENV: ${APP_ENV:-production}
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: ${POSTGRES_DB:-cnode}
       DB_USER: ${POSTGRES_USER:-cnode}
       DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      MONGO_URI: ${MONGO_URI:?MONGO_URI is required}
+      MONGO_DB: ${MONGO_DB:?MONGO_DB is required}
       MIGRATION_TARGET: rehearsal
       MIGRATION_REPORT_PATH: /app/migration-reports/migration-report.json
     volumes:
@@ -110,10 +139,9 @@ services:
       - legacy-cnode
 
   reconcile:
-    image: ${CNODE_API_IMAGE:-ghcr.io/cnodejs/cnode-api:latest}
-    env_file: .env
+    image: ${CNODE_API_IMAGE:?CNODE_API_IMAGE is required}
     environment:
-      DB_DIALECT: pg
+      APP_ENV: ${APP_ENV:-production}
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: ${POSTGRES_DB:-cnode}
@@ -134,7 +162,6 @@ services:
 
   postgres:
     image: postgres:18-bookworm
-    env_file: .env
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-cnode}
       POSTGRES_USER: ${POSTGRES_USER:-cnode}

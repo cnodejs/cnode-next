@@ -1,3 +1,9 @@
+# web-ui-theme Specification
+
+## Purpose
+
+定义 Web 主题系统的语义 token、light/dark/system 三态切换、防 FOUC 初始化、字面量色值清理和全局 CSS 边界要求。
+
 ## Requirements
 
 ### Requirement: 语义 token 单一来源

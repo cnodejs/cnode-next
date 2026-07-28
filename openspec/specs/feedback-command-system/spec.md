@@ -1,4 +1,10 @@
-## ADDED Requirements
+# feedback-command-system Specification
+
+## Purpose
+
+定义搜索/命令入口、消息通知入口、toast 反馈、loading/empty/error 状态和无效控件处理要求，确保用户操作能获得明确且一致的反馈。
+
+## Requirements
 
 ### Requirement: Command/search palette
 

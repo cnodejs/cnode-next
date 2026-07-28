@@ -1,4 +1,10 @@
-## ADDED Requirements
+# footer-system Specification
+
+## Purpose
+
+定义主站和后台 footer 的品牌区域、链接分组、合作伙伴展示、响应式布局和视觉一致性要求，避免 footer 只呈现最小化占位信息。
+
+## Requirements
 
 ### Requirement: 品牌 Footer
 

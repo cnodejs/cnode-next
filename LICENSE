@@ -1,0 +1,7 @@
+# License Status
+
+No open source license has been selected for the current `cnode-next` repository yet.
+
+Until a license is explicitly added by the project maintainers, this repository is all rights reserved by its respective copyright holders. Do not assume MIT, Apache-2.0, or any other license.
+
+The legacy `../nodeclub/` directory is outside this repository and is used only as a behavioral reference during migration. Its presence on the same machine does not define or change the license status of this repository, and this repository does not grant rights to that external code.

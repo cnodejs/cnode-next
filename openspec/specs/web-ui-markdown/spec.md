@@ -1,3 +1,9 @@
+# web-ui-markdown Specification
+
+## Purpose
+
+定义 Web Markdown 渲染、GFM 支持、XSS 防护、代码高亮、编辑器预览和 prose token 样式要求，确保话题和回复内容安全且一致展示。
+
 ## Requirements
 
 ### Requirement: react-markdown 作为 Markdown 渲染器

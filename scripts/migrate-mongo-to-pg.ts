@@ -382,8 +382,6 @@ async function main() {
     await resetSequences(pool);
     report.completedAt = new Date().toISOString();
     await writeFile(reportPath, JSON.stringify(report, null, 2));
-  } catch (error) {
-    throw error;
   } finally {
     await mongo.close();
     await pool.end();

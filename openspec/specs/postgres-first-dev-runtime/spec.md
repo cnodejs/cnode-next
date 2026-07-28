@@ -1,18 +1,25 @@
 # postgres-first-dev-runtime Specification
 
 ## Purpose
-TBD - created by archiving change postgres-first-runtime-verification. Update Purpose after archive.
+定义 cnode-next 的数据库运行时策略、开发连接配置、本地 secret 边界和 PostgreSQL boolean 兼容要求；项目只允许 PostgreSQL 作为开发、测试、迁移验证、CI 和生产数据库。
+
 ## Requirements
 ### Requirement: Development runtime SHALL use PostgreSQL as the default migration validation database
-The project MUST document PostgreSQL as the default database for current development and migration validation work.
+The project MUST document PostgreSQL as the only supported database for current development, testing, migration validation, CI verification, and production runtime work.
 
 #### Scenario: Developer prepares a local runtime
 - **WHEN** a developer follows the development setup documentation
 - **THEN** the documented path MUST direct them to a PostgreSQL-backed runtime
+- **AND** the documented path MUST NOT offer SQLite as a fallback runtime
 
 #### Scenario: SQLite behavior is referenced
-- **WHEN** documentation mentions SQLite
-- **THEN** it MUST be described as historical compatibility or non-acceptance-path behavior, not as the default validation path
+- **WHEN** active code, scripts, docs, or specs mention SQLite
+- **THEN** the mention MUST be removed unless it is in archived historical change records or generic OpenSpec tooling instructions outside application scope
+
+#### Scenario: Runtime database client is created
+- **WHEN** API、worker、migration 或测试验证脚本创建数据库连接
+- **THEN** it MUST create a PostgreSQL-backed client
+- **AND** it MUST NOT branch on `DB_DIALECT` or import `better-sqlite3`
 
 ### Requirement: Developers SHALL provide PostgreSQL and Redis connection settings
 Developers MUST be able to run cnode-next against PostgreSQL/Redis by providing connection settings, regardless of whether the service endpoint comes from local docker-compose or a secure tunnel.
@@ -31,13 +38,6 @@ Local database credentials and tunnel-specific values MUST be stored outside tra
 #### Scenario: Local override file is used
 - **WHEN** a developer stores local PostgreSQL connection values
 - **THEN** the values MUST be stored in an ignored `.env.local` file
-
-### Requirement: CI and release gates SHALL remain future work
-CI required checks, Codespaces configuration, branch protection, and release gates MUST be excluded from this change.
-
-#### Scenario: Current change scope is reviewed
-- **WHEN** operators review this change
-- **THEN** CI, Codespaces, branch protection, and release gate implementation MUST be documented as future work
 
 ### Requirement: API boolean 状态必须兼容 PostgreSQL
 
@@ -59,4 +59,3 @@ CI required checks, Codespaces configuration, branch protection, and release gat
 
 - **WHEN** 管理员在 PostgreSQL-backed runtime 中切换话题或用户状态
 - **THEN** API MUST 为 `top`、`good`、`lock`、`deleted`、`is_block` 写入 boolean-compatible values
-

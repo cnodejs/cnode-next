@@ -50,7 +50,7 @@ async function verifyMarkdownRender(topicId: string) {
   const rendered = await getJson(`/api/v1/topic/${topicId}?mdrender=true`);
   required("markdown.raw.success", raw.success);
   required("markdown.rendered.success", rendered.success);
-  if (raw.data?.content && raw.data.content === rendered.data?.content && /[#*_`\[]/.test(raw.data.content)) {
+  if (raw.data?.content && raw.data.content === rendered.data?.content && /[#*_`[]/.test(raw.data.content)) {
     throw new Error("mdrender=true should return rendered HTML for markdown content");
   }
 }

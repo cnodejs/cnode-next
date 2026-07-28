@@ -1,4 +1,10 @@
-## ADDED Requirements
+# navigation-shell Specification
+
+## Purpose
+
+定义主站和后台导航 shell 的 header cluster 模型、logo 行为、搜索入口、发布 CTA、后台上下文和移动端优先级要求。
+
+## Requirements
 
 ### Requirement: 主站 Header cluster 模型
 

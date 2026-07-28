@@ -1,3 +1,9 @@
+# web-ui-components Specification
+
+## Purpose
+
+定义 Web UI 原子组件、shadcn/ui 组件源码、按钮变体、菜单、Dialog、领域组件组合、图标和 toast 反馈的统一使用要求。
+
 ## Requirements
 
 ### Requirement: shadcn/ui 原子组件层

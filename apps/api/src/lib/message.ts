@@ -1,6 +1,5 @@
 import { getDb } from "./db";
 import { messages } from "@cnode/db";
-import type { MessageDTO } from "@cnode/shared";
 import { eq, and, desc, inArray } from "drizzle-orm";
 import { userQueries, topicQueries, replyQueries } from "./db";
 import { boolEq, boolValue } from "./db-compat";

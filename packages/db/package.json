@@ -12,9 +12,9 @@
   },
   "scripts": {
     "db:generate": "drizzle-kit generate",
-    "db:generate:pg": "drizzle-kit generate --config=drizzle.pg.config.ts",
+    "db:generate:pg": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:push:pg": "drizzle-kit push --config=drizzle.pg.config.ts",
+    "db:push:pg": "drizzle-kit push",
     "db:seed": "tsx src/seed.ts",
     "typecheck": "tsc --noEmit"
   },
@@ -26,15 +26,11 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
-    "@types/better-sqlite3": "^7.6.0",
     "@types/node": "^22.0.0",
     "@types/pg": "^8.11.0",
     "@types/uuid": "^10.0.0",
     "drizzle-kit": "^0.30.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0"
-  },
-  "optionalDependencies": {
-    "better-sqlite3": "^11.0.0"
   }
 }

@@ -1,0 +1,1391 @@
+openapi: 3.1.0
+info:
+  title: CNode Next API
+  version: 1.0.0
+  summary: Legacy-compatible CNode API v1 for topics, replies, users, collections, messages, auth, search, and system config.
+  description: |
+    Machine-readable API reference for cnode-next. The `/api/v1/*` paths preserve the public nodeclub API v1 response envelope and legacy field names where practical.
+servers:
+  - url: https://api.cnodejs.org
+    description: Production API
+  - url: http://localhost:3001
+    description: Local API development server
+security:
+  - SessionCookie: []
+  - AccessTokenQuery: []
+  - AccessTokenBody: []
+tags:
+  - name: topics
+    description: Public topic listing, detail, create, edit, and topic-level actions.
+  - name: replies
+    description: Topic replies, reply edit/delete, and reply up/down actions.
+  - name: users
+    description: Public user profiles and user activity feeds.
+  - name: collections
+    description: Topic collection list, collect, and de-collect APIs.
+  - name: messages
+    description: Authenticated notification and message APIs.
+  - name: auth
+    description: Login, account, session, token, and upload-auth APIs.
+  - name: search
+    description: Public search APIs.
+  - name: system config
+    description: Public read-only runtime configuration for clients.
+  - name: admin
+    description: Admin and moderation APIs. Not the primary external integration surface.
+  - name: internal
+    description: Internal health and operational APIs. Not part of ordinary client integration.
+paths:
+  /health:
+    get:
+      tags: [internal]
+      summary: Process health and build metadata.
+      security: []
+      x-contract-response-fields: [ok, service, version, commit, buildTime]
+      responses:
+        "200":
+          description: Service is reachable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /api/v1/auth/config:
+    get:
+      tags: [system config]
+      summary: Get public authentication and signup configuration.
+      security: []
+      x-contract-response-fields: [success, data.allow_signup]
+      responses:
+        "200":
+          description: Public auth configuration.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: object
+                        required: [allow_signup]
+                        properties:
+                          allow_signup:
+                            type: boolean
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/auth/me:
+    get:
+      tags: [auth]
+      summary: Get the current session user.
+      security:
+        - SessionCookie: []
+      x-contract-response-fields: [success, data.loginname, data.avatar_url]
+      responses:
+        "200":
+          description: Current user, or null/unauthenticated depending on session state.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UserSummary'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/auth/signout:
+    post:
+      tags: [auth]
+      summary: Clear the current session cookie.
+      security:
+        - SessionCookie: []
+      x-contract-response-fields: [success]
+      responses:
+        "200":
+          $ref: '#/components/responses/Success'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/auth/local/login:
+    post:
+      tags: [auth]
+      summary: Sign in with login name/email and password.
+      security: []
+      x-contract-response-fields: [success]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, pass]
+              properties:
+                name: { type: string }
+                pass: { type: string, format: password }
+      responses:
+        "200":
+          $ref: '#/components/responses/Success'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/auth/local/signup:
+    post:
+      tags: [auth]
+      summary: Create a local account when signup is enabled.
+      security: []
+      x-contract-response-fields: [success]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [loginname, pass, email]
+              properties:
+                loginname: { type: string }
+                pass: { type: string, format: password }
+                email: { type: string, format: email }
+                turnstileToken: { type: string }
+      responses:
+        "200":
+          $ref: '#/components/responses/Success'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/auth/local/active_account:
+    get:
+      tags: [auth]
+      summary: Activate a local account using an email token.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Key'
+        - name: name
+          in: query
+          schema: { type: string }
+      x-contract-response-fields: [success]
+      responses:
+        "200":
+          $ref: '#/components/responses/Success'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/auth/local/search_pass:
+    post:
+      tags: [auth]
+      summary: Request a password reset email.
+      security: []
+      x-contract-response-fields: [success]
+      requestBody:
+        $ref: '#/components/requestBodies/EmailRequest'
+      responses:
+        "200":
+          $ref: '#/components/responses/Success'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/auth/local/reset_pass:
+    post:
+      tags: [auth]
+      summary: Reset password using a reset token.
+      security: []
+      x-contract-response-fields: [success]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [key, pass]
+              properties:
+                key: { type: string }
+                pass: { type: string, format: password }
+      responses:
+        "200":
+          $ref: '#/components/responses/Success'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/auth/local/setting:
+    post:
+      tags: [auth]
+      summary: Update the current user's public settings.
+      security:
+        - SessionCookie: []
+      x-contract-response-fields: [success]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSettingsUpdate'
+      responses:
+        "200":
+          $ref: '#/components/responses/Success'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/auth/local/change_pass:
+    post:
+      tags: [auth]
+      summary: Change current user's password.
+      security:
+        - SessionCookie: []
+      x-contract-response-fields: [success]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [old_pass, new_pass]
+              properties:
+                old_pass: { type: string, format: password }
+                new_pass: { type: string, format: password }
+      responses:
+        "200":
+          $ref: '#/components/responses/Success'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/auth/github/pending:
+    get:
+      tags: [auth]
+      summary: Inspect a pending GitHub bind/create profile.
+      security:
+        - SessionCookie: []
+      x-contract-response-fields: [success, data]
+      responses:
+        "200":
+          description: Pending GitHub profile state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDataEnvelope'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/auth/github/create:
+    post:
+      tags: [auth]
+      summary: Create or bind an account from pending GitHub OAuth profile.
+      security:
+        - SessionCookie: []
+      x-contract-response-fields: [success]
+      responses:
+        "200":
+          $ref: '#/components/responses/Success'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/auth/github/callback:
+    get:
+      tags: [auth]
+      summary: Complete GitHub OAuth login or account bind and redirect back to the web app.
+      security: []
+      x-contract-response-fields: []
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema: { type: string }
+        - name: state
+          in: query
+          required: true
+          schema: { type: string }
+        - name: redirect
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        "302":
+          description: Redirects to the web app after setting or updating the session cookie.
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/auth/github/unbind:
+    post:
+      tags: [auth]
+      summary: Unbind GitHub from the current account.
+      security:
+        - SessionCookie: []
+      x-contract-response-fields: [success]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password: { type: string, format: password }
+      responses:
+        "200":
+          $ref: '#/components/responses/Success'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/accesstoken:
+    post:
+      tags: [auth]
+      summary: Validate a legacy access token.
+      security:
+        - AccessTokenBody: []
+      x-contract-response-fields: [success, loginname, avatar_url, id]
+      requestBody:
+        $ref: '#/components/requestBodies/AccessTokenBody'
+      responses:
+        "200":
+          description: Token is valid.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    required: [loginname, avatar_url, id]
+                    properties:
+                      loginname: { type: string }
+                      avatar_url: { type: string }
+                      id: { type: string }
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/user/refresh_token:
+    post:
+      tags: [auth]
+      summary: Rotate the current user's access token.
+      security:
+        - SessionCookie: []
+      x-contract-response-fields: [success, accessToken]
+      responses:
+        "200":
+          description: New access token.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    required: [accessToken]
+                    properties:
+                      accessToken: { type: string }
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/topics:
+    get:
+      tags: [topics]
+      summary: List public topics.
+      security: []
+      x-contract-response-fields: [success, data, total, data.id, data.author_id, data.tab, data.content, data.title, data.last_reply_at, data.good, data.top, data.reply_count, data.visit_count, data.create_at, data.author.loginname, data.author.avatar_url]
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Tab'
+        - $ref: '#/components/parameters/MdRender'
+      responses:
+        "200":
+          description: Paginated topic list.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/TopicSummary'
+                      total:
+                        type: integer
+              examples:
+                htmlContent:
+                  summary: Markdown rendered to HTML by default
+                  value:
+                    success: true
+                    data:
+                      - id: "1"
+                        author_id: "42"
+                        tab: share
+                        content: "<p>Hello <strong>CNode</strong></p>"
+                        title: Hello CNode
+                        last_reply_at: "2026-07-28T10:00:00.000Z"
+                        good: false
+                        top: false
+                        reply_count: 3
+                        visit_count: 120
+                        create_at: "2026-07-28T09:00:00.000Z"
+                        author: { loginname: alice, avatar_url: "https://example.invalid/avatar.png" }
+                    total: 1
+                rawMarkdown:
+                  summary: Raw Markdown when mdrender=false
+                  value:
+                    success: true
+                    data:
+                      - id: "1"
+                        content: "Hello **CNode**"
+                        title: Hello CNode
+                        author: { loginname: alice, avatar_url: "https://example.invalid/avatar.png" }
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [topics]
+      summary: Create a topic.
+      security:
+        - SessionCookie: []
+        - AccessTokenBody: []
+      x-contract-response-fields: [success, topic_id]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TopicCreateRequest'
+      responses:
+        "200":
+          description: Topic created.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    required: [topic_id]
+                    properties:
+                      topic_id: { type: string }
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/topic/{topic_id}:
+    get:
+      tags: [topics]
+      summary: Get topic detail with embedded replies.
+      security:
+        - SessionCookie: []
+        - AccessTokenQuery: []
+        - {}
+      x-contract-response-fields: [success, data.id, data.author_id, data.tab, data.content, data.title, data.last_reply_at, data.good, data.top, data.reply_count, data.visit_count, data.collect_count, data.create_at, data.author.loginname, data.author.avatar_url, data.is_collect, data.replies, data.replies.id, data.replies.author.loginname, data.replies.author.avatar_url, data.replies.content, data.replies.ups, data.replies.create_at, data.replies.reply_id, data.replies.reply_to, data.replies.is_uped]
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+        - $ref: '#/components/parameters/MdRender'
+        - $ref: '#/components/parameters/AccessTokenQuery'
+      responses:
+        "200":
+          description: Topic detail.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/TopicDetail'
+              examples:
+                renderedHtml:
+                  summary: Default HTML-rendered content
+                  value:
+                    success: true
+                    data:
+                      id: "1"
+                      content: "<h2 id=\"hello\">Hello</h2>\n<p>Rendered HTML</p>"
+                      replies:
+                        - id: "2"
+                          content: "<p>reply <code>code</code></p>"
+                          author: { loginname: bob, avatar_url: "https://example.invalid/bob.png" }
+                rawMarkdown:
+                  summary: Raw Markdown with mdrender=false
+                  value:
+                    success: true
+                    data:
+                      id: "1"
+                      content: "## Hello\n\nRendered **later**"
+                      replies:
+                        - id: "2"
+                          content: "reply `code`"
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/topics/update:
+    post:
+      tags: [topics]
+      summary: Edit an existing topic.
+      security:
+        - SessionCookie: []
+        - AccessTokenBody: []
+      x-contract-response-fields: [success, topic_id]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/TopicCreateRequest'
+                - type: object
+                  required: [topic_id]
+                  properties:
+                    topic_id: { type: string }
+      responses:
+        "200":
+          description: Topic updated.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      topic_id: { type: string }
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/topic/{topic_id}/replies:
+    post:
+      tags: [replies]
+      summary: Create a reply on a topic.
+      security:
+        - SessionCookie: []
+        - AccessTokenBody: []
+      x-contract-response-fields: [success, reply_id]
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReplyCreateRequest'
+      responses:
+        "200":
+          description: Reply created.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    required: [reply_id]
+                    properties:
+                      reply_id: { type: string }
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/reply/{reply_id}:
+    get:
+      tags: [replies]
+      summary: Get a reply for edit forms.
+      security:
+        - SessionCookie: []
+        - AccessTokenQuery: []
+      x-contract-response-fields: [success, data.id, data.content, data.author_id, data.topic_id]
+      parameters:
+        - $ref: '#/components/parameters/ReplyId'
+      responses:
+        "200":
+          description: Reply detail.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ReplyEditData'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/reply/{reply_id}/edit:
+    post:
+      tags: [replies]
+      summary: Edit a reply.
+      security:
+        - SessionCookie: []
+        - AccessTokenBody: []
+      x-contract-response-fields: [success, reply_id]
+      parameters:
+        - $ref: '#/components/parameters/ReplyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                accesstoken: { type: string }
+                content: { type: string }
+      responses:
+        "200":
+          description: Reply updated.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      reply_id: { type: string }
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/reply/{reply_id}/delete:
+    post:
+      tags: [replies]
+      summary: Delete a reply owned by the current user.
+      security:
+        - SessionCookie: []
+        - AccessTokenBody: []
+      x-contract-response-fields: [success, status]
+      parameters:
+        - $ref: '#/components/parameters/ReplyId'
+      responses:
+        "200":
+          description: Reply deleted.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      status: { type: string, enum: [success] }
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/reply/{reply_id}/ups:
+    post:
+      tags: [replies]
+      summary: Toggle an upvote on a reply.
+      security:
+        - SessionCookie: []
+        - AccessTokenBody: []
+      x-contract-response-fields: [success, action]
+      parameters:
+        - $ref: '#/components/parameters/ReplyId'
+      responses:
+        "200":
+          description: Upvote toggled.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    required: [action]
+                    properties:
+                      action: { type: string, enum: [up, down] }
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/user/{loginname}:
+    get:
+      tags: [users]
+      summary: Get a public user profile.
+      security:
+        - SessionCookie: []
+        - {}
+      x-contract-response-fields: [success, data.loginname, data.avatar_url, data.githubUsername, data.create_at, data.score, data.recent_topics, data.recent_replies, data.is_block, data.is_muted]
+      parameters:
+        - $ref: '#/components/parameters/LoginName'
+      responses:
+        "200":
+          description: User profile and recent activity.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UserProfile'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/user/{loginname}/topics:
+    get:
+      tags: [users]
+      summary: List topics created by a user.
+      security: []
+      x-contract-response-fields: [success, data, total, user.loginname]
+      parameters:
+        - $ref: '#/components/parameters/LoginName'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        "200":
+          $ref: '#/components/responses/TopicListWithUser'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/user/{loginname}/replies:
+    get:
+      tags: [users]
+      summary: List topics recently replied to by a user.
+      security: []
+      x-contract-response-fields: [success, data, total, user.loginname]
+      parameters:
+        - $ref: '#/components/parameters/LoginName'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        "200":
+          $ref: '#/components/responses/TopicListWithUser'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/user/{loginname}/collections:
+    get:
+      tags: [users, collections]
+      summary: List topics collected by a user with pagination metadata.
+      security: []
+      x-contract-response-fields: [success, data, total, user.loginname]
+      parameters:
+        - $ref: '#/components/parameters/LoginName'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        "200":
+          $ref: '#/components/responses/TopicListWithUser'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/users/stars:
+    get:
+      tags: [users]
+      summary: List star users.
+      security: []
+      x-contract-response-fields: [success, data, data.loginname, data.avatar_url]
+      responses:
+        "200":
+          $ref: '#/components/responses/UserList'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/users/top100:
+    get:
+      tags: [users]
+      summary: List top users by score.
+      security: []
+      x-contract-response-fields: [success, data, data.loginname, data.avatar_url]
+      responses:
+        "200":
+          $ref: '#/components/responses/UserList'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/topic_collect/{loginname}:
+    get:
+      tags: [collections]
+      summary: List public collected topics for a user.
+      security: []
+      x-contract-response-fields: [success, data, data.id, data.title, data.author.loginname]
+      parameters:
+        - $ref: '#/components/parameters/LoginName'
+      responses:
+        "200":
+          description: Collection list.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/TopicSummary'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/topic_collect/collect:
+    post:
+      tags: [collections]
+      summary: Collect a topic.
+      security:
+        - SessionCookie: []
+        - AccessTokenBody: []
+      x-contract-response-fields: [success]
+      requestBody:
+        $ref: '#/components/requestBodies/TopicCollectBody'
+      responses:
+        "200":
+          $ref: '#/components/responses/Success'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/topic_collect/de_collect:
+    post:
+      tags: [collections]
+      summary: Remove a topic collection.
+      security:
+        - SessionCookie: []
+        - AccessTokenBody: []
+      x-contract-response-fields: [success]
+      requestBody:
+        $ref: '#/components/requestBodies/TopicCollectBody'
+      responses:
+        "200":
+          $ref: '#/components/responses/Success'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/messages:
+    get:
+      tags: [messages]
+      summary: List read and unread messages for current user.
+      security:
+        - SessionCookie: []
+        - AccessTokenQuery: []
+      x-contract-response-fields: [success, data.has_read_messages, data.hasnot_read_messages, data.hasnot_read_messages.id, data.hasnot_read_messages.type, data.hasnot_read_messages.has_read, data.hasnot_read_messages.author.loginname, data.hasnot_read_messages.topic.id, data.hasnot_read_messages.reply.id, data.hasnot_read_messages.reply.content]
+      parameters:
+        - $ref: '#/components/parameters/MdRender'
+        - $ref: '#/components/parameters/AccessTokenQuery'
+      responses:
+        "200":
+          description: Message groups.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: object
+                        required: [has_read_messages, hasnot_read_messages]
+                        properties:
+                          has_read_messages:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Message'
+                          hasnot_read_messages:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Message'
+              examples:
+                htmlContent:
+                  summary: Reply content rendered as HTML
+                  value:
+                    success: true
+                    data:
+                      has_read_messages: []
+                      hasnot_read_messages:
+                        - id: "9"
+                          type: reply
+                          has_read: false
+                          reply: { id: "8", content: "<p>Thanks</p>", ups: [], create_at: "2026-07-28T10:00:00.000Z" }
+                rawMarkdown:
+                  summary: Raw reply content with mdrender=false
+                  value:
+                    success: true
+                    data:
+                      has_read_messages: []
+                      hasnot_read_messages:
+                        - id: "9"
+                          reply: { id: "8", content: "**Thanks**", ups: [], create_at: "2026-07-28T10:00:00.000Z" }
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/message/count:
+    get:
+      tags: [messages]
+      summary: Get unread message count.
+      security:
+        - SessionCookie: []
+        - AccessTokenQuery: []
+      x-contract-response-fields: [success, data]
+      responses:
+        "200":
+          description: Unread count.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data: { type: integer }
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/message/mark_all:
+    post:
+      tags: [messages]
+      summary: Mark all unread messages read.
+      security:
+        - SessionCookie: []
+        - AccessTokenBody: []
+      x-contract-response-fields: [success, marked_msgs]
+      responses:
+        "200":
+          description: Marked message IDs.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      marked_msgs:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id: { type: string }
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/message/mark_one/{msg_id}:
+    post:
+      tags: [messages]
+      summary: Mark one message read.
+      security:
+        - SessionCookie: []
+        - AccessTokenBody: []
+      x-contract-response-fields: [success, marked_msg_id]
+      parameters:
+        - name: msg_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Marked message ID.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      marked_msg_id: { type: string }
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/search:
+    get:
+      tags: [search]
+      summary: Search public topics.
+      security: []
+      x-contract-response-fields: [success, data]
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string }
+        - name: engine
+          in: query
+          schema: { type: string, enum: [local] }
+      responses:
+        "200":
+          description: Search results as topic summaries.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/TopicSummary'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/sidebar/home:
+    get:
+      tags: [system config]
+      summary: Get public sidebar content for the web home page.
+      security: []
+      x-contract-response-fields: [success, data]
+      responses:
+        "200":
+          description: Sidebar data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDataEnvelope'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/upload/image:
+    post:
+      tags: [auth]
+      summary: Upload an image for authenticated Markdown content.
+      security:
+        - SessionCookie: []
+      x-contract-response-fields: [success, url]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Uploaded image URL.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      url: { type: string, format: uri }
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/admin/reports:
+    get:
+      tags: [admin]
+      summary: List moderation reports.
+      security:
+        - SessionCookie: []
+      x-contract-response-fields: [success, data, total]
+      responses:
+        "200":
+          $ref: '#/components/responses/ArrayData'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [admin]
+      summary: Create a report for topic or reply content.
+      security:
+        - SessionCookie: []
+      x-contract-response-fields: [success]
+      responses:
+        "200":
+          $ref: '#/components/responses/Success'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/admin/reply/{reply_id}/delete:
+    post:
+      tags: [admin]
+      summary: Moderator reply deletion.
+      security:
+        - SessionCookie: []
+      x-contract-response-fields: [success]
+      parameters:
+        - $ref: '#/components/parameters/ReplyId'
+      responses:
+        "200":
+          $ref: '#/components/responses/Success'
+        default:
+          $ref: '#/components/responses/Error'
+components:
+  securitySchemes:
+    SessionCookie:
+      type: apiKey
+      in: cookie
+      name: node_club
+      description: Signed HTTP-only session cookie set by the web login flow. Cookie name may be configured per deployment.
+    AccessTokenQuery:
+      type: apiKey
+      in: query
+      name: accesstoken
+      description: Legacy CNode API v1 access token query parameter.
+    AccessTokenBody:
+      type: apiKey
+      in: header
+      name: X-Access-Token-In-Body
+      description: Legacy-compatible JSON body field named `accesstoken`; documented as a pseudo scheme because OpenAPI does not model body security schemes directly.
+  parameters:
+    AccessTokenQuery:
+      name: accesstoken
+      in: query
+      required: false
+      schema: { type: string }
+    Key:
+      name: key
+      in: query
+      required: false
+      schema: { type: string }
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    LoginName:
+      name: loginname
+      in: path
+      required: true
+      schema: { type: string }
+    MdRender:
+      name: mdrender
+      in: query
+      required: false
+      description: Defaults to true. Set `false` to receive raw Markdown content instead of rendered HTML.
+      schema: { type: boolean, default: true }
+    Page:
+      name: page
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, default: 1 }
+    ReplyId:
+      name: reply_id
+      in: path
+      required: true
+      schema: { type: string }
+    Tab:
+      name: tab
+      in: query
+      required: false
+      schema: { type: string, enum: [all, share, ask, job, good] }
+    TopicId:
+      name: topic_id
+      in: path
+      required: true
+      schema: { type: string }
+  requestBodies:
+    AccessTokenBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [accesstoken]
+            properties:
+              accesstoken: { type: string }
+    EmailRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [email]
+            properties:
+              email: { type: string, format: email }
+    TopicCollectBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [topic_id]
+            properties:
+              accesstoken: { type: string }
+              topic_id: { type: string }
+  responses:
+    ArrayData:
+      description: Generic array data response.
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items: { type: object }
+                  total: { type: integer }
+    Error:
+      description: Error response using the legacy CNode envelope.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          examples:
+            unauthorized:
+              value: { success: false, error_msg: 未登录 }
+            validation:
+              value: { success: false, error_msg: 参数错误 }
+    Success:
+      description: Successful empty legacy envelope.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SuccessEnvelope'
+    TopicListWithUser:
+      description: Paginated topic list with user summary.
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TopicSummary'
+                  total: { type: integer }
+                  user:
+                    $ref: '#/components/schemas/UserSummary'
+    UserList:
+      description: User list.
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PublicUser'
+  schemas:
+    ErrorEnvelope:
+      type: object
+      required: [success, error_msg]
+      properties:
+        success:
+          type: boolean
+          const: false
+        error_msg:
+          type: string
+      additionalProperties: true
+    HealthResponse:
+      type: object
+      required: [ok, service, version, commit, buildTime]
+      properties:
+        ok: { type: boolean }
+        service: { type: string }
+        version: { type: string }
+        commit: { type: string }
+        buildTime: { type: string }
+    Message:
+      type: object
+      required: [id, type, has_read, create_at, author, topic, reply]
+      properties:
+        id: { type: string }
+        type: { type: string }
+        has_read: { type: boolean }
+        create_at: { type: string }
+        author:
+          $ref: '#/components/schemas/UserSummary'
+        topic:
+          nullable: true
+          allOf:
+            - type: object
+              properties:
+                id: { type: string }
+                title: { type: string }
+                last_reply_at: { type: string }
+                author:
+                  $ref: '#/components/schemas/UserSummary'
+        reply:
+          type: object
+          properties:
+            id: { type: string }
+            content: { type: string, description: HTML by default, raw Markdown when `mdrender=false`. }
+            ups:
+              type: array
+              items: { type: string }
+            create_at: { type: string }
+    ObjectDataEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data: { type: object }
+    PublicUser:
+      type: object
+      required: [loginname, avatar_url]
+      properties:
+        loginname: { type: string }
+        avatar_url: { type: string }
+        githubUsername: { type: string }
+        create_at: { type: string }
+        score: { type: integer }
+        is_admin: { type: boolean }
+        is_mod: { type: boolean }
+        id: { type: string }
+    Reply:
+      type: object
+      required: [id, author, content, ups, create_at]
+      properties:
+        id: { type: string }
+        author:
+          $ref: '#/components/schemas/UserSummary'
+        content: { type: string, description: HTML by default, raw Markdown when `mdrender=false`. }
+        ups:
+          type: array
+          items: { type: string }
+        create_at: { type: string }
+        reply_id: { type: [string, "null"] }
+        reply_to:
+          type: [object, "null"]
+          properties:
+            id: { type: string }
+            author:
+              $ref: '#/components/schemas/UserSummary'
+            content_excerpt: { type: string }
+            deleted: { type: boolean }
+        is_uped: { type: boolean }
+    ReplyCreateRequest:
+      type: object
+      required: [content]
+      properties:
+        accesstoken: { type: string }
+        content: { type: string }
+        reply_id: { type: string }
+        turnstileToken: { type: string }
+    ReplyEditData:
+      type: object
+      properties:
+        id: { type: string }
+        content: { type: string }
+        author_id: { type: string }
+        topic_id: { type: string }
+    SuccessEnvelope:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+          const: true
+      additionalProperties: true
+    TopicCreateRequest:
+      type: object
+      required: [title, tab, content]
+      properties:
+        accesstoken: { type: string }
+        title: { type: string, minLength: 5 }
+        tab: { type: string, enum: [share, ask, job] }
+        content: { type: string, minLength: 5 }
+        turnstileToken: { type: string }
+    TopicDetail:
+      allOf:
+        - $ref: '#/components/schemas/TopicSummary'
+        - type: object
+          required: [replies]
+          properties:
+            replies:
+              type: array
+              items:
+                $ref: '#/components/schemas/Reply'
+            collect_count: { type: integer }
+            is_collect: { type: boolean }
+    TopicSummary:
+      type: object
+      required: [id, author_id, tab, content, title, last_reply_at, good, top, reply_count, visit_count, create_at, author]
+      properties:
+        id: { type: string }
+        author_id: { type: string }
+        tab: { type: string }
+        content: { type: string, description: HTML by default, raw Markdown when `mdrender=false`. }
+        title: { type: string }
+        last_reply_at: { type: string }
+        good: { type: boolean }
+        top: { type: boolean }
+        reply_count: { type: integer }
+        visit_count: { type: integer }
+        create_at: { type: string }
+        author:
+          $ref: '#/components/schemas/UserSummary'
+    UserProfile:
+      allOf:
+        - $ref: '#/components/schemas/PublicUser'
+        - type: object
+          required: [recent_topics, recent_replies]
+          properties:
+            recent_topics:
+              type: array
+              items:
+                $ref: '#/components/schemas/TopicSummary'
+            recent_replies:
+              type: array
+              items:
+                $ref: '#/components/schemas/TopicSummary'
+            is_block: { type: boolean }
+            is_muted: { type: boolean }
+    UserSettingsUpdate:
+      type: object
+      properties:
+        url: { type: string }
+        location: { type: string }
+        signature: { type: string }
+        weibo: { type: string }
+        receive_reply_mail: { type: boolean }
+        receive_at_mail: { type: boolean }
+    UserSummary:
+      type: object
+      required: [loginname, avatar_url]
+      properties:
+        loginname: { type: string }
+        avatar_url: { type: string }

@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, gt, inArray, lt, ne, sql } from "drizzle-orm";
 import { moderationHits, moderationScanJobs, replies, topics } from "@cnode/db";
 import { getDb } from "./db";
-import { boolEq, boolValue } from "./db-compat";
+import { boolEq } from "./db-compat";
 import { createHitDedupeKey, createHitPreview, incrementSensitiveWordHits, loadWords, matchContent, type SensitiveWordEntry } from "./moderation";
 import { getRedis } from "./redis";
 
@@ -23,10 +23,6 @@ export function scanDefaults() {
   };
 }
 
-function encodeJson(value: unknown) {
-  return JSON.stringify(value ?? null);
-}
-
 function decodeJsonArray(value: unknown): number[] | null {
   if (!value) return null;
   if (Array.isArray(value)) return value.map(Number).filter((v) => v > 0);
@@ -39,14 +35,11 @@ function decodeJsonArray(value: unknown): number[] | null {
 }
 
 function dateValue(value = new Date()) {
-  return process.env.DB_DIALECT === "pg" ? value : value.toISOString();
+  return value;
 }
 
 function jsonValue(value: unknown) {
-  if (process.env.DB_DIALECT === "pg" && value !== null && value !== undefined) {
-    return sql`${JSON.stringify(value)}::jsonb`;
-  }
-  return process.env.DB_DIALECT === "pg" ? value : encodeJson(value);
+  return value === undefined ? null : value;
 }
 
 export async function acquireScanWorkerLock(ttlSeconds = 60) {

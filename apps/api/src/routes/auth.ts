@@ -11,8 +11,6 @@ import { auditQueries, settingQueries, userQueries } from "../lib/db";
 import {
   sendActiveMail,
   sendResetPassMail,
-  sendReplyNotifyMail,
-  sendAtNotifyMail,
 } from "../lib/mail";
 import {
   setSessionCookie,

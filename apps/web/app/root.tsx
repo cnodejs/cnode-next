@@ -3,6 +3,7 @@ import { Toaster } from "~/components/ui/sonner";
 import { useAuthStore } from "~/lib/stores/auth-store";
 import { getCurrentUser } from "~/lib/api-client";
 import { useEffect } from "react";
+import packageJson from "../package.json";
 import "~/styles/global.css";
 
 export async function loader({ request }: { request: Request }) {
@@ -12,12 +13,20 @@ export async function loader({ request }: { request: Request }) {
     publicConfig: {
       apiBaseUrl: process.env.APP_API_BASE_URL || "https://api.cnodejs.org",
       turnstileSiteKey: process.env.TURNSTILE_SITE_KEY || "",
+      build: {
+        service: "cnode-web",
+        version: packageJson.version,
+        commit: process.env.APP_GIT_SHA || process.env.GIT_SHA || process.env.COMMIT_SHA || "unknown",
+        buildTime: process.env.APP_BUILD_TIME || process.env.BUILD_TIME || "unknown",
+      },
     },
   };
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const data = useRouteLoaderData("root") as { publicConfig?: { apiBaseUrl?: string; turnstileSiteKey?: string } } | undefined;
+  const data = useRouteLoaderData("root") as
+    | { publicConfig?: { apiBaseUrl?: string; turnstileSiteKey?: string; build?: Record<string, string> } }
+    | undefined;
   const publicConfig = data?.publicConfig || { apiBaseUrl: "https://api.cnodejs.org" };
 
   return (

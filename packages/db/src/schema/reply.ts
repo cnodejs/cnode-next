@@ -1,18 +1,9 @@
-import { sql } from "drizzle-orm";
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
-import {
-  pgTable,
-  serial,
-  integer as pgInteger,
-  text as pgText,
-  boolean as pgBoolean,
-  timestamp,
-} from "drizzle-orm/pg-core";
-import { users } from "./user";
+import { boolean, integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { topics } from "./topic";
+import { users } from "./user";
 
-export const replies = sqliteTable("replies", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const replies = pgTable("replies", {
+  id: serial("id").primaryKey(),
   content: text("content"),
   topicId: integer("topic_id")
     .notNull()
@@ -21,18 +12,7 @@ export const replies = sqliteTable("replies", {
     .notNull()
     .references(() => users.id),
   replyId: integer("reply_id"),
-  deleted: integer("deleted").default(0),
-  createAt: text("create_at").default(sql`(datetime('now'))`),
-  updateAt: text("update_at").default(sql`(datetime('now'))`),
-});
-
-export const repliesPg = pgTable("replies", {
-  id: serial("id").primaryKey(),
-  content: pgText("content"),
-  topicId: pgInteger("topic_id").notNull(),
-  authorId: pgInteger("author_id").notNull(),
-  replyId: pgInteger("reply_id"),
-  deleted: pgBoolean("deleted").default(false),
+  deleted: boolean("deleted").default(false),
   createAt: timestamp("create_at").defaultNow(),
   updateAt: timestamp("update_at").defaultNow(),
 });

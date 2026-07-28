@@ -4,6 +4,15 @@
 
 ## 目标边界
 
+```mermaid
+flowchart LR
+  Mongo[(legacy MongoDB<br/>read-only source)] --> Migrate[migrate-data<br/>explicit profile]
+  Migrate --> Pg[(PostgreSQL target)]
+  Pg --> Reconcile[reconcile<br/>explicit profile]
+  Reconcile --> Smoke[smoke checks]
+  Smoke --> Cutover[traffic cutover]
+```
+
 - 迁移源库只读：`MONGO_URI` 必须使用只读 Mongo 账号。
 - 迁移目标隔离：彩排目标必须是本地或预发布 PostgreSQL，不得是生产目标库。
 - 数据库不得公网暴露：远程源库通过 SSH 隧道或内网跳板访问。
@@ -50,7 +59,6 @@ ssh -N \
 ```bash
 MONGO_URI=mongodb://<mongo-host>:37017/<legacy-db-name>
 MONGO_DB=<legacy-db-name>
-DB_DIALECT=pg
 DB_HOST=postgres
 DB_PORT=5432
 DB_NAME=cnode_rehearsal
@@ -122,6 +130,18 @@ docker exec cnode-cnode-1 node -e "console.log(require('./config').db)"
 - Message：回复、reply2、@ 提及消息在消息中心可见并可标记已读。
 
 ## 切换日分钟级手册
+
+```mermaid
+flowchart TD
+  T30[T-30 confirm rehearsals] --> T20[T-20 announce maintenance]
+  T20 --> T10[T-10 freeze legacy writes]
+  T10 --> T00[T+00 migrate-schema]
+  T00 --> T05[T+05 migrate-data]
+  T05 --> T20B[T+20 reconcile]
+  T20B --> T25[T+25 smoke]
+  T25 --> T30B[T+30 cut traffic]
+  T30B --> T40[T+40 monitor and close legacy]
+```
 
 T-30：确认最近两次彩排通过，迁移耗时低于停机窗口。
 

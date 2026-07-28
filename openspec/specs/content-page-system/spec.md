@@ -1,4 +1,10 @@
-## ADDED Requirements
+# content-page-system Specification
+
+## Purpose
+
+定义关于、FAQ、入门指南和 API 文档等内容页面的共享布局、信息结构、响应式行为和开发者文档呈现要求，避免静态页面退化为占位文本。
+
+## Requirements
 
 ### Requirement: 共享内容页布局
 

@@ -1,4 +1,10 @@
-## ADDED Requirements
+# agent-owned-ui-acceptance Specification
+
+## Purpose
+
+定义由 agent 负责实现 UI 变更时必须完成的自验收范围、路由矩阵、桌面和移动端检查、视觉一致性、运行时错误和最终汇报要求。
+
+## Requirements
 
 ### Requirement: Agent-owned UI acceptance
 

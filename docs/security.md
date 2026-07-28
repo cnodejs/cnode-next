@@ -4,6 +4,15 @@
 
 This repository uses Gitleaks with `.gitleaks.toml` as the single rule source.
 
+```mermaid
+flowchart LR
+  Change[config/code/docs change] --> Staged[pnpm secrets:scan:staged]
+  Staged --> Commit{clean?}
+  Commit -- yes --> Push[push/PR]
+  Commit -- no --> Remove[remove secret and rotate if exposed]
+  Push --> Full[pnpm secrets:scan in pnpm verify]
+```
+
 Install local hooks after cloning:
 
 ```bash
@@ -27,6 +36,15 @@ pnpm secrets:scan:staged
 The hooks fail closed. If `gitleaks` is not installed, `git commit` and `git push` fail with an installation prompt instead of silently skipping the scan.
 
 ## Handling findings
+
+```mermaid
+flowchart TD
+  Finding[Gitleaks finding] --> Real{real secret?}
+  Real -- yes --> Remove[remove from change]
+  Remove --> Rotate[rotate credential if committed or shared]
+  Real -- no --> Placeholder[prefer placeholder or narrow rule]
+  Placeholder --> Targeted[only targeted allowlist if needed]
+```
 
 If Gitleaks reports a real secret, remove it from the change and rotate the credential if it was ever committed or shared.
 

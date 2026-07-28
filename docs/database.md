@@ -1,14 +1,26 @@
 # Database
 
-本文档描述数据库 schema、migration 流程和 SQLite/pg 双 dialect 注意事项。
+本文档描述数据库 schema 和 PostgreSQL migration 流程。项目不允许使用其他本地数据库作为运行时、测试或验收路径。
 
 ## ORM: Drizzle
 
-使用 Drizzle ORM,一份 schema 定义,支持 SQLite 和 PostgreSQL 双 dialect。
+使用 Drizzle ORM 和 PostgreSQL schema。开发、测试、迁移验证、CI 和生产都使用 PostgreSQL。
 
-- 本地开发: better-sqlite3 (SQLite)
+```mermaid
+erDiagram
+  users ||--o{ topics : authors
+  users ||--o{ replies : writes
+  users ||--o{ messages : receives
+  users ||--o{ topic_collects : collects
+  topics ||--o{ replies : contains
+  topics ||--o{ topic_collects : collected_by
+  replies ||--o{ reply_ups : liked_by
+  users ||--o{ reply_ups : likes
+```
+
+- 本地开发: PostgreSQL
 - 生产: PostgreSQL (docker-compose 部署)
-- 通过 `DB_DIALECT` 环境变量切换
+- 运行时不提供数据库 dialect fallback
 
 ## Schema
 
@@ -27,22 +39,25 @@
 
 ## Migration
 
-```bash
-pnpm db:generate    # 生成 migration 文件
-pnpm db:push        # 推送到本地 SQLite
-pnpm db:push:pg     # 推送到 PostgreSQL
+```mermaid
+flowchart LR
+  Schema[packages/db/src/schema] --> Generate[pnpm db:generate]
+  Generate --> Files[packages/db/migrations/pg]
+  Files --> Push[pnpm db:push:pg]
+  Push --> Pg[(PostgreSQL)]
 ```
 
-Migration 文件分 SQLite 和 PostgreSQL 两套,放在 `packages/db/migrations/` 下。
+```bash
+pnpm db:generate    # 生成 migration 文件
+pnpm db:push        # 推送到 PostgreSQL
+pnpm db:push:pg     # 等价 PostgreSQL 建表命令
+```
 
-## SQLite vs PostgreSQL 差异
+Migration 文件放在 `packages/db/migrations/pg/` 下。
 
-| 特性     | SQLite                    | PostgreSQL         |
-| -------- | ------------------------- | ------------------ |
-| BOOLEAN  | INTEGER (0/1)             | BOOLEAN            |
-| DATETIME | TEXT (ISO 8601)           | TIMESTAMP          |
-| 自增 ID  | INTEGER PRIMARY KEY       | SERIAL / GENERATED |
-| 外键     | 需 PRAGMA foreign_keys=ON | 默认开启           |
-| 并发     | 写锁全库级别              | 行级锁             |
+## PostgreSQL 约束
 
-Drizzle 在 ORM 层面抹平大部分差异。本地开发单人够用,并发测试在 CI 上用 PostgreSQL 跑。
+- BOOLEAN 使用 PostgreSQL boolean,代码不得写入 `0`/`1` 作为兼容路径。
+- 时间列使用 PostgreSQL timestamp。
+- 自增主键使用 serial / generated integer。
+- 验证脚本和 CI 必须连接 PostgreSQL 或使用纯逻辑验证，不得引入本地数据库 fallback。

@@ -1,6 +1,7 @@
 name: Build container images
 
 on:
+  pull_request:
   push:
     branches:
       - main
@@ -11,8 +12,34 @@ permissions:
   packages: write
 
 jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install gitleaks
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/gitleaks/gitleaks/master/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify
+        run: pnpm verify
+
   build:
     runs-on: ubuntu-latest
+    needs: verify
+    if: github.event_name != 'pull_request'
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -27,13 +54,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set build metadata
+        run: echo "BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
       - name: Build and push API image
         uses: docker/build-push-action@v7
         with:
           context: .
           file: apps/api/Dockerfile
           push: true
-          tags: ghcr.io/cnodejs/cnode-api:latest
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+            BUILD_TIME=${{ env.BUILD_TIME }}
+          tags: |
+            ghcr.io/cnodejs/cnode-api:sha-${{ github.sha }}
+            ghcr.io/cnodejs/cnode-api:latest
 
       - name: Build and push Web image
         uses: docker/build-push-action@v7
@@ -41,4 +76,9 @@ jobs:
           context: .
           file: apps/web/Dockerfile
           push: true
-          tags: ghcr.io/cnodejs/cnode-web:latest
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+            BUILD_TIME=${{ env.BUILD_TIME }}
+          tags: |
+            ghcr.io/cnodejs/cnode-web:sha-${{ github.sha }}
+            ghcr.io/cnodejs/cnode-web:latest

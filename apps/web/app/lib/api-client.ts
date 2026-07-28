@@ -3,6 +3,12 @@ declare global {
     __CNODE_CONFIG__?: {
       apiBaseUrl?: string;
       turnstileSiteKey?: string;
+      build?: {
+        service: string;
+        version: string;
+        commit: string;
+        buildTime: string;
+      };
     };
   }
 }
