@@ -1,8 +1,5 @@
-# web-api-contract-integration Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change reach-production-grade-release-readiness. Update Purpose after archive.
-## Requirements
 ### Requirement: Web API 调用必须引用 OAS 契约
 `apps/web` SHALL 与 API 契约建立持续校验关系，避免前端调用、后端实现和外部 API 文档漂移。web 调用类型 MUST 从 API 路由的 zod-openapi 声明派生（通过 `z.infer`），不再手写 DTO 或维护独立的契约清单。
 
@@ -44,6 +41,8 @@ Web 与 API 路由的持续集成 SHALL 优先覆盖帖子、回复、用户、�
 - **WHEN** Web 加载用户页、收藏状态或消息页
 - **THEN** 相关端点 MUST 在 `apps/api/src/routes/*.ts` 中以 zod-openapi 声明
 - **AND** Web schema 派生 MUST 标注登录态或 access token 要求
+
+## ADDED Requirements
 
 ### Requirement: Web 表单校验 zod schema 必须从 shared 派生
 Web 表单运行时校验使用的 zod schema MUST 从 `packages/shared/schemas` import，该 schema 与 `apps/api` 路由的 zod-openapi 声明引用同一份源，不得在 web 端手写副本。

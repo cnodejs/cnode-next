@@ -3,6 +3,11 @@ packages:
   - "packages/*"
 allowBuilds:
   '@fission-ai/openspec': true
+  '@scarf/scarf': false
+  '@tree-sitter-grammars/tree-sitter-yaml': false
+  core-js-pure: false
   esbuild: true
   sharp: true
+  tree-sitter: false
+  tree-sitter-json: false
   workerd: true

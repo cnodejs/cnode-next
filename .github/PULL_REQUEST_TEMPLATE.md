@@ -15,7 +15,7 @@
 ## Impact Checklist
 
 - [ ] App code (`apps/`, `packages/`)
-- [ ] API behavior / OpenAPI contract (`api/openapi.yaml`, `apps/web/api-contract.manifest.json`)
+- [ ] API behavior / OpenAPI contract (`apps/api/src/routes/*.ts` zod-openapi declarations, `api/openapi.json` via `pnpm gen:openapi`)
 - [ ] Database schema or migration (`packages/db`)
 - [ ] Deployment (`deployment/`)
 - [ ] Documentation (`README.md`, `docs/`, `wiki/`)

@@ -1,5 +1,5 @@
 import { micromark } from "micromark";
-import { linkUsers } from "@cnode/shared";
+import { linkUsers } from "./at";
 
 export function renderMarkdown(content: string | null | undefined, mdrender: boolean) {
   const text = content || "";

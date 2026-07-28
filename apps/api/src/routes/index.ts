@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { OpenAPIHono } from "@hono/zod-openapi";
 import { topicRoutes } from "./topic";
 import { replyRoutes } from "./reply";
 import { userRoutes } from "./user";
@@ -8,7 +8,7 @@ import { authRoutes } from "./auth";
 import { adminRoutes } from "./admin";
 import { communityRoutes } from "./community";
 
-const apiRoutes = new Hono();
+const apiRoutes = new OpenAPIHono();
 
 apiRoutes.route("/", topicRoutes);
 apiRoutes.route("/", replyRoutes);

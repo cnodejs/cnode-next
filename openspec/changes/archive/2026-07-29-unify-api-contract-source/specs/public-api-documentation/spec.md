@@ -1,8 +1,5 @@
-# public-api-documentation Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change reach-production-grade-release-readiness. Update Purpose after archive.
-## Requirements
 ### Requirement: API 文档必须面向外部参考和学习
 项目 SHALL 提供完整的外部 API reference，使第三方开发者能理解如何调用 CNode API、如何认证、如何处理错误以及如何兼容 legacy nodeclub API v1。API reference MUST 由生成的 OAS 驱动渲染，不再手写端点表格。
 
@@ -132,3 +129,13 @@ API 文档 SHALL 作为 release verification 的检查项，避免实现、OpenS
 - **WHEN** 未来实现 API smoke 或 contract verifier
 - **THEN** verifier SHOULD 复用 OAS 中的 paths、methods、schemas 或 examples 作为检查来源
 - **AND** 若 verifier 暂未完全复用 OAS，release checklist MUST 明确记录覆盖差距
+
+## REMOVED Requirements
+
+### Requirement: API reference 必须使用 redocly build-docs 产出静态 HTML
+**Reason**: API 文档改由 `swagger-ui-react` 在 `apps/web` 的 `/api` 路由直接渲染 OAS，不再需要 `redocly build-docs` 产出 `api/_generated/index.html` 静态文件。
+**Migration**: 删除 `pnpm build:api-docs` 脚本和 `api/_generated/` 目录。外部开发者通过 `apps/web` 的 `/api` 页面或直接读取 `api/openapi.json` 获取文档。
+
+### Requirement: OAS 必须通过 redocly lint 校验
+**Reason**: OAS 改由 `@hono/zod-openapi` 从路由声明自动生成，合规性由生成器保证，不再需要 redocly lint 兜底手写 yaml 的规范错误。
+**Migration**: 删除 `@redocly/cli` 依赖、`redocly.yaml` 配置、`pnpm verify:openapi` 脚本。`pnpm verify` 的 OAS 环节由 `pnpm gen:openapi` 替代——生成成功即证明路由声明可产出合规 OAS。

@@ -97,4 +97,4 @@ curl -fsS 'http://localhost:5173/'
 | `pnpm migrate:reconcile` | Reconcile migrated data. |
 | `pnpm verify` | Full validation gate. Run before release or PR validation when feasible. |
 
-API behavior changes must keep [`api/openapi.yaml`](../api/openapi.yaml) and `apps/web/api-contract.manifest.json` synchronized. Run `pnpm verify:openapi` to validate the OAS.
+API contracts are defined in `apps/api/src/routes/*.ts` as zod-openapi declarations. Run `pnpm gen:openapi` to regenerate `api/openapi.json`. `pnpm verify` includes this step automatically.

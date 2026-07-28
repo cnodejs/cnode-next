@@ -49,4 +49,21 @@ app.use("*", ipBanMiddleware());
 
 app.route("/api/v1", apiRoutes);
 
+app.get("/openapi.json", (c) => {
+  const doc = apiRoutes.getOpenAPIDocument({
+    openapi: "3.1.0",
+    info: {
+      title: "CNode Next API",
+      version: "1.0.0",
+      description:
+        "Machine-readable API reference for cnode-next. Auto-generated from route-level zod-openapi declarations.",
+    },
+    servers: [
+      { url: "https://api.cnodejs.org", description: "Production API" },
+      { url: "http://localhost:3001", description: "Local API development server" },
+    ],
+  });
+  return c.json(doc);
+});
+
 export default app;

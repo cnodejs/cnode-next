@@ -1,7 +1,6 @@
 import { Link } from "react-router";
-import type { TopicDTO } from "@cnode/shared";
-import { Eye, MessageSquare } from "lucide-react";
-import { TimeAgo } from "./TimeAgo";
+import type { TopicDTO } from "~/lib/api-types";
+import { Eye, MessageSquare } from "lucide-react";import { TimeAgo } from "./TimeAgo";
 import { TagBadge, StatusBadge } from "./TagBadge";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { getAvatarFallback, getAvatarUrl } from "~/lib/brand";

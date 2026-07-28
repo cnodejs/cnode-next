@@ -45,7 +45,7 @@ Do not commit real `.env` files or secrets. See [docs/conventions.md](docs/conve
 | Production deployment | [deployment/README.md](deployment/README.md) |
 | PostgreSQL schema and migration rules | [docs/database.md](docs/database.md) |
 | Mongo-to-PostgreSQL migration | [docs/migration-runbook.md](docs/migration-runbook.md) |
-| API reference | [api/openapi.yaml](api/openapi.yaml) |
+| API reference | [api/openapi.json](api/openapi.json) (auto-generated, view at `/api` page) |
 | Content moderation | [docs/content-moderation.md](docs/content-moderation.md) |
 | Historical context and legacy behavior notes | [wiki/README.md](wiki/README.md) |
 | Security practices | [docs/security.md](docs/security.md), [SECURITY.md](SECURITY.md) |

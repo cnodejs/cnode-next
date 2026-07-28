@@ -1,8 +1,37 @@
-import { fetchUsers, linkUsers } from "@cnode/shared";
 import { userQueries } from "./db";
 import { sendAtMessage } from "./message";
 
-export { fetchUsers, linkUsers };
+const IGNORE_REGEXES = [
+  /```[\s\S]+?```/g,
+  /`[\s\S]+?`/g,
+  /^ {4}.*/gm,
+  /\b\S*?@[^\s]*?\..+?\b/g,
+  /\[@.+?\]\(\/.+?\)/g,
+  /\/@/g,
+];
+
+export function fetchUsers(text: string): string[] {
+  if (!text) return [];
+  let cleaned = text;
+  for (const re of IGNORE_REGEXES) {
+    cleaned = cleaned.replace(re, "");
+  }
+  const results = cleaned.match(/@[a-z0-9\-_]+\b/gim);
+  if (!results) return [];
+  const names = results.map((s) => s.slice(1));
+  return [...new Set(names)];
+}
+
+export function linkUsers(text: string): string {
+  const users = fetchUsers(text);
+  for (const name of users) {
+    text = text.replace(
+      new RegExp("@" + name + "\\b(?!\\])", "g"),
+      "[@" + name + "](/user/" + name + ")",
+    );
+  }
+  return text;
+}
 
 export async function sendMessageToMentionUsers(
   text: string,

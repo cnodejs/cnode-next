@@ -403,7 +403,7 @@ function Footer() {
                 <div className="mt-4 space-y-3 text-sm text-muted-foreground">
                   <a
                     className="flex items-center gap-2 hover:text-primary"
-                    href="https://github.com/cnodejs/nodeclub"
+                    href="https://github.com/cnodejs/cnode-next"
                     target="_blank"
                     rel="noopener noreferrer"
                   >

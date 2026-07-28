@@ -1,6 +1,4 @@
-import { Hono } from "hono";
-import { z } from "zod";
-import { zValidator } from "@hono/zod-validator";
+import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import _ from "lodash";
 import { settingQueries, topicQueries, userQueries, replyQueries } from "../lib/db";
 import { incrementScoreAndTopicCount } from "../lib/score";
@@ -12,8 +10,19 @@ import { perUserPerDaySetting } from "../middleware/rate-limit";
 import type { AuthVars } from "../middleware/auth";
 import { ensureMuteNotExpired } from "../lib/penalty";
 import { requestIp, verifyTurnstile } from "../lib/turnstile";
+import {
+  topicListQuerySchema,
+  mdrenderQuerySchema,
+  topicDTOSchema,
+  fullTopicSchema,
+  createTopicBodySchema,
+  updateTopicBodySchema,
+  errorResponseSchema,
+  type TopicDTO,
+} from "@cnode/shared";
+import { z } from "zod";
 
-const topic = new Hono<{
+const topic = new OpenAPIHono<{
   Variables: AuthVars;
 }>();
 
@@ -40,11 +49,33 @@ async function isNewUserForTopicGate(user: any) {
   return accountAgeHours < minHours || Number(user.replyCount || 0) < minReplies;
 }
 
-topic.get("/topics", async (c) => {
-  const page = Math.max(1, Number(c.req.query("page")) || 1);
-  const limit = Math.min(100, Number(c.req.query("limit")) || 20);
-  const tab = c.req.query("tab") || "all";
-  const mdrender = c.req.query("mdrender") !== "false";
+const listTopicsRoute = createRoute({
+  method: "get",
+  path: "/topics",
+  tags: ["topics"],
+  summary: "获取话题列表",
+  description: "支持 page、limit、tab、mdrender 参数。",
+  request: {
+    query: topicListQuerySchema.merge(mdrenderQuerySchema),
+  },
+  responses: {
+    200: {
+      description: "话题列表",
+      content: {
+        "application/json": {
+          schema: z.object({
+            success: z.literal(true),
+            data: z.array(topicDTOSchema),
+            total: z.number(),
+          }),
+        },
+      },
+    },
+  },
+});
+
+topic.openapi(listTopicsRoute, async (c) => {
+  const { page, limit, tab, mdrender } = c.req.valid("query");
 
   const query: any = {};
   if (!tab || tab === "all") {
@@ -78,21 +109,56 @@ topic.get("/topics", async (c) => {
         visit_count: t.visitCount,
         create_at: t.createAt,
         author: userSummary(author),
-      };
+      } as TopicDTO;
     }),
   );
 
-  return c.json({ success: true, data, total });
+  return c.json({ success: true as const, data, total }, 200);
 });
 
-topic.get("/topic/:id", async (c) => {
-  const id = Number(c.req.query("id") || c.req.param("id"));
+const getTopicRoute = createRoute({
+  method: "get",
+  path: "/topic/{topic_id}",
+  tags: ["topics"],
+  summary: "获取话题详情",
+  description: "包含作者、回复和引用摘要。支持 mdrender 和 accesstoken 参数。",
+  request: {
+    params: z.object({ topic_id: z.string() }),
+    query: mdrenderQuerySchema.extend({
+      accesstoken: z.string().optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "话题详情",
+      content: {
+        "application/json": {
+          schema: z.object({
+            success: z.literal(true),
+            data: fullTopicSchema,
+          }),
+        },
+      },
+    },
+    400: {
+      description: "无效的话题 ID",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+    404: {
+      description: "话题不存在",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+  },
+});
+
+topic.openapi(getTopicRoute, async (c) => {
+  const { topic_id } = c.req.valid("param");
+  const id = Number(topic_id);
   if (!id || Number.isNaN(id)) {
-    return c.json({ success: false, error_msg: "不是有效的话题id" }, 400);
+    return c.json({ success: false as const, error_msg: "不是有效的话题id" }, 400);
   }
 
-  const mdrender = c.req.query("mdrender") !== "false";
-  const accesstoken = c.req.query("accesstoken");
+  const { mdrender, accesstoken } = c.req.valid("query");
 
   let currentUser: any = null;
   if (accesstoken) {
@@ -103,14 +169,14 @@ topic.get("/topic/:id", async (c) => {
 
   const topicData = await topicQueries.getById(id);
   if (!topicData || topicData.deleted) {
-    return c.json({ success: false, error_msg: "话题不存在" }, 404);
+    return c.json({ success: false as const, error_msg: "话题不存在" }, 404);
   }
 
   await topicQueries.incrementVisitCount(id);
 
   const author = await userQueries.getById(topicData.authorId);
   if (!c.get("isAdmin") && (topicData.status === "deleted" || INTERNAL_TABS.has(topicData.tab || "") || author?.isBlock)) {
-    return c.json({ success: false, error_msg: "话题不存在" }, 404);
+    return c.json({ success: false as const, error_msg: "话题不存在" }, 404);
   }
   const repliesList = await replyQueries.getByTopicId(id);
   const replyUps = await replyQueries.getUpsByReplyIds(repliesList.map((reply) => reply.id));
@@ -170,37 +236,63 @@ topic.get("/topic/:id", async (c) => {
     is_collect: isCollect,
   };
 
-  return c.json({ success: true, data: result });
+  return c.json({ success: true as const, data: result }, 200);
 });
 
-const createTopicSchema = z.object({
-  accesstoken: z.string().optional(),
-  title: z.string().min(5).max(100),
-  tab: z.enum(["share", "ask", "job"]),
-  content: z.string().min(1),
-  turnstileToken: z.string().optional(),
+const createTopicRoute = createRoute({
+  method: "post",
+  path: "/topics",
+  tags: ["topics"],
+  summary: "创建话题",
+  description: "需要登录。新用户需通过 Turnstile 人机验证。",
+  middleware: [
+    perUserPerDaySetting("create_topic", "rate_topic", CREATE_TOPIC_PER_DAY, true),
+  ],
+  request: {
+    body: {
+      content: { "application/json": { schema: createTopicBodySchema } },
+    },
+  },
+  responses: {
+    200: {
+      description: "创建成功",
+      content: {
+        "application/json": {
+          schema: z.object({ success: z.literal(true), topic_id: z.string() }),
+        },
+      },
+    },
+    401: {
+      description: "未登录",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+    403: {
+      description: "禁言或人机验证失败或新用户限制",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+    422: {
+      description: "包含敏感词",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+  },
 });
 
-topic.post(
-  "/topics",
-  zValidator("json", createTopicSchema),
-  perUserPerDaySetting("create_topic", "rate_topic", CREATE_TOPIC_PER_DAY, true),
-  async (c) => {
+topic.openapi(createTopicRoute, async (c) => {
   let user = c.get("user");
   if (!user) {
-    return c.json({ success: false, error_msg: "未登录" }, 401);
+    return c.json({ success: false as const, error_msg: "未登录" }, 401);
   }
   user = await ensureMuteNotExpired(user);
   if (user.isMuted || user.isBlock) {
-    return c.json({ success: false, error_msg: "您已被禁言" }, 403);
+    return c.json({ success: false as const, error_msg: "您已被禁言" }, 403);
   }
   const body = c.req.valid("json");
   if ((await isNewUserForTopicGate(user)) && !(await verifyTurnstile(body.turnstileToken, requestIp(c)))) {
-    return c.json({ success: false, error_msg: "人机验证失败" }, 403);
+    return c.json({ success: false as const, error_msg: "人机验证失败" }, 403);
   }
   const newUserError = await assertNewUserCanCreateTopic(user);
   if (newUserError) {
-    return c.json({ success: false, error_msg: newUserError }, 403);
+    return c.json({ success: false as const, error_msg: newUserError }, 403);
   }
 
   const { title, tab, content } = body;
@@ -208,14 +300,14 @@ topic.post(
   const titleCheck = await checkContent(title);
   if (titleCheck.hit) {
     return c.json(
-      { success: false, error_msg: `标题包含敏感词: ${titleCheck.words.join(", ")}` },
+      { success: false as const, error_msg: `标题包含敏感词: ${titleCheck.words.join(", ")}` },
       422,
     );
   }
   const contentCheck = await checkContent(content);
   if (contentCheck.hit) {
     return c.json(
-      { success: false, error_msg: `内容包含敏感词: ${contentCheck.words.join(", ")}` },
+      { success: false as const, error_msg: `内容包含敏感词: ${contentCheck.words.join(", ")}` },
       422,
     );
   }
@@ -224,26 +316,56 @@ topic.post(
   await incrementScoreAndTopicCount(user.id, CREATE_TOPIC_SCORE, 1);
   await sendMessageToMentionUsers(content, newTopic.id, user.id);
 
-    return c.json({ success: true, topic_id: String(newTopic.id) });
-  },
-);
-
-const updateTopicSchema = z.object({
-  accesstoken: z.string().optional(),
-  topic_id: z.string().min(1),
-  title: z.string().min(5).max(100),
-  tab: z.enum(["share", "ask", "job"]),
-  content: z.string().min(1),
+  return c.json({ success: true as const, topic_id: String(newTopic.id) }, 200);
 });
 
-topic.post("/topics/update", zValidator("json", updateTopicSchema), async (c) => {
+const updateTopicRoute = createRoute({
+  method: "post",
+  path: "/topics/update",
+  tags: ["topics"],
+  summary: "编辑话题",
+  description: "作者或管理员可编辑。锁定的话题仅管理员可编辑。",
+  request: {
+    body: {
+      content: { "application/json": { schema: updateTopicBodySchema } },
+    },
+  },
+  responses: {
+    200: {
+      description: "更新成功",
+      content: {
+        "application/json": {
+          schema: z.object({ success: z.literal(true), topic_id: z.string() }),
+        },
+      },
+    },
+    401: {
+      description: "未登录",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+    403: {
+      description: "无权限编辑",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+    404: {
+      description: "话题不存在",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+    422: {
+      description: "包含敏感词",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+  },
+});
+
+topic.openapi(updateTopicRoute, async (c) => {
   const body = c.req.valid("json");
   let user = c.get("user");
   if (!user && body.accesstoken) {
     user = await userQueries.getByToken(body.accesstoken);
   }
   if (!user) {
-    return c.json({ success: false, error_msg: "未登录" }, 401);
+    return c.json({ success: false as const, error_msg: "未登录" }, 401);
   }
 
   const { topic_id, title, tab, content } = body;
@@ -252,35 +374,35 @@ topic.post("/topics/update", zValidator("json", updateTopicSchema), async (c) =>
   const titleCheck = await checkContent(title);
   if (titleCheck.hit) {
     return c.json(
-      { success: false, error_msg: `标题包含敏感词: ${titleCheck.words.join(", ")}` },
+      { success: false as const, error_msg: `标题包含敏感词: ${titleCheck.words.join(", ")}` },
       422,
     );
   }
   const contentCheck = await checkContent(content);
   if (contentCheck.hit) {
     return c.json(
-      { success: false, error_msg: `内容包含敏感词: ${contentCheck.words.join(", ")}` },
+      { success: false as const, error_msg: `内容包含敏感词: ${contentCheck.words.join(", ")}` },
       422,
     );
   }
 
   const topicData = await topicQueries.getById(tid);
   if (!topicData || topicData.deleted) {
-    return c.json({ success: false, error_msg: "话题不存在" }, 404);
+    return c.json({ success: false as const, error_msg: "话题不存在" }, 404);
   }
 
   if (topicData.authorId !== user.id && !c.get("isAdmin")) {
-    return c.json({ success: false, error_msg: "无权限编辑" }, 403);
+    return c.json({ success: false as const, error_msg: "无权限编辑" }, 403);
   }
 
   if (topicData.lock && !c.get("isAdmin")) {
-    return c.json({ success: false, error_msg: "话题已锁定" }, 403);
+    return c.json({ success: false as const, error_msg: "话题已锁定" }, 403);
   }
 
   await topicQueries.updateTopic(tid, { title, tab, content });
   await sendMessageToMentionUsers(content, tid, user.id);
 
-  return c.json({ success: true, topic_id: String(tid) });
+  return c.json({ success: true as const, topic_id: String(tid) }, 200);
 });
 
 export { topic as topicRoutes };

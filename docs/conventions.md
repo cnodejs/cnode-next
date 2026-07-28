@@ -52,7 +52,7 @@ This repository keeps public project documentation concise, task-oriented, and s
 | Title | Conventional Commit format matching the primary change type. |
 | Description | State what changed and why. Note migration, deployment, and secret-handling impact. |
 | Tests | Add or update tests for behavior changes. Pure refactors still pass `pnpm test`. |
-| Docs | Update `docs/`, `api-reference.md`, `openapi.yaml`, and `api-contract.manifest.json` when behavior changes. |
+| Docs | Update `docs/` and `apps/api/src/routes/*.ts` zod-openapi declarations when API behavior changes. Run `pnpm gen:openapi` to regenerate `api/openapi.json`. |
 | Verification | Run `pnpm verify` when feasible. If not, list the subset that was run and why. |
 | Reviews | At least one maintainer approval for `main`. Request review from domain owners for affected packages. |
 | Squash merge | Default. The squashed commit message should follow Conventional Commits. |
@@ -71,7 +71,7 @@ This repository keeps public project documentation concise, task-oriented, and s
 | ----- | ----------- |
 | Unit | Pure logic in `packages/shared` and helpers must have unit tests. |
 | Integration | API route and DB query behavior should be covered by package-level tests against PostgreSQL. |
-| Contract | `pnpm verify:openapi-contract` and `pnpm verify:api-contract` keep OAS and Web manifest in sync. |
+| Contract | `pnpm gen:openapi` regenerates `api/openapi.json` from route zod-openapi declarations. `pnpm verify` includes this step. |
 | No SQLite | Tests must not make SQLite a release path. Pure logic checks are acceptable when no DB is needed. |
 | Naming | `*.test.ts` next to the source file or under a `__tests__` directory. |
 | Running | `pnpm test` per package, `pnpm -r test` across the workspace. |
@@ -90,7 +90,7 @@ This repository keeps public project documentation concise, task-oriented, and s
 - Use tables for path params, query, body, and response fields when they improve scanning.
 - Use short prose, lists, and code blocks for explanations, errors, and examples; do not turn the whole API reference into tables.
 - Keep local development hostnames in [docs/development.md](development.md), not repeated throughout the API reference.
-- `api/openapi.yaml` is the single source of truth for API contracts. Keep it synchronized with `apps/web/api-contract.manifest.json` when API behavior changes.
+- `api/openapi.json` is auto-generated from `apps/api/src/routes/*.ts` zod-openapi declarations via `pnpm gen:openapi`. Do not hand-edit it. The route declarations are the single source of truth for API contracts.
 
 ## Secret Handling
 
