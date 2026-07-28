@@ -41,6 +41,13 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Deployment runtime output
+deployment/migration-reports/*
+!deployment/migration-reports/.gitignore
+
+# Generated API docs
+api/_generated/
+
 # Misc
 .cache/
 .turbo/

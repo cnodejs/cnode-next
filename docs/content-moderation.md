@@ -1,48 +1,44 @@
 # Content Moderation
 
-本文档描述内容审核体系:关键字过滤、定期巡检、举报流程、封禁策略。
+This document summarizes current moderation tasks and database-backed moderation concepts. Policy background and community-rule research should be recorded in `wiki/` with sources.
 
-## 关键字过滤
+## Moderation Areas
 
-发帖和回复提交时实时检测,阻止包含敏感词的内容发布。
+| Area | Current task |
+| ---- | ------------ |
+| Keyword rules | Store and update sensitive-word rules through admin workflows. |
+| Submission checks | Block or flag topic/reply content that matches active rules. |
+| Scan jobs | Scan existing content and store findings for review. |
+| Reports | Capture user reports for moderator review. |
+| Audit | Record moderator actions and important state changes. |
 
-- 敏感词库: 数据库存储,支持管理员动态增删
-- 匹配算法: DFA / AC 自动机,支持中英文混合
-- 大文本 (<10000 字) 匹配耗时 <100ms
+## Scan Flow
 
-## 定期巡检
+Moderation scans run as explicit or scheduled jobs and write reviewable hits.
 
-定时任务扫描已发布内容,标记含敏感信息的内容为 `muted` (对用户不可见)。
+```mermaid
+flowchart LR
+  Keyword[active keywords] --> Scan[scan job]
+  Content[topics and replies] --> Scan
+  Scan --> Hits[moderation_hits]
+  Hits --> Review[admin review]
+  Review --> Action[keep, mute, delete, or restore]
+```
 
-- 巡检频率: 可配置 (默认每天 03:00)
-- muted 状态: 不扣分,仅隐藏,管理员可恢复
-- 管理员可见 muted 内容,有视觉标记
+| Step | Result |
+| ---- | ------ |
+| Rules | Current sensitive-word set is selected. |
+| Scan | Existing topic and reply content is checked. |
+| Hits | Findings are deduplicated and stored. |
+| Review | Moderators decide action and leave auditable state. |
 
-## 用户举报
+## Implementation References
 
-- 举报类型: 垃圾广告 / 人身攻击 / 不相关内容 / 其他
-- 自动隐藏阈值: 同一内容被 N 人举报自动 muted (可配置)
-- 管理员审核: 确认违规 (隐藏/删除) 或驳回
+- Schema: `packages/db/src/schema/moderation_scan.ts`.
+- Runtime checks: `apps/api/src/lib/moderation-scan.ts`.
+- Admin routes: `apps/api/src/routes/admin.ts`.
+- Product specs: `openspec/specs/content-moderation/spec.md`, `openspec/specs/anti-spam/spec.md`, `openspec/specs/content-lifecycle/spec.md`.
 
-## 渐进式封禁
+## Writing Policy Notes
 
-| 级别           | 条件     | 限制               |
-| -------------- | -------- | ------------------ |
-| 警告           | 首次违规 | 通知,无限制        |
-| 临时禁言 7 天  | 累计违规 | 不可发帖/回复/点赞 |
-| 临时禁言 30 天 | 多次违规 | 同上               |
-| 永久封禁       | 屡教不改 | is_block = true    |
-
-## IP 封禁
-
-管理员可封禁单个 IP 或 IP 段 (CIDR)。系统也可自动封禁 (短时间注册多个被禁账号)。
-
-## 操作审计日志
-
-记录所有管理员操作和关键用户行为,至少保留 90 天。
-
-详见 `openspec/changes/rewrite-to-cnode-next/specs/` 下的:
-
-- `content-moderation/spec.md`
-- `anti-spam/spec.md`
-- `content-lifecycle/spec.md`
+Do not add unsupported community-rule claims to this doc. Put sourced policy background in the wiki and mark unverified assumptions as `To confirm`.

@@ -1,4 +1,4 @@
-# Production Deployment Audit Record
+# Production Deployment Audit Record Template
 
 Copy this template for each production deployment. Do not paste secrets, `.env` contents, tokens, cookies, private keys, database URLs, user private data, or full API responses.
 
@@ -15,31 +15,14 @@ Copy this template for each production deployment. Do not paste secrets, `.env` 
 | Previous API image | `sha tag or digest` |
 | Previous Web image | `sha tag or digest` |
 
-## Flow
-
-```mermaid
-sequenceDiagram
-  participant O as Operator
-  participant C as Compose
-  participant A as API
-  participant W as Web
-  O->>C: record current images
-  O->>C: optional explicit migrate profile
-  O->>C: pull selected images
-  O->>C: up -d --no-build
-  O->>A: /health
-  O->>A: API smoke
-  O->>W: Web smoke
-```
-
 ## Checklist
 
 - [ ] `pnpm verify` passed before image publication.
 - [ ] API/Web images are SHA tags or digests, not only `latest`.
 - [ ] Current production images were recorded before deployment.
 - [ ] Migration was not needed, or was run explicitly with `--profile migrate`.
-- [ ] `docker compose -f docker-compose.prod.yml pull api web worker` completed.
-- [ ] `docker compose -f docker-compose.prod.yml up -d --no-build postgres redis api web worker` completed.
+- [ ] `docker compose -f deployment/docker-compose.prod.yml pull api web worker` completed.
+- [ ] `docker compose -f deployment/docker-compose.prod.yml up -d --no-build postgres redis api web worker` completed.
 - [ ] `/health` returned 2xx and no sensitive data.
 - [ ] API smoke passed.
 - [ ] Web smoke passed.

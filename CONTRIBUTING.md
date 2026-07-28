@@ -1,18 +1,29 @@
 # Contributing
 
+Start by reading [docs/conventions.md](docs/conventions.md). It defines the repository documentation domains, development conventions, git workflow, pull requests, code review, testing, OpenSpec process, API documentation style, and secret handling rules.
+
+This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating you agree to uphold its standards.
+
 ## Workflow
+
+Use OpenSpec for scoped behavior, product, API, migration, release, or architecture changes. Small documentation corrections and mechanical fixes can be submitted directly when they do not change shipped behavior.
 
 ```mermaid
 flowchart LR
-  Idea[idea or bug] --> Scope{behavior/product change?}
-  Scope -- yes --> OpenSpec[create or update OpenSpec change]
-  Scope -- no --> Patch[small implementation or docs patch]
+  Idea[idea or bug] --> Scope{behavior or product change?}
+  Scope -- yes --> OpenSpec[OpenSpec change]
+  Scope -- no --> Patch[small patch]
   OpenSpec --> Patch
   Patch --> Verify[pnpm verify]
-  Verify --> PR[PR with validation notes]
+  Verify --> PR[PR notes]
 ```
 
-Use OpenSpec for scoped behavior, product, API, migration, release, or architecture changes. Small documentation corrections and mechanical fixes can be submitted directly when they do not change shipped behavior.
+| Step | Contributor task |
+| ---- | ---------------- |
+| Scope | Decide whether OpenSpec is required. |
+| Patch | Keep changes focused and update docs/tests with behavior. |
+| Verify | Run the full gate when feasible. |
+| PR | Include validation notes and risk areas. |
 
 ## Local Validation
 
@@ -22,24 +33,24 @@ Run the full release gate before asking for release or PR validation when feasib
 pnpm verify
 ```
 
-`pnpm verify` runs lint, typecheck, tests, build, OpenSpec strict validation, and secret scanning. If it cannot be run, document the reason and the smaller commands that were run.
+If `pnpm verify` cannot be run, document the reason and the smaller commands that were run.
 
 ## Secret Handling
 
-- Never commit real `.env` files, tokens, cookies, private keys, database URLs, production hostnames with credentials, user data, or secret scan output containing raw values.
+- Never commit real `.env` files, tokens, cookies, private keys, database URLs, production hostnames with credentials, user data, or raw secret scan output.
 - Use placeholders such as `<secret>`, `<local-password>`, `example`, or `${ENV_VAR}` in docs and tests.
 - Run `pnpm secrets:scan` before sharing a branch that touches config, deployment, auth, storage, mail, or CI files.
 - If a secret is exposed, remove it from the change and rotate the credential. Do not paste the secret into an issue or PR.
 
-## PR Validation
+## PR Notes
 
-PR descriptions should include:
+Include:
 
-- OpenSpec change ID or an explicit note that no OpenSpec change is needed.
+- OpenSpec change ID, or a note that no OpenSpec change is needed.
 - Commands run, especially `pnpm verify` or the subset that was possible.
-- Database or migration impact, including whether migration is explicit-only.
-- Deployment impact, including image tag/digest considerations for release changes.
-- Secret handling confirmation for config, CI, deployment, auth, mail, OSS, and database changes.
+- Database or migration impact.
+- Deployment impact for release changes.
+- Secret handling confirmation for config, CI, deployment, auth, mail, storage, and database changes.
 
 ## Database Boundary
 

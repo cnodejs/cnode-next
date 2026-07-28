@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "tsx --test test/mail-template.test.ts test/health.test.ts",
+    "test": "tsx --test test/mail-template.test.ts test/health.test.ts test/admin-pagination.test.ts test/ip-ban-rules.test.ts test/moderation-helpers.test.ts",
     "worker:moderation": "tsx src/worker/moderation-scan.ts",
     "typecheck": "tsc --noEmit"
   },

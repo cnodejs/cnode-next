@@ -1,69 +1,21 @@
 # cnode-next
 
-CNode 社区的 PostgreSQL-only 重写版本。当前仓库实现新 Web、API、共享契约、数据库 schema、迁移脚本和生产部署治理；legacy `../nodeclub/` 只作为业务逻辑参考，不属于本仓库。
+cnode-next is the next-generation implementation of the CNode community (cnodejs.org), the Node.js Chinese professional community. It is built with React Router v7 SSR, Hono, PostgreSQL, Redis, Drizzle, and shared TypeScript contracts, providing a modern Web app, JSON API, database schema, moderation worker, Mongo-to-PostgreSQL migration tooling, and production deployment assets.
 
-## System Map
+CNode（cnodejs.org）是 Node.js 中文专业社区，起源于 nodeclub。本项目是 CNode 的现代化重写，保持 API 和业务行为兼容，运行时数据库迁移到 PostgreSQL。
 
-```mermaid
-graph LR
-  User[用户浏览器] --> Web[apps/web<br/>React Router v7 SSR]
-  Web --> Api[apps/api<br/>Hono API]
-  Api --> Pg[(PostgreSQL)]
-  Api --> Redis[(Redis)]
-  Api --> Oss[OSS<br/>static.cnodejs.org]
-  Worker[moderation worker] --> Pg
-  Worker --> Redis
-  Shared[packages/shared<br/>Zod/types/constants] -.-> Web
-  Shared -.-> Api
-  Db[packages/db<br/>Drizzle PostgreSQL schema] -.-> Api
-  Db -.-> Worker
-```
+## Features
 
-## Data Flow
+| Area | Capabilities |
+| ---- | ------------- |
+| Web | React Router v7 SSR, Vite, Tailwind CSS v4, shadcn/ui |
+| API | Hono on Node.js, cookie auth, GitHub OAuth, legacy `accesstoken` compatibility |
+| Data | PostgreSQL-only Drizzle schema and Mongo-to-PostgreSQL migration tools |
+| Moderation | Keyword rules, scan jobs, audit-oriented admin workflows |
+| Delivery | Docker Compose production runbook and GHCR image workflow documentation |
+| Safety | Secret handling guidance, Gitleaks scan command, security reporting entry |
 
-```mermaid
-sequenceDiagram
-  participant B as Browser
-  participant W as Web SSR
-  participant A as API
-  participant P as PostgreSQL
-  participant R as Redis
-  B->>W: request page
-  W->>A: SSR loader fetch with runtime API base
-  A->>R: session/cache/rate limit
-  A->>P: query or mutation
-  P-->>A: rows
-  A-->>W: JSON contract
-  W-->>B: HTML + window.__CNODE_CONFIG__
-  B->>A: client API calls/uploads/auth actions
-```
-
-## Release Flow
-
-```mermaid
-flowchart TD
-  Change[OpenSpec change] --> Verify[pnpm verify]
-  Verify --> Gate{all checks pass?}
-  Gate -- no --> Stop[do not build or deploy]
-  Gate -- yes --> Images[build GHCR images<br/>sha-&lt;commit&gt; or digest]
-  Images --> Runbook[docs/deployment.md runbook]
-  Runbook --> Migrate[explicit migrate profile only]
-  Migrate --> Up[pull + up --no-build]
-  Up --> Health[/health]
-  Health --> Smoke[smoke tests]
-  Smoke --> Audit[deployment audit record]
-```
-
-## Capabilities
-
-| Area | Current implementation |
-| ---- | ---------------------- |
-| Frontend | React Router v7 SSR, Tailwind CSS v4, shadcn/ui |
-| API | Hono on Node.js, cookie auth, GitHub OAuth, legacy-compatible access token paths |
-| Data | PostgreSQL-only Drizzle schema, Mongo-to-PostgreSQL migration and reconcile scripts |
-| Runtime | Docker Compose production services for API, Web, worker, PostgreSQL and Redis |
-| Delivery | GHCR container images gated by `pnpm verify`, production uses SHA tag or digest |
-| Security | Gitleaks scans, secret-safe docs, root security reporting entry |
+Shared TypeScript and Zod contracts span Web and API. pnpm workspace manages the monorepo.
 
 ## Quick Start
 
@@ -81,43 +33,31 @@ Local endpoints:
 | Web | `http://localhost:5173` |
 | API | `http://localhost:3001` |
 
-## Repository Map
+Do not commit real `.env` files or secrets. See [docs/conventions.md](docs/conventions.md) for documentation, development, and secret handling conventions.
 
-```mermaid
-mindmap
-  root((cnode-next))
-    apps
-      web(React Router SSR)
-      api(Hono API and workers)
-    packages
-      db(PostgreSQL Drizzle schema)
-      shared(API types and Zod)
-    docs
-      architecture
-      development
-      deployment
-      database
-      migration
-      security
-    openspec
-      changes
-      specs
-```
-
-## Documentation Index
+## Documentation
 
 | Need | Start here |
 | ---- | ---------- |
+| Documentation and contribution conventions | [docs/conventions.md](docs/conventions.md) |
 | Architecture and runtime boundaries | [docs/architecture.md](docs/architecture.md) |
 | Local development and verification | [docs/development.md](docs/development.md) |
-| Production deployment runbook | [docs/deployment.md](docs/deployment.md) |
+| Production deployment | [deployment/README.md](deployment/README.md) |
 | PostgreSQL schema and migration rules | [docs/database.md](docs/database.md) |
-| Mongo-to-PostgreSQL cutover | [docs/migration-runbook.md](docs/migration-runbook.md) |
-| API reference | [docs/api-reference.md](docs/api-reference.md) |
+| Mongo-to-PostgreSQL migration | [docs/migration-runbook.md](docs/migration-runbook.md) |
+| API reference | [api/openapi.yaml](api/openapi.yaml) |
+| Content moderation | [docs/content-moderation.md](docs/content-moderation.md) |
+| Historical context and legacy behavior notes | [wiki/README.md](wiki/README.md) |
 | Security practices | [docs/security.md](docs/security.md), [SECURITY.md](SECURITY.md) |
-| Contribution workflow | [CONTRIBUTING.md](CONTRIBUTING.md) |
-| License status | [LICENSE](LICENSE) |
 
-## Legacy References
+## Contributing
 
-`../nodeclub/` (Express + MongoDB, production legacy site) and `egg-cnode/` (unfinished Egg.js migration) are reference code only. They are not linted, tested, built, licensed, or shipped as part of this repository.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR. Behavior, product, API, migration, release, or architecture changes should use OpenSpec; small documentation corrections can be submitted directly when they do not change shipped behavior. We follow the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Security
+
+Report vulnerabilities through a private maintainer-approved channel when possible. Do not paste secrets, tokens, cookies, private keys, database URLs, or user data into public issues. See [SECURITY.md](SECURITY.md).
+
+## License
+
+cnode-next is released under the [MIT License](LICENSE). Legacy reference code outside this repository is not covered by this license.

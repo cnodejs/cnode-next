@@ -1,8 +1,5 @@
-# public-api-documentation Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change reach-production-grade-release-readiness. Update Purpose after archive.
-## Requirements
 ### Requirement: API 文档必须面向外部参考和学习
 项目 SHALL 提供完整的外部 API reference，使第三方开发者能理解如何调用 CNode API、如何认证、如何处理错误以及如何兼容 legacy nodeclub API v1。API reference MUST 按社区接口手册习惯组织，避免混入本地开发说明。
 
@@ -25,6 +22,19 @@ TBD - created by archiving change reach-production-grade-release-readiness. Upda
 - **AND** endpoint 标题和接口表格 MUST 使用相对 path
 - **AND** curl 示例 MAY 使用完整生产 URL
 
+### Requirement: OAS 接口必须按对外能力分组
+OAS SHALL 使用 tags 按外部能力分组，而不是按代码文件、数据库表或内部模块分组。
+
+#### Scenario: 核心接口分组
+- **WHEN** 外部开发者浏览 OAS tags
+- **THEN** tags MUST 至少覆盖帖子、回复、用户、收藏、消息、认证、搜索和系统配置
+- **AND** 帖子与回复能力 MUST 作为最核心分组出现在文档中
+
+#### Scenario: 管理和内部接口分组
+- **WHEN** OAS 包含后台管理、巡检或运维接口
+- **THEN** 这些接口 MUST 使用单独 tag 标记为管理或内部能力
+- **AND** 文档 MUST 明确它们不是普通外部客户端的主要集成入口
+
 ### Requirement: API reference 必须使用统一接口模板
 API reference SHALL 对每个核心公开接口使用一致的查阅模板，使读者能快速找到 method、path、认证、参数、请求体、响应字段、错误和示例。
 
@@ -44,50 +54,6 @@ API reference SHALL 对每个核心公开接口使用一致的查阅模板，使
 - **WHEN** endpoint 有成功响应或错误响应说明
 - **THEN** 文档 MUST 使用表格列出核心 response fields、类型和含义
 - **AND** 常见错误 MUST 使用 status、message/code 和 description 表格描述
-
-### Requirement: API 契约必须提供 OAS 机器可读文档
-项目 SHALL 提供 OpenAPI Specification (OAS) 文档作为外部 API reference 和未来 smoke/contract 验证的机器可读来源。
-
-#### Scenario: OAS 文件存在
-- **WHEN** 外部开发者或验证脚本查找 API 契约
-- **THEN** 仓库 MUST 提供 `docs/openapi.yaml`、`docs/api/openapi.yaml` 或等价位置的 OAS 文件
-- **AND** README 或 API reference MUST 链接到该 OAS 文件
-
-#### Scenario: OAS 可被工具读取
-- **WHEN** 验证脚本或 OpenAPI 工具读取 OAS 文件
-- **THEN** OAS MUST 定义 `openapi` 版本、`info`、`servers`、`paths`、`components.schemas` 和认证方案
-- **AND** OAS MUST 不包含生产 secret、真实用户 token 或私有环境变量
-
-### Requirement: OAS 接口必须按对外能力分组
-OAS SHALL 使用 tags 按外部能力分组，而不是按代码文件、数据库表或内部模块分组。
-
-#### Scenario: 核心接口分组
-- **WHEN** 外部开发者浏览 OAS tags
-- **THEN** tags MUST 至少覆盖帖子、回复、用户、收藏、消息、认证、搜索和系统配置
-- **AND** 帖子与回复能力 MUST 作为最核心分组出现在文档中
-
-#### Scenario: 管理和内部接口分组
-- **WHEN** OAS 包含后台管理、巡检或运维接口
-- **THEN** 这些接口 MUST 使用单独 tag 标记为管理或内部能力
-- **AND** 文档 MUST 明确它们不是普通外部客户端的主要集成入口
-
-### Requirement: OAS 必须优先覆盖帖子和回复能力
-OAS SHALL 第一优先级覆盖对外展示和客户端高频使用的帖子、回复、用户、收藏和消息能力。
-
-#### Scenario: 帖子 API 覆盖
-- **WHEN** 外部开发者查看帖子能力
-- **THEN** OAS MUST 覆盖帖子列表、帖子详情、发帖、编辑帖子和相关参数
-- **AND** OAS MUST 展示成功响应、错误响应、分页和 `mdrender` 语义
-
-#### Scenario: 回复 API 覆盖
-- **WHEN** 外部开发者查看回复能力
-- **THEN** OAS MUST 覆盖回复列表或帖子回复、创建回复、编辑回复、删除回复、点赞和取消点赞
-- **AND** OAS MUST 展示回复作者、内容、时间、点赞状态和 legacy-compatible 字段
-
-#### Scenario: 用户、收藏和消息 API 覆盖
-- **WHEN** 外部开发者查看用户、收藏和消息能力
-- **THEN** OAS MUST 覆盖用户资料、用户话题、用户回复、收藏/取消收藏、消息列表和消息已读
-- **AND** OAS MUST 标注每个接口的认证要求
 
 ### Requirement: API 文档必须覆盖 nodeclub 兼容语义
 API reference SHALL 明确 `/api/v1/*` 与 legacy `../nodeclub/api_router_v1.js` 和 `../nodeclub/api/v1/` 的兼容关系，但兼容背景 MUST 保持简洁并集中说明。

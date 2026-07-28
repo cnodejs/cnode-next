@@ -1239,20 +1239,14 @@ components:
         author:
           $ref: '#/components/schemas/UserSummary'
         topic:
-          nullable: true
-          allOf:
-            - type: object
-              properties:
-                id: { type: string }
-                title: { type: string }
-                last_reply_at: { type: string }
-                author:
-                  $ref: '#/components/schemas/UserSummary'
+          oneOf:
+            - $ref: '#/components/schemas/TopicSummary'
+            - type: "null"
         reply:
           type: object
           properties:
             id: { type: string }
-            content: { type: string, description: HTML by default, raw Markdown when `mdrender=false`. }
+            content: { type: string, description: "HTML by default, raw Markdown when `mdrender=false`." }
             ups:
               type: array
               items: { type: string }
@@ -1282,7 +1276,7 @@ components:
         id: { type: string }
         author:
           $ref: '#/components/schemas/UserSummary'
-        content: { type: string, description: HTML by default, raw Markdown when `mdrender=false`. }
+        content: { type: string, description: "HTML by default, raw Markdown when `mdrender=false`." }
         ups:
           type: array
           items: { type: string }
@@ -1348,7 +1342,7 @@ components:
         id: { type: string }
         author_id: { type: string }
         tab: { type: string }
-        content: { type: string, description: HTML by default, raw Markdown when `mdrender=false`. }
+        content: { type: string, description: "HTML by default, raw Markdown when `mdrender=false`." }
         title: { type: string }
         last_reply_at: { type: string }
         good: { type: boolean }

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-定义 cnode-next 作为 nodeclub 线上行为完全替代品之前必须通过的 URL、API、写入副作用、生产 smoke、不可变镜像和 D 级发布准入验收矩阵。
+定义 cnode-next 作为 nodeclub 线上行为完全替代品之前必须通过的 URL、API、写入副作用、生产 smoke、不可变镜像和发布准入验收矩阵。
 ## Requirements
 ### Requirement: nodeclub 线上替代验收矩阵
 
@@ -39,7 +39,7 @@
 
 - **WHEN** 运维执行生产部署验收
 - **THEN** `api`、`web` 和 `worker` MUST 运行来自 `ghcr.io/cnodejs/*` 的 SHA tag 或 digest 镜像
-- **AND** `docker-compose.prod.yml` MUST NOT 为生产服务定义 `build:`
+- **AND** `deploy/docker-compose.prod.yml` MUST NOT 为生产服务定义 `build:`
 - **AND** 部署命令 MUST 使用 `docker compose pull` 和 `docker compose up -d --no-build`
 - **AND** 部署记录 MUST 能从运行镜像反查 Git commit
 
@@ -50,7 +50,7 @@
 - **AND** 浏览器侧 API 请求 MUST 使用 `.env` 提供的 `APP_API_BASE_URL`
 - **AND** Web 镜像 MUST NOT 因 API 域名变化而重新构建
 
-### Requirement: D 级发布准入必须全绿
+### Requirement: 发布准入必须全绿
 生产部署 SHALL 只允许使用通过 release verification gate 的镜像发布物。
 
 #### Scenario: release gate 失败

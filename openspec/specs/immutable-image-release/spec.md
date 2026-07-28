@@ -20,13 +20,13 @@ CI SHALL 为 API 和 Web 生产镜像发布 commit SHA tag 或 digest，使每�
 生产 `api`、`web` 和 `worker` 服务 SHALL 使用显式 `CNODE_API_IMAGE` 与 `CNODE_WEB_IMAGE` 指向不可变发布物。
 
 #### Scenario: compose 要求显式生产镜像
-- **WHEN** 运维渲染生产 `docker-compose.prod.yml`
+- **WHEN** 运维渲染生产 `deploy/docker-compose.prod.yml`
 - **THEN** `api`、`worker`、`migrate-schema`、`migrate-data` 和 `reconcile` MUST 使用 `CNODE_API_IMAGE` 指向的不可变 API 镜像
 - **AND** `web` MUST 使用 `CNODE_WEB_IMAGE` 指向的不可变 Web 镜像
 
 #### Scenario: latest 仅作为便利标签
 - **WHEN** CI 额外推送 `latest`
-- **THEN** 生产部署文档 MUST 明确 `latest` 不可作为 D 级生产部署依据
+- **THEN** 生产部署文档 MUST 明确 `latest` 不可作为生产部署依据
 - **AND** 部署审计记录 MUST 使用 SHA tag 或 digest
 
 ### Requirement: 回滚必须使用已知旧发布物
@@ -41,4 +41,3 @@ CI SHALL 为 API 和 Web 生产镜像发布 commit SHA tag 或 digest，使每�
 - **WHEN** 新版本部署后 health 或 smoke 失败
 - **THEN** 运维 MUST 将 API/Web 镜像引用恢复到旧 SHA tag 或 digest
 - **AND** 回滚后 MUST 重新验证 health 和 smoke
-

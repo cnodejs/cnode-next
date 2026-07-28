@@ -1,8 +1,5 @@
-# documentation-information-architecture Specification
+## MODIFIED Requirements
 
-## Purpose
-Define the public documentation information architecture for README, docs, wiki, deploy assets, and repository governance files.
-## Requirements
 ### Requirement: 项目文档必须任务导向并适度使用图形
 项目文档 SHALL 以读者任务为中心组织内容；当文档包含图形时，图形 MUST 用于解释结构、流程、状态或关系，并遵循“描述 → 图形 → 简约说明”的块结构。
 

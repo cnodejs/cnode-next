@@ -9,12 +9,12 @@ TBD - created by archiving change reach-production-grade-release-readiness. Upda
 #### Scenario: Web 使用 OAS 类型或校验
 - **WHEN** `apps/web` 调用 `/api/v1/*` 或其他公开 API
 - **THEN** 项目 MUST 提供从 OAS 生成的 TypeScript 类型、生成 API client、或验证脚本中的 OAS path/schema 校验
-- **AND** 该机制 MUST 被 `pnpm verify` 或 release readiness checklist 覆盖
+- **AND** 该机制 MUST 被 `pnpm verify` 或 release checklist 覆盖
 
 #### Scenario: Web 调用未记录 API
 - **WHEN** `apps/web` 新增对某个 API path 的调用
 - **THEN** OAS MUST 包含该 path、method、认证要求和核心响应 schema
-- **AND** 若 OAS 未覆盖该调用，验证 MUST 失败或 release readiness checklist MUST 标记为未达 D 级准入
+- **AND** 若 OAS 未覆盖该调用，验证 MUST 失败或 release checklist MUST 标记为未满足发布准入
 
 ### Requirement: OAS 更新必须能驱动 Web 契约同步
 当 OAS 中影响 Web 的 API path、method、request 或 response schema 发生变化时，项目 SHALL 提供机制提醒或阻断未同步的 Web 调用。
@@ -41,4 +41,3 @@ Web 与 OAS 的持续集成 SHALL 优先覆盖帖子、回复、用户、收藏�
 - **WHEN** Web 加载用户页、收藏状态或消息页
 - **THEN** 相关 API paths MUST 在 OAS 中定义
 - **AND** Web 契约校验 MUST 标注登录态或 access token 要求
-

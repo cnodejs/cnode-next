@@ -1,5 +1,5 @@
 {
-  "description": "Core apps/web API dependencies checked against docs/api/openapi.yaml. Focuses on external topics, replies, users, collections, messages, auth, search, and system config calls.",
+  "description": "Core apps/web API dependencies checked against api/openapi.yaml. Focuses on external topics, replies, users, collections, messages, auth, search, and system config calls.",
   "contracts": [
     { "method": "GET", "path": "/api/v1/topics", "auth": "none", "responseFields": ["success", "data", "total", "data.id", "data.author.loginname", "data.title", "data.reply_count", "data.visit_count"] },
     { "method": "GET", "path": "/api/v1/topic/{topic_id}", "auth": "optional", "responseFields": ["success", "data.id", "data.title", "data.content", "data.author.loginname", "data.replies", "data.replies.id", "data.replies.content", "data.replies.author.loginname", "data.replies.ups", "data.replies.is_uped"] },
