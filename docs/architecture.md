@@ -75,7 +75,7 @@ flowchart LR
   Change[OpenSpec or patch] --> Verify[pnpm verify]
   Verify --> Images[container images]
   Images --> Runbook[deployment runbook]
-  Runbook --> Health[/health]
+  Runbook --> Health["/health"]
   Health --> Smoke[smoke checks]
   Smoke --> Audit[audit record]
 ```
