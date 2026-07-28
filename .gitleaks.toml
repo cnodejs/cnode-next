@@ -45,4 +45,5 @@ regexTarget = "match"
 regexes = [
   '''(?i)(your|example|placeholder|changeme|change-me|local-dev-secret|dummy|test|xxx|<[^>]+>)''',
   '''\$\{[^}]+\}''',
+  '''(?i)replace-with-''',
 ]
