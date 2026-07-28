@@ -2,6 +2,7 @@
   "name": "cnode-next",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "concurrently -n web,api -c blue,green \"pnpm --filter @cnode/web dev\" \"pnpm --filter @cnode/api dev\"",

@@ -52,12 +52,12 @@ flowchart LR
 | API reference and OAS | Pass |
 | Web/OAS contract integration | Pass |
 | CONTRIBUTING | Pass |
-| LICENSE status | Pass, no project license selected yet |
+| LICENSE status | Pass, MIT |
 | SECURITY reporting entry | Pass |
 
 ## Known Residual Risks
 
-- Final release commit and image SHA tags cannot be filled until the changes are committed and GHCR images are published.
+- Final release commit and image SHA tags cannot be filled until the latest changes are committed and GHCR images are published.
 - Production deployment still requires an explicit operator action on the server and must not print real `.env` values.
 - `pnpm-lock.yaml` still contains `drizzle-orm` optional peer dependency names for SQLite packages; these are package metadata from Drizzle, not active runtime dependencies or configured install paths.
 - React Router build prints future v8 warnings; the project remains on React Router v7.

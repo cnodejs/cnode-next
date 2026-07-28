@@ -130,4 +130,4 @@ Rollback 策略：生产部署前记录当前 `CNODE_API_IMAGE`、`CNODE_WEB_IMA
 - GitHub Actions 是否继续保留 `latest` 便利 tag，还是完全停止推送 `latest`？生产必须不依赖它。
 - `/health` 是否需要提供深度依赖检查模式，例如 `/health?deep=1` 检查 PostgreSQL 和 Redis？
 - 部署审计记录放在仓库 `docs/deployments/`、服务器目录，还是外部运维日志？
-- `LICENSE` 采用 MIT、Apache-2.0 还是沿用 legacy CNode/nodeclub 的许可证策略？
+- `LICENSE` 已采用 MIT，并明确 legacy `../nodeclub/` 参考代码不受当前仓库许可证约束。
