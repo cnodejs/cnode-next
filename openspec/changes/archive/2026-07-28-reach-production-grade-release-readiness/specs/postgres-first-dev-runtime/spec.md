@@ -55,10 +55,3 @@ Local database credentials and tunnel-specific values MUST be stored outside tra
 
 - **WHEN** 管理员在 PostgreSQL-backed runtime 中切换话题或用户状态
 - **THEN** API MUST 为 `top`、`good`、`lock`、`deleted`、`is_block` 写入 boolean-compatible values
-
-## REMOVED Requirements
-
-### Requirement: CI and release gates SHALL remain future work
-**Reason**: D 级发布标准要求 CI 和 release gates 成为当前准入条件，不能继续作为 future work。
-
-**Migration**: 使用 `release-verification-gates` 和 `container-image-delivery` 中的发布门禁要求替代。

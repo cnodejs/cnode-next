@@ -2,7 +2,6 @@
 
 ## Purpose
 定义 cnode-next 的数据库运行时策略、开发连接配置、本地 secret 边界和 PostgreSQL boolean 兼容要求；项目只允许 PostgreSQL 作为开发、测试、迁移验证、CI 和生产数据库。
-
 ## Requirements
 ### Requirement: Development runtime SHALL use PostgreSQL as the default migration validation database
 The project MUST document PostgreSQL as the only supported database for current development, testing, migration validation, CI verification, and production runtime work.

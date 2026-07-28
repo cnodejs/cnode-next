@@ -3,7 +3,6 @@
 ## Purpose
 
 定义 cnode-next 作为 nodeclub 线上行为完全替代品之前必须通过的 URL、API、写入副作用、生产 smoke、不可变镜像和 D 级发布准入验收矩阵。
-
 ## Requirements
 ### Requirement: nodeclub 线上替代验收矩阵
 

@@ -2,7 +2,6 @@
 
 ## Purpose
 定义生产容器镜像的 GitHub Actions 构建、验证门禁、GHCR 发布、不可变镜像标识、服务器拉取运行和 Web 运行时 API 配置要求。
-
 ## Requirements
 ### Requirement: GitHub Actions 构建并推送生产容器镜像
 
