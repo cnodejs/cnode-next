@@ -257,6 +257,28 @@ async function insertHit(data: {
   const keywords = data.hits.map((hit) => hit.word);
   const keywordIds = data.hits.map((hit) => hit.keywordId).filter((id): id is number => !!id);
   const dedupeKey = createHitDedupeKey(data.targetType, data.targetId, data.field, keywords.join("|"));
+  const existing = await db.select().from(moderationHits).where(eq(moderationHits.dedupeKey, dedupeKey)).limit(1);
+  if (existing[0]?.status === "confirmed") {
+    await db
+      .update(moderationHits)
+      .set({
+        scanJobId: data.scanJobId,
+        topicId: data.topicId ?? (data.targetType === "topic" ? data.targetId : null),
+        authorId: data.authorId ?? null,
+        keywordIds: jsonValue(keywordIds),
+        keywords: jsonValue(keywords),
+        preview: data.preview,
+        status: "pending",
+        action: "none",
+        handledBy: null,
+        handledAt: null,
+        scannedAt: dateValue(),
+        updateAt: dateValue(),
+      } as any)
+      .where(eq(moderationHits.id, existing[0].id));
+    await incrementSensitiveWordHits(data.hits);
+    return 1;
+  }
   const inserted = await db
     .insert(moderationHits)
     .values({
