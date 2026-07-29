@@ -20,6 +20,7 @@ ENV APP_BUILD_TIME=$BUILD_TIME
 COPY apps/web apps/web
 COPY packages/db packages/db
 COPY packages/shared packages/shared
+COPY scripts scripts
 RUN pnpm --filter @cnode/web build
 
 FROM base AS runtime
