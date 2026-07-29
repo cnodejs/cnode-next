@@ -45,7 +45,7 @@ export default function TopicEdit() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    apiFetch<{ success: boolean; data: any }>(`/api/v1/topic/${tid}`)
+    apiFetch<{ success: boolean; data: any }>(`/api/v1/topic/${tid}?mdrender=false`)
       .then((res) => {
         if (res.success) {
           setTitle(res.data.title);

@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-07-29
+goal: Restore discoverable topic editing for authors/admins and load raw
+  Markdown in the editor

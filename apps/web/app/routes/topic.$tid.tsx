@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import type { Route } from "../../.react-router/types/app/routes/+types/topic.$tid";
 import { Link, useRevalidator } from "react-router";
 import { toast } from "sonner";
-import { Flag, MessageSquare, Star, ThumbsUp, Trash2 } from "lucide-react";
+import { Edit3, Flag, MessageSquare, Star, ThumbsUp, Trash2 } from "lucide-react";
 import { Layout } from "~/components/Layout";
 import { MarkdownView } from "~/components/MarkdownView";
 import { TimeAgo } from "~/components/TimeAgo";
@@ -228,6 +228,7 @@ function TopicActions({ topic, currentUser }: { topic: any; currentUser: any }) 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const { revalidate } = useRevalidator();
   const canManage = !!currentUser?.is_mod;
+  const canEdit = canEditTopic(topic, currentUser);
 
   const { run: toggleCollect, pending: collecting } = useAsyncAction(
     async (): Promise<{ success: boolean; error_msg?: string; skipped?: boolean }> => {
@@ -294,6 +295,13 @@ function TopicActions({ topic, currentUser }: { topic: any; currentUser: any }) 
           <MessageSquare className="h-4 w-4" /> 查看回复
         </a>
       </Button>
+      {canEdit && (
+        <Button asChild variant="outline" size="sm">
+          <Link to={`/topic/${topic.id}/edit`}>
+            <Edit3 className="h-4 w-4" /> 编辑话题
+          </Link>
+        </Button>
+      )}
       {currentUser && <ReportButton targetType="topic" targetId={topic.id} />}
       {canManage && (
         <>
@@ -328,6 +336,10 @@ function TopicActions({ topic, currentUser }: { topic: any; currentUser: any }) 
       )}
     </div>
   );
+}
+
+export function canEditTopic(topic: any, currentUser: any) {
+  return !!currentUser && (currentUser.is_admin || currentUser.loginname === topic?.author?.loginname);
 }
 
 function ReplySection({
