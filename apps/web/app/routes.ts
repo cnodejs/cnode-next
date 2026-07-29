@@ -6,6 +6,7 @@ export default [
   route("topic/create", "routes/topic.create.tsx"),
   route("topic/:tid/edit", "routes/topic.$tid.edit.tsx"),
   route("reply/:id/edit", "routes/reply.$id.edit.tsx"),
+  route("zone/jobs", "routes/zone.jobs.tsx"),
   route("user/:name", "routes/user.$name.tsx"),
   route("user/:name/collections", "routes/user.$name.collections.tsx"),
   route("user/:name/topics", "routes/user.$name.topics.tsx"),
@@ -28,6 +29,7 @@ export default [
   route("faq", "routes/faq.tsx"),
   route("getstart", "routes/getstart.tsx"),
   route("api", "routes/api.tsx"),
+  route("help", "routes/help.tsx"),
   route("rss", "routes/rss.tsx"),
   route("sitemap.xml", "routes/sitemap.tsx"),
   route("robots.txt", "routes/robots.tsx"),
@@ -41,5 +43,7 @@ export default [
   route("admin/keywords", "routes/admin/keywords.tsx"),
   route("admin/audit", "routes/admin/audit.tsx"),
   route("admin/settings", "routes/admin/settings.tsx"),
+  route("admin/zones", "routes/admin/zones.tsx"),
+  route("admin/tabs", "routes/admin/tabs.tsx"),
   route(":name", "routes/legacy-user-redirect.$name.tsx"),
 ] satisfies RouteConfig;

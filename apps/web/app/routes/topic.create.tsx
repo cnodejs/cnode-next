@@ -2,6 +2,7 @@ import type { Route } from "../../.react-router/types/app/routes/+types/topic.cr
 import type { FormEvent } from "react";
 import { Layout } from "~/components/Layout";
 import { MarkdownEditor } from "~/components/MarkdownEditor";
+import { JobMetaForm, type JobMetaFormValue } from "~/components/JobMetaForm";
 import { apiFetch } from "~/lib/api-client";
 import { requireUser } from "~/lib/auth";
 import { useState } from "react";
@@ -28,16 +29,43 @@ export default function TopicCreate() {
   const [tab, setTab] = useState("share");
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
+  const [jobMeta, setJobMeta] = useState<JobMetaFormValue>({
+    company: "",
+    company_logo: null,
+    position: "",
+    location: "",
+    remote: "on-site",
+    salary_min: null,
+    salary_max: null,
+    experience: "",
+    tech_tags: [],
+    contact: "",
+  });
   const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    const body: Record<string, unknown> = { title, tab, content, turnstileToken: getTurnstileToken() };
+    if (tab === "job") {
+      body.job_meta = {
+        company: jobMeta.company,
+        company_logo: jobMeta.company_logo,
+        position: jobMeta.position,
+        location: jobMeta.location,
+        remote: jobMeta.remote,
+        salary_min: jobMeta.salary_min,
+        salary_max: jobMeta.salary_max,
+        experience: jobMeta.experience,
+        tech_tags: jobMeta.tech_tags,
+        contact: jobMeta.contact,
+      };
+    }
     const res = await apiFetch<{ success: boolean; topic_id: string; error_msg?: string }>(
       "/api/v1/topics",
       {
         method: "POST",
-        body: JSON.stringify({ title, tab, content, turnstileToken: getTurnstileToken() }),
+        body: JSON.stringify(body),
       },
     );
     setSaving(false);
@@ -48,6 +76,8 @@ export default function TopicCreate() {
       toast.error(res.error_msg || "发布失败");
     }
   };
+
+  const isJobTab = tab === "job";
 
   return (
     <Layout>
@@ -100,18 +130,22 @@ export default function TopicCreate() {
           </Button>
             </form>
           </CardContent>
-          </Card>
+        </Card>
           <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-            <Card>
-              <CardHeader className="border-b border-border/80 bg-surface-subtle">
-                <CardTitle className="text-base">发布建议</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 pt-6 text-sm text-muted-foreground">
-                <p>问答类话题请包含环境、复现步骤、期望结果和实际错误。</p>
-                <p>分享类话题建议用标题分段，附上相关链接和代码片段。</p>
-                <p>招聘类话题请写清地点、远程方式、技术栈和联系方式。</p>
-              </CardContent>
-            </Card>
+            {isJobTab ? (
+              <JobMetaForm value={jobMeta} onChange={setJobMeta} />
+            ) : (
+              <Card>
+                <CardHeader className="border-b border-border/80 bg-surface-subtle">
+                  <CardTitle className="text-base">发布建议</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 pt-6 text-sm text-muted-foreground">
+                  <p>问答类话题请包含环境、复现步骤、期望结果和实际错误。</p>
+                  <p>分享类话题建议用标题分段，附上相关链接和代码片段。</p>
+                  <p>招聘类话题请写清地点、远程方式、技术栈和联系方式。</p>
+                </CardContent>
+              </Card>
+            )}
           </aside>
         </div>
       </ContentPage>

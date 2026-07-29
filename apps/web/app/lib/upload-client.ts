@@ -7,9 +7,10 @@ type UploadImageResponse = {
   error_msg?: string;
 };
 
-export async function uploadEditorImage(file: File): Promise<{ url: string; filename: string }> {
+async function uploadImage(file: File, purpose?: string): Promise<{ url: string; filename: string }> {
   const formData = new FormData();
   formData.append("file", file);
+  if (purpose) formData.append("purpose", purpose);
 
   const res = await fetch(`${getApiBaseUrl()}/api/v1/upload/image`, {
     method: "POST",
@@ -26,4 +27,12 @@ export async function uploadEditorImage(file: File): Promise<{ url: string; file
     url: data.url,
     filename: data.filename || file.name || "image",
   };
+}
+
+export function uploadEditorImage(file: File): Promise<{ url: string; filename: string }> {
+  return uploadImage(file);
+}
+
+export function uploadJobLogo(file: File): Promise<{ url: string; filename: string }> {
+  return uploadImage(file, "job-logo");
 }

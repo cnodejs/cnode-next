@@ -3,9 +3,7 @@
 ## Purpose
 
 定义 Web 表单的状态管理、共享校验、组件渲染、提交反馈、可访问性和设置页账号身份信息展示要求，确保用户输入流程一致、安全且可维护。
-
 ## Requirements
-
 ### Requirement: react-hook-form + zod 作为表单标准
 
 所有表单(登录、注册、发帖、回复编辑、设置、管理后台设置)SHALL 用 `react-hook-form` 管理状态,用 `@hookform/resolvers/zod` 接 zod resolver 做校验。MUST NOT 用 `useState` 管理表单字段值。
@@ -49,7 +47,7 @@
 
 ### Requirement: 表单覆盖清单
 
-以下 route 的表单 MUST 改造为 react-hook-form + zod + shadcn Form:`signin`、`signup`、`topic.create`、`topic.$tid.edit`、`reply.$id.edit`、`setting`(个人资料 + 改密码)、`admin/settings`、`admin/bans`、`admin/keywords`(如有表单)。
+以下 route 的表单 MUST 改造为 react-hook-form + zod + shadcn Form:`signin`、`signup`、`topic.create`、`topic.$tid.edit`、`reply.$id.edit`、`setting`(个人资料 + 改密码)、`admin/settings`、`admin/bans`、`admin/keywords`(如有表单)。`topic.create` 和 `topic.$tid.edit` SHALL 在 `tab='job'` 时于右侧渲染 `JobMetaForm` 面板，按 tab 条件渲染。
 
 #### Scenario: signin 改造
 
@@ -60,6 +58,25 @@
 
 - **WHEN** 查看 `routes/setting.tsx`
 - **THEN** 个人资料表单与修改密码表单都用 hookform,且分别用 `profileSchema` 与 `changePassSchema` 的扩展版
+
+#### Scenario: 发帖页 tab=job 时渲染 JobMetaForm
+
+- **WHEN** 用户在 `routes/topic.create.tsx` 将 tab 选择为 `job`
+- **THEN** 右侧面板渲染 `JobMetaForm` 组件，展示招聘结构化字段表单（公司/logo/职位/地点/远程/薪资/经验/技术栈/联系方式）
+- **AND** 左侧主表单（标题/tab/正文）不变
+- **AND** 提交时 job_meta 与 topic 主体在单次 POST 一起提交
+
+#### Scenario: 发帖页 tab≠job 时渲染发布建议
+
+- **WHEN** 用户在 `routes/topic.create.tsx` 将 tab 选择为非 `job` 值
+- **THEN** 右侧面板恢复渲染"发布建议"卡片（与现状一致）
+- **AND** 不渲染 `JobMetaForm`
+
+#### Scenario: 编辑页 tab=job 时渲染 JobMetaForm
+
+- **WHEN** 用户在 `routes/topic.$tid.edit.tsx` 编辑 `tab='job'` 的 topic
+- **THEN** 右侧面板渲染 `JobMetaForm` 组件，预填现有 `job_meta` 值
+- **AND** 提交时 job_meta 与 topic 主体在单次 PUT 一起提交
 
 ### Requirement: 设置页必须展示账号身份信息
 用户设置页 SHALL 展示当前账号的只读身份信息，并区分可编辑个人资料和不可直接编辑的登录身份字段。

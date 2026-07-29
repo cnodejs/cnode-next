@@ -5,6 +5,7 @@ import {
   FileText,
   Flag,
   LayoutDashboard,
+  LayoutGrid,
   ScrollText,
   Search,
   Settings,
@@ -45,6 +46,8 @@ const NAV_GROUPS = [
     items: [
       { href: "/admin/audit", icon: ScrollText, label: "审计日志" },
       { href: "/admin/settings", icon: Settings, label: "系统设置" },
+      { href: "/admin/zones", icon: LayoutGrid, label: "专区管理" },
+      { href: "/admin/tabs", icon: LayoutGrid, label: "Tab 管理" },
     ],
   },
 ];

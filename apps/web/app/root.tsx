@@ -1,15 +1,38 @@
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteLoaderData } from "react-router";
 import { Toaster } from "~/components/ui/sonner";
 import { useAuthStore } from "~/lib/stores/auth-store";
-import { getCurrentUser } from "~/lib/api-client";
+import { getCurrentUser, apiFetch } from "~/lib/api-client";
+import { kvGet, kvSet } from "~/lib/kv-cache";
 import { useEffect } from "react";
 import packageJson from "../package.json";
 import "~/styles/global.css";
 
 export async function loader({ request }: { request: Request }) {
+  const cookie = request.headers.get("cookie") || "";
   const user = await getCurrentUser(request);
+
+  const kv = (request as any).cf?.env?.KV;
+  const zonesCacheKey = "config:zones";
+  const tabsCacheKey = "config:tabs";
+
+  let zones: any[] | null = await kvGet(kv, zonesCacheKey);
+  if (!zones) {
+    const res = await apiFetch<{ success: boolean; data: any[] }>("/api/v1/zones", { headers: { cookie } });
+    zones = res.success ? res.data : [];
+    await kvSet(kv, zonesCacheKey, zones, 300);
+  }
+
+  let tabs: any[] | null = await kvGet(kv, tabsCacheKey);
+  if (!tabs) {
+    const res = await apiFetch<{ success: boolean; data: any[] }>("/api/v1/tabs", { headers: { cookie } });
+    tabs = res.success ? res.data : [];
+    await kvSet(kv, tabsCacheKey, tabs, 300);
+  }
+
   return {
     user,
+    zones,
+    tabs,
     publicConfig: {
       apiBaseUrl: process.env.APP_API_BASE_URL || "https://api.cnodejs.org",
       turnstileSiteKey: process.env.TURNSTILE_SITE_KEY || "",

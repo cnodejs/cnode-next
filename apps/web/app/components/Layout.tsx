@@ -13,6 +13,7 @@ import {
   Settings,
   LogOut,
   Rss,
+  ChevronDown,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuthStore } from "~/lib/stores";
@@ -49,6 +50,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 function Header() {
   const [commandOpen, setCommandOpen] = useState(false);
+  const rootData = useRouteLoaderData("root") as { zones?: any[]; tabs?: any[] } | undefined;
+  const visibleZones = (rootData?.zones || []).filter((z: any) => z.visible).sort((a: any, b: any) => a.sort_order - b.sort_order);
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-xl">
@@ -72,18 +75,38 @@ function Header() {
 
         <div className="flex items-center gap-1.5 md:gap-2">
           <nav className="hidden items-center gap-1 text-sm lg:flex">
-            <NavLink to="/getstart">
-              <HelpCircle className="h-4 w-4" />
-              入门
-            </NavLink>
-            <NavLink to="/api">
-              <Code className="h-4 w-4" />
-              API
-            </NavLink>
-            <NavLink to="/about">
-              <Info className="h-4 w-4" />
-              关于
-            </NavLink>
+            {visibleZones.map((z: any) => (
+              <NavLink key={z.slug} to={`/zone/${z.slug}`}>
+                <Code className="h-4 w-4" />
+                {z.name}
+              </NavLink>
+            ))}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="inline-flex h-9 items-center gap-1 rounded-lg px-3 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground">
+                  <Info className="h-4 w-4" />
+                  关于
+                  <ChevronDown className="h-3 w-3" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-36">
+                <DropdownMenuItem asChild>
+                  <Link to="/help" className="w-full justify-start">指引总览</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/getstart" className="w-full justify-start">新手指南</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/api" className="w-full justify-start">API 文档</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/about" className="w-full justify-start">关于我们</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/faq" className="w-full justify-start">常见问题</Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
           <Button
             type="button"
@@ -103,7 +126,7 @@ function Header() {
             </Link>
           </Button>
           <HeaderUserArea />
-          <MobileNavTrigger />
+          <MobileNavTrigger visibleZones={visibleZones} />
         </div>
       </PageContainer>
       <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
@@ -250,7 +273,7 @@ export function HeaderUserArea() {
   );
 }
 
-function MobileNavTrigger() {
+function MobileNavTrigger({ visibleZones = [] }: { visibleZones?: any[] }) {
   const user = useAuthStore((s) => s.user);
   const rootData = useRouteLoaderData("root") as { user: any } | undefined;
   const effectiveUser = user || rootData?.user;
@@ -280,6 +303,27 @@ function MobileNavTrigger() {
             >
               <Pencil className="h-5 w-5 text-primary" /> 发布话题
             </Link>
+            {visibleZones.map((z: any) => (
+              <Link
+                key={z.slug}
+                to={`/zone/${z.slug}`}
+                className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
+              >
+                <Code className="h-5 w-5 text-primary" /> {z.name}
+              </Link>
+            ))}
+            <Link
+              to="/my/messages"
+              className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
+            >
+              <Bell className="h-5 w-5 text-primary" /> 消息
+            </Link>
+            <Link
+              to="/help"
+              className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
+            >
+              <HelpCircle className="h-5 w-5 text-primary" /> 指引总览
+            </Link>
             <Link
               to="/getstart"
               className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
@@ -290,25 +334,19 @@ function MobileNavTrigger() {
               to="/api"
               className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
             >
-              <Code className="h-5 w-5 text-primary" /> API
-            </Link>
-            <Link
-              to="/my/messages"
-              className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
-            >
-              <Bell className="h-5 w-5 text-primary" /> 消息
-            </Link>
-            <Link
-              to="/faq"
-              className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
-            >
-              <HelpCircle className="h-5 w-5 text-primary" /> FAQ
+              <Code className="h-5 w-5 text-primary" /> API 文档
             </Link>
             <Link
               to="/about"
               className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
             >
-              <Info className="h-5 w-5 text-primary" /> 关于
+              <Info className="h-5 w-5 text-primary" /> 关于我们
+            </Link>
+            <Link
+              to="/faq"
+              className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
+            >
+              <HelpCircle className="h-5 w-5 text-primary" /> 常见问题
             </Link>
             {effectiveUser ? (
               <>

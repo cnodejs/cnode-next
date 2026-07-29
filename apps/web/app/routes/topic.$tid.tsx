@@ -8,6 +8,7 @@ import { MarkdownView } from "~/components/MarkdownView";
 import { TimeAgo } from "~/components/TimeAgo";
 import { StatusBadge, TagBadge } from "~/components/TagBadge";
 import { MarkdownEditor } from "~/components/MarkdownEditor";
+import { JobMetaCard } from "~/components/JobMetaCard";
 import { ReadingGrid } from "~/components/PageShell";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
@@ -86,6 +87,11 @@ export default function TopicDetail({ loaderData }: Route.ComponentProps) {
           )}
           <Card>
             <CardContent className="p-5 sm:p-7">
+              {topic.tab === "job" && topic.job_meta && (
+                <div className="mb-4">
+                  <JobMetaCard meta={topic.job_meta} />
+                </div>
+              )}
               <MarkdownView
                 content={topic.content}
                 className="prose-base prose-img:rounded-xl prose-img:border prose-img:border-border prose-pre:overflow-x-auto"

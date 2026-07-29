@@ -5,7 +5,7 @@ import { Sidebar } from "~/components/Sidebar";
 import { Pagination } from "~/components/Pagination";
 import { apiFetch } from "~/lib/api-client";
 import { kvGet, kvSet } from "~/lib/kv-cache";
-import { Link } from "react-router";
+import { Link, useRouteLoaderData } from "react-router";
 import { cn } from "~/lib/utils";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
 import { FeedGrid } from "~/components/PageShell";
@@ -34,14 +34,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return { topics, page, tab, limit, total, kv };
 }
 
-const TABS = [
-  { key: "all", label: "全部" },
-  { key: "share", label: "分享" },
-  { key: "ask", label: "问答" },
-  { key: "job", label: "招聘" },
-  { key: "good", label: "精华" },
-];
-
 export function meta() {
   return [
     { title: "CNode · Node.js 专业中文社区" },
@@ -51,6 +43,12 @@ export function meta() {
 
 export default function Index({ loaderData }: Route.ComponentProps) {
   const { topics, page, tab, limit, total } = loaderData as any;
+  const rootData = useRouteLoaderData("root") as { tabs?: any[] } | undefined;
+  const allTabs = rootData?.tabs || [];
+  const visibleTabs = allTabs
+    .filter((t: any) => t.visible)
+    .sort((a: any, b: any) => a.sort_order - b.sort_order);
+  const tabs = [{ key: "all", label: "全部" }, ...visibleTabs.map((t: any) => ({ key: t.key, label: t.label }))];
 
   return (
     <Layout>
@@ -59,7 +57,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
           <Card className="overflow-hidden">
             <CardHeader className="border-b border-border/80 bg-surface-subtle p-3 sm:p-4">
               <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-background/70 p-1 ring-1 ring-border/70">
-                {TABS.map((t) => {
+                {tabs.map((t) => {
                   const params = new URLSearchParams();
                   if (t.key !== "all") params.set("tab", t.key);
                   const search = params.toString() ? `?${params.toString()}` : "";

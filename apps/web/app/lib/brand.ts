@@ -14,13 +14,18 @@ export function getAvatarFallback(name?: string | null) {
   return value.slice(0, 1).toUpperCase();
 }
 
-export function getTabLabel(tab?: string | null) {
-  const tabs: Record<string, string> = {
-    all: "全部",
-    share: "分享",
-    ask: "问答",
-    job: "招聘",
-    good: "精华",
-  };
-  return tabs[tab || ""] || tab || "社区";
+const DEFAULT_TAB_LABELS: Record<string, string> = {
+  all: "全部",
+  share: "分享",
+  ask: "问答",
+  job: "招聘",
+  good: "精华",
+};
+
+export function getTabLabel(tab?: string | null, tabs?: Array<{ key: string; label: string }>): string {
+  if (tabs && tab) {
+    const found = tabs.find((t) => t.key === tab);
+    if (found) return found.label;
+  }
+  return DEFAULT_TAB_LABELS[tab || ""] || tab || "社区";
 }
