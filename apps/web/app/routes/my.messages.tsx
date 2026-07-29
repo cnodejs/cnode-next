@@ -29,9 +29,6 @@ export async function loader({ request }: Route.LoaderArgs) {
     data: { has_read_messages: any[]; hasnot_read_messages: any[] };
   }>("/api/v1/messages", { headers: { cookie } });
   const unread = res.success ? res.data.hasnot_read_messages || [] : [];
-  if (unread.length > 0) {
-    await apiFetch("/api/v1/message/mark_all", { method: "POST", headers: { cookie } });
-  }
   return {
     readMsgs: res.success ? res.data.has_read_messages || [] : [],
     unreadMsgs: unread,
@@ -56,6 +53,7 @@ export default function Messages({ loaderData }: Route.ComponentProps) {
     async (msgId: string) => {
       const res = await apiFetch<{ success: boolean }>(`/api/v1/message/mark_one/${msgId}`, {
         method: "POST",
+        body: JSON.stringify({}),
       });
       return { ...res, msgId };
     },
@@ -75,7 +73,7 @@ export default function Messages({ loaderData }: Route.ComponentProps) {
 
   const { run: markAllRead, pending: markingAll } = useAsyncAction(
     async () => {
-      return apiFetch<{ success: boolean }>("/api/v1/message/mark_all", { method: "POST" });
+      return apiFetch<{ success: boolean }>("/api/v1/message/mark_all", { method: "POST", body: JSON.stringify({}) });
     },
     {
       onSuccess: (res) => {
