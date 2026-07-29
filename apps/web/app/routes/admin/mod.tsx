@@ -31,20 +31,23 @@ export async function loader({ request }: any) {
   const limit = Math.min(100, Number(url.searchParams.get("limit")) || 50);
   const status = url.searchParams.get("status") || "pending";
   const type = url.searchParams.get("type") || "";
+  const jobId = Math.max(0, Number(url.searchParams.get("job_id")) || 0);
   const cookie = request.headers.get("cookie") || "";
   const params = new URLSearchParams({ page: String(page), limit: String(limit), status });
   if (type) params.set("type", type);
+  if (jobId > 0) params.set("job_id", String(jobId));
   const [res, jobsRes] = await Promise.all([
     apiFetch<{ success: boolean; data: any[]; total?: number; summary?: any }>(`/api/v1/admin/moderation?${params.toString()}`, { headers: { cookie } }),
     apiFetch<{ success: boolean; data: any[] }>("/api/v1/admin/moderation/jobs", { headers: { cookie } }),
   ]);
-  return { results: res.success ? res.data || [] : [], total: res.total ?? 0, summary: res.summary || {}, jobs: jobsRes.success ? jobsRes.data || [] : [], page, limit, status, type };
+  return { results: res.success ? res.data || [] : [], total: res.total ?? 0, summary: res.summary || {}, jobs: jobsRes.success ? jobsRes.data || [] : [], page, limit, status, type, jobId };
 }
 
 export default function AdminMod({ loaderData }: any) {
-  const { results, total, summary, jobs, page, limit, status, type } = loaderData;
+  const { results, total, summary, jobs, page, limit, status, type, jobId } = loaderData;
   const [selected, setSelected] = useState<number[]>([]);
   const [cancelJobId, setCancelJobId] = useState<number | null>(null);
+  const [confirmJobId, setConfirmJobId] = useState<number | null>(null);
   const { revalidate } = useRevalidator();
 
   const toggleSelect = (id: number) => {
@@ -80,6 +83,26 @@ export default function AdminMod({ loaderData }: any) {
           revalidate();
         } else {
           toast.error(res.error_msg || "批量操作失败");
+        }
+      },
+    },
+  );
+
+  const { run: runJobBulkConfirm, pending: jobBulkPending } = useAsyncAction(
+    (id: number) =>
+      apiFetch<{ success: boolean; error_msg?: string; handled?: number }>("/api/v1/admin/moderation/bulk", {
+        method: "POST",
+        body: JSON.stringify({ job_id: id, action: "confirm" }),
+      }),
+    {
+      onSuccess: (res) => {
+        if (res.success) {
+          toast.success(`已确认删除 ${res.handled || 0} 条命中内容`);
+          setConfirmJobId(null);
+          setSelected([]);
+          revalidate();
+        } else {
+          toast.error(res.error_msg || "任务批量确认删除失败");
         }
       },
     },
@@ -156,6 +179,12 @@ export default function AdminMod({ loaderData }: any) {
                       </div>
                     </div>
                     <div className="flex gap-2">
+                      <Button size="sm" variant={jobId === job.id ? "default" : "outline"} asChild>
+                        <Link to={`/admin/mod?status=${encodeURIComponent(status)}${type ? `&type=${encodeURIComponent(type)}` : ""}&job_id=${job.id}`}>查看命中</Link>
+                      </Button>
+                      {(job.pendingHitCount || 0) > 0 ? (
+                        <Button size="sm" variant="destructive" onClick={() => setConfirmJobId(job.id)}>批量确认删除</Button>
+                      ) : null}
                       {job.status === "running" ? <Button size="sm" variant="outline" onClick={() => updateJob(job.id, "pause")}>暂停</Button> : null}
                       {job.status === "paused" || job.status === "failed" ? <Button size="sm" variant="outline" onClick={() => updateJob(job.id, "resume")}>恢复</Button> : null}
                       {job.status === "pending" || job.status === "paused" ? (
@@ -169,6 +198,7 @@ export default function AdminMod({ loaderData }: any) {
                   <div className="mt-3 grid gap-2 text-muted-foreground sm:grid-cols-4">
                     <span>已扫描 {job.scannedCount || 0}</span>
                     <span>命中 {job.hitCount || 0}</span>
+                    <span>待处理 {job.pendingHitCount || 0}</span>
                     <span>topic cursor {job.cursorTopicId || 0}</span>
                     <span>reply cursor {job.cursorReplyId || 0}</span>
                   </div>
@@ -195,8 +225,26 @@ export default function AdminMod({ loaderData }: any) {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          <Dialog open={confirmJobId !== null} onOpenChange={(open) => !jobBulkPending && !open && setConfirmJobId(null)}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>确认批量删除巡检命中的原始内容</DialogTitle>
+                <DialogDescription>
+                  将确认删除任务 #{confirmJobId} 下所有待处理命中的原始话题或回复。该操作会沿用现有软删除、计数器维护和处罚逻辑，不会从数据库物理删除内容。
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setConfirmJobId(null)} disabled={jobBulkPending}>
+                  取消
+                </Button>
+                <Button type="button" variant="destructive" onClick={() => confirmJobId && runJobBulkConfirm(confirmJobId)} disabled={jobBulkPending}>
+                  {jobBulkPending ? "处理中" : `确认删除任务 #${confirmJobId} 的待处理命中`}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </AdminPanel>
-        <AdminPanel title="待复核内容" description={`当前页 ${results.length} 条 / 共 ${total} 条`} contentClassName="p-4">
+        <AdminPanel title={jobId > 0 ? `任务 #${jobId} 待复核内容` : "待复核内容"} description={`当前页 ${results.length} 条 / 共 ${total} 条`} action={jobId > 0 ? <Button size="sm" variant="outline" asChild><Link to="/admin/mod">查看全部</Link></Button> : null} contentClassName="p-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface-subtle p-3 text-sm">
             <div className="flex flex-wrap gap-2">
               <Badge variant="outline">话题 {summary.by_type?.topic || 0}</Badge>
@@ -234,6 +282,7 @@ export default function AdminMod({ loaderData }: any) {
                       checked={selected.includes(r.id)}
                       onCheckedChange={() => toggleSelect(r.id)}
                     />
+                    {r.scan_job_id ? <span>任务 #{r.scan_job_id}</span> : null}
                     <span>{r.type === "topic" ? "话题" : "回复"} #{r.target_id}</span>
                     <span>字段 {r.field || "content"}</span>
                     <span>巡检时间 {r.scanned_at}</span>
@@ -260,7 +309,7 @@ export default function AdminMod({ loaderData }: any) {
                   </div>
                 </div>
               ))}
-              <Pagination page={page} total={total} limit={limit} basePath="/admin/mod" searchParams={{ status, ...(type ? { type } : {}) }} />
+              <Pagination page={page} total={total} limit={limit} basePath="/admin/mod" searchParams={{ status, ...(type ? { type } : {}), ...(jobId > 0 ? { job_id: String(jobId) } : {}) }} />
             </div>
           )}
         </AdminPanel>

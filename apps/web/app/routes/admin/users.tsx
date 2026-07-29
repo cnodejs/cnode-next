@@ -2,7 +2,7 @@ import { requireAdmin } from "~/lib/auth";
 import { AdminLayout } from "~/components/AdminLayout";
 import { apiFetch } from "~/lib/api-client";
 import { useState } from "react";
-import { Form, useRevalidator } from "react-router";
+import { Form, Link, useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
@@ -26,9 +26,28 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 
 export function meta() {
   return [{ title: "用户管理 · CNode Admin" }];
+}
+
+export const USER_MANAGEMENT_GROUP_LABELS = {
+  governance: "用户治理",
+  roles: "角色权限",
+  security: "账号安全",
+  danger: "危险操作",
+} as const;
+
+export function userBlockActionLabel(isBlocked: boolean) {
+  return isBlocked ? "恢复用户内容" : "屏蔽用户内容";
 }
 
 export async function loader({ request }: any) {
@@ -60,7 +79,7 @@ export default function AdminUsers({ loaderData }: any) {
       { method: "POST" },
     );
     if (res.success) {
-      toast.success(block ? "已隐藏用户内容" : "已恢复用户内容可见");
+      toast.success(block ? "已屏蔽用户内容" : "已恢复用户内容");
       revalidate();
     } else {
       toast.error(res.error_msg || "操作失败");
@@ -139,7 +158,7 @@ export default function AdminUsers({ loaderData }: any) {
   return (
     <AdminLayout>
       <AdminPage>
-        <AdminPageHeader title="用户管理" description="查看社区用户状态，执行内容隐藏、禁言、密码重置和清理操作。" />
+        <AdminPageHeader title="用户管理" description="查看社区用户状态，执行内容屏蔽、禁言、密码重置和清理操作。" />
         <AdminPanel title="用户列表" description={`当前显示 ${users.length} / ${total} 个用户`}>
           <AdminToolbar>
             <Form method="get" className="flex w-full gap-2 sm:max-w-md">
@@ -177,7 +196,7 @@ export default function AdminUsers({ loaderData }: any) {
                 <TableCell>{u.reply_count}</TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-1">
-                    {u.is_block && <Badge variant="destructive">内容隐藏</Badge>}
+                    {u.is_block && <Badge variant="destructive">内容已屏蔽</Badge>}
                     {u.is_muted && <Badge variant="destructive">禁言</Badge>}
                     {!u.is_block && !u.is_muted && <Badge variant="success">正常</Badge>}
                   </div>
@@ -189,57 +208,43 @@ export default function AdminUsers({ loaderData }: any) {
                     {!(u.roles || []).length && <span className="text-xs text-muted-foreground">无</span>}
                   </div>
                 </TableCell>
-                <TableCell className="w-80">
-                  <div className="flex flex-wrap gap-1">
-                    {!isSelf && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleBlock(u.loginname, !u.is_block)}
-                        >
-                          {u.is_block ? "恢复可见" : "隐藏内容"}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleMute(u.loginname, !u.is_muted)}
-                        >
-                          {u.is_muted ? "解除禁言" : "禁言"}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleRole(u.id, "moderator", !(u.roles || []).includes("moderator"))}
-                        >
-                          {(u.roles || []).includes("moderator") ? "撤销版主" : "授予版主"}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleRole(u.id, "recruiter", !(u.roles || []).includes("recruiter"))}
-                        >
-                          {(u.roles || []).includes("recruiter") ? "撤销猎头" : "授予猎头"}
-                        </Button>
-                      </>
-                    )}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setResetTarget({ id: u.id, loginname: u.loginname })}
-                    >
-                      重置密码
+                <TableCell className="w-36">
+                  <div className="flex items-center gap-2">
+                    <Button asChild size="sm" variant="ghost">
+                      <Link to={`/user/${u.loginname}`}>查看</Link>
                     </Button>
-                    {!isSelf && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-destructive"
-                        onClick={() => setDeleteAllTarget(u.loginname)}
-                      >
-                        删除发言
-                      </Button>
-                    )}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="sm" variant="outline">管理</Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-52">
+                        <DropdownMenuLabel>{USER_MANAGEMENT_GROUP_LABELS.governance}</DropdownMenuLabel>
+                        <DropdownMenuItem disabled={isSelf} onSelect={() => handleBlock(u.loginname, !u.is_block)}>
+                          {userBlockActionLabel(u.is_block)}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem disabled={isSelf} onSelect={() => handleMute(u.loginname, !u.is_muted)}>
+                          {u.is_muted ? "解除禁言" : "禁言"}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>{USER_MANAGEMENT_GROUP_LABELS.roles}</DropdownMenuLabel>
+                        <DropdownMenuItem disabled={isSelf} onSelect={() => handleRole(u.id, "moderator", !(u.roles || []).includes("moderator"))}>
+                          {(u.roles || []).includes("moderator") ? "撤销版主" : "授予版主"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem disabled={isSelf} onSelect={() => handleRole(u.id, "recruiter", !(u.roles || []).includes("recruiter"))}>
+                          {(u.roles || []).includes("recruiter") ? "撤销猎头" : "授予猎头"}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>{USER_MANAGEMENT_GROUP_LABELS.security}</DropdownMenuLabel>
+                        <DropdownMenuItem onSelect={() => setResetTarget({ id: u.id, loginname: u.loginname })}>
+                          重置密码
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>{USER_MANAGEMENT_GROUP_LABELS.danger}</DropdownMenuLabel>
+                        <DropdownMenuItem disabled={isSelf} className="text-destructive focus:text-destructive" onSelect={() => setDeleteAllTarget(u.loginname)}>
+                          删除所有发言
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </TableCell>
               </TableRow>

@@ -34,6 +34,8 @@ const NAV_GROUPS = [
       { href: "/admin/moderation", icon: Search, label: "巡检结果" },
       { href: "/admin/reports", icon: Flag, label: "举报队列" },
       { href: "/admin/keywords", icon: BadgeAlert, label: "敏感词", adminOnly: true },
+      { href: "/admin/zones", icon: LayoutGrid, label: "专区管理", adminOnly: true },
+      { href: "/admin/tabs", icon: LayoutGrid, label: "Tab 管理", adminOnly: true },
     ],
   },
   {
@@ -44,12 +46,15 @@ const NAV_GROUPS = [
     ],
   },
   {
-    label: "系统",
+    label: "审计",
     items: [
       { href: "/admin/audit", icon: ScrollText, label: "审计日志", adminOnly: true },
+    ],
+  },
+  {
+    label: "系统",
+    items: [
       { href: "/admin/settings", icon: Settings, label: "系统设置", adminOnly: true },
-      { href: "/admin/zones", icon: LayoutGrid, label: "专区管理", adminOnly: true },
-      { href: "/admin/tabs", icon: LayoutGrid, label: "Tab 管理", adminOnly: true },
     ],
   },
 ];
@@ -81,7 +86,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               {isAdmin && <AdminTopLink to="/admin">概览</AdminTopLink>}
               <AdminTopLink
                 to="/admin/topics"
-                match={["/admin/topics", "/admin/moderation", "/admin/reports", "/admin/keywords"]}
+                match={["/admin/topics", "/admin/moderation", "/admin/reports", "/admin/keywords", "/admin/zones", "/admin/tabs"]}
               >
                 内容
               </AdminTopLink>
@@ -91,7 +96,12 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 </AdminTopLink>
               )}
               {isAdmin && (
-                <AdminTopLink to="/admin/settings" match={["/admin/audit", "/admin/settings"]}>
+                <AdminTopLink to="/admin/audit">
+                  审计
+                </AdminTopLink>
+              )}
+              {isAdmin && (
+                <AdminTopLink to="/admin/settings">
                   系统
                 </AdminTopLink>
               )}
