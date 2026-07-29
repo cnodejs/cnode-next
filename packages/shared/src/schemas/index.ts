@@ -9,3 +9,4 @@ export * from "./community";
 export * from "./admin";
 export * from "./tab";
 export * from "./zone";
+export * from "./role";

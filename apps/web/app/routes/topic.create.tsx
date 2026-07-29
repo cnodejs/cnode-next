@@ -21,11 +21,13 @@ export function meta() {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
-  await requireUser(request);
-  return {};
+  const user = await requireUser(request);
+  return { user };
 }
 
-export default function TopicCreate() {
+export default function TopicCreate({ loaderData }: Route.ComponentProps) {
+  const currentUser = (loaderData as any).user;
+  const canPostJob = !!currentUser?.is_admin || (currentUser?.roles || []).includes("recruiter");
   const [title, setTitle] = useState("");
   const [tab, setTab] = useState("share");
   const [content, setContent] = useState("");
@@ -82,6 +84,10 @@ export default function TopicCreate() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    if (tab === "job" && !canPostJob) {
+      toast.error("招聘发布需要授权");
+      return;
+    }
     submitTopic();
   };
 
@@ -121,8 +127,9 @@ export default function TopicCreate() {
             >
               <option value="share">分享</option>
               <option value="ask">问答</option>
-              <option value="job">招聘</option>
+              {canPostJob ? <option value="job">招聘</option> : <option value="job" disabled>招聘（需要授权）</option>}
             </select>
+            {!canPostJob && <p className="text-xs text-muted-foreground">招聘发布需要猎头角色授权。</p>}
           </div>
           <div className="space-y-2">
             <Label>正文</Label>

@@ -15,6 +15,13 @@
       "when": 1785000000000,
       "tag": "0001_add_jobs_zone",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785400000000,
+      "tag": "0002_user_roles_and_tab_scope",
+      "breakpoints": true
     }
   ]
 }

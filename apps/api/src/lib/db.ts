@@ -13,8 +13,9 @@ import {
   jobMeta,
   tabs,
   zones,
+  userRoles,
 } from "@cnode/db";
-import { eq, and, desc, inArray, sql, count } from "drizzle-orm";
+import { eq, and, desc, inArray, sql, count, isNull } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { boolEq, boolValue } from "./db-compat";
 
@@ -179,6 +180,62 @@ export const userQueries = {
   },
 };
 
+export const roleQueries = {
+  async listByUserId(userId: number): Promise<string[]> {
+    const db = getDb();
+    const rows = await db
+      .select({ role: userRoles.role })
+      .from(userRoles)
+      .where(and(eq(userRoles.userId, userId), isNull(userRoles.revokedAt)));
+    return rows.map((row) => row.role);
+  },
+
+  async listByUserIds(userIds: number[]): Promise<Map<number, string[]>> {
+    const result = new Map<number, string[]>();
+    if (userIds.length === 0) return result;
+
+    const db = getDb();
+    const rows = await db
+      .select({ userId: userRoles.userId, role: userRoles.role })
+      .from(userRoles)
+      .where(and(inArray(userRoles.userId, userIds), isNull(userRoles.revokedAt)));
+    for (const row of rows) {
+      const roles = result.get(row.userId) || [];
+      roles.push(row.role);
+      result.set(row.userId, roles);
+    }
+    return result;
+  },
+
+  async hasRole(userId: number, role: string): Promise<boolean> {
+    const db = getDb();
+    const rows = await db
+      .select({ id: userRoles.id })
+      .from(userRoles)
+      .where(and(eq(userRoles.userId, userId), eq(userRoles.role, role), isNull(userRoles.revokedAt)))
+      .limit(1);
+    return rows.length > 0;
+  },
+
+  async grant(userId: number, role: string, grantedBy: number, reason?: string | null) {
+    const db = getDb();
+    await db
+      .insert(userRoles)
+      .values({ userId, role, grantedBy, reason: reason || null, createAt: new Date(), updateAt: new Date() })
+      .onConflictDoNothing();
+    return roleQueries.listByUserId(userId);
+  },
+
+  async revoke(userId: number, role: string) {
+    const db = getDb();
+    await db
+      .update(userRoles)
+      .set({ revokedAt: new Date(), updateAt: new Date() })
+      .where(and(eq(userRoles.userId, userId), eq(userRoles.role, role), isNull(userRoles.revokedAt)));
+    return roleQueries.listByUserId(userId);
+  },
+};
+
 function topicConditions(where: any) {
   const conditions: any[] = [];
   if (where.deleted !== undefined) {
@@ -204,12 +261,14 @@ function topicConditions(where: any) {
   if (where.publicVisible) {
     conditions.push(boolEq(topics.deleted, false));
     conditions.push(sql`coalesce(${topics.status}, 'published') <> 'deleted'`);
-    conditions.push(
-      sql`(${topics.tab} is null or ${topics.tab} not in (${sql.join(
-        INTERNAL_TABS.map((tab) => sql`${tab}`),
-        sql`, `,
-      )}))`,
-    );
+    if (!where.includeInternalTabs) {
+      conditions.push(
+        sql`(${topics.tab} is null or ${topics.tab} not in (${sql.join(
+          INTERNAL_TABS.map((tab) => sql`${tab}`),
+          sql`, `,
+        )}))`,
+      );
+    }
     conditions.push(
       sql`exists (select 1 from ${users} where ${users.id} = ${topics.authorId} and ${boolEq(users.isBlock, false)})`,
     );

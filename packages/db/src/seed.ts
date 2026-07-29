@@ -101,12 +101,15 @@ async function seed() {
       { key: "ask", label: "问答", visible: true, sortOrder: 2 },
       { key: "job", label: "招聘", visible: true, sortOrder: 3 },
       { key: "good", label: "精华", visible: true, sortOrder: 4 },
+      { key: "dev", label: "开发", visible: true, sortOrder: 90, scope: "admin" },
+      { key: "test", label: "测试", visible: true, sortOrder: 91, scope: "admin" },
     ])
     .onConflictDoUpdate({
       target: tabs.key,
       set: {
         label: sql`excluded.label`,
         sortOrder: sql`excluded.sort_order`,
+        scope: sql`excluded.scope`,
         updateAt: new Date(),
       },
     });

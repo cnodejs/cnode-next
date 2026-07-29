@@ -14,7 +14,7 @@ import {
   githubUnbindSchema,
   errorResponseSchema,
 } from "@cnode/shared";
-import { auditQueries, settingQueries, userQueries } from "../lib/db";
+import { auditQueries, roleQueries, settingQueries, userQueries } from "../lib/db";
 import { sendActiveMail, sendResetPassMail } from "../lib/mail";
 import { setSessionCookie, clearSessionCookie, authMiddleware, type AuthVars } from "../middleware/auth";
 import { perIpPerDay, perUserPerDay } from "../middleware/rate-limit";
@@ -332,9 +332,10 @@ auth.openapi(meRoute, async (c) => {
   if (!user) return c.json({ success: false, data: null }, 200);
   const admins = (process.env.APP_ADMINS || "").split(",").filter(Boolean);
   const moderators = (process.env.APP_MODERATORS || "").split(",").filter(Boolean);
+  const roles = await roleQueries.listByUserId(user.id);
   const isAdmin = admins.includes(user.loginname);
-  const isMod = moderators.includes(user.loginname) || isAdmin;
-  return c.json({ success: true, data: { loginname: user.loginname, email: user.email, github_username: user.githubUsername, github_bound: !!user.githubId, url: user.url, location: user.location, signature: user.signature, weibo: user.weibo, receive_reply_mail: !!user.receiveReplyMail, receive_at_mail: !!user.receiveAtMail, is_admin: isAdmin, is_mod: isMod, is_muted: !!user.isMuted || !!user.isBlock, is_block: !!user.isBlock } }, 200);
+  const isMod = moderators.includes(user.loginname) || roles.includes("moderator") || isAdmin;
+  return c.json({ success: true, data: { loginname: user.loginname, email: user.email, github_username: user.githubUsername, github_bound: !!user.githubId, url: user.url, location: user.location, signature: user.signature, weibo: user.weibo, receive_reply_mail: !!user.receiveReplyMail, receive_at_mail: !!user.receiveAtMail, is_admin: isAdmin, is_mod: isMod, roles, is_muted: !!user.isMuted || !!user.isBlock, is_block: !!user.isBlock } }, 200);
 });
 
 // --- POST /auth/local/setting ---

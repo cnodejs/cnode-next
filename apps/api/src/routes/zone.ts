@@ -193,6 +193,7 @@ zone.openapi(listTabsRoute, async (c) => {
     label: r.label,
     visible: !!r.visible,
     sort_order: r.sortOrder || 0,
+    scope: r.scope || "public",
   }));
   return c.json({ success: true as const, data }, 200);
 });

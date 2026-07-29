@@ -12,6 +12,7 @@ import {
   settingQueries,
   zoneQueries,
   tabQueries,
+  roleQueries,
 } from "../lib/db";
 import {
   auditLogs,
@@ -42,7 +43,7 @@ import { decrementScoreAndReplyCount } from "../lib/score";
 import { isValidIpRule } from "../middleware/ip-ban";
 import { applyProgressivePenalty } from "../lib/penalty";
 import { userSummary } from "../lib/format";
-import { createReportBodySchema, errorResponseSchema } from "@cnode/shared";
+import { createReportBodySchema, errorResponseSchema, roleAssignmentSchema, userRoleSchema } from "@cnode/shared";
 
 const admin = new OpenAPIHono<{
   Variables: AuthVars;
@@ -202,7 +203,7 @@ admin.post("/topic/:tid/good", modRequired(), async (c) => {
   return c.json({ success: true, message: topic.good ? "已取消加精" : "已加精" });
 });
 
-admin.post("/topic/:tid/lock", adminRequired(), async (c) => {
+admin.post("/topic/:tid/lock", modRequired(), async (c) => {
   const tid = Number(c.req.param("tid"));
   const topic = await topicQueries.getById(tid);
   if (!topic) return c.json({ success: false, error_msg: "话题不存在" }, 404);
@@ -252,7 +253,42 @@ admin.get("/admin/users", adminRequired(), async (c) => {
   let totalQuery = db.select({ c: count() }).from(users).$dynamic();
   if (where) { listQuery = listQuery.where(where) as any; totalQuery = totalQuery.where(where) as any; }
   const [list, totalResult] = await Promise.all([listQuery.orderBy(desc(users.createAt)).limit(pagination.limit).offset(pagination.offset), totalQuery]);
-  return c.json(paginated(list.map((u: any) => ({ id: u.id, loginname: u.loginname, email: u.email, avatar_url: u.avatar, score: u.score, topic_count: u.topicCount, reply_count: u.replyCount, is_block: !!u.isBlock, is_muted: !!u.isMuted || !!u.isBlock, active: !!u.active, create_at: u.createAt })), Number(totalResult[0]?.c || 0), pagination));
+  const rolesByUserId = await roleQueries.listByUserIds(list.map((u: any) => u.id));
+  return c.json(paginated(list.map((u: any) => ({ id: u.id, loginname: u.loginname, email: u.email, avatar_url: u.avatar, score: u.score, topic_count: u.topicCount, reply_count: u.replyCount, roles: rolesByUserId.get(u.id) || [], is_block: !!u.isBlock, is_muted: !!u.isMuted || !!u.isBlock, active: !!u.active, create_at: u.createAt })), Number(totalResult[0]?.c || 0), pagination));
+});
+
+admin.get("/admin/users/:id/roles", adminRequired(), async (c) => {
+  const id = Number(c.req.param("id"));
+  if (!id || Number.isNaN(id)) return c.json({ success: false, error_msg: "用户不存在" }, 404);
+  const target = await userQueries.getById(id);
+  if (!target) return c.json({ success: false, error_msg: "用户不存在" }, 404);
+  const roles = await roleQueries.listByUserId(id);
+  return c.json({ success: true, data: { user_id: id, roles } });
+});
+
+admin.post("/admin/users/:id/roles", adminRequired(), async (c) => {
+  const id = Number(c.req.param("id"));
+  const target = id > 0 && !Number.isNaN(id) ? await userQueries.getById(id) : null;
+  if (!target) return c.json({ success: false, error_msg: "用户不存在" }, 404);
+  const parsed = roleAssignmentSchema.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success) return c.json({ success: false, error_msg: "角色无效" }, 422);
+  const user = c.get("user")!;
+  const roles = await roleQueries.grant(id, parsed.data.role, user.id, parsed.data.reason);
+  await auditQueries.log(user.id, user.loginname, "grant_role", { type: "user", id: String(id), name: target.loginname }, "success", JSON.stringify({ role: parsed.data.role, reason: parsed.data.reason || null }));
+  return c.json({ success: true, data: { user_id: id, roles } });
+});
+
+admin.delete("/admin/users/:id/roles/:role", adminRequired(), async (c) => {
+  const id = Number(c.req.param("id"));
+  const target = id > 0 && !Number.isNaN(id) ? await userQueries.getById(id) : null;
+  if (!target) return c.json({ success: false, error_msg: "用户不存在" }, 404);
+  const role = c.req.param("role");
+  const parsed = userRoleSchema.safeParse(role);
+  if (!parsed.success) return c.json({ success: false, error_msg: "角色无效" }, 422);
+  const user = c.get("user")!;
+  const roles = await roleQueries.revoke(id, parsed.data);
+  await auditQueries.log(user.id, user.loginname, "revoke_role", { type: "user", id: String(id), name: target.loginname }, "success", JSON.stringify({ role: parsed.data }));
+  return c.json({ success: true, data: { user_id: id, roles } });
 });
 
 admin.post("/user/:name/block", adminRequired(), async (c) => {
@@ -740,6 +776,7 @@ admin.get("/admin/tabs", adminRequired(), async (c) => {
     label: r.label,
     visible: !!r.visible,
     sort_order: r.sortOrder || 0,
+    scope: r.scope || "public",
   }));
   return c.json({ success: true, data });
 });
@@ -765,6 +802,7 @@ admin.patch("/admin/tabs/:id", adminRequired(), async (c) => {
       label: updated.label,
       visible: !!updated.visible,
       sort_order: updated.sortOrder || 0,
+      scope: updated.scope || "public",
     },
   });
 });

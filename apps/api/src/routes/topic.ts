@@ -1,6 +1,6 @@
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import _ from "lodash";
-import { settingQueries, topicQueries, userQueries, replyQueries, jobMetaQueries } from "../lib/db";
+import { settingQueries, topicQueries, userQueries, replyQueries, jobMetaQueries, roleQueries } from "../lib/db";
 import { incrementScoreAndTopicCount } from "../lib/score";
 import { sendMessageToMentionUsers } from "../lib/at";
 import { checkContent } from "../lib/moderation";
@@ -49,6 +49,18 @@ async function isNewUserForTopicGate(user: any) {
   return accountAgeHours < minHours || Number(user.replyCount || 0) < minReplies;
 }
 
+export function canPostJobFromRoles(isAdmin: boolean, roles: string[]) {
+  return isAdmin || roles.includes("recruiter");
+}
+
+function isAdminUser(user: any) {
+  return (process.env.APP_ADMINS || "").split(",").filter(Boolean).includes(user.loginname);
+}
+
+async function canPostJob(user: any) {
+  return canPostJobFromRoles(isAdminUser(user), await roleQueries.listByUserId(user.id));
+}
+
 const listTopicsRoute = createRoute({
   method: "get",
   path: "/topics",
@@ -78,6 +90,10 @@ topic.openapi(listTopicsRoute, async (c) => {
   const { page, limit, tab, mdrender } = c.req.valid("query");
 
   const query: any = {};
+  const isAdmin = c.get("isAdmin");
+  if (tab && INTERNAL_TABS.has(tab) && !isAdmin) {
+    return c.json({ success: true as const, data: [], total: 0 }, 200);
+  }
   if (!tab || tab === "all") {
     query.excludeTabs = ["job"];
   } else if (tab === "good") {
@@ -86,6 +102,7 @@ topic.openapi(listTopicsRoute, async (c) => {
     query.tab = tab;
   }
   query.publicVisible = true;
+  query.includeInternalTabs = isAdmin;
 
   const topicsList = await topicQueries.getByQuery(query, {
     limit,
@@ -283,7 +300,7 @@ const createTopicRoute = createRoute({
       content: { "application/json": { schema: errorResponseSchema } },
     },
     403: {
-      description: "禁言或人机验证失败或新用户限制",
+      description: "禁言、人机验证失败、新用户限制或招聘发布未授权",
       content: { "application/json": { schema: errorResponseSchema } },
     },
     422: {
@@ -312,6 +329,10 @@ topic.openapi(createTopicRoute, async (c) => {
   }
 
   const { title, tab, content } = body;
+
+  if (tab === "job" && !(await canPostJob(user))) {
+    return c.json({ success: false as const, error_msg: "招聘发布需要授权" }, 403);
+  }
 
   const titleCheck = await checkContent(title);
   if (titleCheck.hit) {
@@ -429,6 +450,14 @@ topic.openapi(updateTopicRoute, async (c) => {
 
   if (topicData.lock && !c.get("isAdmin")) {
     return c.json({ success: false as const, error_msg: "话题已锁定" }, 403);
+  }
+
+  if (topicData.tab !== "job" && tab === "job" && !(await canPostJob(user))) {
+    return c.json({ success: false as const, error_msg: "招聘发布需要授权" }, 403);
+  }
+
+  if (topicData.tab === "job" && tab !== "job" && !c.get("isAdmin")) {
+    return c.json({ success: false as const, error_msg: "招聘话题不能改为普通分类" }, 403);
   }
 
   await topicQueries.updateTopic(tid, { title, tab, content });

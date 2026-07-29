@@ -385,7 +385,7 @@
             }
           },
           "403": {
-            "description": "禁言或人机验证失败或新用户限制",
+            "description": "禁言、人机验证失败、新用户限制或招聘发布未授权",
             "content": {
               "application/json": {
                 "schema": {
@@ -6172,6 +6172,14 @@
                           },
                           "sort_order": {
                             "type": "number"
+                          },
+                          "scope": {
+                            "type": "string",
+                            "enum": [
+                              "public",
+                              "admin"
+                            ],
+                            "default": "public"
                           }
                         },
                         "required": [

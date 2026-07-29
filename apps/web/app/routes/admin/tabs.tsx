@@ -27,6 +27,7 @@ interface TabRow {
   label: string;
   visible: boolean;
   sort_order: number;
+  scope: "public" | "admin";
 }
 
 export async function loader({ request }: { request: Request }) {
@@ -84,7 +85,7 @@ export default function AdminTabs({ loaderData }: { loaderData: any }) {
   return (
     <AdminLayout>
       <AdminPage>
-        <AdminPageHeader title="Tab 管理" description="控制首页 tab 按钮的可见性、标签和排序。" />
+          <AdminPageHeader title="Tab 管理" description="控制首页 tab 按钮的可见性、标签和排序；内部 tab 仅管理员可见。" />
         <AdminPanel title="Tab 列表" description={`共 ${tabs.length} 个 tab`}>
           <div className="overflow-x-auto">
             <Table className="min-w-[640px]">
@@ -92,6 +93,7 @@ export default function AdminTabs({ loaderData }: { loaderData: any }) {
                 <TableRow>
                   <TableHead className="w-24">Key (只读)</TableHead>
                   <TableHead className="min-w-32">标签</TableHead>
+                  <TableHead className="w-24">范围</TableHead>
                   <TableHead className="w-20">可见</TableHead>
                   <TableHead className="w-20">排序</TableHead>
                   <TableHead className="w-24 text-right">操作</TableHead>
@@ -107,6 +109,9 @@ export default function AdminTabs({ loaderData }: { loaderData: any }) {
                         onChange={(e) => updateField(tab.id, "label", e.target.value)}
                         className="h-8"
                       />
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {tab.scope === "admin" ? "管理员专用" : "公开"}
                     </TableCell>
                     <TableCell>
                       <Checkbox

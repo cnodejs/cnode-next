@@ -6,6 +6,7 @@ export interface AuthUser {
   avatar_url: string;
   is_admin?: boolean;
   is_mod?: boolean;
+  roles?: string[];
   id?: string | number;
 }
 

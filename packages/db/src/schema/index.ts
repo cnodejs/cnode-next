@@ -13,3 +13,4 @@ export * from "./moderation_scan";
 export * from "./job_meta";
 export * from "./tabs";
 export * from "./zones";
+export * from "./user_roles";

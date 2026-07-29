@@ -80,6 +80,24 @@ export default function AdminUsers({ loaderData }: any) {
     }
   };
 
+  const handleRole = async (userId: number, role: "moderator" | "recruiter", enabled: boolean) => {
+    const roleLabel = role === "moderator" ? "版主" : "猎头";
+    if (!window.confirm(`确认${enabled ? "授予" : "撤销"}${roleLabel}角色？`)) return;
+    const res = await apiFetch<{ success: boolean; error_msg?: string }>(
+      enabled ? `/api/v1/admin/users/${userId}/roles` : `/api/v1/admin/users/${userId}/roles/${role}`,
+      {
+        method: enabled ? "POST" : "DELETE",
+        ...(enabled ? { body: JSON.stringify({ role }) } : {}),
+      },
+    );
+    if (res.success) {
+      toast.success(enabled ? "角色已授予" : "角色已撤销");
+      revalidate();
+    } else {
+      toast.error(res.error_msg || "角色操作失败");
+    }
+  };
+
   const { run: runDeleteAll, pending: deletingAll } = useAsyncAction(
     () =>
       apiFetch<{ success: boolean; error_msg?: string }>(
@@ -139,6 +157,7 @@ export default function AdminUsers({ loaderData }: any) {
               <TableHead>话题</TableHead>
               <TableHead>回复</TableHead>
               <TableHead>状态</TableHead>
+              <TableHead>角色</TableHead>
               <TableHead>操作</TableHead>
             </TableRow>
           </TableHeader>
@@ -163,6 +182,13 @@ export default function AdminUsers({ loaderData }: any) {
                     {!u.is_block && !u.is_muted && <Badge variant="success">正常</Badge>}
                   </div>
                 </TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-1">
+                    {(u.roles || []).includes("moderator") && <Badge variant="secondary">版主</Badge>}
+                    {(u.roles || []).includes("recruiter") && <Badge variant="secondary">猎头</Badge>}
+                    {!(u.roles || []).length && <span className="text-xs text-muted-foreground">无</span>}
+                  </div>
+                </TableCell>
                 <TableCell className="w-80">
                   <div className="flex flex-wrap gap-1">
                     {!isSelf && (
@@ -180,6 +206,20 @@ export default function AdminUsers({ loaderData }: any) {
                           onClick={() => handleMute(u.loginname, !u.is_muted)}
                         >
                           {u.is_muted ? "解除禁言" : "禁言"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleRole(u.id, "moderator", !(u.roles || []).includes("moderator"))}
+                        >
+                          {(u.roles || []).includes("moderator") ? "撤销版主" : "授予版主"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleRole(u.id, "recruiter", !(u.roles || []).includes("recruiter"))}
+                        >
+                          {(u.roles || []).includes("recruiter") ? "撤销猎头" : "授予猎头"}
                         </Button>
                       </>
                     )}

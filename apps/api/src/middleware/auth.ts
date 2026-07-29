@@ -1,12 +1,13 @@
 import { createMiddleware } from "hono/factory";
 import { getCookie, setCookie, deleteCookie } from "hono/cookie";
-import { userQueries } from "../lib/db";
+import { roleQueries, userQueries } from "../lib/db";
 
 export interface AuthVars {
   user: Awaited<ReturnType<typeof userQueries.getById>> | null;
   isLogin: boolean;
   isAdmin: boolean;
   isMod: boolean;
+  roles: string[];
 }
 
 export function setSessionCookie(
@@ -58,13 +59,15 @@ export const authMiddleware = () =>
     const admins = (process.env.APP_ADMINS || "").split(",").filter(Boolean);
     const moderators = (process.env.APP_MODERATORS || "").split(",").filter(Boolean);
 
+    const roles = user ? await roleQueries.listByUserId(user.id) : [];
     const isAdmin = user ? admins.includes(user.loginname) : false;
-    const isMod = user ? moderators.includes(user.loginname) || isAdmin : false;
+    const isMod = user ? moderators.includes(user.loginname) || roles.includes("moderator") || isAdmin : false;
 
     c.set("user", user);
     c.set("isLogin", !!user);
     c.set("isAdmin", isAdmin);
     c.set("isMod", isMod);
+    c.set("roles", roles);
 
     await next();
   });

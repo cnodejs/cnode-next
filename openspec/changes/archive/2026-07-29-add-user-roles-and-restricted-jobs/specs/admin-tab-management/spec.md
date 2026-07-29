@@ -1,8 +1,5 @@
-# admin-tab-management Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change add-jobs-zone. Update Purpose after archive.
-## Requirements
 ### Requirement: tabs 注册表
 
 系统 SHALL 新增 `tabs` 表，存储首页 tab 按钮的 key、标签、可见性、排序和访问范围。`tabs.key` SHALL 与代码支持的 `topics.tab` 字段值对应，UNIQUE 约束。tab 的存在性 SHALL 由代码/migration/bootstrap 控制，管理后台 SHALL NOT 支持运行时新增或删除 tab。
@@ -50,21 +47,6 @@ TBD - created by archiving change add-jobs-zone. Update Purpose after archive.
 - **WHEN** 管理员将某个 public tab 的 `visible` 设为 `false`
 - **THEN** 首页不展示该 tab 按钮
 - **AND** 直接访问对应 `?tab=` 仍按 API 层 tab 权限和公开规则处理
-
-### Requirement: getTabLabel 从 DB 加载
-
-`getTabLabel`（`apps/web/app/lib/brand.ts:17`）SHALL 改为从 root loader data 的 `tabs` 读取 label，替代硬编码 map。SSR 上下文无 loader data 时 SHALL fallback 到硬编码默认值。
-
-#### Scenario: getTabLabel 从配置读取
-
-- **WHEN** 组件调用 `getTabLabel('job')` 且 root loader data 可用
-- **THEN** 从 `tabs` 配置返回 `key='job'` 对应的 `label`
-- **AND** 不依赖硬编码 map
-
-#### Scenario: SSR fallback
-
-- **WHEN** SSR 上下文无 loader data（如独立 API 调用场景）
-- **THEN** `getTabLabel` fallback 到硬编码默认值（share→分享, ask→问答, job→招聘, good→精华）
 
 ### Requirement: 管理后台 Tab 管理页面
 
@@ -118,23 +100,3 @@ TBD - created by archiving change add-jobs-zone. Update Purpose after archive.
 - **WHEN** 管理员访问 Tab 管理 API
 - **THEN** API 不提供创建或删除 tab 的公开操作
 - **AND** 加新 tab 需通过代码变更和 migration/bootstrap 完成
-
-### Requirement: root loader 加载 tabs 配置
-
-`root.tsx` loader SHALL 加载 `tabs` 表中所有行，注入全局 route loader data，供首页 tab 渲染和 `getTabLabel` 查询。
-
-#### Scenario: root loader 返回 tabs
-
-- **WHEN** 任意页面通过 `useRouteLoaderData("root")` 读取数据
-- **THEN** 数据包含 `tabs` 数组（所有行，含 `visible=false`）
-- **AND** 前端按 `visible` 过滤展示
-
-### Requirement: v1 不支持运行时新增 tab
-
-管理后台 v1 SHALL 只支持编辑现有 tabs 行的标签、可见性、排序，SHALL NOT 支持运行时新增或删除 tab 行。
-
-#### Scenario: 管理后台无新增按钮
-
-- **WHEN** 管理员访问 `/admin/tabs`
-- **THEN** 页面不展示"新增 Tab"按钮
-- **AND** 加新 tab 需通过 migration/bootstrap 完成

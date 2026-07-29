@@ -15,8 +15,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const page = Number(url.searchParams.get("page")) || 1;
   const tab = url.searchParams.get("tab") || "all";
   const limit = 20;
+  const cookie = request.headers.get("cookie") || "";
 
-  const cacheKey = `topics:${tab}:${page}`;
+  const cacheKey = `topics:${tab}:${page}:${cookie ? "auth" : "public"}`;
   const kv = (context as any)?.cloudflare?.env?.KV;
   const cached = await kvGet<{ data: any[]; total: number }>(kv, cacheKey);
   if (cached) {
@@ -25,6 +26,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   const res = await apiFetch<{ success: boolean; data: any[]; total?: number }>(
     `/api/v1/topics?page=${page}&limit=${limit}&tab=${tab}`,
+    { headers: { cookie } },
   );
 
   const topics = res.success ? res.data : [];
@@ -43,10 +45,11 @@ export function meta() {
 
 export default function Index({ loaderData }: Route.ComponentProps) {
   const { topics, page, tab, limit, total } = loaderData as any;
-  const rootData = useRouteLoaderData("root") as { tabs?: any[] } | undefined;
+  const rootData = useRouteLoaderData("root") as { tabs?: any[]; user?: any } | undefined;
   const allTabs = rootData?.tabs || [];
+  const isAdmin = !!rootData?.user?.is_admin;
   const visibleTabs = allTabs
-    .filter((t: any) => t.visible)
+    .filter((t: any) => t.visible && ((t.scope || "public") === "public" || isAdmin))
     .sort((a: any, b: any) => a.sort_order - b.sort_order);
   const tabs = [{ key: "all", label: "全部" }, ...visibleTabs.map((t: any) => ({ key: t.key, label: t.label }))];
 
