@@ -890,14 +890,21 @@ admin.get("/admin/moderation/jobs", adminRequired(), async (c) => {
     db.select().from(moderationScanJobs).orderBy(desc(moderationScanJobs.createAt)).limit(pagination.limit).offset(pagination.offset),
     db.select({ c: count() }).from(moderationScanJobs),
   ]);
+  const hitCounts = await Promise.all(
+    list.map(async (job: any) => {
+      const rows = await db.select({ c: count() }).from(moderationHits).where(eq(moderationHits.scanJobId, job.id));
+      return [job.id, Number(rows[0]?.c || 0)] as const;
+    }),
+  );
   const pendingCounts = await Promise.all(
     list.map(async (job: any) => {
       const rows = await db.select({ c: count() }).from(moderationHits).where(and(eq(moderationHits.scanJobId, job.id), eq(moderationHits.status, "pending")));
       return [job.id, Number(rows[0]?.c || 0)] as const;
     }),
   );
+  const hitsByJobId = new Map(hitCounts);
   const pendingByJobId = new Map(pendingCounts);
-  return c.json(paginated(list.map((job: any) => ({ ...job, pendingHitCount: pendingByJobId.get(job.id) || 0 })), Number(totalResult[0]?.c || 0), pagination));
+  return c.json(paginated(list.map((job: any) => ({ ...job, hitCount: hitsByJobId.get(job.id) || 0, rawHitCount: job.hitCount || 0, pendingHitCount: pendingByJobId.get(job.id) || 0 })), Number(totalResult[0]?.c || 0), pagination));
 });
 
 admin.post("/admin/moderation/jobs", adminRequired(), async (c) => {

@@ -254,11 +254,10 @@ async function insertHit(data: {
 }) {
   if (!data.hits.length) return 0;
   const db = getDb();
-  await incrementSensitiveWordHits(data.hits);
   const keywords = data.hits.map((hit) => hit.word);
   const keywordIds = data.hits.map((hit) => hit.keywordId).filter((id): id is number => !!id);
   const dedupeKey = createHitDedupeKey(data.targetType, data.targetId, data.field, keywords.join("|"));
-  await db
+  const inserted = await db
     .insert(moderationHits)
     .values({
       scanJobId: data.scanJobId,
@@ -277,8 +276,10 @@ async function insertHit(data: {
       createAt: dateValue(),
       updateAt: dateValue(),
     } as any)
-    .onConflictDoNothing();
-  return 1;
+    .onConflictDoNothing()
+    .returning({ id: moderationHits.id });
+  if (inserted.length > 0) await incrementSensitiveWordHits(data.hits);
+  return inserted.length;
 }
 
 async function scanTopicBatch(job: any, words: SensitiveWordEntry[]) {
