@@ -71,6 +71,18 @@ CNode 社区的核心业务规则：积分、发帖、回复、收藏、消息�
 | Soft delete | `deleted = true` |
 | Score | 作者 -5, `topicCount` -1 |
 
+### Admin Permanent Deletion
+
+| Rule | Value |
+| ---- | ----- |
+| Permission | admin only |
+| Entry point | 后台话题管理中的独立危险操作 |
+| Effect | 从 PostgreSQL 删除话题记录，并清理直接依赖数据 |
+| Dependencies | 回复、回复点赞、收藏、招聘扩展、巡检命中、消息引用和举报引用 |
+| Audit | 必须写入审计日志 |
+
+永久删除不同于普通删除。普通删除和巡检确认删除都沿用软删除语义；巡检任务级批量确认删除会删除命中的原始话题或回复，但仍然只是软删除，不从数据库物理移除内容。
+
 ### Admin Actions
 
 | Action | Effect | Route |
@@ -79,6 +91,7 @@ CNode 社区的核心业务规则：积分、发帖、回复、收藏、消息�
 | Good | toggle `topics.good` | `POST /topic/:tid/good` |
 | Lock | toggle `topics.lock` | `POST /topic/:tid/lock` |
 | Delete | soft delete | `POST /topic/:tid/delete` |
+| Permanent delete | physical delete, admin only | 后台管理 API |
 
 ## Reply Rules
 
@@ -184,6 +197,25 @@ CNode 社区的核心业务规则：积分、发帖、回复、收藏、消息�
 ### Advanced User
 
 Legacy: `score > 700 || is_star` → `isAdvanced`。当前实现是否保留此阈值待确认。
+
+### Admin User Governance Wording
+
+后台管理界面将 `block` 表达为“屏蔽用户内容 / 恢复用户内容”。该操作的核心语义是让目标用户的历史公开内容不再出现在公共入口中。`mute` 表达为“禁言 / 解除禁言”，核心语义是阻止目标用户继续新增话题或回复。二者不得在 UI 中混为同一个动作。
+
+后台用户管理列表中的操作按风险分组：用户治理（屏蔽内容、禁言）、角色权限（授予/撤销版主或猎头）、账号安全（重置密码）、危险操作（删除所有发言）。删除所有发言必须保留二次确认和审计日志。
+
+## RSS Feed Rules
+
+公开 `/rss` 是唯一对外 RSS 订阅地址。RSS feed 表示全站公开内容订阅，不等同首页 `all` feed。
+
+| Rule | Value |
+| ---- | ----- |
+| Format | RSS 2.0 XML |
+| Source | API RSS source JSON + Web XML serialization |
+| Limit | 最多 50 条 |
+| Sort | `create_at desc` |
+| Include | 公开 `share` / `ask` / `job` 等话题 |
+| Exclude | `dev` / `test`、`deleted=true`、`status=deleted`、block 作者内容 |
 
 ## Rate Limiting
 

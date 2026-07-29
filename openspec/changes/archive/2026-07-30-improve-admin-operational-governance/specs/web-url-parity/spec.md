@@ -1,10 +1,4 @@
-# web-url-parity Specification
-
-## Purpose
-
-定义 cnode-next 完全替代 nodeclub 线上公开 Web URL 时必须满足的页面、响应类型和兼容跳转要求。
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: legacy Web URL 必须可替代
 

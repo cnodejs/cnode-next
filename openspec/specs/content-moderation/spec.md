@@ -128,3 +128,42 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 - **WHEN** 系统没有实现敏感词命中次数统计
 - **THEN** `/admin/keywords` MUST 隐藏命中次数列或明确标记为未接入
 - **AND** 不得展示永远为 0 或空值的运营指标
+
+### Requirement: 巡检命中按任务归类处理
+
+系统 SHALL 使用巡检命中记录上的任务关联，将后台巡检结果按巡检任务过滤和展示。
+
+#### Scenario: 查询指定任务的巡检命中
+- **WHEN** 管理员请求查看任务 `#11` 的巡检命中
+- **THEN** 系统 MUST 返回 `scan_job_id=11` 的命中记录
+- **AND** 系统 MUST 支持继续按待处理、已确认、误报或忽略状态筛选该任务下的命中
+
+#### Scenario: 重复命中不重复入队
+- **WHEN** 后续巡检任务再次扫描到同一对象、同一字段和同一组敏感词
+- **THEN** 系统 MUST 继续避免创建重复待处理命中记录
+- **AND** 该限制 MUST 不阻止管理员处理首次创建的待处理命中
+
+### Requirement: 巡检任务级批量确认删除
+
+系统 SHALL 允许管理员对某个巡检任务下的待处理命中执行批量确认删除，确认删除的目标是命中的原始话题或回复。
+
+#### Scenario: 批量确认删除话题和回复命中
+- **WHEN** 管理员确认删除某巡检任务下的待处理命中
+- **THEN** 系统 MUST 对话题命中执行现有话题删除动作
+- **AND** 系统 MUST 对回复命中执行现有回复删除动作
+- **AND** 系统 MUST 将对应巡检命中标记为已确认处理
+
+#### Scenario: 批量确认删除只处理待处理命中
+- **WHEN** 巡检任务下同时存在 pending、confirmed、false_positive 或 ignored 命中
+- **THEN** 任务级批量确认删除 MUST 只处理 pending 命中
+- **AND** 已处理命中 MUST 不重复删除内容或重复处罚作者
+
+#### Scenario: 批量确认删除写入审计日志
+- **WHEN** 管理员完成任务级批量确认删除
+- **THEN** 系统 MUST 写入审计日志
+- **AND** 审计详情 MUST 包含任务 ID、操作类型和实际处理数量
+
+#### Scenario: 非管理员不可执行任务级批量确认删除
+- **WHEN** 非 admin 用户调用任务级批量确认删除接口
+- **THEN** 系统 MUST 返回权限错误
+- **AND** 话题、回复和巡检命中状态 MUST 保持不变

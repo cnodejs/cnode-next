@@ -227,3 +227,139 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 - **WHEN** 自动封禁用户数、趋势图或最近审计操作尚未实现真实查询
 - **THEN** 页面 MUST 隐藏对应模块或明确标记未接入
 - **AND** 不得展示硬编码、空数组伪装成真实结果
+
+### Requirement: 后台导航按运营任务组织
+
+管理后台导航 SHALL 按管理员运营任务组织，而不是按实现页面随意堆叠。系统设置入口 MUST 位于后台导航最后。
+
+#### Scenario: 后台导航分组顺序
+- **WHEN** admin 或 moderator 访问管理后台
+- **THEN** 导航分组 MUST 按总览、内容、用户、审计、系统的顺序展示可访问分组
+- **AND** 系统设置 MUST 位于系统分组内
+- **AND** 系统分组 MUST 是最后一个分组
+
+#### Scenario: 内容结构管理归入内容分组
+- **WHEN** admin 查看后台导航
+- **THEN** 专区管理和 Tab 管理 MUST 归入内容相关分组
+- **AND** 话题管理、巡检结果、举报队列、敏感词、专区管理和 Tab 管理 SHOULD 在同一内容运营分组中展示
+
+#### Scenario: 审计拥有独立导航入口
+- **WHEN** admin 查看后台导航
+- **THEN** 审计日志 MUST 位于独立审计分组或顶部审计入口下
+- **AND** 审计入口 MUST 不混在系统设置之前的无序系统杂项中
+
+#### Scenario: 顶部和移动端导航顺序一致
+- **WHEN** admin 在桌面或移动端访问后台
+- **THEN** 顶部导航、侧栏导航和移动端导航 SHOULD 使用一致的任务顺序
+- **AND** `/admin/zones`、`/admin/tabs`、`/admin/audit` 和 `/admin/settings` 的 active state MUST 匹配所属导航入口
+
+### Requirement: 审计日志必须支持运营追踪
+
+后台审计页面 SHALL 支持运营复盘、风险追踪和问责，而不是仅按时间罗列原始日志。
+
+#### Scenario: 审计中心摘要
+- **WHEN** admin 访问 `/admin/audit`
+- **THEN** 页面 MUST 展示当前筛选范围内的摘要指标
+- **AND** 摘要 SHOULD 至少包含高风险操作、内容删除、权限变更、账号安全和失败/异常数量
+- **AND** 摘要 MUST 基于当前筛选全集计算，不得只统计当前页数据
+
+#### Scenario: 审计事件分类和风险等级
+- **WHEN** 系统返回审计日志
+- **THEN** 每条日志 MUST 包含或可派生事件分类、风险等级和人类可读动作标签
+- **AND** 内容治理、用户治理、角色权限、账号安全、安全策略、举报巡检和系统设置 SHOULD 作为第一阶段分类
+- **AND** delete、reset password、role、ban 等敏感操作 MUST 具备高风险或极高风险视觉提示
+
+#### Scenario: 审计筛选
+- **WHEN** admin 在 `/admin/audit` 筛选审计事件
+- **THEN** 系统 MUST 支持按时间范围、事件分类、风险等级、操作人、目标类型、结果和关键词筛选
+- **AND** 筛选状态 MUST 体现在 URL 参数中
+- **AND** 分页、刷新和返回页面时 MUST 保留筛选上下文
+
+#### Scenario: 审计事件流展示
+- **WHEN** admin 查看审计事件列表
+- **THEN** 页面 MUST 使用事件流或等价卡片化列表展示审计记录
+- **AND** 每条事件 MUST 展示风险 badge、人类可读动作标题、操作人、时间、分类、目标和结果
+- **AND** 页面 MUST 不要求管理员直接理解原始 action 字符串才能判断事件含义
+
+#### Scenario: 审计详情展开
+- **WHEN** admin 展开某条审计事件
+- **THEN** 页面 MUST 展示原始 action、operator_id、operator_name、target_type、target_id、target_name、result、create_at 和 detail
+- **AND** detail 为 JSON 时 SHOULD 格式化展示
+- **AND** detail 非 JSON 时 SHOULD 原样展示
+- **AND** 系统 MUST 避免展示 secrets、token、明文密码或生产环境变量
+
+#### Scenario: 审计目标跳转
+- **WHEN** 审计事件目标可映射到现有后台或前台资源
+- **THEN** 页面 SHOULD 提供目标跳转入口
+- **AND** user 目标 SHOULD 可跳转到用户主页或后台用户搜索
+- **AND** topic 目标 SHOULD 可跳转到话题页
+- **AND** report 或 scan_job 目标 SHOULD 可跳转到对应后台队列或巡检页面
+
+#### Scenario: 移动端审计展示
+- **WHEN** admin 在移动端访问 `/admin/audit`
+- **THEN** 页面 MUST 使用适合窄屏的卡片或事件流布局
+- **AND** 页面 MUST NOT 依赖横向滚动表格作为主要审计体验
+
+### Requirement: 后台话题管理多维筛选
+
+后台话题管理 SHALL 允许管理员和版主按话题属性、状态、时间维度和排序方式查询话题，并且筛选结果 MUST 使用后端分页查询生成。
+
+#### Scenario: 按 tab 筛选话题
+- **WHEN** 管理员或版主在 `/admin/topics` 选择某个 tab
+- **THEN** 页面 MUST 只展示该 tab 下的话题
+- **AND** 分页 MUST 保留当前 tab 筛选条件
+
+#### Scenario: 按内容状态和运营标记筛选话题
+- **WHEN** 管理员或版主选择可见状态或运营标记筛选条件
+- **THEN** 系统 MUST 按正常、已隐藏、已删除、置顶、精华、锁定或归档等条件返回匹配话题
+- **AND** 后端 MUST 忽略非法枚举值或返回明确错误，不得拼接未校验的 SQL 片段
+
+#### Scenario: 按时间维度筛选话题
+- **WHEN** 管理员或版主选择创建时间、更新时间或最后回复时间并提交时间范围
+- **THEN** 系统 MUST 按所选时间字段过滤话题
+- **AND** 起止时间同时存在时 MUST 返回落在闭区间内的话题
+- **AND** 只提供起始或结束时间时 MUST 支持单边范围过滤
+
+#### Scenario: 按运营指标排序话题
+- **WHEN** 管理员或版主选择回复数、浏览数、收藏数、创建时间、更新时间或最后回复时间排序
+- **THEN** 系统 MUST 按所选排序返回分页结果
+- **AND** 未选择排序时 MUST 保持后台话题列表的默认稳定排序
+
+#### Scenario: 批量操作后保留筛选上下文
+- **WHEN** 管理员或版主在筛选后的话题列表执行批量置顶、加精、隐藏、软删除或真实删除后
+- **THEN** 页面 MUST 刷新当前筛选结果
+- **AND** URL 中的筛选、排序和分页参数 MUST 不丢失
+
+### Requirement: 巡检结果按任务治理
+
+后台巡检结果页 SHALL 以巡检任务作为命中记录的组织入口，允许管理员查看指定任务产生的待处理命中并执行任务级批量处理。
+
+#### Scenario: 从任务查看巡检命中
+- **WHEN** 管理员在巡检任务列表点击查看某个任务的命中
+- **THEN** 系统 MUST 展示 `scan_job_id` 等于该任务 ID 的巡检命中列表
+- **AND** 列表 MUST 保留现有命中对象、命中词、预览、作者和扫描时间信息
+
+#### Scenario: 任务级批量确认删除入口
+- **WHEN** 管理员查看含有待处理命中的巡检任务
+- **THEN** 页面 MUST 提供批量确认删除该任务待处理命中的入口
+- **AND** 入口文案 MUST 明确说明将删除原始话题或回复，而不是仅清除巡检记录
+
+#### Scenario: 任务级批量确认删除需要二次确认
+- **WHEN** 管理员触发任务级批量确认删除
+- **THEN** 页面 MUST 展示二次确认对话框
+- **AND** 对话框 MUST 显示任务 ID 和预计处理的待处理命中数量
+- **AND** 管理员取消确认时 MUST 不改变任何话题、回复或巡检命中状态
+
+### Requirement: 内容治理文档同步
+
+后台内容治理行为变更 SHALL 同步到对应 `docs/` 和 `wiki/` 文档，避免管理员误解软删除、巡检确认删除和真实删除的差异。
+
+#### Scenario: 巡检治理文档同步
+- **WHEN** 巡检结果按任务查看和任务级批量确认删除实现完成
+- **THEN** `docs/content-moderation.md` MUST 说明按任务查看巡检命中和任务级批量确认删除流程
+- **AND** 文档 MUST 明确任务级批量确认删除会删除原始话题或回复，但仍沿用软删除生命周期
+
+#### Scenario: 真实删除业务规则同步
+- **WHEN** 后台话题真实删除实现完成
+- **THEN** `wiki/business-rules.md` MUST 记录真实删除是 admin-only 独立危险操作
+- **AND** wiki MUST 区分现有软删除、巡检确认删除和数据库物理删除
