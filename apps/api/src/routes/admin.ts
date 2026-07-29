@@ -10,6 +10,8 @@ import {
   reportQueries,
   ipBanQueries,
   settingQueries,
+  zoneQueries,
+  tabQueries,
 } from "../lib/db";
 import {
   auditLogs,
@@ -683,6 +685,88 @@ admin.get("/search", async (c) => {
   }
   const searchUrls: Record<string, string> = { google: `https://www.google.com/search?q=site:cnodejs.org+${encodeURIComponent(q)}`, baidu: `https://www.baidu.com/s?wd=site:cnodejs.org+${encodeURIComponent(q)}` };
   return c.redirect(searchUrls[engine] || searchUrls.google);
+});
+
+// ── Zone management ──
+admin.get("/admin/zones", adminRequired(), async (c) => {
+  const rows = await zoneQueries.listAll();
+  const data = rows.map((r: any) => ({
+    id: r.id,
+    slug: r.slug,
+    name: r.name,
+    description: r.description,
+    icon: r.icon,
+    visible: !!r.visible,
+    sort_order: r.sortOrder || 0,
+  }));
+  return c.json({ success: true, data });
+});
+
+admin.patch("/admin/zones/:id", adminRequired(), async (c) => {
+  const id = Number(c.req.param("id"));
+  const body = await c.req.json().catch(() => ({}));
+  const update: any = {};
+  if (typeof body.name === "string") update.name = body.name;
+  if (typeof body.description === "string") update.description = body.description;
+  if (typeof body.icon === "string") update.icon = body.icon;
+  if (typeof body.visible === "boolean") update.visible = body.visible;
+  if (typeof body.sort_order === "number") update.sortOrder = body.sort_order;
+
+  const updated = await zoneQueries.updateById(id, update);
+  if (!updated) return c.json({ success: false, error_msg: "专区不存在" }, 404);
+
+  const user = c.get("user")!;
+  await auditQueries.log(user.id, user.loginname, "update_zone", { type: "zone", id: String(id), name: updated.slug }, "success");
+  return c.json({
+    success: true,
+    data: {
+      id: updated.id,
+      slug: updated.slug,
+      name: updated.name,
+      description: updated.description,
+      icon: updated.icon,
+      visible: !!updated.visible,
+      sort_order: updated.sortOrder || 0,
+    },
+  });
+});
+
+// ── Tab management ──
+admin.get("/admin/tabs", adminRequired(), async (c) => {
+  const rows = await tabQueries.listAll();
+  const data = rows.map((r: any) => ({
+    id: r.id,
+    key: r.key,
+    label: r.label,
+    visible: !!r.visible,
+    sort_order: r.sortOrder || 0,
+  }));
+  return c.json({ success: true, data });
+});
+
+admin.patch("/admin/tabs/:id", adminRequired(), async (c) => {
+  const id = Number(c.req.param("id"));
+  const body = await c.req.json().catch(() => ({}));
+  const update: any = {};
+  if (typeof body.label === "string") update.label = body.label;
+  if (typeof body.visible === "boolean") update.visible = body.visible;
+  if (typeof body.sort_order === "number") update.sortOrder = body.sort_order;
+
+  const updated = await tabQueries.updateById(id, update);
+  if (!updated) return c.json({ success: false, error_msg: "Tab 不存在" }, 404);
+
+  const user = c.get("user")!;
+  await auditQueries.log(user.id, user.loginname, "update_tab", { type: "tab", id: String(id), name: updated.key }, "success");
+  return c.json({
+    success: true,
+    data: {
+      id: updated.id,
+      key: updated.key,
+      label: updated.label,
+      visible: !!updated.visible,
+      sort_order: updated.sortOrder || 0,
+    },
+  });
 });
 
 export { admin as adminRoutes };

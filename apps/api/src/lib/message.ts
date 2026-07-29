@@ -26,7 +26,7 @@ export async function sendReplyMessage(
     authorId,
     topicId,
     replyId,
-    createAt: new Date().toISOString(),
+    createAt: new Date(),
   });
   const [master, topic, reply] = await Promise.all([
     userQueries.getById(masterId),
@@ -58,7 +58,7 @@ export async function sendReply2Message(
     authorId,
     topicId,
     replyId,
-    createAt: new Date().toISOString(),
+    createAt: new Date(),
   });
 }
 
@@ -72,7 +72,7 @@ export async function sendAtMessage(masterId: number, authorId: number, topicId:
     authorId,
     topicId,
     replyId,
-    createAt: new Date().toISOString(),
+    createAt: new Date(),
   });
   const [master, topic] = await Promise.all([userQueries.getById(masterId), topicQueries.getById(topicId)]);
   if (master?.receiveAtMail && master.email && topic) {

@@ -10,3 +10,6 @@ export * from "./report";
 export * from "./ip_ban";
 export * from "./site_setting";
 export * from "./moderation_scan";
+export * from "./job_meta";
+export * from "./tabs";
+export * from "./zones";

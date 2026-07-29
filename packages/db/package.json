@@ -15,6 +15,7 @@
     "db:generate:pg": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:push:pg": "drizzle-kit push",
+    "db:migrate": "tsx src/migrate.ts",
     "db:seed": "tsx src/seed.ts",
     "typecheck": "tsc --noEmit"
   },

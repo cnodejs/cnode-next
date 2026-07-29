@@ -73,7 +73,7 @@ collect.openapi(collectRoute, async (c) => {
   const db = getDb();
   const existing = await db.select().from(topicCollects).where(and(eq(topicCollects.userId, user.id), eq(topicCollects.topicId, tid))).limit(1);
   if (existing.length > 0) return c.json({ success: false as const, error_msg: "已经收藏过该主题" }, 409);
-  await db.insert(topicCollects).values({ userId: user.id, topicId: tid, createAt: new Date().toISOString() });
+  await db.insert(topicCollects).values({ userId: user.id, topicId: tid, createAt: new Date() });
   await incrementCollectTopicCount(user.id);
   await topicQueries.incrementCollectCount(tid);
   return c.json({ success: true as const }, 200);

@@ -10,6 +10,9 @@ import {
   reports,
   ipBans,
   siteSettings,
+  jobMeta,
+  tabs,
+  zones,
 } from "@cnode/db";
 import { eq, and, desc, inArray, sql, count } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
@@ -246,7 +249,7 @@ export const topicQueries = {
 
   async newAndSave(title: string, content: string, tab: string, authorId: number) {
     const db = getDb();
-    const now = new Date().toISOString();
+    const now = new Date();
     const [topic] = await db
       .insert(topics)
       .values({ title, content, tab, authorId, createAt: now, updateAt: now })
@@ -260,7 +263,7 @@ export const topicQueries = {
       .update(topics)
       .set({
         lastReplyId: replyId,
-        lastReplyAt: new Date().toISOString(),
+        lastReplyAt: new Date(),
         replyCount: sql`${topics.replyCount} + 1`,
       })
       .where(eq(topics.id, topicId));
@@ -306,7 +309,7 @@ export const topicQueries = {
     const db = getDb();
     await db
       .update(topics)
-      .set({ ...params, updateAt: new Date().toISOString() } as any)
+      .set({ ...params, updateAt: new Date() } as any)
       .where(eq(topics.id, id));
   },
 
@@ -349,7 +352,7 @@ export const replyQueries = {
 
   async newAndSave(content: string, topicId: number, authorId: number, replyId?: number) {
     const db = getDb();
-    const now = new Date().toISOString();
+    const now = new Date();
     const [reply] = await db
       .insert(replies)
       .values({ content, topicId, authorId, replyId, createAt: now, updateAt: now })
@@ -361,7 +364,7 @@ export const replyQueries = {
     const db = getDb();
     await db
       .update(replies)
-      .set({ content, updateAt: new Date().toISOString() } as any)
+      .set({ content, updateAt: new Date() } as any)
       .where(eq(replies.id, id));
   },
 
@@ -394,7 +397,7 @@ export const replyQueries = {
     }
     await db
       .insert(replyUps)
-      .values({ replyId, userId, createAt: new Date().toISOString() } as any);
+      .values({ replyId, userId, createAt: new Date() } as any);
     return "up" as const;
   },
 };
@@ -420,7 +423,7 @@ export const auditQueries = {
       targetName: target.name || null,
       result,
       detail,
-      createAt: new Date().toISOString(),
+      createAt: new Date(),
     });
   },
 
@@ -440,7 +443,7 @@ export const keywordQueries = {
     const db = getDb();
     await db
       .insert(sensitiveWords)
-      .values({ word, category: category || null, createAt: new Date().toISOString() });
+      .values({ word, category: category || null, createAt: new Date() });
     const result = await db
       .select()
       .from(sensitiveWords)
@@ -454,7 +457,7 @@ export const keywordQueries = {
     for (const w of words) {
       await db
         .insert(sensitiveWords)
-        .values({ ...w, createAt: new Date().toISOString() })
+        .values({ ...w, createAt: new Date() })
         .onConflictDoNothing();
     }
   },
@@ -483,7 +486,7 @@ export const reportQueries = {
     description?: string;
   }) {
     const db = getDb();
-    await db.insert(reports).values({ ...data, createAt: new Date().toISOString() });
+    await db.insert(reports).values({ ...data, createAt: new Date() });
   },
 
   async handle(id: number, handlerId: number, action: string) {
@@ -491,7 +494,7 @@ export const reportQueries = {
     const status = action === "confirm" ? "confirmed" : "dismissed";
     await db
       .update(reports)
-      .set({ status, handlerId, handleAt: new Date().toISOString() })
+      .set({ status, handlerId, handleAt: new Date() })
       .where(eq(reports.id, id));
   },
 };
@@ -504,7 +507,7 @@ export const ipBanQueries = {
 
   async add(ip: string, reason?: string, source = "manual") {
     const db = getDb();
-    await db.insert(ipBans).values({ ip, reason, source, createAt: new Date().toISOString() });
+    await db.insert(ipBans).values({ ip, reason, source, createAt: new Date() });
   },
 
   async remove(id: number) {
@@ -539,6 +542,203 @@ export const settingQueries = {
   async set(key: string, value: string) {
     const db = getDb();
     await db.delete(siteSettings).where(eq(siteSettings.key, key));
-    await db.insert(siteSettings).values({ key, value, updateAt: new Date().toISOString() });
+    await db.insert(siteSettings).values({ key, value, updateAt: new Date() });
+  },
+};
+
+export const jobMetaQueries = {
+  async upsert(topicId: number, data: {
+    company: string;
+    companyLogo?: string | null;
+    position: string;
+    location: string;
+    remote: string;
+    salaryMin?: number | null;
+    salaryMax?: number | null;
+    experience?: string | null;
+    techTags?: string[];
+    contact: string;
+  }) {
+    const db = getDb();
+    await db
+      .insert(jobMeta)
+      .values({
+        topicId,
+        company: data.company,
+        companyLogo: data.companyLogo ?? null,
+        position: data.position,
+        location: data.location,
+        remote: data.remote,
+        salaryMin: data.salaryMin ?? null,
+        salaryMax: data.salaryMax ?? null,
+        experience: data.experience ?? null,
+        techTags: data.techTags ?? null,
+        contact: data.contact,
+        createAt: new Date(),
+        updateAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: jobMeta.topicId,
+        set: {
+          company: data.company,
+          companyLogo: data.companyLogo ?? null,
+          position: data.position,
+          location: data.location,
+          remote: data.remote,
+          salaryMin: data.salaryMin ?? null,
+          salaryMax: data.salaryMax ?? null,
+          experience: data.experience ?? null,
+          techTags: data.techTags ?? null,
+          contact: data.contact,
+          updateAt: new Date(),
+        },
+      });
+  },
+
+  async getByTopicId(topicId: number) {
+    const db = getDb();
+    const result = await db.select().from(jobMeta).where(eq(jobMeta.topicId, topicId)).limit(1);
+    return result[0] || null;
+  },
+
+  async listWithFilters(params: {
+    limit: number;
+    offset: number;
+    location?: string;
+    remote?: string;
+    salaryMin?: number;
+    tags?: string[];
+  }) {
+    const db = getDb();
+    const conditions: any[] = [
+      eq(topics.tab, "job"),
+      boolEq(topics.deleted, false),
+      sql`coalesce(${topics.status}, 'published') <> 'deleted'`,
+      sql`${jobMeta.topicId} = ${topics.id}`,
+    ];
+    if (params.location) conditions.push(eq(jobMeta.location, params.location));
+    if (params.remote) conditions.push(eq(jobMeta.remote, params.remote));
+    if (params.salaryMin) conditions.push(sql`${jobMeta.salaryMax} >= ${params.salaryMin}`);
+    if (params.tags && params.tags.length > 0) {
+      conditions.push(sql`${jobMeta.techTags} && ${sql.raw(`ARRAY[${params.tags.map((t) => `'${t.replace(/'/g, "''")}'`).join(",")}]::text[]`)}`);
+    }
+    const where = and(...conditions);
+    const listQuery = db
+      .select({
+        id: topics.id,
+        title: topics.title,
+        content: topics.content,
+        authorId: topics.authorId,
+        replyCount: topics.replyCount,
+        visitCount: topics.visitCount,
+        createAt: topics.createAt,
+        company: jobMeta.company,
+        companyLogo: jobMeta.companyLogo,
+        position: jobMeta.position,
+        location: jobMeta.location,
+        remote: jobMeta.remote,
+        salaryMin: jobMeta.salaryMin,
+        salaryMax: jobMeta.salaryMax,
+        experience: jobMeta.experience,
+        techTags: jobMeta.techTags,
+        contact: jobMeta.contact,
+      })
+      .from(topics)
+      .innerJoin(jobMeta, eq(jobMeta.topicId, topics.id))
+      .where(where)
+      .orderBy(desc(topics.createAt))
+      .limit(params.limit)
+      .offset(params.offset);
+    return listQuery;
+  },
+
+  async countWithFilters(params: {
+    location?: string;
+    remote?: string;
+    salaryMin?: number;
+    tags?: string[];
+  }) {
+    const db = getDb();
+    const conditions: any[] = [
+      eq(topics.tab, "job"),
+      boolEq(topics.deleted, false),
+      sql`coalesce(${topics.status}, 'published') <> 'deleted'`,
+      sql`${jobMeta.topicId} = ${topics.id}`,
+    ];
+    if (params.location) conditions.push(eq(jobMeta.location, params.location));
+    if (params.remote) conditions.push(eq(jobMeta.remote, params.remote));
+    if (params.salaryMin) conditions.push(sql`${jobMeta.salaryMax} >= ${params.salaryMin}`);
+    if (params.tags && params.tags.length > 0) {
+      conditions.push(sql`${jobMeta.techTags} && ${sql.raw(`ARRAY[${params.tags.map((t) => `'${t.replace(/'/g, "''")}'`).join(",")}]::text[]`)}`);
+    }
+    const where = and(...conditions);
+    const result = await db
+      .select({ c: count() })
+      .from(topics)
+      .innerJoin(jobMeta, eq(jobMeta.topicId, topics.id))
+      .where(where);
+    return Number(result[0]?.c || 0);
+  },
+
+  async facetLocations(): Promise<string[]> {
+    const db = getDb();
+    const result = await db
+      .selectDistinct({ location: jobMeta.location })
+      .from(jobMeta)
+      .innerJoin(topics, eq(jobMeta.topicId, topics.id))
+      .where(and(eq(topics.tab, "job"), boolEq(topics.deleted, false)));
+    return result.map((r: any) => r.location).filter(Boolean);
+  },
+};
+
+export const tabQueries = {
+  async listAll() {
+    const db = getDb();
+    return db.select().from(tabs).orderBy(tabs.sortOrder);
+  },
+
+  async listVisible() {
+    const db = getDb();
+    return db
+      .select()
+      .from(tabs)
+      .where(boolEq(tabs.visible, true))
+      .orderBy(tabs.sortOrder);
+  },
+
+  async updateById(id: number, data: { label?: string; visible?: boolean; sortOrder?: number }) {
+    const db = getDb();
+    const update: any = { updateAt: new Date() };
+    if (data.label !== undefined) update.label = data.label;
+    if (data.visible !== undefined) update.visible = boolValue(data.visible);
+    if (data.sortOrder !== undefined) update.sortOrder = data.sortOrder;
+    await db.update(tabs).set(update).where(eq(tabs.id, id));
+    const result = await db.select().from(tabs).where(eq(tabs.id, id)).limit(1);
+    return result[0] || null;
+  },
+};
+
+export const zoneQueries = {
+  async listAll() {
+    const db = getDb();
+    return db.select().from(zones).orderBy(zones.sortOrder);
+  },
+
+  async listVisible() {
+    const db = getDb();
+    return db.select().from(zones).where(boolEq(zones.visible, true)).orderBy(zones.sortOrder);
+  },
+
+  async updateById(id: number, data: { name?: string; description?: string; icon?: string; visible?: boolean; sortOrder?: number }) {
+    const db = getDb();
+    const update: any = { updateAt: new Date() };
+    if (data.name !== undefined) update.name = data.name;
+    if (data.description !== undefined) update.description = data.description;
+    if (data.icon !== undefined) update.icon = data.icon;
+    if (data.visible !== undefined) update.visible = boolValue(data.visible);
+    if (data.sortOrder !== undefined) update.sortOrder = data.sortOrder;
+    await db.update(zones).set(update).where(eq(zones.id, id));
+    const result = await db.select().from(zones).where(eq(zones.id, id)).limit(1);
+    return result[0] || null;
   },
 };

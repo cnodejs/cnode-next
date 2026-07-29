@@ -56,7 +56,10 @@ function createOssClient() {
   if (!accessKeyId || !accessKeySecret || !bucket) throw new Error("OSS_ACCESS_KEY_ID, OSS_ACCESS_KEY_SECRET and OSS_BUCKET are required");
   return new OSS({ accessKeyId, accessKeySecret, bucket, region, endpoint });
 }
-function uploadPrefix() { return (process.env.OSS_UPLOAD_PREFIX || "cnode-next/uploads").replace(/^\/+|\/+$/g, ""); }
+function uploadPrefix(purpose?: string | null) {
+  const base = (process.env.OSS_UPLOAD_PREFIX || "cnode-next/uploads").replace(/^\/+|\/+$/g, "");
+  return purpose === "job-logo" ? `${base}/jobs` : base;
+}
 function staticUploadUrl(filename: string) { return `${(process.env.OSS_STATIC_HOST || "https://static.cnodejs.org").replace(/\/+$/g, "")}/${filename}`; }
 function safeOriginalName(name: string) { return name.replace(/[/\\]/g, "").trim().slice(0, 255) || "image"; }
 function extensionForFilename(name: string) { return name.toLowerCase().match(/\.[a-z0-9]+$/)?.[0] || ""; }
@@ -394,7 +397,8 @@ auth.post("/upload/image", async (c) => {
   if (originalExtension && !allowedImageExtensions.has(originalExtension)) return c.json({ success: false, error_msg: "只支持 png/jpeg/gif/webp 图片上传" }, 422);
   const maxSize = Number(process.env.OSS_UPLOAD_MAX_BYTES || 5 * 1024 * 1024);
   if (file.size > maxSize) return c.json({ success: false, error_msg: "图片不能超过 5MB" }, 413);
-  const filename = `${uploadPrefix()}/${uuidv4()}${extensionForContentType(file.type)}`;
+  const purpose = typeof formData?.get("purpose") === "string" ? String(formData.get("purpose")) : null;
+  const filename = `${uploadPrefix(purpose)}/${uuidv4()}${extensionForContentType(file.type)}`;
   await createOssClient().put(filename, Buffer.from(await file.arrayBuffer()), { headers: { "Content-Type": file.type } });
   return c.json({ success: true, url: staticUploadUrl(filename), filename: originalName });
 });

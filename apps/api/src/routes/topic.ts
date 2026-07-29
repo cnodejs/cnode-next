@@ -1,6 +1,6 @@
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import _ from "lodash";
-import { settingQueries, topicQueries, userQueries, replyQueries } from "../lib/db";
+import { settingQueries, topicQueries, userQueries, replyQueries, jobMetaQueries } from "../lib/db";
 import { incrementScoreAndTopicCount } from "../lib/score";
 import { sendMessageToMentionUsers } from "../lib/at";
 import { checkContent } from "../lib/moderation";
@@ -219,6 +219,8 @@ topic.openapi(getTopicRoute, async (c) => {
 
   const isCollect = currentUser ? await topicQueries.isCollected(id, currentUser.id) : false;
 
+  const jobMetaData = topicData.tab === "job" ? await jobMetaQueries.getByTopicId(id) : null;
+
   const result: any = {
     id: String(topicData.id),
     author_id: String(topicData.authorId),
@@ -234,6 +236,20 @@ topic.openapi(getTopicRoute, async (c) => {
     author: userSummary(author),
     replies: repliesData,
     is_collect: isCollect,
+    job_meta: jobMetaData
+      ? {
+          company: jobMetaData.company,
+          company_logo: jobMetaData.companyLogo,
+          position: jobMetaData.position,
+          location: jobMetaData.location,
+          remote: jobMetaData.remote,
+          salary_min: jobMetaData.salaryMin,
+          salary_max: jobMetaData.salaryMax,
+          experience: jobMetaData.experience,
+          tech_tags: jobMetaData.techTags || [],
+          contact: jobMetaData.contact,
+        }
+      : null,
   };
 
   return c.json({ success: true as const, data: result }, 200);
@@ -313,6 +329,22 @@ topic.openapi(createTopicRoute, async (c) => {
   }
 
   const newTopic = await topicQueries.newAndSave(title, content, tab, user.id);
+
+  if (tab === "job" && body.job_meta) {
+    await jobMetaQueries.upsert(newTopic.id, {
+      company: body.job_meta.company,
+      companyLogo: body.job_meta.company_logo ?? null,
+      position: body.job_meta.position,
+      location: body.job_meta.location,
+      remote: body.job_meta.remote,
+      salaryMin: body.job_meta.salary_min ?? null,
+      salaryMax: body.job_meta.salary_max ?? null,
+      experience: body.job_meta.experience ?? null,
+      techTags: body.job_meta.tech_tags ?? [],
+      contact: body.job_meta.contact,
+    });
+  }
+
   await incrementScoreAndTopicCount(user.id, CREATE_TOPIC_SCORE, 1);
   await sendMessageToMentionUsers(content, newTopic.id, user.id);
 
@@ -400,6 +432,22 @@ topic.openapi(updateTopicRoute, async (c) => {
   }
 
   await topicQueries.updateTopic(tid, { title, tab, content });
+
+  if (tab === "job" && body.job_meta) {
+    await jobMetaQueries.upsert(tid, {
+      company: body.job_meta.company,
+      companyLogo: body.job_meta.company_logo ?? null,
+      position: body.job_meta.position,
+      location: body.job_meta.location,
+      remote: body.job_meta.remote,
+      salaryMin: body.job_meta.salary_min ?? null,
+      salaryMax: body.job_meta.salary_max ?? null,
+      experience: body.job_meta.experience ?? null,
+      techTags: body.job_meta.tech_tags ?? [],
+      contact: body.job_meta.contact,
+    });
+  }
+
   await sendMessageToMentionUsers(content, tid, user.id);
 
   return c.json({ success: true as const, topic_id: String(tid) }, 200);

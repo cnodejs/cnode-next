@@ -24,6 +24,7 @@ pnpm test                 # tests
 pnpm build                # all packages/apps
 pnpm verify               # release gate: lint/typecheck/test/build/OpenSpec/secrets
 pnpm db:push:pg           # create/update PostgreSQL schema
+pnpm db:migrate           # apply reviewed Drizzle migrations
 pnpm db:seed              # seed test data
 pnpm migrate:mongo-to-pg  # explicit Mongo to PostgreSQL migration
 pnpm migrate:reconcile    # explicit migration reconcile

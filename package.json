@@ -13,6 +13,7 @@
     "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm gen:openapi && pnpm verify:compose-config && openspec validate --all --strict && pnpm secrets:scan",
     "db:push": "pnpm --filter @cnode/db db:push",
     "db:push:pg": "pnpm --filter @cnode/db db:push:pg",
+    "db:migrate": "pnpm --filter @cnode/db db:migrate",
     "db:seed": "pnpm --filter @cnode/db db:seed",
     "db:generate": "pnpm --filter @cnode/db db:generate",
     "migrate:mongo-to-pg": "tsx scripts/migrate-mongo-to-pg.ts",

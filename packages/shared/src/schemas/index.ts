@@ -7,3 +7,5 @@ export { collectBodySchema, collectLoginNameParamSchema } from "./collect";
 export * from "./message";
 export * from "./community";
 export * from "./admin";
+export * from "./tab";
+export * from "./zone";
