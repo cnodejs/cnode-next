@@ -1,5 +1,4 @@
-import assert from "node:assert/strict";
-import { test } from "node:test";
+import { expect, test } from "vitest";
 import { createHitDedupeKey, createHitPreview, matchContent } from "../src/lib/moderation";
 
 const words = [
@@ -9,22 +8,22 @@ const words = [
 
 test("matchContent matches case-insensitive ASCII", () => {
   const hits = matchContent("hello badword and 敏感内容", words);
-  assert.equal(hits.length, 2);
-  assert.equal(hits[0]?.word, "BadWord");
-  assert.equal(hits[0]?.index, 6);
+  expect(hits.length).toBe(2);
+  expect(hits[0]?.word).toBe("BadWord");
+  expect(hits[0]?.index).toBe(6);
 });
 
 test("matchContent matches CJK", () => {
   const hits = matchContent("hello badword and 敏感内容", words);
-  assert.equal(hits[1]?.word, "敏感");
+  expect(hits[1]?.word).toBe("敏感");
 });
 
 test("createHitPreview creates bounded preview", () => {
   const preview = createHitPreview("0123456789SensitiveContentABCDEFGHIJ", 10, 5);
-  assert.equal(preview, "...56789Sensi...");
+  expect(preview).toBe("...56789Sensi...");
 });
 
 test("createHitDedupeKey normalizes to lowercase", () => {
   const dedupeKey = createHitDedupeKey("topic", 123, "content", "BadWord");
-  assert.equal(dedupeKey, "topic:123:content:badword");
+  expect(dedupeKey).toBe("topic:123:content:badword");
 });

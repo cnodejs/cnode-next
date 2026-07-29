@@ -1,35 +1,34 @@
-import assert from "node:assert/strict";
-import { test } from "node:test";
+import { expect, test } from "vitest";
 import { isValidIpRule, matchesIpRule } from "../src/middleware/ip-ban";
 
 test("isValidIpRule accepts single IPv4", () => {
-  assert.equal(isValidIpRule("1.2.3.4"), true);
+  expect(isValidIpRule("1.2.3.4")).toBe(true);
 });
 
 test("isValidIpRule accepts IPv4 CIDR", () => {
-  assert.equal(isValidIpRule("1.2.3.0/24"), true);
+  expect(isValidIpRule("1.2.3.0/24")).toBe(true);
 });
 
 test("isValidIpRule rejects invalid CIDR prefix", () => {
-  assert.equal(isValidIpRule("1.2.3.0/33"), false);
+  expect(isValidIpRule("1.2.3.0/33")).toBe(false);
 });
 
 test("isValidIpRule rejects garbage", () => {
-  assert.equal(isValidIpRule("not-an-ip"), false);
+  expect(isValidIpRule("not-an-ip")).toBe(false);
 });
 
 test("matchesIpRule exact match", () => {
-  assert.equal(matchesIpRule("1.2.3.4", "1.2.3.4"), true);
+  expect(matchesIpRule("1.2.3.4", "1.2.3.4")).toBe(true);
 });
 
 test("matchesIpRule exact miss", () => {
-  assert.equal(matchesIpRule("1.2.3.5", "1.2.3.4"), false);
+  expect(matchesIpRule("1.2.3.5", "1.2.3.4")).toBe(false);
 });
 
 test("matchesIpRule CIDR match", () => {
-  assert.equal(matchesIpRule("1.2.3.5", "1.2.3.0/24"), true);
+  expect(matchesIpRule("1.2.3.5", "1.2.3.0/24")).toBe(true);
 });
 
 test("matchesIpRule CIDR miss", () => {
-  assert.equal(matchesIpRule("1.2.4.5", "1.2.3.0/24"), false);
+  expect(matchesIpRule("1.2.4.5", "1.2.3.0/24")).toBe(false);
 });

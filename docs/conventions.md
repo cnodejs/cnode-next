@@ -71,11 +71,14 @@ This repository keeps public project documentation concise, task-oriented, and s
 | Level | Expectation |
 | ----- | ----------- |
 | Unit | Pure logic in `packages/shared` and helpers must have unit tests. |
-| Integration | API route and DB query behavior should be covered by package-level tests against PostgreSQL. |
+| API route | `apps/api` uses Vitest. Route tests may use Hono `app.request` and fake/mock service boundaries, but must not connect to a real database. |
+| DB behavior | Do not add database integration tests unless a future OpenSpec change defines a PostgreSQL-only strategy. Current API tests do not use a real test database. |
 | Contract | `pnpm gen:openapi` regenerates `api/openapi.json` from route zod-openapi declarations. `pnpm verify` includes this step. |
-| No SQLite | Tests must not make SQLite a release path. Pure logic checks are acceptable when no DB is needed. |
-| Naming | `*.test.ts` next to the source file or under a `__tests__` directory. |
-| Running | `pnpm test` per package, `pnpm -r test` across the workspace. |
+| No SQLite | Tests must not make SQLite, PGlite, in-memory SQL, or dialect fallback a release path. Pure logic checks are acceptable when no DB is needed. |
+| Naming | `apps/api` tests live under `apps/api/test/**/*.test.ts`; other packages use `*.test.ts` next to source or under `__tests__`. |
+| Running | `apps/api` runs `vitest run` with automatic test discovery. Use `pnpm test` per package, `pnpm -r test` across the workspace. |
+
+API tests must not require `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, or any real PostgreSQL test database. Tests that need database-backed branches should fake the service/query boundary and state that they verify route behavior, not PostgreSQL semantics.
 
 ## OpenSpec And Design Process
 

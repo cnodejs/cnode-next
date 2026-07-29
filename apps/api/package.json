@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "tsx --test test/mail-template.test.ts test/health.test.ts test/admin-pagination.test.ts test/ip-ban-rules.test.ts test/moderation-helpers.test.ts test/roles-permissions.test.ts",
+    "test": "vitest run",
     "worker:moderation": "tsx src/worker/moderation-scan.ts",
     "typecheck": "tsc --noEmit",
     "gen:openapi": "tsx scripts/gen-openapi.ts"
@@ -16,8 +16,8 @@
     "@cnode/db": "workspace:*",
     "@cnode/shared": "workspace:*",
     "@hono/node-server": "^1.13.0",
-    "@hono/zod-validator": "^0.4.0",
     "@hono/zod-openapi": "^1.5.1",
+    "@hono/zod-validator": "^0.4.0",
     "@react-email/render": "2.1.0",
     "ali-oss": "^6.21.0",
     "bcryptjs": "^2.4.3",
@@ -44,6 +44,7 @@
     "@types/react-dom": "19.2.3",
     "@types/uuid": "^10.0.0",
     "tsx": "^4.19.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.10"
   }
 }

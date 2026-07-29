@@ -1,5 +1,4 @@
-import assert from "node:assert/strict";
-import { test } from "node:test";
+import { expect, test } from "vitest";
 import app from "../src/app";
 
 test("GET /health returns shallow build metadata without sensitive leakage", async () => {
@@ -12,22 +11,22 @@ test("GET /health returns shallow build metadata without sensitive leakage", asy
 
   try {
     const res = await app.request("/health");
-    assert.equal(res.status, 200);
-    assert.equal(res.headers.get("content-type")?.includes("application/json"), true);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")?.includes("application/json")).toBe(true);
 
     const body = await res.json();
-    assert.deepEqual(Object.keys(body).sort(), ["buildTime", "commit", "ok", "service", "version"]);
-    assert.equal(body.ok, true);
-    assert.equal(body.service, "cnode-api");
-    assert.equal(body.commit, "abc123");
-    assert.equal(body.buildTime, "2026-07-28T00:00:00.000Z");
-    assert.equal(typeof body.version, "string");
+    expect(Object.keys(body).sort()).toEqual(["buildTime", "commit", "ok", "service", "version"]);
+    expect(body.ok).toBe(true);
+    expect(body.service).toBe("cnode-api");
+    expect(body.commit).toBe("abc123");
+    expect(body.buildTime).toBe("2026-07-28T00:00:00.000Z");
+    expect(typeof body.version).toBe("string");
 
     const serialized = JSON.stringify(body);
-    assert.doesNotMatch(serialized, /DATABASE_URL|AUTH_SESSION_SECRET|TURNSTILE_SECRET_KEY/);
-    assert.doesNotMatch(serialized, /secret-password|super-secret-session|turnstile-secret-token/);
-    assert.doesNotMatch(serialized, /postgres:\/\//);
-    assert.doesNotMatch(serialized, /stack/i);
+    expect(serialized).not.toMatch(/DATABASE_URL|AUTH_SESSION_SECRET|TURNSTILE_SECRET_KEY/);
+    expect(serialized).not.toMatch(/secret-password|super-secret-session|turnstile-secret-token/);
+    expect(serialized).not.toMatch(/postgres:\/\//);
+    expect(serialized).not.toMatch(/stack/i);
   } finally {
     process.env = oldEnv;
   }
