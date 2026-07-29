@@ -28,11 +28,18 @@ rules:
   proposal:
     - Keep proposals under 800 words
     - Always include a "Non-goals" section
+    - Always define the change scope: in-scope areas, out-of-scope areas, affected systems, and high-risk categories
+    - Always include a "Documentation Impact" section covering docs/ and wiki/ updates, deferrals, or why they are not required
     - Reference the legacy nodeclub/egg-cnode code by path when explaining what is being replaced
   tasks:
     - Group tasks into phases (MVP first, then feature-complete)
     - Each task should be completable in under 2 hours
     - Include verification steps where possible
+    - Include docs/wiki synchronization tasks when Documentation Impact requires updates
+    - Include diagram consistency and archive-readiness checks for design-heavy changes
+    - Include database audit verification tasks for database changes
   design:
     - Record not just the decision but the alternatives that were rejected and why
     - Use Mermaid diagrams (not ASCII art) for architecture flows and data flows
+    - Use Mermaid diagrams or concise matrices for data models, state transitions, permissions, and migration/release ordering when those areas are affected
+    - Include a "Database Change Audit" for any PostgreSQL schema, Drizzle migration, seed/bootstrap, index, constraint, backfill, data repair, data cleanup, data retention, or field semantics change

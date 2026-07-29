@@ -10,7 +10,7 @@ This repository keeps public project documentation concise, task-oriented, and s
 | `docs/` | Stable task documentation | Architecture, development, database, migration, API reference, moderation, and security tasks. Keep current behavior first. |
 | `wiki/` | Knowledge base | Historical context, legacy behavior, migration background, community rules, and business logic notes. Must follow [wiki/writing-guidelines.md](../wiki/writing-guidelines.md). |
 | `deployment/` | Production deployment domain | Production runbook, compose file, grouped dotenv template, audit template, and real operator assets. |
-| `openspec/` | Proposed and accepted behavior changes | Use for scoped product, API, migration, release, or architecture changes. |
+| `openspec/` | Proposed and accepted behavior changes | Use for scoped product, API, migration, release, architecture, database, security, permissions, deployment, or data repair changes. |
 
 `docs/`, `wiki/`, and `deployment/` are sibling domains. `docs/` answers "how do I develop, understand, or use this now?". `wiki/` records "why is this true, where did it come from, and what still needs review?". `deployment/` contains the production runbook and files operators can copy, validate, or execute.
 
@@ -53,6 +53,7 @@ This repository keeps public project documentation concise, task-oriented, and s
 | Description | State what changed and why. Note migration, deployment, and secret-handling impact. |
 | Tests | Add or update tests for behavior changes. Pure refactors still pass `pnpm test`. |
 | Docs | Update `docs/` and `apps/api/src/routes/*.ts` zod-openapi declarations when API behavior changes. Run `pnpm gen:openapi` to regenerate `api/openapi.json`. |
+| Database audit | For PostgreSQL schema, migration, seed/bootstrap, index, constraint, backfill, cleanup, repair, retention, or field semantic changes, link to the OpenSpec `Database Change Audit`. |
 | Verification | Run `pnpm verify` when feasible. If not, list the subset that was run and why. |
 | Reviews | At least one maintainer approval for `main`. Request review from domain owners for affected packages. |
 | Squash merge | Default. The squashed commit message should follow Conventional Commits. |
@@ -78,11 +79,22 @@ This repository keeps public project documentation concise, task-oriented, and s
 
 ## OpenSpec And Design Process
 
-- Use OpenSpec for scoped behavior, product, API, migration, release, or architecture changes. See [CONTRIBUTING.md](../CONTRIBUTING.md).
+- Use OpenSpec for scoped behavior, product, API, migration, release, architecture, database, security, permissions, deployment, or data repair changes. See [CONTRIBUTING.md](../CONTRIBUTING.md) and [docs/openspec-governance.md](openspec-governance.md).
 - Small documentation corrections and mechanical fixes can be submitted directly when they do not change shipped behavior.
-- Proposals should state Why, What Changes, Non-goals, Capabilities, and Impact.
+- Proposals should state Why, What Changes, Scope, Non-goals, Capabilities, Impact, and Documentation Impact.
 - Specs are capability-oriented and declarative. Implementation details belong in `design.md` or tasks, not the spec.
-- Archive a change only after tasks are complete and `openspec validate --all --strict` passes.
+- Designs should include Mermaid diagrams or concise matrices for affected architecture, data, state, permission, and migration flows.
+- Database-related designs must include a `Database Change Audit` covering impact, compatibility, migration, rollback, performance, data integrity, and documentation updates.
+- Archive a change only after tasks are complete, documentation impact is handled, database audit evidence exists where applicable, and `openspec validate --all --strict` passes.
+
+## Documentation Sync Rules
+
+| Change area | Documentation expectation |
+| ----------- | ------------------------- |
+| Current development, runtime, architecture, API, database, migration, moderation, or security behavior | Update the relevant `docs/` page or explain why stable docs are not affected. |
+| Business rules, legacy behavior, migration background, community rules, or sourced historical context | Update the relevant `wiki/` page and follow [wiki/writing-guidelines.md](../wiki/writing-guidelines.md). |
+| API contract behavior | Update route zod-openapi declarations and regenerate `api/openapi.json` with `pnpm gen:openapi`. |
+| PostgreSQL schema, migration, index, constraint, backfill, cleanup, repair, retention, or field semantics | Include OpenSpec `Database Change Audit`; update `docs/database.md`, `docs/migration-runbook.md`, or `wiki/migration-background.md` when durable knowledge changes. |
 
 ## API Documentation Rules
 

@@ -6,24 +6,25 @@ This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.
 
 ## Workflow
 
-Use OpenSpec for scoped behavior, product, API, migration, release, or architecture changes. Small documentation corrections and mechanical fixes can be submitted directly when they do not change shipped behavior.
+Use OpenSpec for scoped behavior, product, API, migration, release, architecture, database, security, permissions, deployment, or data repair changes. Small documentation corrections and mechanical fixes can be submitted directly when they do not change shipped behavior.
 
 ```mermaid
 flowchart LR
-  Idea[idea or bug] --> Scope{behavior or product change?}
+  Idea[idea or bug] --> Scope{scoped behavior or high-risk change?}
   Scope -- yes --> OpenSpec[OpenSpec change]
   Scope -- no --> Patch[small patch]
-  OpenSpec --> Patch
+  OpenSpec --> Audit[scope + docs/wiki + audit]
+  Audit --> Patch
   Patch --> Verify[pnpm verify]
   Verify --> PR[PR notes]
 ```
 
 | Step | Contributor task |
 | ---- | ---------------- |
-| Scope | Decide whether OpenSpec is required. |
+| Scope | Decide whether OpenSpec is required and identify affected systems, docs, wiki, and high-risk categories. |
 | Patch | Keep changes focused and update docs/tests with behavior. |
 | Verify | Run the full gate when feasible. |
-| PR | Include validation notes and risk areas. |
+| PR | Include validation notes, documentation impact, and risk areas. |
 
 ## Local Validation
 
@@ -48,7 +49,8 @@ Include:
 
 - OpenSpec change ID, or a note that no OpenSpec change is needed.
 - Commands run, especially `pnpm verify` or the subset that was possible.
-- Database or migration impact.
+- Documentation impact for `docs/` and `wiki/`, or why long-lived documentation was not affected.
+- Database or migration impact, including a link or summary of the OpenSpec `Database Change Audit` for database-related changes.
 - Deployment impact for release changes.
 - Secret handling confirmation for config, CI, deployment, auth, mail, storage, and database changes.
 
