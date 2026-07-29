@@ -16,6 +16,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { useNavTransition } from "./NavProgress";
 import { useAuthStore } from "~/lib/stores";
 import { useRouteLoaderData } from "react-router";
 import { apiFetch } from "~/lib/api-client";
@@ -25,6 +26,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { CNodeLogo } from "./CNodeLogo";
 import { CommandPalette } from "./CommandPalette";
 import { PageContainer } from "./PageShell";
+import { cn } from "~/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,10 +39,11 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const isNavigating = useNavTransition();
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Header />
-      <main className="flex-1">
+      <main className={cn("flex-1 transition-opacity duration-200", isNavigating ? "opacity-60" : "opacity-100")}>
         <PageContainer className="py-6">{children}</PageContainer>
       </main>
       <Footer />
@@ -159,12 +162,8 @@ export function HeaderUserArea() {
 
   useEffect(() => setMounted(true), []);
 
-  const rootData = useRouteLoaderData("root") as { user: any } | undefined;
-  const ssrUser = rootData?.user;
-  const effectiveUser = user || ssrUser;
-
-  if (!mounted && ssrUser === undefined) return null;
-  if (!effectiveUser) {
+  if (!mounted) return null;
+  if (!user) {
     return (
       <Link
         to="/signin"
@@ -204,10 +203,10 @@ export function HeaderUserArea() {
           >
             <Avatar className="h-7 w-7 ring-1 ring-cnode-green/30">
               <AvatarImage
-                src={getAvatarUrl(effectiveUser.avatar_url, 32)}
-                alt={effectiveUser.loginname}
+                src={getAvatarUrl(user.avatar_url, 32)}
+                alt={user.loginname}
               />
-              <AvatarFallback>{getAvatarFallback(effectiveUser.loginname)}</AvatarFallback>
+              <AvatarFallback>{getAvatarFallback(user.loginname)}</AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
@@ -215,14 +214,14 @@ export function HeaderUserArea() {
           <DropdownMenuLabel className="flex items-center gap-2 px-2 py-2 font-normal">
             <Avatar className="h-8 w-8 ring-1 ring-cnode-green/30">
               <AvatarImage
-                src={getAvatarUrl(effectiveUser.avatar_url, 32)}
-                alt={effectiveUser.loginname}
+                src={getAvatarUrl(user.avatar_url, 32)}
+                alt={user.loginname}
               />
-              <AvatarFallback>{getAvatarFallback(effectiveUser.loginname)}</AvatarFallback>
+              <AvatarFallback>{getAvatarFallback(user.loginname)}</AvatarFallback>
             </Avatar>
             <div className="min-w-0">
               <div className="truncate text-sm font-medium text-foreground">
-                {effectiveUser.loginname}
+                {user.loginname}
               </div>
               <div className="text-xs text-muted-foreground">已登录</div>
             </div>
@@ -230,7 +229,7 @@ export function HeaderUserArea() {
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem asChild>
-              <Link to={`/user/${effectiveUser.loginname}`}>
+              <Link to={`/user/${user.loginname}`}>
                 <User />
                 我的主页
               </Link>
@@ -242,7 +241,7 @@ export function HeaderUserArea() {
               </Link>
             </DropdownMenuItem>
           </DropdownMenuGroup>
-          {(effectiveUser.is_admin || effectiveUser.is_mod) && (
+          {(user.is_admin || user.is_mod) && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
@@ -275,8 +274,6 @@ export function HeaderUserArea() {
 
 function MobileNavTrigger({ visibleZones = [] }: { visibleZones?: any[] }) {
   const user = useAuthStore((s) => s.user);
-  const rootData = useRouteLoaderData("root") as { user: any } | undefined;
-  const effectiveUser = user || rootData?.user;
 
   return (
     <div className="md:hidden">
@@ -348,10 +345,10 @@ function MobileNavTrigger({ visibleZones = [] }: { visibleZones?: any[] }) {
             >
               <HelpCircle className="h-5 w-5 text-primary" /> 常见问题
             </Link>
-            {effectiveUser ? (
+            {user ? (
               <>
                 <Link
-                  to={`/user/${effectiveUser.loginname}`}
+                  to={`/user/${user.loginname}`}
                   className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
                 >
                   <User className="h-5 w-5 text-primary" /> 我的主页
@@ -362,7 +359,7 @@ function MobileNavTrigger({ visibleZones = [] }: { visibleZones?: any[] }) {
                 >
                   <Settings className="h-5 w-5 text-primary" /> 设置
                 </Link>
-                {(effectiveUser.is_admin || effectiveUser.is_mod) && (
+                {(user.is_admin || user.is_mod) && (
                   <Link
                     to="/admin"
                     className="col-span-2 flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"

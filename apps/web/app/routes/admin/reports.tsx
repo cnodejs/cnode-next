@@ -3,6 +3,7 @@ import { AdminLayout } from "~/components/AdminLayout";
 import { apiFetch } from "~/lib/api-client";
 import { Form, useRevalidator } from "react-router";
 import { toast } from "sonner";
+import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { EmptyState } from "~/components/EmptyState";
@@ -31,18 +32,25 @@ export default function AdminReports({ loaderData }: any) {
   const { reports, total, page, limit, status } = loaderData;
   const { revalidate } = useRevalidator();
 
-  const handleAction = async (id: number, action: string) => {
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>(
-      `/api/v1/admin/reports/${id}/${action}`,
-      { method: "POST" },
-    );
-    if (res.success) {
-      toast.success(action === "confirm" ? "已确认违规" : "已驳回");
-      revalidate();
-    } else {
-      toast.error(res.error_msg || "操作失败");
-    }
-  };
+  const { run: handleAction } = useAsyncAction(
+    async (id: number, action: string) => {
+      const res = await apiFetch<{ success: boolean; error_msg?: string }>(
+        `/api/v1/admin/reports/${id}/${action}`,
+        { method: "POST" },
+      );
+      return { ...res, action };
+    },
+    {
+      onSuccess: (result) => {
+        if (result.success) {
+          toast.success(result.action === "confirm" ? "已确认违规" : "已驳回");
+          revalidate();
+        } else {
+          toast.error(result.error_msg || "操作失败");
+        }
+      },
+    },
+  );
 
   return (
     <AdminLayout>

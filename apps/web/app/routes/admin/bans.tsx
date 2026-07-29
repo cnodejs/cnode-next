@@ -4,6 +4,7 @@ import { apiFetch } from "~/lib/api-client";
 import { useRevalidator } from "react-router";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Badge } from "~/components/ui/badge";
@@ -52,49 +53,56 @@ export default function AdminBans({ loaderData }: any) {
   const { revalidate } = useRevalidator();
   const [ip, setIp] = useState("");
   const [reason, setReason] = useState("");
-  const [savingIp, setSavingIp] = useState(false);
 
-  const handleUnblock = async (name: string) => {
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>(
-      `/api/v1/user/${name}/unblock`,
-      { method: "POST" },
-    );
-    if (res.success) {
-      toast.success(`已解禁 ${name}`);
-      revalidate();
-    } else {
-      toast.error(res.error_msg || "解禁失败");
-    }
-  };
+  const { run: handleUnblock } = useAsyncAction(
+    async (name: string) => {
+      const res = await apiFetch<{ success: boolean; error_msg?: string }>(`/api/v1/user/${name}/unblock`, { method: "POST" });
+      return { ...res, name };
+    },
+    {
+      onSuccess: (result) => {
+        if (result.success) {
+          toast.success(`已解禁 ${result.name}`);
+          revalidate();
+        } else {
+          toast.error(result.error_msg || "解禁失败");
+        }
+      },
+    },
+  );
 
-  const handleAddIp = async () => {
-    setSavingIp(true);
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>("/api/v1/admin/bans/ips", {
-      method: "POST",
-      body: JSON.stringify({ ip, reason }),
-    }).catch(() => ({ success: false, error_msg: "添加失败" }));
-    setSavingIp(false);
-    if (res.success) {
-      toast.success("IP 规则已添加");
-      setIp("");
-      setReason("");
-      revalidate();
-    } else {
-      toast.error(res.error_msg || "添加失败");
-    }
-  };
+  const { run: handleAddIp, pending: savingIp } = useAsyncAction(
+    () =>
+      apiFetch<{ success: boolean; error_msg?: string }>("/api/v1/admin/bans/ips", {
+        method: "POST",
+        body: JSON.stringify({ ip, reason }),
+      }),
+    {
+      successMessage: "IP 规则已添加",
+      onSuccess: () => {
+        setIp("");
+        setReason("");
+        revalidate();
+      },
+    },
+  );
 
-  const handleRemoveIp = async (id: number) => {
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>(`/api/v1/admin/bans/ips/${id}`, {
-      method: "DELETE",
-    }).catch(() => ({ success: false, error_msg: "移除失败" }));
-    if (res.success) {
-      toast.success("IP 规则已移除");
-      revalidate();
-    } else {
-      toast.error(res.error_msg || "移除失败");
-    }
-  };
+  const { run: handleRemoveIp } = useAsyncAction(
+    (id: number) =>
+      apiFetch<{ success: boolean; error_msg?: string }>(`/api/v1/admin/bans/ips/${id}`, {
+        method: "DELETE",
+      }).catch(() => ({ success: false, error_msg: "移除失败" })),
+    {
+      onSuccess: (res) => {
+        if (res.success) {
+          toast.success("IP 规则已移除");
+          revalidate();
+        } else {
+          toast.error(res.error_msg || "移除失败");
+        }
+      },
+    },
+  );
 
   return (
     <AdminLayout>

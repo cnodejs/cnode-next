@@ -1,7 +1,7 @@
 import { requireAdmin } from "~/lib/auth";
 import { AdminLayout } from "~/components/AdminLayout";
 import { useState } from "react";
-import { toast } from "sonner";
+import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Checkbox } from "~/components/ui/checkbox";
@@ -31,17 +31,10 @@ export async function loader({ request }: any) {
 
 export default function AdminSettings({ loaderData }: any) {
   const [config, setConfig] = useState(loaderData.config);
-  const [saving, setSaving] = useState(false);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await apiFetch("/api/v1/admin/settings", { method: "POST", body: JSON.stringify(config) });
-      toast.success("已保存");
-    } finally {
-      setSaving(false);
-    }
-  };
+  const { run: handleSave, pending: saving } = useAsyncAction(
+    () => apiFetch("/api/v1/admin/settings", { method: "POST", body: JSON.stringify(config) }),
+    { successMessage: "已保存" },
+  );
 
   return (
     <AdminLayout>

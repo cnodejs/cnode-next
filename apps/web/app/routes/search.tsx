@@ -2,7 +2,7 @@ import { Layout } from "~/components/Layout";
 import { TopicList } from "~/components/TopicList";
 import { apiFetch } from "~/lib/api-client";
 import { useSearchParams } from "react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Card } from "~/components/ui/card";
@@ -21,19 +21,43 @@ export default function Search() {
   const [input, setInput] = useState(q);
   const [results, setResults] = useState<any[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const requestIdRef = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
+    abortRef.current?.abort();
+
     if (!q) {
       setResults(null);
+      setLoading(false);
       return;
     }
+
+    const requestId = ++requestIdRef.current;
+    const controller = new AbortController();
+    abortRef.current = controller;
     setLoading(true);
+
     apiFetch<{ success: boolean; data: any[] }>(
       `/api/v1/search?q=${encodeURIComponent(q)}&engine=local`,
+      { signal: controller.signal },
     )
-      .then((res) => setResults(res.success ? res.data || [] : []))
-      .catch(() => setResults([]))
-      .finally(() => setLoading(false));
+      .then((res) => {
+        if (requestIdRef.current !== requestId) return;
+        setResults(res.success ? res.data || [] : []);
+      })
+      .catch((err) => {
+        if (requestIdRef.current !== requestId) return;
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setResults([]);
+      })
+      .finally(() => {
+        if (requestIdRef.current === requestId) setLoading(false);
+      });
+
+    return () => {
+      controller.abort();
+    };
   }, [q]);
 
   const handleSubmit = (e: React.FormEvent) => {

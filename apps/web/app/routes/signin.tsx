@@ -1,7 +1,7 @@
 import { Layout } from "~/components/Layout";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { apiFetch } from "~/lib/api-client";
-import { useState } from "react";
+import { useAsyncAction } from "~/hooks/use-async-action";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -33,7 +33,6 @@ export async function loader({ request }: { request: Request }) {
 }
 
 export default function Signin() {
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [params] = useSearchParams();
 
@@ -52,25 +51,25 @@ export default function Signin() {
     defaultValues: { name: "", pass: "" },
   });
 
-  const onSubmit = async (values: SigninValues) => {
-    setLoading(true);
-    try {
-      const res = await apiFetch<{ success: boolean; error_msg?: string }>(
+  const { run: onSubmit, pending: loading } = useAsyncAction(
+    async (values: SigninValues) => {
+      return apiFetch<{ success: boolean; error_msg?: string }>(
         "/api/v1/auth/local/login",
         { method: "POST", body: JSON.stringify(values) },
       );
-      if (res.success) {
-        toast.success("登录成功");
-        navigate("/");
-      } else {
-        toast.error(res.error_msg || "登录失败");
-      }
-    } catch {
-      toast.error("网络错误,请稍后重试");
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    {
+      errorMessage: "网络错误,请稍后重试",
+      onSuccess: (res) => {
+        if (res.success) {
+          toast.success("登录成功");
+          navigate("/");
+        } else {
+          toast.error(res.error_msg || "登录失败");
+        }
+      },
+    },
+  );
 
   return (
     <Layout>

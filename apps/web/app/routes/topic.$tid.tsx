@@ -26,6 +26,7 @@ import { getAvatarFallback, getAvatarUrl, getTabLabel } from "~/lib/brand";
 import { kvGet, kvSet } from "~/lib/kv-cache";
 import { extractMarkdownHeadings } from "~/lib/markdown-headings";
 import { TurnstileWidget, getTurnstileToken } from "~/components/TurnstileWidget";
+import { useAsyncAction } from "~/hooks/use-async-action";
 
 export async function loader({ params, request, context }: Route.LoaderArgs) {
   const tid = params.tid!;
@@ -224,53 +225,68 @@ function TopicContext({ topic }: { topic: any }) {
 }
 
 function TopicActions({ topic, currentUser }: { topic: any; currentUser: any }) {
-  const [collecting, setCollecting] = useState(false);
-  const [adminAction, setAdminAction] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const { revalidate } = useRevalidator();
   const canManage = !!currentUser?.is_mod;
 
-  async function toggleCollect() {
-    if (!currentUser) {
-      toast.error("登录后即可收藏话题");
-      return;
-    }
-    setCollecting(true);
-    const path = topic.is_collect ? "/api/v1/topic_collect/de_collect" : "/api/v1/topic_collect/collect";
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>(path, {
-      method: "POST",
-      body: JSON.stringify({ topic_id: topic.id }),
-    }).catch(() => ({ success: false, error_msg: topic.is_collect ? "取消收藏失败" : "收藏失败" }));
-    setCollecting(false);
-    if (res.success) {
-      toast.success(topic.is_collect ? "已取消收藏" : "已收藏话题");
-      revalidate();
-    } else {
-      toast.error(res.error_msg || (topic.is_collect ? "取消收藏失败" : "收藏失败"));
-    }
-  }
+  const { run: toggleCollect, pending: collecting } = useAsyncAction(
+    async (): Promise<{ success: boolean; error_msg?: string; skipped?: boolean }> => {
+      if (!currentUser) {
+        toast.error("登录后即可收藏话题");
+        return { success: false, skipped: true };
+      }
+      const path = topic.is_collect ? "/api/v1/topic_collect/de_collect" : "/api/v1/topic_collect/collect";
+      return apiFetch<{ success: boolean; error_msg?: string }>(path, {
+        method: "POST",
+        body: JSON.stringify({ topic_id: topic.id }),
+      }).catch(() => ({ success: false, error_msg: topic.is_collect ? "取消收藏失败" : "收藏失败" }));
+    },
+    {
+      onSuccess: (res) => {
+        if (res.skipped) return;
+        if (res.success) {
+          toast.success(topic.is_collect ? "已取消收藏" : "已收藏话题");
+          revalidate();
+        } else {
+          toast.error(res.error_msg || (topic.is_collect ? "取消收藏失败" : "收藏失败"));
+        }
+      },
+    },
+  );
 
-  async function runTopicAction(action: "delete" | "top" | "good") {
-    if (!canManage) return;
-    const actionLabel = action === "delete" ? "删除帖子" : action === "top" ? (topic.top ? "取消置顶" : "置顶") : topic.good ? "取消高亮" : "高亮";
-    setAdminAction(action);
-    const res: { success: boolean; message?: string; error_msg?: string } = await apiFetch<{ success: boolean; message?: string; error_msg?: string }>(`/api/v1/topic/${topic.id}/${action}`, {
-      method: "POST",
-      body: JSON.stringify({}),
-    }).catch(() => ({ success: false, error_msg: `${actionLabel}失败` }));
-    setAdminAction(null);
-    if (res.success) {
-      toast.success(res.message || `${actionLabel}成功`);
-      if (action === "delete") setDeleteOpen(false);
-      revalidate();
-    } else {
-      toast.error(res.error_msg || `${actionLabel}失败`);
-    }
-  }
+  const { run: runTopicAction, pending: adminPending } = useAsyncAction(
+    async (
+      action: "delete" | "top" | "good",
+    ): Promise<{ success: boolean; message?: string; error_msg?: string; skipped?: boolean; actionLabel: string }> => {
+      const actionLabel =
+        action === "delete" ? "删除帖子" : action === "top" ? (topic.top ? "取消置顶" : "置顶") : topic.good ? "取消高亮" : "高亮";
+      if (!canManage) return { success: false, skipped: true, actionLabel };
+      const res = await apiFetch<{ success: boolean; message?: string; error_msg?: string }>(
+        `/api/v1/topic/${topic.id}/${action}`,
+        {
+          method: "POST",
+          body: JSON.stringify({}),
+        },
+      ).catch(() => ({ success: false, error_msg: `${actionLabel}失败` }));
+      return { ...res, actionLabel };
+    },
+    {
+      onSuccess: (res) => {
+        if (res.skipped) return;
+        if (res.success) {
+          toast.success(res.message || `${res.actionLabel}成功`);
+          setDeleteOpen(false);
+          revalidate();
+        } else {
+          toast.error(res.error_msg || `${res.actionLabel}失败`);
+        }
+      },
+    },
+  );
 
   return (
     <div className="flex flex-wrap gap-3">
-      <Button variant={topic.is_collect ? "default" : "outline"} size="sm" onClick={toggleCollect} disabled={collecting}>
+      <Button variant={topic.is_collect ? "default" : "outline"} size="sm" onClick={() => toggleCollect()} disabled={collecting}>
         <Star className="h-4 w-4" /> {collecting ? "处理中" : topic.is_collect ? "取消收藏" : "收藏话题"}
       </Button>
       <Button asChild variant="ghost" size="sm">
@@ -281,16 +297,16 @@ function TopicActions({ topic, currentUser }: { topic: any; currentUser: any }) 
       {currentUser && <ReportButton targetType="topic" targetId={topic.id} />}
       {canManage && (
         <>
-          <Button type="button" variant="outline" size="sm" onClick={() => runTopicAction("top")} disabled={!!adminAction}>
-            {adminAction === "top" ? "处理中" : topic.top ? "取消置顶" : "置顶帖子"}
+          <Button type="button" variant="outline" size="sm" onClick={() => runTopicAction("top")} disabled={adminPending}>
+            {adminPending ? "处理中" : topic.top ? "取消置顶" : "置顶帖子"}
           </Button>
-          <Button type="button" variant="outline" size="sm" onClick={() => runTopicAction("good")} disabled={!!adminAction}>
-            {adminAction === "good" ? "处理中" : topic.good ? "取消高亮" : "高亮帖子"}
+          <Button type="button" variant="outline" size="sm" onClick={() => runTopicAction("good")} disabled={adminPending}>
+            {adminPending ? "处理中" : topic.good ? "取消高亮" : "高亮帖子"}
           </Button>
-          <Button type="button" variant="destructive" size="sm" onClick={() => setDeleteOpen(true)} disabled={!!adminAction}>
-            <Trash2 className="h-4 w-4" /> {adminAction === "delete" ? "删除中" : "删除帖子"}
+          <Button type="button" variant="destructive" size="sm" onClick={() => setDeleteOpen(true)} disabled={adminPending}>
+            <Trash2 className="h-4 w-4" /> {adminPending ? "删除中" : "删除帖子"}
           </Button>
-          <Dialog open={deleteOpen} onOpenChange={(open) => !adminAction && setDeleteOpen(open)}>
+          <Dialog open={deleteOpen} onOpenChange={(open) => !adminPending && setDeleteOpen(open)}>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>确认删除帖子</DialogTitle>
@@ -299,11 +315,11 @@ function TopicActions({ topic, currentUser }: { topic: any; currentUser: any }) 
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setDeleteOpen(false)} disabled={!!adminAction}>
+                <Button type="button" variant="outline" onClick={() => setDeleteOpen(false)} disabled={adminPending}>
                   取消
                 </Button>
-                <Button type="button" variant="destructive" onClick={() => runTopicAction("delete")} disabled={!!adminAction}>
-                  {adminAction === "delete" ? "删除中" : "确认删除帖子"}
+                <Button type="button" variant="destructive" onClick={() => runTopicAction("delete")} disabled={adminPending}>
+                  {adminPending ? "删除中" : "确认删除帖子"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -332,21 +348,31 @@ function ReplySection({
     setContent(reply?.author?.loginname ? `@${reply.author.loginname} ` : "");
   }
 
-  const handleSubmit = async (e: FormEvent) => {
+  const { run: submitReply, pending: submitting } = useAsyncAction(
+    async () => {
+      return apiFetch<{ success: boolean; error_msg?: string }>(`/api/v1/topic/${topicId}/replies`, {
+        method: "POST",
+        body: JSON.stringify({ content, reply_id: targetReply?.id, turnstileToken: getTurnstileToken() }),
+      });
+    },
+    {
+      onSuccess: (res) => {
+        if (res.success) {
+          toast.success("回复成功");
+          setContent("");
+          setTargetReply(null);
+          revalidate();
+        } else {
+          toast.error(res.error_msg || "回复失败");
+        }
+      },
+    },
+  );
+
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!content.trim()) return;
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>(`/api/v1/topic/${topicId}/replies`, {
-      method: "POST",
-      body: JSON.stringify({ content, reply_id: targetReply?.id, turnstileToken: getTurnstileToken() }),
-    });
-    if (res.success) {
-      toast.success("回复成功");
-      setContent("");
-      setTargetReply(null);
-      revalidate();
-    } else {
-      toast.error(res.error_msg || "回复失败");
-    }
+    submitReply();
   };
 
   return (
@@ -392,7 +418,7 @@ function ReplySection({
               )}
               <MarkdownEditor value={content} onChange={setContent} placeholder="支持 Markdown，建议贴出代码和错误信息" />
               <TurnstileWidget />
-              <Button type="submit" size="sm" disabled={!content.trim()}>
+              <Button type="submit" size="sm" disabled={!content.trim() || submitting}>
                 回复
               </Button>
             </form>
@@ -422,51 +448,55 @@ function ReplyItem({
   onReply: () => void;
 }) {
   const author = reply.author;
-  const [upping, setUpping] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const { revalidate } = useRevalidator();
 
-  async function toggleUp() {
-    if (!currentUser) {
-      toast.error("登录后即可点赞回复");
-      return;
-    }
-    setUpping(true);
-    const res: { success: boolean; action?: "up" | "down"; error_msg?: string } = await apiFetch<{
-      success: boolean;
-      action?: "up" | "down";
-      error_msg?: string;
-    }>(`/api/v1/reply/${reply.id}/ups`, {
-      method: "POST",
-      body: JSON.stringify({}),
-    }).catch(() => ({ success: false, error_msg: "点赞失败" }));
-    setUpping(false);
-    if (res.success) {
-      toast.success(res.action === "down" ? "已取消点赞" : "已点赞");
-      revalidate();
-    } else {
-      toast.error(res.error_msg || "点赞失败");
-    }
-  }
+  const { run: toggleUp, pending: upping } = useAsyncAction(
+    async (): Promise<{ success: boolean; action?: "up" | "down"; error_msg?: string; skipped?: boolean }> => {
+      if (!currentUser) {
+        toast.error("登录后即可点赞回复");
+        return { success: false, skipped: true };
+      }
+      return apiFetch<{ success: boolean; action?: "up" | "down"; error_msg?: string }>(`/api/v1/reply/${reply.id}/ups`, {
+        method: "POST",
+        body: JSON.stringify({}),
+      }).catch(() => ({ success: false, error_msg: "点赞失败" }));
+    },
+    {
+      onSuccess: (res) => {
+        if (res.skipped) return;
+        if (res.success) {
+          toast.success(res.action === "down" ? "已取消点赞" : "已点赞");
+          revalidate();
+        } else {
+          toast.error(res.error_msg || "点赞失败");
+        }
+      },
+    },
+  );
 
-  async function deleteReply() {
-    if (!currentUser) return;
-    setDeleting(true);
-    const path = currentUser.is_mod ? `/api/v1/admin/reply/${reply.id}/delete` : `/api/v1/reply/${reply.id}/delete`;
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>(path, {
-      method: "POST",
-      body: JSON.stringify({}),
-    }).catch(() => ({ success: false, error_msg: "删除失败" }));
-    setDeleting(false);
-    if (res.success) {
-      toast.success("回复已删除");
-      setDeleteOpen(false);
-      revalidate();
-    } else {
-      toast.error(res.error_msg || "删除失败");
-    }
-  }
+  const { run: deleteReply, pending: deleting } = useAsyncAction(
+    async (): Promise<{ success: boolean; error_msg?: string; skipped?: boolean }> => {
+      if (!currentUser) return { success: false, skipped: true };
+      const path = currentUser.is_mod ? `/api/v1/admin/reply/${reply.id}/delete` : `/api/v1/reply/${reply.id}/delete`;
+      return apiFetch<{ success: boolean; error_msg?: string }>(path, {
+        method: "POST",
+        body: JSON.stringify({}),
+      }).catch(() => ({ success: false, error_msg: "删除失败" }));
+    },
+    {
+      onSuccess: (res) => {
+        if (res.skipped) return;
+        if (res.success) {
+          toast.success("回复已删除");
+          setDeleteOpen(false);
+          revalidate();
+        } else {
+          toast.error(res.error_msg || "删除失败");
+        }
+      },
+    },
+  );
 
   const upCount = Array.isArray(reply.ups) ? reply.ups.length : 0;
   const canDelete = currentUser && (currentUser.is_mod || currentUser.loginname === author?.loginname);
@@ -559,23 +589,26 @@ function ReportButton({ targetType, targetId, compact = false }: { targetType: "
   const [open, setOpen] = useState(false);
   const [type, setType] = useState("spam");
   const [description, setDescription] = useState("");
-  const [submitting, setSubmitting] = useState(false);
 
-  async function submitReport() {
-    setSubmitting(true);
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>("/api/v1/admin/reports", {
-      method: "POST",
-      body: JSON.stringify({ targetType, targetId, type, description }),
-    }).catch(() => ({ success: false, error_msg: "举报失败" }));
-    setSubmitting(false);
-    if (res.success) {
-      toast.success("举报已提交");
-      setDescription("");
-      setOpen(false);
-    } else {
-      toast.error(res.error_msg || "举报失败");
-    }
-  }
+  const { run: submitReport, pending: submitting } = useAsyncAction(
+    async () => {
+      return apiFetch<{ success: boolean; error_msg?: string }>("/api/v1/admin/reports", {
+        method: "POST",
+        body: JSON.stringify({ targetType, targetId, type, description }),
+      }).catch(() => ({ success: false, error_msg: "举报失败" }));
+    },
+    {
+      onSuccess: (res) => {
+        if (res.success) {
+          toast.success("举报已提交");
+          setDescription("");
+          setOpen(false);
+        } else {
+          toast.error(res.error_msg || "举报失败");
+        }
+      },
+    },
+  );
 
   return (
     <>

@@ -7,6 +7,7 @@ import { CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { AuthShell } from "~/components/AuthShell";
 import { TurnstileWidget, getTurnstileToken } from "~/components/TurnstileWidget";
+import { useAsyncAction } from "~/hooks/use-async-action";
 
 export function meta() {
   return [{ title: "找回密码 · CNode" }];
@@ -16,29 +17,31 @@ export default function SearchPass() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-    setLoading(true);
-
-    try {
-      const res = await apiFetch<{ success: boolean; error_msg?: string; message?: string }>(
+  const { run: doSearch, pending: loading } = useAsyncAction(
+    async () => {
+      return apiFetch<{ success: boolean; error_msg?: string; message?: string }>(
         "/api/v1/auth/local/search_pass",
         { method: "POST", body: JSON.stringify({ email, turnstileToken: getTurnstileToken() }) },
       );
-      if (res.success) {
-        setSuccess(res.message || "重置邮件已发送");
-      } else {
-        setError(res.error_msg || "操作失败");
-      }
-    } catch {
-      setError("网络错误");
-    } finally {
-      setLoading(false);
-    }
+    },
+    {
+      onError: () => setError("网络错误"),
+      onSuccess: (res) => {
+        if (res.success) {
+          setSuccess(res.message || "重置邮件已发送");
+        } else {
+          setError(res.error_msg || "操作失败");
+        }
+      },
+    },
+  );
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    doSearch();
   };
 
   return (

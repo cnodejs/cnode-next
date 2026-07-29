@@ -1,5 +1,6 @@
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteLoaderData } from "react-router";
 import { Toaster } from "~/components/ui/sonner";
+import { NavProgress } from "~/components/NavProgress";
 import { useAuthStore } from "~/lib/stores/auth-store";
 import { getCurrentUser, apiFetch } from "~/lib/api-client";
 import { kvGet, kvSet } from "~/lib/kv-cache";
@@ -68,6 +69,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <body>
         {children}
         <ScrollRestoration />
+        <NavProgress />
         <script
           dangerouslySetInnerHTML={{
             __html: `window.__CNODE_CONFIG__=${JSON.stringify(publicConfig).replace(/</g, "\\u003c")};`,

@@ -4,6 +4,7 @@ import { apiFetch } from "~/lib/api-client";
 import { useState } from "react";
 import { Form, useRevalidator } from "react-router";
 import { toast } from "sonner";
+import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Checkbox } from "~/components/ui/checkbox";
@@ -50,23 +51,29 @@ export default function AdminTopics({ loaderData }: any) {
     setSelected(selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id]);
   };
 
-  const handleAction = async (action: string, topicId?: number) => {
+  const { run: runAction } = useAsyncAction(
+    (action: string, ids: number[]) =>
+      apiFetch<{ success: boolean; error_msg?: string }>(
+        `/api/v1/admin/topics/${action}`,
+        { method: "POST", body: JSON.stringify({ ids }) },
+      ),
+    {
+      onSuccess: (res) => {
+        if (res.success) {
+          toast.success("操作成功");
+          setSelected([]);
+          revalidate();
+        } else {
+          toast.error(res.error_msg || "操作失败");
+        }
+      },
+    },
+  );
+
+  const handleAction = (action: string, topicId?: number) => {
     const ids = topicId ? [topicId] : selected;
     if (ids.length === 0) return;
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>(
-      `/api/v1/admin/topics/${action}`,
-      {
-        method: "POST",
-        body: JSON.stringify({ ids }),
-      },
-    );
-    if (res.success) {
-      toast.success("操作成功");
-      setSelected([]);
-      revalidate();
-    } else {
-      toast.error(res.error_msg || "操作失败");
-    }
+    runAction(action, ids);
   };
 
   return (

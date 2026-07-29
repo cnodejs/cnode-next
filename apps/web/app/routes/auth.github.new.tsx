@@ -11,6 +11,7 @@ import { CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { getAvatarFallback, getAvatarUrl } from "~/lib/brand";
+import { useAsyncAction } from "~/hooks/use-async-action";
 
 export function meta() {
   return [{ title: "完成 GitHub 登录 · CNode" }];
@@ -30,22 +31,25 @@ export default function GithubNew({ loaderData }: Route.ComponentProps) {
   const [mode, setMode] = useState<"new" | "bind">(profile?.email_exists ? "bind" : "new");
   const [name, setName] = useState("");
   const [pass, setPass] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  async function submit() {
-    setLoading(true);
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>("/api/v1/auth/github/create", {
-      method: "POST",
-      body: JSON.stringify({ isnew: mode === "new", name, pass }),
-    }).catch(() => ({ success: false, error_msg: "GitHub 登录失败" }));
-    setLoading(false);
-    if (res.success) {
-      toast.success("GitHub 登录成功");
-      navigate("/");
-    } else {
-      toast.error(res.error_msg || "GitHub 登录失败");
-    }
-  }
+  const { run: submit, pending: loading } = useAsyncAction(
+    async () => {
+      return apiFetch<{ success: boolean; error_msg?: string }>("/api/v1/auth/github/create", {
+        method: "POST",
+        body: JSON.stringify({ isnew: mode === "new", name, pass }),
+      }).catch(() => ({ success: false, error_msg: "GitHub 登录失败" }));
+    },
+    {
+      onSuccess: (res) => {
+        if (res.success) {
+          toast.success("GitHub 登录成功");
+          navigate("/");
+        } else {
+          toast.error(res.error_msg || "GitHub 登录失败");
+        }
+      },
+    },
+  );
 
   return (
     <Layout>

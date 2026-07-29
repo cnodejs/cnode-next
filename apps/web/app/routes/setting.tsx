@@ -33,6 +33,7 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog";
 import { ContentPage } from "~/components/PageShell";
+import { useAsyncAction } from "~/hooks/use-async-action";
 
 const profileSchema = z.object({
   url: z.string().optional(),
@@ -92,7 +93,23 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
     defaultValues: { password: "" },
   });
 
-  const [tokenLoading, setTokenLoading] = useState(false);
+  const { run: handleRefreshToken, pending: tokenLoading } = useAsyncAction(
+    async () => {
+      return apiFetch<{ success: boolean; accessToken?: string; error_msg?: string }>(
+        "/api/v1/user/refresh_token",
+        { method: "POST" },
+      );
+    },
+    {
+      onSuccess: (res) => {
+        if (res.success && res.accessToken) {
+          toast.success("Token 已刷新", { description: res.accessToken });
+        } else {
+          toast.error(res.error_msg || "刷新失败");
+        }
+      },
+    },
+  );
 
   useEffect(() => {
     if (params.get("github") === "bound") toast.success("GitHub 已绑定");
@@ -144,22 +161,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
     }
   };
 
-  const handleRefreshToken = async () => {
-    setTokenLoading(true);
-    try {
-      const res = await apiFetch<{ success: boolean; accessToken?: string; error_msg?: string }>(
-        "/api/v1/user/refresh_token",
-        { method: "POST" },
-      );
-      if (res.success && res.accessToken) {
-        toast.success("Token 已刷新", { description: res.accessToken });
-      } else {
-        toast.error(res.error_msg || "刷新失败");
-      }
-    } finally {
-      setTokenLoading(false);
-    }
-  };
+
 
   return (
     <Layout>

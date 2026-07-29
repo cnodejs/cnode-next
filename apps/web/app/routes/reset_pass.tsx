@@ -6,6 +6,7 @@ import { Button } from "~/components/ui/button";
 import { CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { AuthShell } from "~/components/AuthShell";
+import { useAsyncAction } from "~/hooks/use-async-action";
 
 export function meta() {
   return [{ title: "重置密码 · CNode" }];
@@ -17,12 +18,31 @@ export default function ResetPass() {
   const [newPass, setNewPass] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const passValid = newPass.length >= 8 && /[a-zA-Z]/.test(newPass) && /[0-9]/.test(newPass);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const { run: doReset, pending: loading } = useAsyncAction(
+    async () => {
+      return apiFetch<{ success: boolean; error_msg?: string; message?: string }>(
+        "/api/v1/auth/local/reset_pass",
+        { method: "POST", body: JSON.stringify({ key, psw: newPass }) },
+      );
+    },
+    {
+      onError: () => setError("网络错误"),
+      onSuccess: (res) => {
+        if (res.success) {
+          setSuccess("密码已重置,正在跳转登录页...");
+          setTimeout(() => navigate("/signin"), 2000);
+        } else {
+          setError(res.error_msg || "重置失败");
+        }
+      },
+    },
+  );
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     if (!key) {
@@ -33,24 +53,7 @@ export default function ResetPass() {
       setError("密码至少 8 位,必须包含字母和数字");
       return;
     }
-
-    setLoading(true);
-    try {
-      const res = await apiFetch<{ success: boolean; error_msg?: string; message?: string }>(
-        "/api/v1/auth/local/reset_pass",
-        { method: "POST", body: JSON.stringify({ key, psw: newPass }) },
-      );
-      if (res.success) {
-        setSuccess("密码已重置,正在跳转登录页...");
-        setTimeout(() => navigate("/signin"), 2000);
-      } else {
-        setError(res.error_msg || "重置失败");
-      }
-    } catch {
-      setError("网络错误");
-    } finally {
-      setLoading(false);
-    }
+    doReset();
   };
 
   return (

@@ -4,6 +4,7 @@ import { apiFetch } from "~/lib/api-client";
 import { useState } from "react";
 import { Form, useRevalidator } from "react-router";
 import { toast } from "sonner";
+import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Badge } from "~/components/ui/badge";
@@ -51,7 +52,6 @@ export default function AdminUsers({ loaderData }: any) {
   const [users] = useState<any[]>(initialUsers);
   const [resetTarget, setResetTarget] = useState<{ id: number; loginname: string } | null>(null);
   const [deleteAllTarget, setDeleteAllTarget] = useState<string | null>(null);
-  const [deletingAll, setDeletingAll] = useState(false);
   const { revalidate } = useRevalidator();
 
   const handleBlock = async (name: string, block: boolean) => {
@@ -80,21 +80,28 @@ export default function AdminUsers({ loaderData }: any) {
     }
   };
 
-  const handleDeleteAll = async () => {
+  const { run: runDeleteAll, pending: deletingAll } = useAsyncAction(
+    () =>
+      apiFetch<{ success: boolean; error_msg?: string }>(
+        `/api/v1/user/${deleteAllTarget}/delete_all`,
+        { method: "POST" },
+      ),
+    {
+      onSuccess: (res) => {
+        if (res.success) {
+          toast.success("已删除该用户所有发言");
+          setDeleteAllTarget(null);
+          revalidate();
+        } else {
+          toast.error(res.error_msg || "删除失败");
+        }
+      },
+    },
+  );
+
+  const handleDeleteAll = () => {
     if (!deleteAllTarget) return;
-    setDeletingAll(true);
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>(
-      `/api/v1/user/${deleteAllTarget}/delete_all`,
-      { method: "POST" },
-    );
-    setDeletingAll(false);
-    if (res.success) {
-      toast.success("已删除该用户所有发言");
-      setDeleteAllTarget(null);
-      revalidate();
-    } else {
-      toast.error(res.error_msg || "删除失败");
-    }
+    runDeleteAll();
   };
 
   const handleResetPass = async () => {

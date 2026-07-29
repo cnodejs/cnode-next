@@ -21,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
+import { useAsyncAction } from "~/hooks/use-async-action";
 
 export async function loader({ params, context, request }: Route.LoaderArgs) {
   const name = params.name!;
@@ -105,7 +106,6 @@ export default function UserProfile({ loaderData }: Route.ComponentProps) {
 }
 
 function UserHero({ user, currentUser }: { user: any; currentUser?: any }) {
-  const [submitting, setSubmitting] = useState(false);
   const [actionTarget, setActionTarget] = useState<"block" | "mute" | "delete_all" | null>(null);
   const { revalidate } = useRevalidator();
   const canManage = !!currentUser?.is_admin;
@@ -138,28 +138,32 @@ function UserHero({ user, currentUser }: { user: any; currentUser?: any }) {
           }
         : null;
 
-  async function runUserAction() {
-    if (!canManage || !actionTarget) return;
-    const action = actionTarget === "block"
-      ? user.is_block ? "unblock" : "block"
-      : actionTarget === "mute"
-        ? user.is_muted ? "unmute" : "mute"
-        : "delete_all";
-    const fallback = actionTarget === "delete_all" ? "删除失败" : "操作失败";
-    setSubmitting(true);
-    const res: { success: boolean; message?: string; error_msg?: string } = await apiFetch<{ success: boolean; message?: string; error_msg?: string }>(`/api/v1/user/${user.loginname}/${action}`, {
-      method: "POST",
-      body: JSON.stringify({}),
-    }).catch(() => ({ success: false, error_msg: fallback }));
-    setSubmitting(false);
-    if (res.success) {
-      toast.success(res.message || "操作成功");
-      setActionTarget(null);
-      revalidate();
-    } else {
-      toast.error(res.error_msg || fallback);
-    }
-  }
+  const { run: runUserAction, pending: submitting } = useAsyncAction(
+    async () => {
+      if (!canManage || !actionTarget) return { success: false, error_msg: "操作失败" };
+      const action = actionTarget === "block"
+        ? user.is_block ? "unblock" : "block"
+        : actionTarget === "mute"
+          ? user.is_muted ? "unmute" : "mute"
+          : "delete_all";
+      const fallback = actionTarget === "delete_all" ? "删除失败" : "操作失败";
+      return apiFetch<{ success: boolean; message?: string; error_msg?: string }>(`/api/v1/user/${user.loginname}/${action}`, {
+        method: "POST",
+        body: JSON.stringify({}),
+      }).catch(() => ({ success: false, error_msg: fallback }));
+    },
+    {
+      onSuccess: (res) => {
+        if (res.success) {
+          toast.success(res.message || "操作成功");
+          setActionTarget(null);
+          revalidate();
+        } else {
+          toast.error(res.error_msg || "操作失败");
+        }
+      },
+    },
+  );
 
   return (
     <section className="rounded-3xl border border-cnode-green/20 bg-cnode-soft p-6 shadow-card sm:p-8">

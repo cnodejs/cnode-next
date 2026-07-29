@@ -1,7 +1,7 @@
 import { Layout } from "~/components/Layout";
 import { Link, useNavigate } from "react-router";
 import { apiFetch } from "~/lib/api-client";
-import { useState } from "react";
+import { useAsyncAction } from "~/hooks/use-async-action";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -45,7 +45,6 @@ export async function loader({ request }: { request: Request }) {
 }
 
 export default function Signup({ loaderData }: any) {
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const allowSignup = loaderData.allowSignup;
 
@@ -54,10 +53,9 @@ export default function Signup({ loaderData }: any) {
     defaultValues: { loginname: "", pass: "", confirmPass: "", email: "" },
   });
 
-  const onSubmit = async (values: SignupValues) => {
-    setLoading(true);
-    try {
-      const res = await apiFetch<{ success: boolean; error_msg?: string; message?: string }>(
+  const { run: onSubmit, pending: loading } = useAsyncAction(
+    async (values: SignupValues) => {
+      return apiFetch<{ success: boolean; error_msg?: string; message?: string }>(
         "/api/v1/auth/local/signup",
         {
           method: "POST",
@@ -69,18 +67,19 @@ export default function Signup({ loaderData }: any) {
           }),
         },
       );
-      if (res.success) {
-        toast.success(res.message || "注册成功,请查收邮件激活账号");
-        setTimeout(() => navigate("/signin"), 3000);
-      } else {
-        toast.error(res.error_msg || "注册失败");
-      }
-    } catch {
-      toast.error("网络错误");
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    {
+      errorMessage: "网络错误",
+      onSuccess: (res) => {
+        if (res.success) {
+          toast.success(res.message || "注册成功,请查收邮件激活账号");
+          setTimeout(() => navigate("/signin"), 3000);
+        } else {
+          toast.error(res.error_msg || "注册失败");
+        }
+      },
+    },
+  );
 
   return (
     <Layout>

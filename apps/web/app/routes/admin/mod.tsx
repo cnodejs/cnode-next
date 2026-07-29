@@ -4,6 +4,7 @@ import { apiFetch } from "~/lib/api-client";
 import { Link, useRevalidator } from "react-router";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { Checkbox } from "~/components/ui/checkbox";
@@ -44,69 +45,86 @@ export default function AdminMod({ loaderData }: any) {
   const { results, total, summary, jobs, page, limit, status, type } = loaderData;
   const [selected, setSelected] = useState<number[]>([]);
   const [cancelJobId, setCancelJobId] = useState<number | null>(null);
-  const [jobUpdating, setJobUpdating] = useState<number | null>(null);
   const { revalidate } = useRevalidator();
 
   const toggleSelect = (id: number) => {
     setSelected(selected.includes(id) ? selected.filter((item) => item !== id) : [...selected, id]);
   };
 
-  const handleAction = async (id: number, action: string) => {
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>(
-      `/api/v1/admin/moderation/${id}/${action}`,
-      { method: "POST" },
-    );
-    if (res.success) {
-      toast.success("操作成功");
-      revalidate();
-    } else {
-      toast.error(res.error_msg || "操作失败");
-    }
-  };
+  const { run: handleAction } = useAsyncAction(
+    (id: number, action: string) =>
+      apiFetch<{ success: boolean; error_msg?: string }>(`/api/v1/admin/moderation/${id}/${action}`, { method: "POST" }),
+    {
+      onSuccess: (res) => {
+        if (res.success) {
+          toast.success("操作成功");
+          revalidate();
+        } else {
+          toast.error(res.error_msg || "操作失败");
+        }
+      },
+    },
+  );
 
-  const handleBulkAction = async (action: string) => {
+  const { run: runBulkAction } = useAsyncAction(
+    (action: string) =>
+      apiFetch<{ success: boolean; error_msg?: string; handled?: number }>("/api/v1/admin/moderation/bulk", {
+        method: "POST",
+        body: JSON.stringify({ ids: selected, action }),
+      }),
+    {
+      onSuccess: (res) => {
+        if (res.success) {
+          toast.success(`已处理 ${res.handled || selected.length} 条`);
+          setSelected([]);
+          revalidate();
+        } else {
+          toast.error(res.error_msg || "批量操作失败");
+        }
+      },
+    },
+  );
+
+  const handleBulkAction = (action: string) => {
     if (selected.length === 0) return;
-    const res = await apiFetch<{ success: boolean; error_msg?: string; handled?: number }>(
-      "/api/v1/admin/moderation/bulk",
-      { method: "POST", body: JSON.stringify({ ids: selected, action }) },
-    );
-    if (res.success) {
-      toast.success(`已处理 ${res.handled || selected.length} 条`);
-      setSelected([]);
-      revalidate();
-    } else {
-      toast.error(res.error_msg || "批量操作失败");
-    }
+    runBulkAction(action);
   };
 
-  const createJob = async (scope: string) => {
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>("/api/v1/admin/moderation/jobs", {
-      method: "POST",
-      body: JSON.stringify({ scope, mode: "historical" }),
-    });
-    if (res.success) {
-      toast.success("扫描任务已创建");
-      revalidate();
-    } else {
-      toast.error(res.error_msg || "创建任务失败");
-    }
-  };
+  const { run: createJob } = useAsyncAction(
+    (scope: string) =>
+      apiFetch<{ success: boolean; error_msg?: string }>("/api/v1/admin/moderation/jobs", {
+        method: "POST",
+        body: JSON.stringify({ scope, mode: "historical" }),
+      }),
+    {
+      onSuccess: (res) => {
+        if (res.success) {
+          toast.success("扫描任务已创建");
+          revalidate();
+        } else {
+          toast.error(res.error_msg || "创建任务失败");
+        }
+      },
+    },
+  );
 
-  const updateJob = async (id: number, action: string) => {
-    setJobUpdating(id);
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>(
-      `/api/v1/admin/moderation/jobs/${id}/${action}`,
-      { method: "POST" },
-    );
-    setJobUpdating(null);
-    if (res.success) {
-      toast.success(action === "run" ? "已触发立即执行" : action === "cancel" ? "任务已取消" : "任务已更新");
-      if (action === "cancel") setCancelJobId(null);
-      revalidate();
-    } else {
-      toast.error(res.error_msg || "更新任务失败");
-    }
-  };
+  const { run: updateJob, pending: jobPending } = useAsyncAction(
+    async (id: number, action: string) => {
+      const res = await apiFetch<{ success: boolean; error_msg?: string }>(`/api/v1/admin/moderation/jobs/${id}/${action}`, { method: "POST" });
+      return { ...res, action };
+    },
+    {
+      onSuccess: (result) => {
+        if (result.success) {
+          toast.success(result.action === "run" ? "已触发立即执行" : result.action === "cancel" ? "任务已取消" : "任务已更新");
+          if (result.action === "cancel") setCancelJobId(null);
+          revalidate();
+        } else {
+          toast.error(result.error_msg || "更新任务失败");
+        }
+      },
+    },
+  );
 
   return (
     <AdminLayout>
@@ -141,10 +159,10 @@ export default function AdminMod({ loaderData }: any) {
                       {job.status === "running" ? <Button size="sm" variant="outline" onClick={() => updateJob(job.id, "pause")}>暂停</Button> : null}
                       {job.status === "paused" || job.status === "failed" ? <Button size="sm" variant="outline" onClick={() => updateJob(job.id, "resume")}>恢复</Button> : null}
                       {job.status === "pending" || job.status === "paused" ? (
-                        <Button size="sm" variant="outline" onClick={() => updateJob(job.id, "run")} disabled={jobUpdating === job.id}>立即执行</Button>
+                        <Button size="sm" variant="outline" onClick={() => updateJob(job.id, "run")} disabled={jobPending}>立即执行</Button>
                       ) : null}
                       {["pending", "paused", "running"].includes(job.status) ? (
-                        <Button size="sm" variant="destructive" onClick={() => setCancelJobId(job.id)} disabled={jobUpdating === job.id}>取消</Button>
+                        <Button size="sm" variant="destructive" onClick={() => setCancelJobId(job.id)} disabled={jobPending}>取消</Button>
                       ) : null}
                     </div>
                   </div>
@@ -159,7 +177,7 @@ export default function AdminMod({ loaderData }: any) {
               ))}
             </div>
           )}
-          <Dialog open={cancelJobId !== null} onOpenChange={(open) => !jobUpdating && !open && setCancelJobId(null)}>
+          <Dialog open={cancelJobId !== null} onOpenChange={(open) => !jobPending && !open && setCancelJobId(null)}>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>确认取消巡检任务</DialogTitle>
@@ -168,11 +186,11 @@ export default function AdminMod({ loaderData }: any) {
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setCancelJobId(null)} disabled={jobUpdating !== null}>
+                <Button type="button" variant="outline" onClick={() => setCancelJobId(null)} disabled={jobPending}>
                   保留任务
                 </Button>
-                <Button type="button" variant="destructive" onClick={() => cancelJobId && updateJob(cancelJobId, "cancel")} disabled={jobUpdating !== null}>
-                  {jobUpdating ? "取消中" : "确认取消任务"}
+                <Button type="button" variant="destructive" onClick={() => cancelJobId && updateJob(cancelJobId, "cancel")} disabled={jobPending}>
+                  {jobPending ? "取消中" : "确认取消任务"}
                 </Button>
               </DialogFooter>
             </DialogContent>

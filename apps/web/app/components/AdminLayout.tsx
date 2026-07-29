@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { HeaderUserArea } from "./Layout";
+import { useNavTransition } from "./NavProgress";
 import { Button } from "./ui/button";
 import { cn } from "~/lib/utils";
 import { CNodeLogo } from "./CNodeLogo";
@@ -54,6 +55,7 @@ const NAV_GROUPS = [
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [commandOpen, setCommandOpen] = useState(false);
+  const isNavigating = useNavTransition();
 
   return (
     <div className="min-h-screen bg-surface-subtle text-foreground dark:bg-background">
@@ -114,7 +116,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           <aside className="hidden md:block">
             <AdminSideNav />
           </aside>
-          <main className="min-h-[calc(100vh-8rem)] min-w-0 pb-8">{children}</main>
+          <main className={cn("min-h-[calc(100vh-8rem)] min-w-0 pb-8 transition-opacity duration-200", isNavigating ? "opacity-60" : "opacity-100")}>{children}</main>
         </div>
       </PageContainer>
     </div>

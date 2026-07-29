@@ -8,6 +8,7 @@ import { requireUser } from "~/lib/auth";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
+import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -28,7 +29,6 @@ export default function TopicCreate() {
   const [title, setTitle] = useState("");
   const [tab, setTab] = useState("share");
   const [content, setContent] = useState("");
-  const [saving, setSaving] = useState(false);
   const [jobMeta, setJobMeta] = useState<JobMetaFormValue>({
     company: "",
     company_logo: null,
@@ -43,38 +43,46 @@ export default function TopicCreate() {
   });
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    const body: Record<string, unknown> = { title, tab, content, turnstileToken: getTurnstileToken() };
-    if (tab === "job") {
-      body.job_meta = {
-        company: jobMeta.company,
-        company_logo: jobMeta.company_logo,
-        position: jobMeta.position,
-        location: jobMeta.location,
-        remote: jobMeta.remote,
-        salary_min: jobMeta.salary_min,
-        salary_max: jobMeta.salary_max,
-        experience: jobMeta.experience,
-        tech_tags: jobMeta.tech_tags,
-        contact: jobMeta.contact,
-      };
-    }
-    const res = await apiFetch<{ success: boolean; topic_id: string; error_msg?: string }>(
-      "/api/v1/topics",
-      {
-        method: "POST",
-        body: JSON.stringify(body),
+  const { run: submitTopic, pending: saving } = useAsyncAction(
+    async () => {
+      const body: Record<string, unknown> = { title, tab, content, turnstileToken: getTurnstileToken() };
+      if (tab === "job") {
+        body.job_meta = {
+          company: jobMeta.company,
+          company_logo: jobMeta.company_logo,
+          position: jobMeta.position,
+          location: jobMeta.location,
+          remote: jobMeta.remote,
+          salary_min: jobMeta.salary_min,
+          salary_max: jobMeta.salary_max,
+          experience: jobMeta.experience,
+          tech_tags: jobMeta.tech_tags,
+          contact: jobMeta.contact,
+        };
+      }
+      return apiFetch<{ success: boolean; topic_id: string; error_msg?: string }>(
+        "/api/v1/topics",
+        {
+          method: "POST",
+          body: JSON.stringify(body),
+        },
+      );
+    },
+    {
+      onSuccess: (res) => {
+        if (res.success) {
+          toast.success("发布成功");
+          navigate(`/topic/${res.topic_id}`);
+        } else {
+          toast.error(res.error_msg || "发布失败");
+        }
       },
-    );
-    setSaving(false);
-    if (res.success) {
-      toast.success("发布成功");
-      navigate(`/topic/${res.topic_id}`);
-    } else {
-      toast.error(res.error_msg || "发布失败");
-    }
+    },
+  );
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    submitTopic();
   };
 
   const isJobTab = tab === "job";

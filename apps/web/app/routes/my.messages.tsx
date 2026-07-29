@@ -15,6 +15,7 @@ import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { EmptyState } from "~/components/EmptyState";
+import { useAsyncAction } from "~/hooks/use-async-action";
 
 export function meta() {
   return [{ title: "消息 · CNode" }];
@@ -51,32 +52,43 @@ export default function Messages({ loaderData }: Route.ComponentProps) {
     fetchUnread();
   }, [initialRead, initialUnread, fetchUnread]);
 
-  const markOneRead = async (msgId: string) => {
-    const res = await apiFetch<{ success: boolean }>(`/api/v1/message/mark_one/${msgId}`, {
-      method: "POST",
-    });
-    if (res.success) {
-      const msg = unreadMsgs.find((item) => item.id === msgId);
-      setUnreadMsgs((items) => items.filter((item) => item.id !== msgId));
-      if (msg) setReadMsgs((items) => [{ ...msg, has_read: true }, ...items]);
-      setUnreadCount(Math.max(0, unreadMsgs.length - 1));
-      toast.success("已标记已读");
-      fetchUnread();
-      revalidate();
-    }
-  };
+  const { run: markOneRead, pending: markingOne } = useAsyncAction(
+    async (msgId: string) => {
+      const res = await apiFetch<{ success: boolean }>(`/api/v1/message/mark_one/${msgId}`, {
+        method: "POST",
+      });
+      return { ...res, msgId };
+    },
+    {
+      onSuccess: (res) => {
+        if (!res.success) return;
+        const msg = unreadMsgs.find((item) => item.id === res.msgId);
+        setUnreadMsgs((items) => items.filter((item) => item.id !== res.msgId));
+        if (msg) setReadMsgs((items) => [{ ...msg, has_read: true }, ...items]);
+        setUnreadCount(Math.max(0, unreadMsgs.length - 1));
+        toast.success("已标记已读");
+        fetchUnread();
+        revalidate();
+      },
+    },
+  );
 
-  const markAllRead = async () => {
-    const res = await apiFetch<{ success: boolean }>("/api/v1/message/mark_all", { method: "POST" });
-    if (res.success) {
-      setReadMsgs((items) => [...unreadMsgs.map((msg) => ({ ...msg, has_read: true })), ...items]);
-      setUnreadMsgs([]);
-      setUnreadCount(0);
-      toast.success("已全部标记已读");
-      fetchUnread();
-      revalidate();
-    }
-  };
+  const { run: markAllRead, pending: markingAll } = useAsyncAction(
+    async () => {
+      return apiFetch<{ success: boolean }>("/api/v1/message/mark_all", { method: "POST" });
+    },
+    {
+      onSuccess: (res) => {
+        if (!res.success) return;
+        setReadMsgs((items) => [...unreadMsgs.map((msg) => ({ ...msg, has_read: true })), ...items]);
+        setUnreadMsgs([]);
+        setUnreadCount(0);
+        toast.success("已全部标记已读");
+        fetchUnread();
+        revalidate();
+      },
+    },
+  );
 
   return (
     <Layout>
@@ -92,15 +104,15 @@ export default function Messages({ loaderData }: Route.ComponentProps) {
               <Badge variant={unreadMsgs.length > 0 ? "default" : "secondary"}>
                 {unreadMsgs.length} 条新消息
               </Badge>
-              <Button size="sm" variant="outline" onClick={markAllRead} disabled={unreadMsgs.length === 0}>
-                <CheckCheck className="h-4 w-4" /> 全部已读
+              <Button size="sm" variant="outline" onClick={() => markAllRead()} disabled={unreadMsgs.length === 0 || markingAll}>
+                <CheckCheck className="h-4 w-4" /> {markingAll ? "处理中" : "全部已读"}
               </Button>
             </div>
           </div>
         </section>
 
-        <MessageGroup title="新消息" icon={<Bell className="h-4 w-4" />} messages={unreadMsgs} onMarkRead={markOneRead} />
-        <MessageGroup title="过往消息" icon={<Inbox className="h-4 w-4" />} messages={readMsgs} onMarkRead={markOneRead} />
+        <MessageGroup title="新消息" icon={<Bell className="h-4 w-4" />} messages={unreadMsgs} onMarkRead={markOneRead} pending={markingOne} />
+        <MessageGroup title="过往消息" icon={<Inbox className="h-4 w-4" />} messages={readMsgs} onMarkRead={markOneRead} pending={markingOne} />
       </ContentPage>
     </Layout>
   );
@@ -111,11 +123,13 @@ function MessageGroup({
   icon,
   messages,
   onMarkRead,
+  pending,
 }: {
   title: string;
   icon: React.ReactNode;
   messages: any[];
   onMarkRead: (id: string) => void;
+  pending: boolean;
 }) {
   return (
     <Card>
@@ -130,7 +144,7 @@ function MessageGroup({
         {messages.length > 0 ? (
           <div className="divide-y divide-border">
             {messages.map((msg) => (
-              <MessageItem key={msg.id} msg={msg} onMarkRead={onMarkRead} />
+              <MessageItem key={msg.id} msg={msg} onMarkRead={onMarkRead} pending={pending} />
             ))}
           </div>
         ) : (
@@ -141,7 +155,7 @@ function MessageGroup({
   );
 }
 
-function MessageItem({ msg, onMarkRead }: { msg: any; onMarkRead: (id: string) => void }) {
+function MessageItem({ msg, onMarkRead, pending }: { msg: any; onMarkRead: (id: string) => void; pending: boolean }) {
   const typeText =
     msg.type === "reply"
       ? "回复了你的话题"
@@ -179,8 +193,8 @@ function MessageItem({ msg, onMarkRead }: { msg: any; onMarkRead: (id: string) =
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <TimeAgo date={msg.create_at} />
           {!msg.has_read && (
-            <Button size="sm" variant="link" className="h-auto p-0 text-xs" onClick={() => onMarkRead(msg.id)}>
-              标记已读
+            <Button size="sm" variant="link" className="h-auto p-0 text-xs" onClick={() => onMarkRead(msg.id)} disabled={pending}>
+              {pending ? "处理中" : "标记已读"}
             </Button>
           )}
         </div>

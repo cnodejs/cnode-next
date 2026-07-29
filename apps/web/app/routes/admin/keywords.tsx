@@ -4,6 +4,7 @@ import { apiFetch } from "~/lib/api-client";
 import { useState } from "react";
 import { Form, useRevalidator } from "react-router";
 import { toast } from "sonner";
+import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { AdminPage, AdminPageHeader, AdminPanel, AdminToolbar } from "~/components/AdminPage";
@@ -44,51 +45,70 @@ export default function AdminKeywords({ loaderData }: any) {
   const [showBulk, setShowBulk] = useState(false);
   const { revalidate } = useRevalidator();
 
-  const handleAdd = async () => {
+  const { run: runAdd } = useAsyncAction(
+    () =>
+      apiFetch<{ success: boolean; error_msg?: string }>("/api/v1/admin/keywords", {
+        method: "POST",
+        body: JSON.stringify({ word: newWord.trim() }),
+      }),
+    {
+      onSuccess: (res) => {
+        if (res.success) {
+          toast.success("已添加");
+          setNewWord("");
+          revalidate();
+        } else {
+          toast.error(res.error_msg || "添加失败");
+        }
+      },
+    },
+  );
+
+  const handleAdd = () => {
     if (!newWord.trim()) return;
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>("/api/v1/admin/keywords", {
-      method: "POST",
-      body: JSON.stringify({ word: newWord.trim() }),
-    });
-    if (res.success) {
-      toast.success("已添加");
-      setNewWord("");
-      revalidate();
-    } else {
-      toast.error(res.error_msg || "添加失败");
-    }
+    runAdd();
   };
 
-  const handleDelete = async (id: number) => {
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>(
-      `/api/v1/admin/keywords/${id}`,
-      { method: "DELETE" },
-    );
-    if (res.success) {
-      toast.success("已删除");
-      revalidate();
-    } else {
-      toast.error(res.error_msg || "删除失败");
-    }
-  };
+  const { run: handleDelete } = useAsyncAction(
+    (id: number) =>
+      apiFetch<{ success: boolean; error_msg?: string }>(`/api/v1/admin/keywords/${id}`, { method: "DELETE" }),
+    {
+      onSuccess: (res) => {
+        if (res.success) {
+          toast.success("已删除");
+          revalidate();
+        } else {
+          toast.error(res.error_msg || "删除失败");
+        }
+      },
+    },
+  );
 
-  const handleBulk = async () => {
-    const lines = bulkText.split("\n").filter(Boolean);
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>(
-      "/api/v1/admin/keywords/bulk",
-      {
+  const { run: runBulk } = useAsyncAction(
+    async () => {
+      const lines = bulkText.split("\n").filter(Boolean);
+      const res = await apiFetch<{ success: boolean; error_msg?: string }>("/api/v1/admin/keywords/bulk", {
         method: "POST",
         body: JSON.stringify({ words: lines }),
+      });
+      return { ...res, count: lines.length };
+    },
+    {
+      onSuccess: (result) => {
+        if (result.success) {
+          toast.success(`已导入 ${result.count} 条`);
+          setBulkText("");
+          setShowBulk(false);
+          revalidate();
+        } else {
+          toast.error(result.error_msg || "导入失败");
+        }
       },
-    );
-    if (res.success) {
-      toast.success(`已导入 ${lines.length} 条`);
-      setBulkText("");
-      setShowBulk(false);
-      revalidate();
-    } else {
-      toast.error(res.error_msg || "导入失败");
-    }
+    },
+  );
+
+  const handleBulk = () => {
+    runBulk();
   };
 
   return (

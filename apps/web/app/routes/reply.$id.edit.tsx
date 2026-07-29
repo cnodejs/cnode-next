@@ -6,6 +6,7 @@ import { requireUser } from "~/lib/auth";
 import { useState } from "react";
 import { useNavigate, useRevalidator } from "react-router";
 import { toast } from "sonner";
+import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
 import { ContentPage } from "~/components/PageShell";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -28,27 +29,34 @@ export default function ReplyEdit({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
   const { revalidate } = useRevalidator();
   const [content, setContent] = useState(reply?.content || "");
-  const [saving, setSaving] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const { run: submitReply, pending: saving } = useAsyncAction(
+    async () => {
+      return apiFetch<{ success: boolean; error_msg?: string }>(
+        `/api/v1/reply/${reply?.id}/edit`,
+        {
+          method: "POST",
+          body: JSON.stringify({ content }),
+        },
+      );
+    },
+    {
+      onSuccess: (res) => {
+        if (res.success) {
+          toast.success("已保存");
+          revalidate();
+          navigate(-1);
+        } else {
+          toast.error(res.error_msg || "保存失败");
+        }
+      },
+    },
+  );
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim()) return;
-    setSaving(true);
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>(
-      `/api/v1/reply/${reply?.id}/edit`,
-      {
-        method: "POST",
-        body: JSON.stringify({ content }),
-      },
-    );
-    setSaving(false);
-    if (res.success) {
-      toast.success("已保存");
-      revalidate();
-      navigate(-1);
-    } else {
-      toast.error(res.error_msg || "保存失败");
-    }
+    submitReply();
   };
 
   if (!reply) {

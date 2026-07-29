@@ -7,6 +7,7 @@ import { requireUser } from "~/lib/auth";
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
+import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -41,7 +42,6 @@ export default function TopicEdit() {
     contact: "",
   });
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -71,35 +71,43 @@ export default function TopicEdit() {
       .finally(() => setLoading(false));
   }, [tid]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const { run: submitTopic, pending: saving } = useAsyncAction(
+    async () => {
+      const body: Record<string, unknown> = { topic_id: tid, title, tab, content };
+      if (tab === "job") {
+        body.job_meta = {
+          company: jobMeta.company,
+          company_logo: jobMeta.company_logo,
+          position: jobMeta.position,
+          location: jobMeta.location,
+          remote: jobMeta.remote,
+          salary_min: jobMeta.salary_min,
+          salary_max: jobMeta.salary_max,
+          experience: jobMeta.experience,
+          tech_tags: jobMeta.tech_tags,
+          contact: jobMeta.contact,
+        };
+      }
+      return apiFetch<{ success: boolean; error_msg?: string }>(`/api/v1/topics/update`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+    },
+    {
+      onSuccess: (res) => {
+        if (res.success) {
+          toast.success("已保存");
+          navigate(`/topic/${tid}`);
+        } else {
+          toast.error(res.error_msg || "保存失败");
+        }
+      },
+    },
+  );
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
-    const body: Record<string, unknown> = { topic_id: tid, title, tab, content };
-    if (tab === "job") {
-      body.job_meta = {
-        company: jobMeta.company,
-        company_logo: jobMeta.company_logo,
-        position: jobMeta.position,
-        location: jobMeta.location,
-        remote: jobMeta.remote,
-        salary_min: jobMeta.salary_min,
-        salary_max: jobMeta.salary_max,
-        experience: jobMeta.experience,
-        tech_tags: jobMeta.tech_tags,
-        contact: jobMeta.contact,
-      };
-    }
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>(`/api/v1/topics/update`, {
-      method: "POST",
-      body: JSON.stringify(body),
-    });
-    setSaving(false);
-    if (res.success) {
-      toast.success("已保存");
-      navigate(`/topic/${tid}`);
-    } else {
-      toast.error(res.error_msg || "保存失败");
-    }
+    submitTopic();
   };
 
   if (loading) {
