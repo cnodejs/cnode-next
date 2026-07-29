@@ -1,6 +1,9 @@
 import { MongoClient } from "mongodb";
 import { Pool } from "pg";
 import { readFile } from "fs/promises";
+import { loadRootEnv } from "./env";
+
+loadRootEnv({ cwd: import.meta.dirname });
 
 interface MigrationReport {
   skipped?: Record<string, { count: number }>;

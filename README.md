@@ -21,7 +21,7 @@ Shared TypeScript and Zod contracts span Web and API. pnpm workspace manages the
 
 ```bash
 pnpm install
-cp .env.example .env.local
+cp .env.example .env
 pnpm db:push:pg
 pnpm dev
 ```
@@ -33,7 +33,7 @@ Local endpoints:
 | Web | `http://localhost:5173` |
 | API | `http://localhost:3001` |
 
-Do not commit real `.env` files or secrets. See [docs/conventions.md](docs/conventions.md) for documentation, development, and secret handling conventions.
+Root `.env` is the single default local environment source. Do not commit real `.env` files or secrets. See [docs/conventions.md](docs/conventions.md) for documentation, development, and secret handling conventions.
 
 ## Documentation
 

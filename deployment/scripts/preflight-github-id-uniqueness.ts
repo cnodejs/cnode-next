@@ -1,10 +1,7 @@
 import { Pool } from "pg";
+import { loadRootEnv } from "../../scripts/env";
 
-try {
-  process.loadEnvFile();
-} catch (error) {
-  if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-}
+loadRootEnv({ cwd: import.meta.dirname });
 
 const required = ["DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME"] as const;
 const missing = required.filter((name) => !process.env[name]);

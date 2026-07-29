@@ -1,6 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
 import { isAbsolute, resolve } from "node:path";
-import { setGlobalDispatcher, ProxyAgent } from "undici";
 
 function findWorkspaceRoot(cwd: string) {
   let current = resolve(cwd);
@@ -48,7 +47,7 @@ function loadEnvFile(path: string, protectedKeys: Set<string>, overrideLoaded: b
   }
 }
 
-function loadRootEnv() {
+export function loadRootEnv() {
   const root = findWorkspaceRoot(import.meta.dirname);
   const protectedKeys = new Set(Object.keys(process.env).filter((key) => process.env[key] !== undefined));
 
@@ -60,12 +59,4 @@ function loadRootEnv() {
   const explicitPath = isAbsolute(envFile) ? envFile : resolve(root, envFile);
   if (!existsSync(explicitPath)) throw new Error(`CNODE_ENV_FILE does not exist: ${envFile}`);
   loadEnvFile(explicitPath, protectedKeys, true);
-}
-
-loadRootEnv();
-
-const proxy = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
-if (proxy) {
-  setGlobalDispatcher(new ProxyAgent(proxy));
-  console.log("[proxy] set global dispatcher:", proxy);
 }

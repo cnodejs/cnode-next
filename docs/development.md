@@ -16,10 +16,10 @@ This guide gets a local cnode-next workspace running. It is not a production dep
 Copy the local template and fill development values:
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
 
-`apps/api` loads root `.env` and then `.env.local`. Web-specific overrides may live in `apps/web/.env.local`. Do not commit or paste real `.env` values.
+Root `.env` is the single default local environment source for Web, API, DB scripts, workers, and migration tooling. `.env.local` and app-local files such as `apps/web/.env.local` are not loaded by default. Do not commit or paste real `.env` values.
 
 Minimum local values:
 
@@ -58,7 +58,7 @@ docker run --name cnode-redis \
   -d redis:7-bookworm redis-server --appendonly yes
 ```
 
-If you use an SSH tunnel to a private database for migration rehearsal, point `DB_HOST` and `DB_PORT` at the local tunnel listener. Do not expose databases publicly.
+If you use an SSH tunnel to a private database for migration rehearsal, keep that configuration in an explicit ignored profile such as `.env.remote.local`, point `DB_HOST` and `DB_PORT` at the local tunnel listener, and run commands with `CNODE_ENV_FILE=.env.remote.local`. Do not expose databases publicly.
 
 ## Start
 
@@ -96,5 +96,28 @@ curl -fsS 'http://localhost:5173/'
 | `pnpm migrate:mongo-to-pg` | Run explicit Mongo-to-PostgreSQL migration tooling. |
 | `pnpm migrate:reconcile` | Reconcile migrated data. |
 | `pnpm verify` | Full validation gate. Run before release or PR validation when feasible. |
+
+## Environment Loading Matrix
+
+Runtime commands keep their default command shape and load root `.env` from their natural config or script entrypoints. Explicit profiles override root `.env` values with `CNODE_ENV_FILE`, while shell/CI/compose-provided variables remain authoritative.
+
+| Command | Local env behavior |
+| ------- | ------------------ |
+| `pnpm dev` | Keeps existing Web/API scripts; Web loads root `.env` from `apps/web/vite.config.ts`, API from `apps/api/src/load-env.ts`. |
+| `pnpm --filter @cnode/web dev` | Keeps `react-router dev`; Vite config loads root `.env`. |
+| `pnpm --filter @cnode/web build` | Keeps `react-router build`; Vite config loads root `.env`. |
+| `pnpm --filter @cnode/web typecheck` | Keeps `react-router typegen && tsc --noEmit`; Vite config loads root `.env` for React Router typegen. |
+| `pnpm --filter @cnode/api dev` | Keeps `tsx watch src/index.ts`; API runtime loader loads root `.env`. |
+| `pnpm --filter @cnode/api worker:moderation` | Keeps worker command; API worker imports the runtime loader. |
+| `pnpm db:push:pg`, `pnpm db:generate` | Keep `drizzle-kit` commands; Drizzle config loads root `.env`. |
+| `pnpm db:migrate`, `pnpm db:seed` | Keep `tsx src/*` commands; DB scripts load root `.env`. |
+| `pnpm migrate:mongo-to-pg`, `pnpm migrate:reconcile` | Keep root `tsx scripts/*` commands; scripts load root `.env`; use `CNODE_ENV_FILE=.env.remote.local` for remote rehearsal. |
+| `pnpm lint`, `pnpm format`, `pnpm secrets:scan`, `pnpm verify:compose-config` | Do not load local dotenv files. |
+
+Example remote rehearsal profile:
+
+```bash
+CNODE_ENV_FILE=.env.remote.local pnpm migrate:reconcile
+```
 
 API contracts are defined in `apps/api/src/routes/*.ts` as zod-openapi declarations. Run `pnpm gen:openapi` to regenerate `api/openapi.json`. `pnpm verify` includes this step automatically.

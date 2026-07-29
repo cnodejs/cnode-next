@@ -1,6 +1,9 @@
 import { MongoClient, ObjectId } from "mongodb";
 import { Pool } from "pg";
 import { writeFile } from "fs/promises";
+import { loadRootEnv } from "./env";
+
+loadRootEnv({ cwd: import.meta.dirname });
 
 type LegacyDoc = Record<string, any> & { _id: ObjectId };
 type IdMap = Map<string, number>;
