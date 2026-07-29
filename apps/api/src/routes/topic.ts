@@ -57,6 +57,24 @@ function isAdminUser(user: any) {
   return (process.env.APP_ADMINS || "").split(",").filter(Boolean).includes(user.loginname);
 }
 
+export function shouldIncludeInternalTabsInTopicList(tab: string | undefined, isAdmin: boolean) {
+  return !!(isAdmin && tab && INTERNAL_TABS.has(tab));
+}
+
+export function buildTopicListQuery(tab: string | undefined, isAdmin: boolean) {
+  if (tab && INTERNAL_TABS.has(tab) && !isAdmin) return null;
+  const query: any = { publicVisible: true };
+  if (!tab || tab === "all") {
+    query.excludeTabs = ["job"];
+  } else if (tab === "good") {
+    query.good = 1;
+  } else {
+    query.tab = tab;
+  }
+  query.includeInternalTabs = shouldIncludeInternalTabsInTopicList(tab, isAdmin);
+  return query;
+}
+
 async function canPostJob(user: any) {
   return canPostJobFromRoles(isAdminUser(user), await roleQueries.listByUserId(user.id));
 }
@@ -89,20 +107,11 @@ const listTopicsRoute = createRoute({
 topic.openapi(listTopicsRoute, async (c) => {
   const { page, limit, tab, mdrender } = c.req.valid("query");
 
-  const query: any = {};
   const isAdmin = c.get("isAdmin");
-  if (tab && INTERNAL_TABS.has(tab) && !isAdmin) {
+  const query = buildTopicListQuery(tab, isAdmin);
+  if (!query) {
     return c.json({ success: true as const, data: [], total: 0 }, 200);
   }
-  if (!tab || tab === "all") {
-    query.excludeTabs = ["job"];
-  } else if (tab === "good") {
-    query.good = 1;
-  } else {
-    query.tab = tab;
-  }
-  query.publicVisible = true;
-  query.includeInternalTabs = isAdmin;
 
   const topicsList = await topicQueries.getByQuery(query, {
     limit,

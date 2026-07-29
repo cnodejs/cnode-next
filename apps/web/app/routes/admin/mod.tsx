@@ -180,7 +180,7 @@ export default function AdminMod({ loaderData }: any) {
                     </div>
                     <div className="flex gap-2">
                       <Button size="sm" variant={jobId === job.id ? "default" : "outline"} asChild>
-                        <Link to={`/admin/mod?status=${encodeURIComponent(status)}${type ? `&type=${encodeURIComponent(type)}` : ""}&job_id=${job.id}`}>查看命中</Link>
+                        <Link to={`/admin/moderation?status=${encodeURIComponent(status)}${type ? `&type=${encodeURIComponent(type)}` : ""}&job_id=${job.id}`}>查看命中</Link>
                       </Button>
                       {(job.pendingHitCount || 0) > 0 ? (
                         <Button size="sm" variant="destructive" onClick={() => setConfirmJobId(job.id)}>批量确认删除</Button>
@@ -244,7 +244,7 @@ export default function AdminMod({ loaderData }: any) {
             </DialogContent>
           </Dialog>
         </AdminPanel>
-        <AdminPanel title={jobId > 0 ? `任务 #${jobId} 待复核内容` : "待复核内容"} description={`当前页 ${results.length} 条 / 共 ${total} 条`} action={jobId > 0 ? <Button size="sm" variant="outline" asChild><Link to="/admin/mod">查看全部</Link></Button> : null} contentClassName="p-4">
+        <AdminPanel title={jobId > 0 ? `任务 #${jobId} 待复核内容` : "待复核内容"} description={`当前页 ${results.length} 条 / 共 ${total} 条`} action={jobId > 0 ? <Button size="sm" variant="outline" asChild><Link to="/admin/moderation">查看全部</Link></Button> : null} contentClassName="p-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface-subtle p-3 text-sm">
             <div className="flex flex-wrap gap-2">
               <Badge variant="outline">话题 {summary.by_type?.topic || 0}</Badge>
@@ -309,7 +309,7 @@ export default function AdminMod({ loaderData }: any) {
                   </div>
                 </div>
               ))}
-              <Pagination page={page} total={total} limit={limit} basePath="/admin/mod" searchParams={{ status, ...(type ? { type } : {}), ...(jobId > 0 ? { job_id: String(jobId) } : {}) }} />
+              <Pagination page={page} total={total} limit={limit} basePath="/admin/moderation" searchParams={{ status, ...(type ? { type } : {}), ...(jobId > 0 ? { job_id: String(jobId) } : {}) }} />
             </div>
           )}
         </AdminPanel>

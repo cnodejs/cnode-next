@@ -16,7 +16,14 @@ export const paginationQuerySchema = z.object({
 });
 
 export const mdrenderQuerySchema = z.object({
-  mdrender: z.coerce.boolean().default(true),
+  mdrender: z
+    .preprocess((value) => {
+      if (typeof value !== "string") return value;
+      if (["false", "0", "off", "no"].includes(value.toLowerCase())) return false;
+      if (["true", "1", "on", "yes"].includes(value.toLowerCase())) return true;
+      return value;
+    }, z.boolean())
+    .default(true),
 });
 
 export const errorResponseSchema = z.object({

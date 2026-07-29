@@ -45,25 +45,34 @@ export function escapeXml(value: string | number | null | undefined) {
     .replace(/'/g, "&apos;");
 }
 
+function absoluteHtmlUrls(html: string, baseUrl: string) {
+  return html.replace(/\s(href|src)=(['"])(\/[^/'"][^'"]*)\2/gi, (_match, attr, quote, path) => {
+    return ` ${attr}=${quote}${baseUrl.replace(/\/+$/g, "")}${path}${quote}`;
+  });
+}
+
 export function buildRssXml(source: RssSource) {
+  const baseUrl = source.link.replace(/\/+$/g, "");
+  const selfUrl = `${baseUrl}/rss`;
   const items = source.items
     .map(
       (item) => `    <item>
       <title>${escapeXml(item.title)}</title>
       <link>${escapeXml(item.link)}</link>
       <guid>${escapeXml(item.guid)}</guid>
-      <description>${escapeXml(item.description)}</description>
-      <author>${escapeXml(item.author)}</author>
+      <description>${escapeXml(absoluteHtmlUrls(item.description, baseUrl))}</description>
+      <dc:creator>${escapeXml(item.author)}</dc:creator>
       <pubDate>${escapeXml(item.pubDate)}</pubDate>
     </item>`,
     )
     .join("\n");
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
     <title>${escapeXml(source.title)}</title>
     <link>${escapeXml(source.link)}</link>
+    <atom:link href="${escapeXml(selfUrl)}" rel="self" type="application/rss+xml" />
     <language>${escapeXml(source.language)}</language>
     <description>${escapeXml(source.description)}</description>
 ${items ? `${items}\n` : ""}  </channel>

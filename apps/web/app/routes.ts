@@ -36,6 +36,7 @@ export default [
   route("app/download", "routes/app.download.tsx"),
   route("admin", "routes/admin/_index.tsx"),
   route("admin/topics", "routes/admin/topics.tsx"),
+  route("admin/mod", "routes/admin/mod-redirect.tsx"),
   route("admin/moderation", "routes/admin/mod.tsx"),
   route("admin/users", "routes/admin/users.tsx"),
   route("admin/bans", "routes/admin/bans.tsx"),

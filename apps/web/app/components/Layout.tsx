@@ -478,9 +478,15 @@ function FooterGroup({ title, links }: { title: string; links: Array<[string, st
       <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
         {links.map(([label, href]) => (
           <li key={href}>
-            <Link to={href} className="hover:text-primary">
-              {label}
-            </Link>
+            {href === "/rss" ? (
+              <a href={href} className="hover:text-primary">
+                {label}
+              </a>
+            ) : (
+              <Link to={href} className="hover:text-primary">
+                {label}
+              </Link>
+            )}
           </li>
         ))}
       </ul>

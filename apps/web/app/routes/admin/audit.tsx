@@ -65,7 +65,7 @@ function targetHref(log: AuditLog) {
 }
 
 function DetailBlock({ detail }: { detail: string | null }) {
-  if (!detail) return <span className="text-muted-foreground">无</span>;
+  if (!detail) return <div className="rounded-xl border border-dashed border-border bg-card p-3 text-xs text-muted-foreground">该审计事件没有附加详情。</div>;
   try {
     return <pre className="overflow-auto rounded-xl bg-surface-subtle p-3 text-xs">{JSON.stringify(JSON.parse(detail), null, 2)}</pre>;
   } catch {
@@ -139,16 +139,20 @@ export default function AdminAudit({ loaderData }: any) {
                   </div>
 
                   <details className="mt-3 rounded-xl bg-surface-subtle p-3 text-sm">
-                    <summary className="cursor-pointer font-medium text-cnode-ink">展开原始记录</summary>
+                    <summary className="cursor-pointer font-medium text-cnode-ink">查看审计字段</summary>
                     <div className="mt-3 grid gap-3 lg:grid-cols-[16rem_minmax(0,1fr)]">
                       <dl className="space-y-1 text-xs text-muted-foreground">
+                        <div className="mb-2 font-semibold text-cnode-ink">基础字段</div>
                         <div><dt className="inline font-semibold">id: </dt><dd className="inline">{log.id}</dd></div>
                         <div><dt className="inline font-semibold">action: </dt><dd className="inline">{log.action}</dd></div>
                         <div><dt className="inline font-semibold">operator_id: </dt><dd className="inline">{log.operator_id ?? ""}</dd></div>
                         <div><dt className="inline font-semibold">target_type: </dt><dd className="inline">{log.target_type || ""}</dd></div>
                         <div><dt className="inline font-semibold">target_id: </dt><dd className="inline">{log.target_id || ""}</dd></div>
                       </dl>
-                      <DetailBlock detail={log.detail} />
+                      <div className="min-w-0 space-y-2">
+                        <div className="text-xs font-semibold text-cnode-ink">附加详情 detail</div>
+                        <DetailBlock detail={log.detail} />
+                      </div>
                     </div>
                   </details>
                 </article>
