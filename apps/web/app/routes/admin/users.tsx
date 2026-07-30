@@ -167,17 +167,13 @@ export default function AdminUsers({ loaderData }: any) {
             </Form>
           </AdminToolbar>
           <div className="overflow-x-auto">
-          <Table className="min-w-[980px]">
+          <Table className="min-w-[720px]">
           <TableHeader>
             <TableRow>
               <TableHead>用户</TableHead>
-              <TableHead>邮箱</TableHead>
-              <TableHead>积分</TableHead>
-              <TableHead>话题</TableHead>
-              <TableHead>回复</TableHead>
               <TableHead>状态</TableHead>
               <TableHead>角色</TableHead>
-              <TableHead>操作</TableHead>
+              <TableHead className="text-right">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -185,15 +181,12 @@ export default function AdminUsers({ loaderData }: any) {
               const isSelf = currentUser?.loginname === u.loginname || String(currentUser?.id || "") === String(u.id);
               return (
               <TableRow key={u.id}>
-                <TableCell className="max-w-48 break-all">
-                  <a href={`/user/${u.loginname}`} className="text-primary hover:underline">
+                <TableCell className="max-w-md break-all">
+                  <Link to={`/user/${u.loginname}`} className="font-medium text-primary hover:underline">
                     {u.loginname}
-                  </a>
+                  </Link>
+                  <div className="mt-1 text-xs text-muted-foreground">{u.email}</div>
                 </TableCell>
-                <TableCell className="max-w-64 break-all text-muted-foreground">{u.email}</TableCell>
-                <TableCell>{u.score}</TableCell>
-                <TableCell>{u.topic_count}</TableCell>
-                <TableCell>{u.reply_count}</TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-1">
                     {u.is_block && <Badge variant="destructive">内容已屏蔽</Badge>}
@@ -208,8 +201,8 @@ export default function AdminUsers({ loaderData }: any) {
                     {!(u.roles || []).length && <span className="text-xs text-muted-foreground">无</span>}
                   </div>
                 </TableCell>
-                <TableCell className="w-36">
-                  <div className="flex items-center gap-2">
+                <TableCell className="w-36 text-right">
+                  <div className="flex items-center justify-end gap-2">
                     <Button asChild size="sm" variant="ghost">
                       <Link to={`/user/${u.loginname}`}>查看</Link>
                     </Button>

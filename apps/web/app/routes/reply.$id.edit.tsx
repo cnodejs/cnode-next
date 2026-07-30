@@ -84,12 +84,12 @@ export default function ReplyEdit({ loaderData }: Route.ComponentProps) {
           <CardContent className="pt-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <MarkdownEditor value={content} onChange={setContent} placeholder="支持 Markdown 格式" />
-          <div className="flex gap-2">
-            <Button type="submit" disabled={saving}>
-              {saving ? "保存中..." : "保存"}
-            </Button>
+          <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => navigate(-1)}>
               取消
+            </Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? "保存中..." : "保存"}
             </Button>
           </div>
         </form>

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import type { Route } from "../../.react-router/types/app/routes/+types/topic.$tid";
 import { Link, useRevalidator } from "react-router";
 import { toast } from "sonner";
@@ -286,34 +286,40 @@ function TopicActions({ topic, currentUser }: { topic: any; currentUser: any }) 
   );
 
   return (
-    <div className="flex flex-wrap gap-3">
-      <Button variant={topic.is_collect ? "default" : "outline"} size="sm" onClick={() => toggleCollect()} disabled={collecting}>
-        <Star className="h-4 w-4" /> {collecting ? "处理中" : topic.is_collect ? "取消收藏" : "收藏话题"}
-      </Button>
-      <Button asChild variant="ghost" size="sm">
-        <a href="#replies">
-          <MessageSquare className="h-4 w-4" /> 查看回复
-        </a>
-      </Button>
-      {canEdit && (
-        <Button asChild variant="outline" size="sm">
-          <Link to={`/topic/${topic.id}/edit`}>
-            <Edit3 className="h-4 w-4" /> 编辑话题
-          </Link>
+    <div className="flex flex-col gap-3 rounded-2xl border border-cnode-green/15 bg-card p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-wrap gap-2">
+        <Button variant={topic.is_collect ? "default" : "outline"} size="sm" onClick={() => toggleCollect()} disabled={collecting}>
+          <Star className="h-4 w-4" /> {collecting ? "处理中" : topic.is_collect ? "取消收藏" : "收藏话题"}
         </Button>
-      )}
-      {currentUser && <ReportButton targetType="topic" targetId={topic.id} />}
-      {canManage && (
-        <>
-          <Button type="button" variant="outline" size="sm" onClick={() => runTopicAction("top")} disabled={adminPending}>
-            {adminPending ? "处理中" : topic.top ? "取消置顶" : "置顶帖子"}
-          </Button>
-          <Button type="button" variant="outline" size="sm" onClick={() => runTopicAction("good")} disabled={adminPending}>
-            {adminPending ? "处理中" : topic.good ? "取消高亮" : "高亮帖子"}
-          </Button>
-          <Button type="button" variant="destructive" size="sm" onClick={() => setDeleteOpen(true)} disabled={adminPending}>
-            <Trash2 className="h-4 w-4" /> {adminPending ? "删除中" : "删除帖子"}
-          </Button>
+        <Button asChild variant="ghost" size="sm">
+          <a href="#replies">
+            <MessageSquare className="h-4 w-4" /> 查看回复
+          </a>
+        </Button>
+      </div>
+      {(canEdit || currentUser || canManage) && (
+        <div className="flex flex-wrap gap-2" aria-label="更多话题操作">
+          {canEdit && (
+            <Button asChild variant="outline" size="sm">
+              <Link to={`/topic/${topic.id}/edit`}>
+                <Edit3 className="h-4 w-4" /> 编辑话题
+              </Link>
+            </Button>
+          )}
+          {currentUser && <ReportButton targetType="topic" targetId={topic.id} />}
+          {canManage && (
+            <>
+              <Button type="button" variant="outline" size="sm" onClick={() => runTopicAction("top")} disabled={adminPending}>
+                {adminPending ? "处理中" : topic.top ? "取消置顶" : "置顶帖子"}
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => runTopicAction("good")} disabled={adminPending}>
+                {adminPending ? "处理中" : topic.good ? "取消高亮" : "高亮帖子"}
+              </Button>
+              <Button type="button" variant="destructive" size="sm" onClick={() => setDeleteOpen(true)} disabled={adminPending}>
+                <Trash2 className="h-4 w-4" /> {adminPending ? "删除中" : "删除帖子"}
+              </Button>
+            </>
+          )}
           <Dialog open={deleteOpen} onOpenChange={(open) => !adminPending && setDeleteOpen(open)}>
             <DialogContent>
               <DialogHeader>
@@ -332,7 +338,7 @@ function TopicActions({ topic, currentUser }: { topic: any; currentUser: any }) 
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        </>
+        </div>
       )}
     </div>
   );
@@ -353,11 +359,20 @@ function ReplySection({
 }) {
   const [targetReply, setTargetReply] = useState<any | null>(null);
   const [content, setContent] = useState("");
+  const formRef = useRef<HTMLFormElement>(null);
   const { revalidate } = useRevalidator();
+
+  function focusReplyEditor() {
+    window.setTimeout(() => {
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      formRef.current?.querySelector("textarea")?.focus();
+    }, 0);
+  }
 
   function startReply(reply?: any) {
     setTargetReply(reply || null);
     setContent(reply?.author?.loginname ? `@${reply.author.loginname} ` : "");
+    focusReplyEditor();
   }
 
   const { run: submitReply, pending: submitting } = useAsyncAction(
@@ -416,7 +431,7 @@ function ReplySection({
         </CardHeader>
         <CardContent className="pt-6">
           {currentUser ? (
-            <form onSubmit={handleSubmit} className="space-y-3">
+            <form ref={formRef} onSubmit={handleSubmit} className="scroll-mt-24 space-y-3">
               {targetReply && (
                 <div className="rounded-lg border border-cnode-green/30 bg-cnode-soft p-3 text-sm">
                   <div className="mb-1 flex items-center justify-between gap-3">
@@ -430,9 +445,11 @@ function ReplySection({
               )}
               <MarkdownEditor value={content} onChange={setContent} placeholder="支持 Markdown，建议贴出代码和错误信息" />
               <TurnstileWidget />
-              <Button type="submit" size="sm" disabled={!content.trim() || submitting}>
-                回复
-              </Button>
+              <div className="flex justify-end">
+                <Button type="submit" size="sm" disabled={!content.trim() || submitting}>
+                  回复
+                </Button>
+              </div>
             </form>
           ) : (
             <div className="rounded-xl border border-border bg-surface-subtle p-4 text-sm text-muted-foreground">

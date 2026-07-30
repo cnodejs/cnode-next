@@ -6,9 +6,17 @@ interface PaginationProps {
   limit: number;
   basePath: string;
   searchParams?: Record<string, string>;
+  variant?: "numbered" | "simple";
 }
 
-export function Pagination({ page, total, limit, basePath, searchParams = {} }: PaginationProps) {
+export function Pagination({
+  page,
+  total,
+  limit,
+  basePath,
+  searchParams = {},
+  variant = "numbered",
+}: PaginationProps) {
   const totalPages = Math.ceil(total / limit);
   if (totalPages <= 1) return null;
 
@@ -24,12 +32,31 @@ export function Pagination({ page, total, limit, basePath, searchParams = {} }: 
   for (let i = start; i <= end; i++) pages.push(i);
 
   const linkClass =
-    "px-3 py-1 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground text-sm";
+    "inline-flex h-9 items-center rounded-xl border border-input bg-card px-3 text-sm shadow-sm hover:bg-accent hover:text-accent-foreground";
   const activeClass =
     "border-cnode-ink bg-cnode-ink text-white hover:bg-cnode-ink/90 hover:text-white";
 
+  if (variant === "simple") {
+    return (
+      <div className="mt-4 flex items-center justify-between gap-2">
+        {page > 1 ? (
+          <Link to={buildUrl(page - 1)} className={linkClass}>
+            ← 上一页
+          </Link>
+        ) : (
+          <span />
+        )}
+        {page < totalPages ? (
+          <Link to={buildUrl(page + 1)} className={linkClass}>
+            下一页 →
+          </Link>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
-    <div className="flex items-center gap-2 mt-4">
+    <div className="mt-4 flex items-center gap-2">
       {page > 1 && (
         <Link to={buildUrl(page - 1)} className={linkClass}>
           ← 上一页

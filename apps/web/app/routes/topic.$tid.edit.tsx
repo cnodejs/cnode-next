@@ -148,7 +148,7 @@ export default function TopicEdit() {
                     id="tab"
                     value={tab}
                     onChange={(e) => setTab(e.target.value)}
-                    className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
+                    className="h-9 w-full rounded-xl border border-input bg-card px-3 text-sm shadow-sm transition-colors hover:border-cnode-green/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <option value="share">分享</option>
                     <option value="ask">问答</option>
@@ -157,11 +157,13 @@ export default function TopicEdit() {
                 </div>
                 <div className="space-y-2">
                   <Label>正文</Label>
-                  <MarkdownEditor value={content} onChange={setContent} />
+                  <MarkdownEditor value={content} onChange={setContent} minHeight={280} />
                 </div>
-                <Button type="submit" disabled={saving}>
-                  {saving ? "保存中..." : "保存"}
-                </Button>
+                <div className="flex justify-end">
+                  <Button type="submit" disabled={saving}>
+                    {saving ? "保存中..." : "保存"}
+                  </Button>
+                </div>
               </form>
             </CardContent>
           </Card>

@@ -282,7 +282,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                           <FormLabel>签名</FormLabel>
                           <FormControl>
                             <textarea
-                              className="w-full px-3 py-2 rounded-md border border-input bg-transparent text-sm"
+                              className="w-full rounded-xl border border-input bg-card px-3 py-2 text-sm shadow-sm transition-colors hover:border-cnode-green/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                               rows={2}
                               {...field}
                             />

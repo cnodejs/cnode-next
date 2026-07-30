@@ -38,7 +38,8 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
     setSearchParams(next);
   }
 
-  const controlClass = "h-10 w-full rounded-md border border-input bg-background px-3 text-sm";
+  const controlClass =
+    "h-9 w-full rounded-xl border border-input bg-card px-3 text-sm shadow-sm transition-colors hover:border-cnode-green/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
   const filterControls = (
     <div className="grid gap-3 md:grid-cols-[minmax(8rem,1fr)_minmax(8rem,1fr)_8rem_minmax(13rem,1.4fr)_6rem] md:items-end">
@@ -81,7 +82,7 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
           value={salaryMin}
           onChange={(e) => updateParam("salary_min", e.target.value)}
           placeholder="如 30"
-          className="h-10 w-full"
+          className="h-9 w-full"
         />
       </div>
 
@@ -91,11 +92,11 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
           value={tags}
           onChange={(e) => updateParam("tags", e.target.value)}
           placeholder="如 Node,PostgreSQL"
-          className="h-10 w-full"
+          className="h-9 w-full"
         />
       </div>
 
-      <Button type="button" variant="ghost" className="h-10 w-full" onClick={clearAll}>
+      <Button type="button" variant="ghost" className="h-9 w-full" onClick={clearAll}>
         清除筛选
       </Button>
     </div>
@@ -103,7 +104,7 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
 
   return (
     <>
-      <div className="hidden rounded-xl border border-border bg-card p-3 shadow-sm md:block">
+      <div className="hidden rounded-2xl border border-border bg-card p-3 shadow-sm md:block">
         {filterControls}
       </div>
 

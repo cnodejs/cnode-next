@@ -92,6 +92,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
             limit={limit}
             basePath="/"
             searchParams={{ ...(tab !== "all" ? { tab } : {}) }}
+            variant="simple"
           />
         </div>
 

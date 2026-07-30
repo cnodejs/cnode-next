@@ -22,4 +22,15 @@ describe("Pagination", () => {
       "/admin/reports?status=pending&q=node&page=3",
     );
   });
+
+  it("renders simple pagination without page numbers", () => {
+    render(
+      <MemoryRouter>
+        <Pagination page={1} total={100} limit={10} basePath="/" variant="simple" />
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByRole("link", { name: "1" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "下一页 →" })).toHaveAttribute("href", "/?page=2");
+  });
 });

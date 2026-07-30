@@ -26,6 +26,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { CNodeLogo } from "./CNodeLogo";
 import { CommandPalette } from "./CommandPalette";
 import { PageContainer } from "./PageShell";
+import { ScrollTopButton } from "./ScrollTopButton";
 import { cn } from "~/lib/utils";
 import {
   DropdownMenu,
@@ -47,6 +48,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <PageContainer className="py-6">{children}</PageContainer>
       </main>
       <Footer />
+      <ScrollTopButton />
     </div>
   );
 }
@@ -84,6 +86,10 @@ function Header() {
                 {z.name}
               </NavLink>
             ))}
+            <NavLink to="/api">
+              <Code className="h-4 w-4" />
+              API
+            </NavLink>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="inline-flex h-9 items-center gap-1 rounded-lg px-3 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground">
@@ -94,19 +100,13 @@ function Header() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-36">
                 <DropdownMenuItem asChild>
-                  <Link to="/help" className="w-full justify-start">指引总览</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
                   <Link to="/getstart" className="w-full justify-start">新手指南</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/api" className="w-full justify-start">API 文档</Link>
+                  <Link to="/faq" className="w-full justify-start">常见问题</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/about" className="w-full justify-start">关于我们</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/faq" className="w-full justify-start">常见问题</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -237,7 +237,7 @@ export function HeaderUserArea() {
             <DropdownMenuItem asChild>
               <Link to="/setting">
                 <Settings />
-                设置
+                用户设置
               </Link>
             </DropdownMenuItem>
           </DropdownMenuGroup>
@@ -316,12 +316,6 @@ function MobileNavTrigger({ visibleZones = [] }: { visibleZones?: any[] }) {
               <Bell className="h-5 w-5 text-primary" /> 消息
             </Link>
             <Link
-              to="/help"
-              className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
-            >
-              <HelpCircle className="h-5 w-5 text-primary" /> 指引总览
-            </Link>
-            <Link
               to="/getstart"
               className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
             >
@@ -331,19 +325,19 @@ function MobileNavTrigger({ visibleZones = [] }: { visibleZones?: any[] }) {
               to="/api"
               className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
             >
-              <Code className="h-5 w-5 text-primary" /> API 文档
-            </Link>
-            <Link
-              to="/about"
-              className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
-            >
-              <Info className="h-5 w-5 text-primary" /> 关于我们
+              <Code className="h-5 w-5 text-primary" /> API
             </Link>
             <Link
               to="/faq"
               className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
             >
               <HelpCircle className="h-5 w-5 text-primary" /> 常见问题
+            </Link>
+            <Link
+              to="/about"
+              className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
+            >
+              <Info className="h-5 w-5 text-primary" /> 关于我们
             </Link>
             {user ? (
               <>
@@ -357,7 +351,7 @@ function MobileNavTrigger({ visibleZones = [] }: { visibleZones?: any[] }) {
                   to="/setting"
                   className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
                 >
-                  <Settings className="h-5 w-5 text-primary" /> 设置
+                  <Settings className="h-5 w-5 text-primary" /> 用户设置
                 </Link>
                 {(user.is_admin || user.is_mod) && (
                   <Link

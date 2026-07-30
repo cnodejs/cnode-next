@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useRouteLoaderData } from "react-router";
 import {
   FileText,
   HelpCircle,
@@ -19,9 +19,10 @@ const quickActions = [
   { label: "发布话题", to: "/topic/create", icon: Pencil },
   { label: "我的消息", to: "/my/messages", icon: MessageSquare },
   { label: "新手指南", to: "/getstart", icon: HelpCircle },
-  { label: "API 文档", to: "/api", icon: FileText },
+  { label: "API", to: "/api", icon: FileText },
+  { label: "常见问题", to: "/faq", icon: HelpCircle },
   { label: "关于 CNode", to: "/about", icon: Info },
-  { label: "管理后台", to: "/admin", icon: LayoutDashboard },
+  { label: "管理后台", to: "/admin", icon: LayoutDashboard, adminOnly: true },
 ];
 
 export function CommandPalette({
@@ -33,9 +34,16 @@ export function CommandPalette({
 }) {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
+  const rootData = useRouteLoaderData("root") as { user?: { is_admin?: boolean; is_mod?: boolean } } | undefined;
+  const canAccessAdmin = !!(rootData?.user?.is_admin || rootData?.user?.is_mod);
   const actions = useMemo(
-    () => quickActions.filter((item) => item.label.toLowerCase().includes(query.toLowerCase())),
-    [query],
+    () =>
+      quickActions.filter(
+        (item) =>
+          (!item.adminOnly || canAccessAdmin) &&
+          item.label.toLowerCase().includes(query.toLowerCase()),
+      ),
+    [canAccessAdmin, query],
   );
 
   useEffect(() => {

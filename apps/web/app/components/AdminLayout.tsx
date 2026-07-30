@@ -19,6 +19,7 @@ import { cn } from "~/lib/utils";
 import { CNodeLogo } from "./CNodeLogo";
 import { CommandPalette } from "./CommandPalette";
 import { PageContainer } from "./PageShell";
+import { ScrollTopButton } from "./ScrollTopButton";
 import { useState } from "react";
 import { useAuthStore } from "~/lib/stores/auth-store";
 
@@ -135,6 +136,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           <main className={cn("min-h-[calc(100vh-8rem)] min-w-0 pb-8 transition-opacity duration-200", isNavigating ? "opacity-60" : "opacity-100")}>{children}</main>
         </div>
       </PageContainer>
+      <ScrollTopButton />
     </div>
   );
 }
