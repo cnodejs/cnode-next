@@ -36,15 +36,16 @@ const GITHUB_OAUTH_COOKIE = "github_oauth_state";
 
 const presignUploadSchema = z.object({
   filename: z.string().max(255).optional(),
-  contentType: z.string().regex(/^image\/(png|jpeg|gif|webp)$/).default("image/png"),
+  contentType: z.string().regex(/^image\/(png|jpeg|gif|webp|svg\+xml)$/).default("image/png"),
 });
-const allowedImageTypes = new Set(["image/png", "image/jpeg", "image/gif", "image/webp"]);
-const allowedImageExtensions = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp"]);
+const allowedImageTypes = new Set(["image/png", "image/jpeg", "image/gif", "image/webp", "image/svg+xml"]);
+const allowedImageExtensions = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"]);
 
 function extensionForContentType(contentType: string) {
   if (contentType === "image/jpeg") return ".jpg";
   if (contentType === "image/gif") return ".gif";
   if (contentType === "image/webp") return ".webp";
+  if (contentType === "image/svg+xml") return ".svg";
   return ".png";
 }
 function createOssClient() {
@@ -378,7 +379,7 @@ auth.openapi(presignRoute, async (c) => {
   const user = c.get("user");
   if (!user) return c.json({ success: false as const, error_msg: "未登录" }, 401);
   const parsed = presignUploadSchema.safeParse(await c.req.json().catch(() => ({})));
-  if (!parsed.success) return c.json({ success: false as const, error_msg: "只支持 png/jpeg/gif/webp 图片上传" }, 422);
+  if (!parsed.success) return c.json({ success: false as const, error_msg: "只支持 png/jpeg/gif/webp/svg 图片上传" }, 422);
   const { contentType } = parsed.data;
   const filename = `${uploadPrefix()}/${uuidv4()}${extensionForContentType(contentType)}`;
   const uploadUrl = createOssClient().signatureUrl(filename, { method: "PUT", expires: Number(process.env.OSS_UPLOAD_EXPIRES || 600), headers: { "Content-Type": contentType } });
@@ -392,10 +393,10 @@ auth.post("/upload/image", async (c) => {
   const formData = await c.req.formData().catch(() => null);
   const file = formData?.get("file");
   if (!(file instanceof File)) return c.json({ success: false, error_msg: "请选择要上传的图片" }, 400);
-  if (!allowedImageTypes.has(file.type)) return c.json({ success: false, error_msg: "只支持 png/jpeg/gif/webp 图片上传" }, 422);
+  if (!allowedImageTypes.has(file.type)) return c.json({ success: false, error_msg: "只支持 png/jpeg/gif/webp/svg 图片上传" }, 422);
   const originalName = safeOriginalName(file.name);
   const originalExtension = extensionForFilename(originalName);
-  if (originalExtension && !allowedImageExtensions.has(originalExtension)) return c.json({ success: false, error_msg: "只支持 png/jpeg/gif/webp 图片上传" }, 422);
+  if (originalExtension && !allowedImageExtensions.has(originalExtension)) return c.json({ success: false, error_msg: "只支持 png/jpeg/gif/webp/svg 图片上传" }, 422);
   const maxSize = Number(process.env.OSS_UPLOAD_MAX_BYTES || 5 * 1024 * 1024);
   if (file.size > maxSize) return c.json({ success: false, error_msg: "图片不能超过 5MB" }, 413);
   const purpose = typeof formData?.get("purpose") === "string" ? String(formData.get("purpose")) : null;

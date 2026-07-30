@@ -109,7 +109,7 @@ export function JobMetaForm({ value, onChange }: JobMetaFormProps) {
             )}
             <input
               type="file"
-              accept="image/png,image/jpeg,image/gif,image/webp"
+              accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
               className="hidden"
               id="company-logo-upload"
               onChange={(e) => {

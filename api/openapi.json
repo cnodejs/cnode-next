@@ -5403,7 +5403,7 @@
                   },
                   "contentType": {
                     "type": "string",
-                    "pattern": "^image\\/(png|jpeg|gif|webp)$",
+                    "pattern": "^image\\/(png|jpeg|gif|webp|svg\\+xml)$",
                     "default": "image/png"
                   }
                 }

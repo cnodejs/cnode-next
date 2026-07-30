@@ -48,6 +48,7 @@ describe("MarkdownEditor", () => {
     const onChange = vi.fn();
     render(<MarkdownEditor value="正文" onChange={onChange} />);
     const file = new File(["png"], "avatar.png", { type: "image/png" });
+    expect(screen.getByLabelText("上传图片文件")).toHaveAttribute("accept", expect.stringContaining("image/svg+xml"));
 
     await userEvent.upload(screen.getByLabelText("上传图片文件"), file);
 

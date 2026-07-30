@@ -208,7 +208,7 @@ export function MarkdownEditor({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/png,image/jpeg,image/gif,image/webp"
+          accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
           aria-label="上传图片文件"
           className="hidden"
           onChange={(event) => {
