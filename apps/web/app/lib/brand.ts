@@ -1,5 +1,5 @@
-export const CNODE_LOGO_LIGHT = "https://static2.cnodejs.org/public/images/cnodejs_light.svg";
-export const CNODE_LOGO_DARK = "https://static2.cnodejs.org/public/images/cnodejs.svg";
+export const CNODE_LOGO_LIGHT = "/cnodejs_light.svg";
+export const CNODE_LOGO_DARK = "/cnodejs.svg";
 
 export function getAvatarUrl(value?: string | null, size = 48) {
   if (!value) return "";

@@ -16,7 +16,7 @@ import {
 } from "react-email";
 import type { CSSProperties } from "react";
 
-const CNODE_LOGO_LIGHT = "https://static2.cnodejs.org/public/images/cnodejs_light.svg";
+const CNODE_LOGO_LIGHT_PATH = "/cnodejs_light.svg";
 const DEFAULT_WEB_BASE_URL = "http://localhost:5173";
 const SUMMARY_LIMIT = 600;
 const TITLE_LIMIT = 160;
@@ -34,6 +34,7 @@ interface LayoutProps {
   actionUrl: string;
   detailLabel?: string;
   detail?: string;
+  logoUrl?: string;
 }
 
 const styles: Record<string, CSSProperties> = {
@@ -158,6 +159,7 @@ function CNodeEmailLayout({
   actionUrl,
   detailLabel,
   detail,
+  logoUrl,
 }: LayoutProps) {
   return (
     <Html lang="zh-CN" dir="ltr">
@@ -168,7 +170,7 @@ function CNodeEmailLayout({
           <Section style={styles.header}>
             <Row>
               <Column>
-                <Img src={CNODE_LOGO_LIGHT} width="120" alt="CNode" style={styles.logo} />
+                <Img src={logoUrl || absoluteWebUrl(CNODE_LOGO_LIGHT_PATH)} width="120" alt="CNode" style={styles.logo} />
               </Column>
               <Column style={styles.tagline}>Node.js 中文技术社区</Column>
             </Row>
@@ -217,6 +219,13 @@ function safeHttpUrl(value: string) {
   return url.toString();
 }
 
+function absoluteWebUrl(path: string, webBaseUrl?: string) {
+  const baseUrl = safeHttpUrl(
+    webBaseUrl || process.env.APP_WEB_BASE_URL || DEFAULT_WEB_BASE_URL,
+  ).replace(/\/+$/, "");
+  return safeHttpUrl(`${baseUrl}${path.startsWith("/") ? path : `/${path}`}`);
+}
+
 function normalizeText(value: string) {
   return value.replace(/\r\n?/g, "\n").trim();
 }
@@ -237,10 +246,7 @@ async function renderMail(options: LayoutProps) {
 }
 
 function authUrl(path: string, key: string, webBaseUrl?: string) {
-  const baseUrl = safeHttpUrl(
-    webBaseUrl || process.env.APP_WEB_BASE_URL || DEFAULT_WEB_BASE_URL,
-  ).replace(/\/+$/, "");
-  return safeHttpUrl(`${baseUrl}${path}?key=${encodeURIComponent(key)}`);
+  return safeHttpUrl(`${absoluteWebUrl(path, webBaseUrl)}?key=${encodeURIComponent(key)}`);
 }
 
 async function buildAuthMail(options: LayoutProps & { subject: string }): Promise<MailTemplate> {
@@ -257,6 +263,7 @@ export async function buildActiveMail(key: string, webBaseUrl?: string): Promise
     intro: "欢迎加入 CNode。请点击下方按钮完成账号激活，然后即可登录社区。",
     actionLabel: "激活账号",
     actionUrl,
+    logoUrl: absoluteWebUrl(CNODE_LOGO_LIGHT_PATH, webBaseUrl),
   });
 }
 
@@ -269,6 +276,7 @@ export async function buildResetPassMail(key: string, webBaseUrl?: string): Prom
       "我们收到了你的密码重置请求。请点击下方按钮继续设置新密码；如果并非你本人操作，可以忽略此邮件。",
     actionLabel: "重置密码",
     actionUrl,
+    logoUrl: absoluteWebUrl(CNODE_LOGO_LIGHT_PATH, webBaseUrl),
   });
 }
 

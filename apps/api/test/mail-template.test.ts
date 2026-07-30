@@ -6,11 +6,9 @@ import {
   buildResetPassMail,
 } from "../src/lib/mail-template";
 
-const LOGO_URL = "https://static2.cnodejs.org/public/images/cnodejs_light.svg";
-
-function assertBrandedMail(mail: { html: string; text: string }, actionLabel: string, url: string) {
+function assertBrandedMail(mail: { html: string; text: string }, actionLabel: string, url: string, logoUrl = "http://localhost:5173/cnodejs_light.svg") {
   expect(mail.html).toMatch(/<!doctype html/i);
-  expect(mail.html).toContain(LOGO_URL);
+  expect(mail.html).toContain(logoUrl);
   expect(mail.html).toContain("#80bd01");
   expect(mail.html).toContain('role="presentation"');
   expect(mail.html).toContain("max-width:600px");
@@ -26,7 +24,7 @@ test("builds branded activation and password reset emails", async () => {
   const activation = await buildActiveMail("a/b c&d", "https://next.cnodejs.org///");
   const activationUrl = "https://next.cnodejs.org/active_account?key=a%2Fb%20c%26d";
   expect(activation.subject).toBe("CNode 账号激活");
-  assertBrandedMail(activation, "激活账号", activationUrl);
+  assertBrandedMail(activation, "激活账号", activationUrl, "https://next.cnodejs.org/cnodejs_light.svg");
 
   const reset = await buildResetPassMail("reset-key", "http://localhost:5173/");
   const resetUrl = "http://localhost:5173/reset_pass?key=reset-key";
