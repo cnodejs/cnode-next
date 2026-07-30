@@ -1,6 +1,6 @@
-# cnode-next
+# CNode.js Next
 
-cnode-next is the next-generation implementation of the CNode community (cnodejs.org), the Node.js Chinese professional community. It is built with React Router v7 SSR, Hono, PostgreSQL, Redis, Drizzle, and shared TypeScript contracts, providing a modern Web app, JSON API, database schema, moderation worker, Mongo-to-PostgreSQL migration tooling, and production deployment assets.
+CNode.js Next powers cnodejs.org, the Node.js Chinese developer community. It is a modern rewrite of the original nodeclub application, built as an open-source TypeScript monorepo.
 
 CNode（cnodejs.org）是 Node.js 中文专业社区，起源于 nodeclub。本项目是 CNode 的现代化重写，保持 API 和业务行为兼容，运行时数据库迁移到 PostgreSQL。
 
@@ -60,4 +60,4 @@ Report vulnerabilities through a private maintainer-approved channel when possib
 
 ## License
 
-cnode-next is released under the [MIT License](LICENSE). Legacy reference code outside this repository is not covered by this license.
+CNode.js Next is released under the [MIT License](LICENSE). Legacy reference code outside this repository is not covered by this license.

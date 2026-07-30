@@ -1,6 +1,6 @@
 # Deploy
 
-`deployment/` is the production deployment domain for cnode-next. It contains the production runbook, compose file, dotenv template, and audit template. Local development belongs in [`docs/development.md`](../docs/development.md); historical operational context belongs in `wiki/`.
+`deployment/` is the production deployment domain for CNode.js Next. It contains the production runbook, compose file, dotenv template, and audit template. Local development belongs in [`docs/development.md`](../docs/development.md); historical operational context belongs in `wiki/`.
 
 ## Assets
 
@@ -84,7 +84,7 @@ docker compose -f deployment/docker-compose.prod.yml up -d --no-build postgres r
 ```bash
 curl -fsS https://api.cnodejs.org/health
 curl -fsS 'https://api.cnodejs.org/api/v1/topics?limit=1&tab=all'
-curl -fsS 'https://next.cnodejs.org/'
+curl -fsS 'https://cnodejs.org/'
 docker compose -f deployment/docker-compose.prod.yml ps api web worker
 ```
 
@@ -109,7 +109,7 @@ If a migration changed production data, image rollback is not database rollback.
 Key production environment groups live in `.env.production.example`.
 
 ```bash
-APP_WEB_BASE_URL=https://next.cnodejs.org
+APP_WEB_BASE_URL=https://cnodejs.org
 APP_API_INTERNAL_BASE_URL=http://api:3001
 APP_API_BASE_URL=https://api.cnodejs.org
 TURNSTILE_SITE_KEY=

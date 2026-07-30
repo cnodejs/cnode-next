@@ -4,7 +4,7 @@ services:
     environment:
       APP_ADMINS: ${APP_ADMINS:-}
       APP_ENV: ${APP_ENV:-production}
-      APP_WEB_BASE_URL: ${APP_WEB_BASE_URL:-https://next.cnodejs.org}
+      APP_WEB_BASE_URL: ${APP_WEB_BASE_URL:-https://cnodejs.org}
       APP_API_BASE_URL: ${APP_API_BASE_URL:-https://api.cnodejs.org}
       AUTH_SESSION_SECRET: ${AUTH_SESSION_SECRET:?AUTH_SESSION_SECRET is required}
       AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-.cnodejs.org}
@@ -57,7 +57,7 @@ services:
     image: ${CNODE_WEB_IMAGE:?CNODE_WEB_IMAGE is required}
     environment:
       APP_ENV: ${APP_ENV:-production}
-      APP_WEB_BASE_URL: ${APP_WEB_BASE_URL:-https://next.cnodejs.org}
+      APP_WEB_BASE_URL: ${APP_WEB_BASE_URL:-https://cnodejs.org}
       APP_API_INTERNAL_BASE_URL: http://api:3001
       APP_API_BASE_URL: ${APP_API_BASE_URL:-https://api.cnodejs.org}
       AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-.cnodejs.org}
