@@ -67,8 +67,7 @@ export async function loader({ request }: any) {
 }
 
 export default function AdminUsers({ loaderData }: any) {
-  const { users: initialUsers, total, page, limit, q, currentUser } = loaderData;
-  const [users] = useState<any[]>(initialUsers);
+  const { users, total, page, limit, q, currentUser } = loaderData;
   const [resetTarget, setResetTarget] = useState<{ id: number; loginname: string } | null>(null);
   const [deleteAllTarget, setDeleteAllTarget] = useState<string | null>(null);
   const { revalidate } = useRevalidator();
@@ -177,7 +176,7 @@ export default function AdminUsers({ loaderData }: any) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((u) => {
+            {users.map((u: any) => {
               const isSelf = currentUser?.loginname === u.loginname || String(currentUser?.id || "") === String(u.id);
               return (
               <TableRow key={u.id}>

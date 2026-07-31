@@ -77,7 +77,12 @@ export const adminTopicsQuerySchema = adminPaginationQuerySchema.extend({
 });
 
 export const adminUsersQuerySchema = adminPaginationQuerySchema.extend({
-  search: z.string().optional(),
+  q: z.string().optional(),
+});
+
+export const adminUserBulkGovernanceBodySchema = z.object({
+  action: z.enum(["unmute", "unblock"]),
+  ids: z.array(z.coerce.number().int().positive()).min(1).max(100),
 });
 
 export const adminAuditQuerySchema = adminPaginationQuerySchema.extend({

@@ -55,7 +55,7 @@ import {
   parseAdminTopicFilters,
   type AdminTopicFilters,
 } from "../lib/admin-governance";
-import { createReportBodySchema, errorResponseSchema, roleAssignmentSchema, userRoleSchema } from "@cnode/shared";
+import { adminUserBulkGovernanceBodySchema, createReportBodySchema, errorResponseSchema, roleAssignmentSchema, userRoleSchema } from "@cnode/shared";
 
 const admin = new OpenAPIHono<{
   Variables: AuthVars;
@@ -115,6 +115,8 @@ export function auditEventMeta(action: string) {
     unblock_user: "恢复用户内容",
     mute_user: "禁言用户",
     unmute_user: "解除禁言",
+    bulk_unblock_user: "批量恢复内容可见",
+    bulk_unmute_user: "批量解除禁言",
     delete_all_user_content: "删除用户所有发言",
     grant_role: "授予角色",
     revoke_role: "撤销角色",
@@ -137,14 +139,14 @@ export function auditEventMeta(action: string) {
           ? "security"
           : action.startsWith("update_")
             ? "system"
-            : ["block_user", "unblock_user", "mute_user", "unmute_user", "delete_all_user_content"].includes(action)
+            : ["block_user", "unblock_user", "mute_user", "unmute_user", "bulk_unblock_user", "bulk_unmute_user", "delete_all_user_content"].includes(action)
               ? "user"
               : "content";
   const risk = ["delete_topic", "delete_reply", "delete_all_user_content", "permanent_delete_topic"].includes(action)
     ? "critical"
     : ["grant_role", "revoke_role", "reset_password", "ban_ip", "unban_ip"].includes(action)
       ? "high"
-      : ["lock", "unlock", "block_user", "unblock_user", "mute_user", "unmute_user"].includes(action)
+      : ["lock", "unlock", "block_user", "unblock_user", "mute_user", "unmute_user", "bulk_unblock_user", "bulk_unmute_user"].includes(action)
         ? "medium"
         : "low";
   return { category, risk, label: labels[action] || action.replace(/_/g, " ") };
@@ -264,6 +266,23 @@ function rejectSelfTarget(c: any, targetUser: { id: number }) {
     return c.json({ success: false, error_msg: "不能对自己执行该操作" }, 422);
   }
   return null;
+}
+
+export function bulkUserGovernanceAuditAction(action: "unmute" | "unblock") {
+  return action === "unmute" ? "bulk_unmute_user" : "bulk_unblock_user";
+}
+
+export function buildBulkUserGovernancePlan(action: "unmute" | "unblock", requestedIds: number[], currentUserId: number, existingUsers: { id: number }[]) {
+  const ids = Array.from(new Set(requestedIds));
+  const selfSkippedIds = ids.filter((id) => id === currentUserId);
+  const existingIds = existingUsers.map((user) => user.id);
+  const missingIds = ids.filter((id) => id !== currentUserId && !existingIds.includes(id));
+  return {
+    ids,
+    processedIds: existingIds,
+    skippedIds: [...selfSkippedIds, ...missingIds],
+    update: action === "unmute" ? { isMuted: boolValue(false) } : { isBlock: boolValue(false) },
+  };
 }
 
 async function getReportTargetSummary(targetType: string, targetId: number) {
@@ -543,6 +562,35 @@ admin.delete("/admin/users/:id/roles/:role", adminRequired(), async (c) => {
   return c.json({ success: true, data: { user_id: id, roles } });
 });
 
+admin.post("/admin/users/bulk-governance", adminRequired(), async (c) => {
+  const parsed = adminUserBulkGovernanceBodySchema.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success) return c.json({ success: false, error_msg: "批量用户治理参数无效" }, 422);
+  const currentUser = c.get("user")!;
+  const ids = Array.from(new Set(parsed.data.ids));
+  const skipped = ids.filter((id) => id === currentUser.id);
+  const targetIds = ids.filter((id) => id !== currentUser.id);
+  if (!targetIds.length) {
+    return c.json({ success: true, processed: 0, processed_ids: [], skipped_ids: skipped });
+  }
+
+  const db = getDb();
+  const targetRows = await db.select({ id: users.id, loginname: users.loginname }).from(users).where(inArray(users.id, targetIds));
+  const plan = buildBulkUserGovernancePlan(parsed.data.action, ids, currentUser.id, targetRows);
+  if (plan.processedIds.length > 0) {
+    await db.update(users).set(plan.update as any).where(inArray(users.id, plan.processedIds));
+  }
+
+  await auditQueries.log(
+    currentUser.id,
+    currentUser.loginname,
+    bulkUserGovernanceAuditAction(parsed.data.action),
+    { type: "user", id: plan.processedIds.join(","), name: targetRows.map((user: any) => user.loginname).join(",") },
+    "success",
+    JSON.stringify({ action: parsed.data.action, ids: plan.ids, processed_ids: plan.processedIds, skipped_ids: plan.skippedIds, processed: plan.processedIds.length }),
+  );
+  return c.json({ success: true, processed: plan.processedIds.length, processed_ids: plan.processedIds, skipped_ids: plan.skippedIds });
+});
+
 admin.post("/user/:name/block", adminRequired(), async (c) => {
   const name = c.req.param("name");
   const userData = await userQueries.getByLoginName(name);
@@ -649,13 +697,14 @@ admin.post("/user/:name/reset_password", adminRequired(), async (c) => {
 // ── Ban management ──
 admin.get("/admin/bans/users", adminRequired(), async (c) => {
   const pagination = getPagination(c);
+  const status = c.req.query("status") === "muted" ? "muted" : "blocked";
   const db = getDb();
-  const where = boolEq(users.isBlock, true);
+  const where = status === "muted" ? boolEq(users.isMuted, true) : boolEq(users.isBlock, true);
   const [banned, totalResult] = await Promise.all([
     db.select().from(users).where(where).orderBy(desc(users.createAt)).limit(pagination.limit).offset(pagination.offset),
     db.select({ c: count() }).from(users).where(where),
   ]);
-  return c.json(paginated(banned.map((u: any) => ({ id: u.id, loginname: u.loginname, is_block: true })), Number(totalResult[0]?.c || 0), pagination));
+  return c.json(paginated(banned.map((u: any) => ({ id: u.id, loginname: u.loginname, is_block: !!u.isBlock, is_muted: !!u.isMuted })), Number(totalResult[0]?.c || 0), pagination));
 });
 
 admin.get("/admin/bans/ips", adminRequired(), async (c) => {
