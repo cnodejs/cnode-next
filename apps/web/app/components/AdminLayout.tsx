@@ -68,7 +68,14 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-surface-subtle text-foreground dark:bg-background">
-      <header className="sticky top-0 z-40 border-b border-cnode-ink/10 bg-background/90 backdrop-blur-xl">
+      <a
+        href="#main-content"
+        onClick={() => document.getElementById("main-content")?.focus()}
+        className="fixed left-4 top-4 z-[100] -translate-y-20 rounded-lg bg-cnode-ink px-4 py-2 text-sm font-medium text-white opacity-0 shadow-lg transition-[transform,opacity] focus:translate-y-0 focus:opacity-100"
+      >
+        跳到主要内容
+      </a>
+      <header className="sticky top-0 z-40 bg-background/90 shadow-sm backdrop-blur-xl">
         <PageContainer className="flex h-16 max-w-screen-2xl items-center justify-between">
           <div className="flex min-w-0 items-center gap-4">
             <CNodeLogo admin />
@@ -78,12 +85,12 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 commandFinalFocusRef.current = event.currentTarget;
                 setCommandOpen(true);
               }}
-              className="hidden h-9 w-[260px] items-center gap-2 rounded-xl border border-input bg-card px-3 text-sm text-muted-foreground shadow-sm transition-colors hover:border-cnode-green/40 hover:bg-accent hover:text-accent-foreground lg:inline-flex"
+              className="hidden h-9 w-[260px] items-center gap-2 rounded-md bg-muted px-3 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 lg:inline-flex"
               aria-label="搜索后台内容"
             >
               <Search className="h-4 w-4" />
               <span className="min-w-0 flex-1 truncate text-left">搜索后台内容...</span>
-              <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+              <kbd className="rounded bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground">
                 ⌘K
               </kbd>
             </button>
@@ -138,13 +145,13 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         />
       </header>
 
-      <PageContainer className="max-w-screen-2xl py-6">
+      <PageContainer className="max-w-screen-2xl py-4 sm:py-6">
         <AdminMobileNav isAdmin={isAdmin} />
-        <div className="grid min-w-0 gap-6 md:grid-cols-[220px_minmax(0,1fr)]">
+        <div className="grid min-w-0 gap-4 lg:gap-6 md:grid-cols-[220px_minmax(0,1fr)]">
           <aside className="hidden md:block">
             <AdminSideNav isAdmin={isAdmin} />
           </aside>
-          <main className={cn("min-h-[calc(100vh-8rem)] min-w-0 pb-8 transition-opacity duration-200", isNavigating ? "opacity-60" : "opacity-100")}>{children}</main>
+          <main id="main-content" tabIndex={-1} className={cn("min-h-[calc(100vh-8rem)] min-w-0 pb-6 transition-opacity duration-200", isNavigating ? "opacity-60" : "opacity-100")}>{children}</main>
         </div>
       </PageContainer>
       <ScrollTopButton />
@@ -168,6 +175,7 @@ function AdminTopLink({
   return (
     <Link
       to={to}
+      aria-current={active ? "page" : undefined}
       className={cn(
         "box-border inline-flex h-9 items-center rounded-lg px-3 leading-none text-muted-foreground transition-colors hover:bg-cnode-soft hover:text-foreground",
         active && "bg-cnode-ink text-white hover:bg-cnode-ink hover:text-white",
@@ -187,9 +195,9 @@ function visibleGroups(isAdmin: boolean) {
 
 function AdminSideNav({ isAdmin }: { isAdmin: boolean }) {
   return (
-    <nav className="sticky top-24 rounded-2xl border border-cnode-ink/10 bg-card p-3 text-sm shadow-card">
+    <nav className="sticky top-24 rounded-2xl bg-card p-3 text-sm shadow-card">
       {visibleGroups(isAdmin).map((group) => (
-        <div key={group.label} className="space-y-1 [&+&]:mt-4">
+        <div key={group.label} className="flex flex-col gap-1 [&+&]:mt-4">
           <div className="box-border flex h-6 items-center px-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             {group.label}
           </div>
@@ -204,7 +212,7 @@ function AdminSideNav({ isAdmin }: { isAdmin: boolean }) {
 
 function AdminMobileNav({ isAdmin }: { isAdmin: boolean }) {
   return (
-    <nav className="-mx-4 mb-4 flex gap-2 overflow-x-auto border-b border-border px-4 pb-3 md:hidden">
+    <nav className="mb-4 flex gap-2 overflow-x-auto rounded-xl bg-card p-2 shadow-sm md:hidden">
       {visibleGroups(isAdmin).flatMap((group) => group.items).map((item) => (
         <AdminNavItem key={item.href} {...item} compact />
       ))}
@@ -229,6 +237,7 @@ function AdminNavItem({
   return (
     <Link
       to={href}
+      aria-current={active ? "page" : undefined}
       className={cn(
         "box-border flex items-center whitespace-nowrap rounded-xl text-muted-foreground transition-colors hover:bg-cnode-soft hover:text-foreground",
         compact ? "h-9 shrink-0 gap-2 px-3 text-sm" : "h-10 gap-2 px-3 leading-none",

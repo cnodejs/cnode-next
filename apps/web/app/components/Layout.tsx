@@ -32,7 +32,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuLinkItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
@@ -41,8 +40,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const isNavigating = useNavTransition();
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <a
+        href="#main-content"
+        onClick={() => document.getElementById("main-content")?.focus()}
+        className="fixed left-4 top-4 z-[100] -translate-y-20 rounded-lg bg-cnode-ink px-4 py-2 text-sm font-medium text-white opacity-0 shadow-lg transition-[transform,opacity] focus:translate-y-0 focus:opacity-100"
+      >
+        跳到主要内容
+      </a>
       <Header />
-      <main className={cn("flex-1 transition-opacity duration-200", isNavigating ? "opacity-60" : "opacity-100")}>
+      <main id="main-content" tabIndex={-1} className={cn("flex-1 transition-opacity duration-200", isNavigating ? "opacity-60" : "opacity-100")}>
         <PageContainer className="py-6">{children}</PageContainer>
       </main>
       <Footer />
@@ -58,7 +64,7 @@ export function Header() {
   const visibleZones = (rootData?.zones || []).filter((z: any) => z.visible).sort((a: any, b: any) => a.sort_order - b.sort_order);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 bg-background/90 shadow-sm backdrop-blur-xl">
       <PageContainer className="flex h-16 items-center justify-between">
         <div className="flex min-w-0 items-center gap-3 md:gap-4">
           <CNodeLogo className="hidden sm:inline-flex" />
@@ -69,12 +75,12 @@ export function Header() {
               commandFinalFocusRef.current = event.currentTarget;
               setCommandOpen(true);
             }}
-            className="hidden h-9 w-[280px] items-center gap-2 rounded-xl border border-input bg-card px-3 text-sm text-muted-foreground shadow-sm transition-colors hover:border-cnode-green/40 hover:bg-accent hover:text-accent-foreground md:inline-flex lg:w-[340px]"
+            className="hidden h-9 w-[280px] items-center gap-2 rounded-md bg-muted px-3 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 md:inline-flex lg:w-[340px]"
             aria-label="搜索话题和用户"
           >
             <Search className="h-4 w-4" />
             <span className="min-w-0 flex-1 truncate text-left">搜索话题、用户...</span>
-            <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+            <kbd className="rounded bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground">
               ⌘K
             </kbd>
           </button>
@@ -138,6 +144,7 @@ function NavLink({ to, children }: { to: string; children: React.ReactNode }) {
   return (
     <Link
       to={to}
+      aria-current={active ? "page" : undefined}
       className={
         active
           ? "inline-flex h-9 items-center gap-1 rounded-lg bg-accent px-3 text-accent-foreground"
@@ -195,7 +202,7 @@ export function HeaderUserArea() {
             aria-label="用户菜单"
           />}
         >
-          <Avatar className="h-7 w-7 ring-1 ring-cnode-green/30">
+          <Avatar className="size-7">
             <AvatarImage
               src={getAvatarUrl(user.avatar_url, 32)}
               alt={user.loginname}
@@ -203,10 +210,10 @@ export function HeaderUserArea() {
             <AvatarFallback>{getAvatarFallback(user.loginname)}</AvatarFallback>
           </Avatar>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuContent align="end" className="w-52 p-2">
           <DropdownMenuGroup>
-            <DropdownMenuLabel className="flex items-center gap-2 px-2 py-2 font-normal">
-              <Avatar className="h-8 w-8 ring-1 ring-cnode-green/30">
+            <DropdownMenuLabel className="mb-1 flex items-center gap-2 rounded-lg bg-surface-subtle px-2 py-2 font-normal">
+              <Avatar className="size-8">
                 <AvatarImage
                   src={getAvatarUrl(user.avatar_url, 32)}
                   alt={user.loginname}
@@ -221,7 +228,6 @@ export function HeaderUserArea() {
               </div>
             </DropdownMenuLabel>
           </DropdownMenuGroup>
-          <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuLinkItem render={<Link to={`/user/${user.loginname}`} />}>
               <User />
@@ -234,23 +240,21 @@ export function HeaderUserArea() {
           </DropdownMenuGroup>
           {(user.is_admin || user.is_mod) && (
             <>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuLinkItem render={<Link to="/admin" />}>
+              <DropdownMenuGroup className="mt-1">
+                <DropdownMenuLinkItem render={<Link to={user.is_admin ? "/admin" : "/admin/topics"} />}>
                   <Shield />
-                  管理后台
+                  {user.is_admin ? "管理后台" : "内容管理"}
                 </DropdownMenuLinkItem>
               </DropdownMenuGroup>
             </>
           )}
-          <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={async () => {
               await apiFetch("/api/v1/auth/signout", { method: "POST" });
               clear();
               window.location.href = "/";
             }}
-            className="text-destructive data-[highlighted]:text-destructive"
+            className="mt-1 text-destructive data-[highlighted]:text-destructive"
           >
             <LogOut />
             退出登录
@@ -277,13 +281,13 @@ function MobileNavTrigger({ visibleZones = [] }: { visibleZones?: any[] }) {
           <nav className="grid grid-cols-2 gap-2 py-3">
             <Link
               to="/search"
-              className="flex min-h-12 items-center gap-3 rounded-xl border border-border bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-foreground"
+              className="flex min-h-12 items-center gap-3 rounded-xl bg-surface-subtle px-3 text-sm text-foreground transition-colors hover:bg-accent"
             >
               <Search className="h-5 w-5 text-primary" /> 搜索
             </Link>
             <Link
               to="/topic/create"
-              className="flex min-h-12 items-center gap-3 rounded-xl border border-border bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-foreground"
+              className="flex min-h-12 items-center gap-3 rounded-xl bg-surface-subtle px-3 text-sm text-foreground transition-colors hover:bg-accent"
             >
               <Pencil className="h-5 w-5 text-primary" /> 发布话题
             </Link>
@@ -291,26 +295,26 @@ function MobileNavTrigger({ visibleZones = [] }: { visibleZones?: any[] }) {
               <Link
                 key={z.slug}
                 to={`/zone/${z.slug}`}
-                className="flex min-h-12 items-center gap-3 rounded-xl border border-border bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-foreground"
+                className="flex min-h-12 items-center gap-3 rounded-xl bg-surface-subtle px-3 text-sm text-foreground transition-colors hover:bg-accent"
               >
                 <Code className="h-5 w-5 text-primary" /> {z.name}
               </Link>
             ))}
             <Link
               to="/my/messages"
-              className="flex min-h-12 items-center gap-3 rounded-xl border border-border bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-foreground"
+              className="flex min-h-12 items-center gap-3 rounded-xl bg-surface-subtle px-3 text-sm text-foreground transition-colors hover:bg-accent"
             >
               <Bell className="h-5 w-5 text-primary" /> 消息
             </Link>
             <Link
               to="/api"
-              className="flex min-h-12 items-center gap-3 rounded-xl border border-border bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-foreground"
+              className="flex min-h-12 items-center gap-3 rounded-xl bg-surface-subtle px-3 text-sm text-foreground transition-colors hover:bg-accent"
             >
               <Code className="h-5 w-5 text-primary" /> API
             </Link>
             <Link
               to="/about"
-              className="flex min-h-12 items-center gap-3 rounded-xl border border-border bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-foreground"
+              className="flex min-h-12 items-center gap-3 rounded-xl bg-surface-subtle px-3 text-sm text-foreground transition-colors hover:bg-accent"
             >
               <Info className="h-5 w-5 text-primary" /> 关于
             </Link>
@@ -318,29 +322,29 @@ function MobileNavTrigger({ visibleZones = [] }: { visibleZones?: any[] }) {
               <>
                 <Link
                   to={`/user/${user.loginname}`}
-                  className="flex min-h-12 items-center gap-3 rounded-xl border border-border bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-foreground"
+                  className="flex min-h-12 items-center gap-3 rounded-xl bg-surface-subtle px-3 text-sm text-foreground transition-colors hover:bg-accent"
                 >
                   <User className="h-5 w-5 text-primary" /> 我的主页
                 </Link>
                 <Link
                   to="/setting"
-                  className="flex min-h-12 items-center gap-3 rounded-xl border border-border bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-foreground"
+                  className="flex min-h-12 items-center gap-3 rounded-xl bg-surface-subtle px-3 text-sm text-foreground transition-colors hover:bg-accent"
                 >
                   <Settings className="h-5 w-5 text-primary" /> 用户设置
                 </Link>
                 {(user.is_admin || user.is_mod) && (
                   <Link
-                    to="/admin"
-                    className="col-span-2 flex min-h-12 items-center gap-3 rounded-xl border border-border bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-foreground"
+                    to={user.is_admin ? "/admin" : "/admin/topics"}
+                    className="col-span-2 flex min-h-12 items-center gap-3 rounded-xl bg-surface-subtle px-3 text-sm text-foreground transition-colors hover:bg-accent"
                   >
-                    <Shield className="h-5 w-5 text-primary" /> 管理后台
+                    <Shield className="h-5 w-5 text-primary" /> {user.is_admin ? "管理后台" : "内容管理"}
                   </Link>
                 )}
               </>
             ) : (
               <Link
                 to="/signin"
-                className="flex min-h-12 items-center gap-3 rounded-xl border border-border bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-foreground"
+                className="flex min-h-12 items-center gap-3 rounded-xl bg-surface-subtle px-3 text-sm text-foreground transition-colors hover:bg-accent"
               >
                 <User className="h-5 w-5 text-primary" /> 登录
               </Link>
@@ -354,9 +358,9 @@ function MobileNavTrigger({ visibleZones = [] }: { visibleZones?: any[] }) {
 
 export function Footer() {
   return (
-    <footer className="mt-16 border-t border-border bg-background">
+    <footer className="mt-16 bg-surface-subtle/40">
       <PageContainer className="py-10">
-        <div className="overflow-hidden rounded-3xl border border-cnode-green/20 bg-card shadow-card">
+        <div className="overflow-hidden rounded-3xl bg-card shadow-card">
           <div className="grid lg:grid-cols-[minmax(0,1.25fr)_minmax(520px,1fr)]">
             <section className="relative bg-cnode-ink p-8 text-white sm:p-10">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(128,189,1,0.26),transparent_32%),radial-gradient(circle_at_88%_78%,rgba(128,189,1,0.14),transparent_34%)]" />
@@ -384,7 +388,7 @@ export function Footer() {
                 </div>
               </div>
             </section>
-            <section className="grid divide-y divide-border bg-surface-subtle sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            <section className="grid bg-surface-subtle sm:grid-cols-3">
               <FooterGroup
                 title="社区"
                 links={[
@@ -403,7 +407,7 @@ export function Footer() {
               />
               <div className="p-6 sm:p-8">
                 <h3 className="text-sm font-semibold text-foreground">开发者</h3>
-                <div className="mt-4 space-y-3 text-sm text-muted-foreground">
+                <div className="mt-4 flex flex-col gap-3 text-sm text-muted-foreground">
                   <a
                     className="flex items-center gap-2 hover:text-primary"
                     href="https://github.com/cnodejs/cnode-next"
@@ -419,7 +423,7 @@ export function Footer() {
           </div>
         </div>
       </PageContainer>
-      <div className="border-t border-border/80">
+      <div>
         <PageContainer className="flex flex-col gap-2 py-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} CNode Next. Node.js 中文技术社区。</p>
           <p>
@@ -435,7 +439,7 @@ function FooterGroup({ title, links }: { title: string; links: Array<[string, st
   return (
     <div className="p-6 sm:p-8">
       <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-      <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
+      <ul className="mt-4 flex flex-col gap-3 text-sm text-muted-foreground">
         {links.map(([label, href]) => (
           <li key={href}>
             {href === "/rss" ? (

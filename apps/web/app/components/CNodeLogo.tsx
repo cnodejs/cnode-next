@@ -31,7 +31,7 @@ export function CNodeLogo({ to = "/", admin = false, compact = false, className 
         )}
       </span>
       {admin && (
-        <span className="hidden items-center gap-1 rounded-full border border-cnode-green/40 bg-cnode-soft px-2 py-1 text-xs font-medium text-foreground sm:inline-flex">
+        <span className="hidden items-center gap-1 rounded-full bg-cnode-soft px-2 py-1 text-xs font-medium text-foreground sm:inline-flex">
           <Shield className="h-3 w-3" /> Admin
         </span>
       )}

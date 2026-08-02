@@ -9,6 +9,7 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { NativeSelect } from "~/components/ui/native-select";
 import { Form, Link } from "react-router";
+import { EmptyState } from "~/components/EmptyState";
 
 type AuditLog = {
   id: number;
@@ -66,7 +67,7 @@ function targetHref(log: AuditLog) {
 }
 
 function DetailBlock({ detail }: { detail: string | null }) {
-  if (!detail) return <div className="rounded-xl border border-dashed border-border bg-card p-3 text-xs text-muted-foreground">该审计事件没有附加详情。</div>;
+  if (!detail) return <div className="rounded-lg bg-surface-subtle p-3 text-xs text-muted-foreground">该审计事件没有附加详情。</div>;
   try {
     return <pre className="overflow-auto rounded-xl bg-surface-subtle p-3 text-xs">{JSON.stringify(JSON.parse(detail), null, 2)}</pre>;
   } catch {
@@ -97,7 +98,7 @@ export default function AdminAudit({ loaderData }: any) {
           <AdminMetricCard label="失败/异常" value={summary.failures} />
         </div>
 
-        <AdminPanel title="审计事件" description={`当前显示 ${logs.length} / ${total} 条记录`}>
+        <AdminPanel title="审计事件" description={`当前显示 ${logs.length} / ${total} 条记录`} flush>
           <AdminToolbar>
             <Form method="get" className="grid w-full gap-2 md:grid-cols-4 xl:grid-cols-7">
               <Input type="date" name="date_from" defaultValue={filters.date_from || ""} aria-label="开始日期" />
@@ -116,14 +117,20 @@ export default function AdminAudit({ loaderData }: any) {
             </Form>
           </AdminToolbar>
 
-          <div className="space-y-3 p-4">
-            {logs.length === 0 && <div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">暂无审计记录</div>}
+          <div className="flex flex-col gap-3 p-3 sm:p-4">
+            {logs.length === 0 && (
+              <EmptyState
+                title="没有匹配的审计记录"
+                message="当前日期、类型、风险或关键词筛选没有结果。"
+                action={<Button render={<Link to="/admin/audit" />} variant="outline">清除筛选</Button>}
+              />
+            )}
             {logs.map((log) => {
               const href = targetHref(log);
               return (
-                <article key={log.id} className="rounded-2xl border border-cnode-green/15 bg-card p-4 shadow-sm">
+                <article key={log.id} className="rounded-lg bg-card p-4 shadow-sm">
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="min-w-0 space-y-2">
+                    <div className="flex min-w-0 flex-col gap-2">
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge variant={riskVariant(log.risk)}>{riskLabels[log.risk]}</Badge>
                         <Badge variant="secondary">{categoryLabels[log.category] || log.category}</Badge>
@@ -142,7 +149,7 @@ export default function AdminAudit({ loaderData }: any) {
                   <details className="mt-3 rounded-xl bg-surface-subtle p-3 text-sm">
                     <summary className="cursor-pointer font-medium text-foreground">查看审计字段</summary>
                     <div className="mt-3 grid gap-3 lg:grid-cols-[16rem_minmax(0,1fr)]">
-                      <dl className="space-y-1 text-xs text-muted-foreground">
+                      <dl className="flex flex-col gap-1 text-xs text-muted-foreground">
                         <div className="mb-2 font-semibold text-foreground">基础字段</div>
                         <div><dt className="inline font-semibold">id: </dt><dd className="inline">{log.id}</dd></div>
                         <div><dt className="inline font-semibold">action: </dt><dd className="inline">{log.action}</dd></div>
@@ -150,7 +157,7 @@ export default function AdminAudit({ loaderData }: any) {
                         <div><dt className="inline font-semibold">target_type: </dt><dd className="inline">{log.target_type || ""}</dd></div>
                         <div><dt className="inline font-semibold">target_id: </dt><dd className="inline">{log.target_id || ""}</dd></div>
                       </dl>
-                      <div className="min-w-0 space-y-2">
+                      <div className="flex min-w-0 flex-col gap-2">
                         <div className="text-xs font-semibold text-foreground">附加详情 detail</div>
                         <DetailBlock detail={log.detail} />
                       </div>

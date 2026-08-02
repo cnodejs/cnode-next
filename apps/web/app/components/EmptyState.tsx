@@ -1,12 +1,21 @@
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "./ui/empty";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "./ui/empty";
 
-function EmptyState({ message }: { message: string }) {
+function EmptyState({
+  message,
+  title = "暂无内容",
+  action,
+}: {
+  message: string;
+  title?: string;
+  action?: React.ReactNode;
+}) {
   return (
-    <Empty className="my-4 border-cnode-green/30 bg-cnode-soft/40">
+    <Empty className="my-4 bg-cnode-soft/40">
       <EmptyHeader>
-        <EmptyTitle>暂无内容</EmptyTitle>
+        <EmptyTitle>{title}</EmptyTitle>
         <EmptyDescription>{message}</EmptyDescription>
       </EmptyHeader>
+      {action && <EmptyContent>{action}</EmptyContent>}
     </Empty>
   );
 }

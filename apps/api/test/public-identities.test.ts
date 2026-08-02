@@ -22,20 +22,12 @@ test("public identities remain independent from inherited permissions", () => {
   ]);
 });
 
-test("legacy moderator configuration and omitted roles do not grant public identities", () => {
-  const originalAdmins = process.env.APP_ADMINS;
-  const originalModerators = process.env.APP_MODERATORS;
-  process.env.APP_ADMINS = "";
-  process.env.APP_MODERATORS = "alice";
-
-  try {
-    expect(resolveUserAccess("alice", []).identities).toEqual([]);
-  } finally {
-    if (originalAdmins === undefined) delete process.env.APP_ADMINS;
-    else process.env.APP_ADMINS = originalAdmins;
-    if (originalModerators === undefined) delete process.env.APP_MODERATORS;
-    else process.env.APP_MODERATORS = originalModerators;
-  }
+test("omitted database roles do not grant public identities", () => {
+  expect(resolveUserAccess("alice", [], [])).toEqual({
+    identities: [],
+    isAdmin: false,
+    isMod: false,
+  });
 });
 
 test("active role queries exclude revoked database roles", () => {

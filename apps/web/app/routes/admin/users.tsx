@@ -10,6 +10,7 @@ import { Input } from "~/components/ui/input";
 import { Badge } from "~/components/ui/badge";
 import { AdminPage, AdminPageHeader, AdminPanel, AdminToolbar } from "~/components/AdminPage";
 import { Pagination } from "~/components/Pagination";
+import { ConfirmationDialog } from "~/components/ConfirmationDialog";
 import {
   Table,
   TableBody,
@@ -18,14 +19,6 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "~/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,54 +63,52 @@ export async function loader({ request }: any) {
 export default function AdminUsers({ loaderData }: any) {
   const { users, total, page, limit, q, currentUser } = loaderData;
   const [resetTarget, setResetTarget] = useState<{ id: number; loginname: string } | null>(null);
-  const [resetting, setResetting] = useState(false);
   const [deleteAllTarget, setDeleteAllTarget] = useState<string | null>(null);
+  const [governanceTarget, setGovernanceTarget] = useState<{ name: string; kind: "block" | "mute"; enabled: boolean } | null>(null);
+  const [roleTarget, setRoleTarget] = useState<{ id: number; name: string; role: "moderator" | "recruiter"; enabled: boolean; currentRoles: string[] } | null>(null);
   const managementTriggerRef = useRef<HTMLElement | null>(null);
   const { revalidate } = useRevalidator();
 
-  const handleBlock = async (name: string, block: boolean) => {
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>(
-      `/api/v1/user/${name}/${block ? "block" : "unblock"}`,
-      { method: "POST" },
-    );
-    if (res.success) {
-      toast.success(block ? "已屏蔽用户内容" : "已恢复用户内容");
-      revalidate();
-    } else {
-      toast.error(res.error_msg || "操作失败");
-    }
-  };
-
-  const handleMute = async (name: string, mute: boolean) => {
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>(
-      `/api/v1/user/${name}/${mute ? "mute" : "unmute"}`,
-      { method: "POST" },
-    );
-    if (res.success) {
-      toast.success(mute ? "已禁言" : "已解除禁言");
-      revalidate();
-    } else {
-      toast.error(res.error_msg || "操作失败");
-    }
-  };
-
-  const handleRole = async (userId: number, role: "moderator" | "recruiter", enabled: boolean) => {
-    const roleLabel = role === "moderator" ? "版主" : "猎头";
-    if (!window.confirm(`确认${enabled ? "授予" : "撤销"}${roleLabel}角色？`)) return;
-    const res = await apiFetch<{ success: boolean; error_msg?: string }>(
-      enabled ? `/api/v1/admin/users/${userId}/roles` : `/api/v1/admin/users/${userId}/roles/${role}`,
-      {
-        method: enabled ? "POST" : "DELETE",
-        ...(enabled ? { body: JSON.stringify({ role }) } : {}),
+  const { run: runGovernance, pending: governancePending } = useAsyncAction(
+    async () => {
+      if (!governanceTarget) return { success: false, error_msg: "未选择用户" };
+      const action = governanceTarget.kind === "block"
+        ? governanceTarget.enabled ? "block" : "unblock"
+        : governanceTarget.enabled ? "mute" : "unmute";
+      return apiFetch<{ success: boolean; error_msg?: string }>(`/api/v1/user/${governanceTarget.name}/${action}`, { method: "POST" });
+    },
+    {
+      onSuccess: (res) => {
+        if (res.success) {
+          toast.success("用户治理状态已更新");
+          setGovernanceTarget(null);
+          revalidate();
+        } else toast.error(res.error_msg || "操作失败");
       },
-    );
-    if (res.success) {
-      toast.success(enabled ? "角色已授予" : "角色已撤销");
-      revalidate();
-    } else {
-      toast.error(res.error_msg || "角色操作失败");
-    }
-  };
+    },
+  );
+
+  const { run: runRoleChange, pending: rolePending } = useAsyncAction(
+    async () => {
+      if (!roleTarget) return { success: false, error_msg: "未选择用户" };
+      return apiFetch<{ success: boolean; error_msg?: string }>(
+        roleTarget.enabled ? `/api/v1/admin/users/${roleTarget.id}/roles` : `/api/v1/admin/users/${roleTarget.id}/roles/${roleTarget.role}`,
+        {
+          method: roleTarget.enabled ? "POST" : "DELETE",
+          ...(roleTarget.enabled ? { body: JSON.stringify({ role: roleTarget.role }) } : {}),
+        },
+      );
+    },
+    {
+      onSuccess: (res) => {
+        if (res.success) {
+          toast.success("用户角色已更新");
+          setRoleTarget(null);
+          revalidate();
+        } else toast.error(res.error_msg || "角色操作失败");
+      },
+    },
+  );
 
   const { run: runDeleteAll, pending: deletingAll } = useAsyncAction(
     () =>
@@ -143,30 +134,32 @@ export default function AdminUsers({ loaderData }: any) {
     runDeleteAll();
   };
 
-  const handleResetPass = async () => {
-    if (!resetTarget || resetting) return;
-    setResetting(true);
-    try {
-      const res = await apiFetch<{ success: boolean; newPassword?: string; error_msg?: string }>(
+  const { run: handleResetPass, pending: resetting } = useAsyncAction(
+    async () => {
+      if (!resetTarget) return { success: false, error_msg: "未选择用户" };
+      return apiFetch<{ success: boolean; newPassword?: string; error_msg?: string }>(
         `/api/v1/user/${resetTarget.loginname}/reset_password`,
         { method: "POST" },
       );
+    },
+    {
+      errorMessage: "重置失败，请重试",
+      onSuccess: (res) => {
       if (res.success && res.newPassword) {
         toast.success("密码已重置", { description: `新密码: ${res.newPassword}` });
+        setResetTarget(null);
       } else {
         toast.error(res.error_msg || "重置失败");
       }
-      setResetTarget(null);
-    } finally {
-      setResetting(false);
-    }
-  };
+      },
+    },
+  );
 
   return (
     <AdminLayout>
       <AdminPage>
         <AdminPageHeader title="用户管理" description="查看社区用户状态，执行内容屏蔽、禁言、密码重置和清理操作。" />
-        <AdminPanel title="用户列表" description={`当前显示 ${users.length} / ${total} 个用户`}>
+        <AdminPanel title="用户列表" description={`当前显示 ${users.length} / ${total} 个用户`} flush>
           <AdminToolbar>
             <Form method="get" className="flex w-full gap-2 sm:max-w-md">
               <Input name="q" defaultValue={q} placeholder="搜索用户名/邮箱" className="flex-1" />
@@ -228,20 +221,20 @@ export default function AdminUsers({ loaderData }: any) {
                       <DropdownMenuContent align="end" className="w-52">
                         <DropdownMenuGroup>
                           <DropdownMenuLabel>{USER_MANAGEMENT_GROUP_LABELS.governance}</DropdownMenuLabel>
-                          <DropdownMenuItem disabled={isSelf} onClick={() => handleBlock(u.loginname, !u.is_block)}>
+                          <DropdownMenuItem disabled={isSelf} onClick={() => setGovernanceTarget({ name: u.loginname, kind: "block", enabled: !u.is_block })}>
                             {userBlockActionLabel(u.is_block)}
                           </DropdownMenuItem>
-                          <DropdownMenuItem disabled={isSelf} onClick={() => handleMute(u.loginname, !u.is_muted)}>
+                          <DropdownMenuItem disabled={isSelf} onClick={() => setGovernanceTarget({ name: u.loginname, kind: "mute", enabled: !u.is_muted })}>
                             {u.is_muted ? "解除禁言" : "禁言"}
                           </DropdownMenuItem>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
                         <DropdownMenuGroup>
                           <DropdownMenuLabel>{USER_MANAGEMENT_GROUP_LABELS.roles}</DropdownMenuLabel>
-                          <DropdownMenuItem disabled={isSelf} onClick={() => handleRole(u.id, "moderator", !(u.roles || []).includes("moderator"))}>
+                          <DropdownMenuItem disabled={isSelf} onClick={() => setRoleTarget({ id: u.id, name: u.loginname, role: "moderator", enabled: !(u.roles || []).includes("moderator"), currentRoles: u.roles || [] })}>
                             {(u.roles || []).includes("moderator") ? "撤销版主" : "授予版主"}
                           </DropdownMenuItem>
-                          <DropdownMenuItem disabled={isSelf} onClick={() => handleRole(u.id, "recruiter", !(u.roles || []).includes("recruiter"))}>
+                          <DropdownMenuItem disabled={isSelf} onClick={() => setRoleTarget({ id: u.id, name: u.loginname, role: "recruiter", enabled: !(u.roles || []).includes("recruiter"), currentRoles: u.roles || [] })}>
                             {(u.roles || []).includes("recruiter") ? "撤销猎头" : "授予猎头"}
                           </DropdownMenuItem>
                         </DropdownMenuGroup>
@@ -271,63 +264,61 @@ export default function AdminUsers({ loaderData }: any) {
           <div className="px-4 pb-4">
             <Pagination page={page} total={total} limit={limit} basePath="/admin/users" searchParams={{ ...(q ? { q } : {}) }} />
           </div>
-          <Dialog
-            open={!!deleteAllTarget}
-            onOpenChange={(open, eventDetails) => {
-              if (open) return;
-              if (deletingAll) {
-                eventDetails.cancel();
-                return;
-              }
-              setDeleteAllTarget(null);
-            }}
-          >
-            <DialogContent finalFocus={managementTriggerRef}>
-              <DialogHeader>
-                <DialogTitle>确认删除用户所有发言</DialogTitle>
-                <DialogDescription>
-                  将删除 {deleteAllTarget} 的所有话题和回复，此操作会写入审计日志。请确认目标用户无误。
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setDeleteAllTarget(null)} disabled={deletingAll}>
-                  取消
-                </Button>
-                <Button type="button" variant="destructive" onClick={handleDeleteAll} disabled={deletingAll}>
-                  {deletingAll ? "删除中" : "确认删除所有发言"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <ConfirmationDialog
+            open={deleteAllTarget !== null}
+            onOpenChange={(open) => !open && setDeleteAllTarget(null)}
+            title="删除用户所有发言"
+            description={<>将删除 {deleteAllTarget} 的全部话题和回复并写入审计日志；用户账号本身不会删除。</>}
+            confirmLabel="确认删除所有发言"
+            pendingLabel="删除中"
+            pending={deletingAll}
+            finalFocus={managementTriggerRef}
+            onConfirm={handleDeleteAll}
+          />
         </AdminPanel>
       </AdminPage>
 
-      <Dialog
-        open={!!resetTarget}
-        onOpenChange={(open, eventDetails) => {
-          if (open) return;
-          if (resetting) {
-            eventDetails.cancel();
-            return;
-          }
-          setResetTarget(null);
-        }}
-      >
-        <DialogContent finalFocus={managementTriggerRef}>
-          <DialogHeader>
-            <DialogTitle>重置密码</DialogTitle>
-            <DialogDescription>
-              确认重置用户 <strong>{resetTarget?.loginname}</strong> 的密码?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setResetTarget(null)} disabled={resetting}>
-              取消
-            </Button>
-            <Button onClick={handleResetPass} disabled={resetting}>{resetting ? "重置中" : "确认"}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmationDialog
+        open={governanceTarget !== null}
+        onOpenChange={(open) => !open && setGovernanceTarget(null)}
+        title={governanceTarget?.kind === "block"
+          ? governanceTarget.enabled ? "屏蔽用户内容" : "恢复用户内容可见"
+          : governanceTarget?.enabled ? "禁言用户" : "解除用户禁言"}
+        description={governanceTarget?.kind === "block"
+          ? governanceTarget.enabled
+            ? `将隐藏 ${governanceTarget.name} 的公开内容；这不等同于禁言，不会单独阻止其发布新内容。`
+            : `将恢复 ${governanceTarget.name} 的内容可见性；不会解除禁言或恢复已删除内容。`
+          : governanceTarget?.enabled
+            ? `将禁止 ${governanceTarget.name} 新增话题和回复；已有内容不会因此自动隐藏。`
+            : `将恢复 ${governanceTarget?.name} 新增话题和回复的能力；不会取消内容屏蔽。`}
+        confirmLabel="确认变更用户状态"
+        pending={governancePending}
+        destructive={!!governanceTarget?.enabled}
+        finalFocus={managementTriggerRef}
+        onConfirm={runGovernance}
+      />
+      <ConfirmationDialog
+        open={roleTarget !== null}
+        onOpenChange={(open) => !open && setRoleTarget(null)}
+        title={roleTarget?.enabled ? "授予用户角色" : "撤销用户角色"}
+        description={roleTarget ? `${roleTarget.name} 当前角色：${roleTarget.currentRoles.join("、") || "无"}。变更后${roleTarget.enabled ? "将拥有" : "将失去"}${roleTarget.role === "moderator" ? "版主内容治理" : "招聘发布"}权限。` : ""}
+        confirmLabel={roleTarget?.enabled ? "确认授予角色" : "确认撤销角色"}
+        pending={rolePending}
+        destructive={!roleTarget?.enabled}
+        finalFocus={managementTriggerRef}
+        onConfirm={runRoleChange}
+      />
+      <ConfirmationDialog
+        open={resetTarget !== null}
+        onOpenChange={(open) => !open && setResetTarget(null)}
+        title="重置用户密码"
+        description={<>将重置用户 {resetTarget?.loginname} 的登录凭证；现有密码将立即失效，新凭证仅在成功后显示。</>}
+        confirmLabel="确认重置密码"
+        pendingLabel="重置中"
+        pending={resetting}
+        finalFocus={managementTriggerRef}
+        onConfirm={handleResetPass}
+      />
     </AdminLayout>
   );
 }

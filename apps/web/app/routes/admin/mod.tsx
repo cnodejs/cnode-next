@@ -11,14 +11,7 @@ import { Checkbox } from "~/components/ui/checkbox";
 import { EmptyState } from "~/components/EmptyState";
 import { AdminPage, AdminPageHeader, AdminPanel } from "~/components/AdminPage";
 import { Pagination } from "~/components/Pagination";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "~/components/ui/dialog";
+import { ConfirmationDialog } from "~/components/ConfirmationDialog";
 
 export function meta() {
   return [{ title: "巡检结果 · CNode Admin" }];
@@ -48,21 +41,24 @@ export default function AdminMod({ loaderData }: any) {
   const [selected, setSelected] = useState<number[]>([]);
   const [cancelJobId, setCancelJobId] = useState<number | null>(null);
   const [confirmJobId, setConfirmJobId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ ids: number[]; label: string } | null>(null);
   const cancelJobFinalFocusRef = useRef<HTMLElement | null>(null);
   const confirmJobFinalFocusRef = useRef<HTMLElement | null>(null);
+  const deleteFinalFocusRef = useRef<HTMLElement | null>(null);
   const { revalidate } = useRevalidator();
 
   const toggleSelect = (id: number) => {
     setSelected(selected.includes(id) ? selected.filter((item) => item !== id) : [...selected, id]);
   };
 
-  const { run: handleAction } = useAsyncAction(
+  const { run: handleAction, pending: actionPending } = useAsyncAction(
     (id: number, action: string) =>
       apiFetch<{ success: boolean; error_msg?: string }>(`/api/v1/admin/moderation/${id}/${action}`, { method: "POST" }),
     {
       onSuccess: (res) => {
         if (res.success) {
           toast.success("操作成功");
+          setDeleteTarget(null);
           revalidate();
         } else {
           toast.error(res.error_msg || "操作失败");
@@ -71,7 +67,7 @@ export default function AdminMod({ loaderData }: any) {
     },
   );
 
-  const { run: runBulkAction } = useAsyncAction(
+  const { run: runBulkAction, pending: bulkPending } = useAsyncAction(
     (action: string) =>
       apiFetch<{ success: boolean; error_msg?: string; handled?: number }>("/api/v1/admin/moderation/bulk", {
         method: "POST",
@@ -82,6 +78,7 @@ export default function AdminMod({ loaderData }: any) {
         if (res.success) {
           toast.success(`已处理 ${res.handled || selected.length} 条`);
           setSelected([]);
+          setDeleteTarget(null);
           revalidate();
         } else {
           toast.error(res.error_msg || "批量操作失败");
@@ -115,7 +112,7 @@ export default function AdminMod({ loaderData }: any) {
     runBulkAction(action);
   };
 
-  const { run: createJob } = useAsyncAction(
+  const { run: createJob, pending: creatingJob } = useAsyncAction(
     (scope: string) =>
       apiFetch<{ success: boolean; error_msg?: string }>("/api/v1/admin/moderation/jobs", {
         method: "POST",
@@ -160,21 +157,20 @@ export default function AdminMod({ loaderData }: any) {
           description={`共 ${jobs.length} 个任务`}
           action={
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" onClick={() => createJob("topics")}>扫描话题</Button>
-              <Button size="sm" variant="outline" onClick={() => createJob("replies")}>扫描回复</Button>
-              <Button size="sm" onClick={() => createJob("all")}>扫描全部</Button>
+              <Button size="sm" variant="outline" disabled={creatingJob} onClick={() => createJob("topics")}>扫描话题</Button>
+              <Button size="sm" variant="outline" disabled={creatingJob} onClick={() => createJob("replies")}>扫描回复</Button>
+              <Button size="sm" disabled={creatingJob} onClick={() => createJob("all")}>{creatingJob ? "创建中" : "扫描全部"}</Button>
             </div>
           }
-          contentClassName="p-4"
         >
           {jobs.length === 0 ? (
             <EmptyState message="暂无扫描任务" />
           ) : (
-            <div className="space-y-3">
+            <div className="flex flex-col gap-3">
               {jobs.map((job: any) => (
-                <div key={job.id} className="rounded-2xl border border-border bg-background p-4 text-sm">
+                <div key={job.id} className="rounded-lg bg-surface-subtle p-4 text-sm">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="min-w-0 space-y-1">
+                    <div className="flex min-w-0 flex-col gap-1">
                       <div className="font-medium">任务 #{job.id}</div>
                       <div className="break-words text-muted-foreground">
                         {job.scope} · {job.mode} · {job.reason} · {job.status}
@@ -228,65 +224,30 @@ export default function AdminMod({ loaderData }: any) {
               ))}
             </div>
           )}
-          <Dialog
+          <ConfirmationDialog
             open={cancelJobId !== null}
-            onOpenChange={(open, eventDetails) => {
-              if (open) return;
-              if (jobPending) {
-                eventDetails.cancel();
-                return;
-              }
-              setCancelJobId(null);
-            }}
-          >
-            <DialogContent finalFocus={cancelJobFinalFocusRef}>
-              <DialogHeader>
-                <DialogTitle>确认取消巡检任务</DialogTitle>
-                <DialogDescription>
-                  取消后该任务会停止继续扫描，不会删除已经生成的巡检命中记录。
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setCancelJobId(null)} disabled={jobPending}>
-                  保留任务
-                </Button>
-                <Button type="button" variant="destructive" onClick={() => cancelJobId && updateJob(cancelJobId, "cancel")} disabled={jobPending}>
-                  {jobPending ? "取消中" : "确认取消任务"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          <Dialog
+            onOpenChange={(open) => !open && setCancelJobId(null)}
+            title="确认取消巡检任务"
+            description={<>取消任务 #{cancelJobId} 后将停止继续扫描；已经生成的巡检命中记录会保留。</>}
+            confirmLabel="确认取消任务"
+            pendingLabel="取消中"
+            pending={jobPending}
+            finalFocus={cancelJobFinalFocusRef}
+            onConfirm={() => cancelJobId && updateJob(cancelJobId, "cancel")}
+          />
+          <ConfirmationDialog
             open={confirmJobId !== null}
-            onOpenChange={(open, eventDetails) => {
-              if (open) return;
-              if (jobBulkPending) {
-                eventDetails.cancel();
-                return;
-              }
-              setConfirmJobId(null);
-            }}
-          >
-            <DialogContent finalFocus={confirmJobFinalFocusRef}>
-              <DialogHeader>
-                <DialogTitle>确认批量删除巡检命中的原始内容</DialogTitle>
-                <DialogDescription>
-                  将确认删除任务 #{confirmJobId} 下所有待处理命中的原始话题或回复。该操作会沿用现有软删除、计数器维护和处罚逻辑，不会从数据库物理删除内容。
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setConfirmJobId(null)} disabled={jobBulkPending}>
-                  取消
-                </Button>
-                <Button type="button" variant="destructive" onClick={() => confirmJobId && runJobBulkConfirm(confirmJobId)} disabled={jobBulkPending}>
-                  {jobBulkPending ? "处理中" : `确认删除任务 #${confirmJobId} 的待处理命中`}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+            onOpenChange={(open) => !open && setConfirmJobId(null)}
+            title="确认批量删除巡检命中的原始内容"
+            description={<>将确认删除任务 #{confirmJobId} 下所有待处理命中的原始话题或回复。该操作会沿用现有软删除、计数器维护和处罚逻辑，不会从数据库物理删除内容。</>}
+            confirmLabel={`确认删除任务 #${confirmJobId} 的待处理命中`}
+            pending={jobBulkPending}
+            finalFocus={confirmJobFinalFocusRef}
+            onConfirm={() => confirmJobId && runJobBulkConfirm(confirmJobId)}
+          />
         </AdminPanel>
-        <AdminPanel title={jobId > 0 ? `任务 #${jobId} 待复核内容` : "待复核内容"} description={`当前页 ${results.length} 条 / 共 ${total} 条`} action={jobId > 0 ? <Button render={<Link to="/admin/moderation" />} size="sm" variant="outline">查看全部</Button> : null} contentClassName="p-4">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface-subtle p-3 text-sm">
+        <AdminPanel title={jobId > 0 ? `任务 #${jobId} 待复核内容` : "待复核内容"} description={`当前页 ${results.length} 条 / 共 ${total} 条`} action={jobId > 0 ? <Button render={<Link to="/admin/moderation" />} size="sm" variant="outline">查看全部</Button> : null}>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-surface-subtle p-3 text-sm">
             <div className="flex flex-wrap gap-2">
               <Badge variant="outline">话题 {summary.by_type?.topic || 0}</Badge>
               <Badge variant="outline">回复 {summary.by_type?.reply || 0}</Badge>
@@ -297,16 +258,19 @@ export default function AdminMod({ loaderData }: any) {
             {selected.length > 0 ? (
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-medium">已选 {selected.length} 条</span>
-                <Button size="sm" variant="outline" onClick={() => handleBulkAction("ignore")}>批量忽略</Button>
-                <Button size="sm" variant="outline" onClick={() => handleBulkAction("falsepositive")}>批量误报</Button>
-                <Button size="sm" variant="destructive" onClick={() => handleBulkAction("confirm")}>删除选中</Button>
+                <Button size="sm" variant="outline" disabled={bulkPending} onClick={() => handleBulkAction("ignore")}>批量忽略</Button>
+                <Button size="sm" variant="outline" disabled={bulkPending} onClick={() => handleBulkAction("falsepositive")}>批量误报</Button>
+                <Button size="sm" variant="destructive" onClick={(event) => {
+                  deleteFinalFocusRef.current = event.currentTarget;
+                  setDeleteTarget({ ids: selected, label: `${selected.length} 条巡检命中` });
+                }}>删除选中</Button>
               </div>
             ) : null}
           </div>
           {results.length === 0 ? (
             <EmptyState message="暂无巡检结果" />
           ) : (
-            <div className="space-y-3">
+            <div className="flex flex-col gap-3">
               <label className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Checkbox
                   aria-label="选择当前页全部巡检记录"
@@ -316,7 +280,7 @@ export default function AdminMod({ loaderData }: any) {
                 选择当前页全部记录
               </label>
               {results.map((r: any) => (
-                <div key={r.id} className="rounded-2xl border border-border bg-background p-4">
+                <div key={r.id} className="rounded-lg bg-surface-subtle p-4">
                   <div className="mb-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                     <Checkbox
                       aria-label={`选择巡检记录 ${r.id}`}
@@ -344,15 +308,32 @@ export default function AdminMod({ loaderData }: any) {
                     {r.preview}
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Button size="sm" variant="destructive" onClick={() => handleAction(r.id, "confirm")}>确认删除</Button>
-                    <Button size="sm" variant="outline" onClick={() => handleAction(r.id, "ignore")}>忽略</Button>
-                    <Button size="sm" variant="ghost" onClick={() => handleAction(r.id, "falsepositive")}>标记误报</Button>
+                    <Button size="sm" variant="destructive" onClick={(event) => {
+                      deleteFinalFocusRef.current = event.currentTarget;
+                      setDeleteTarget({ ids: [r.id], label: `${r.type === "topic" ? "话题" : "回复"} #${r.target_id}` });
+                    }}>确认删除</Button>
+                    <Button size="sm" variant="outline" disabled={actionPending} onClick={() => handleAction(r.id, "ignore")}>忽略</Button>
+                    <Button size="sm" variant="ghost" disabled={actionPending} onClick={() => handleAction(r.id, "falsepositive")}>标记误报</Button>
                   </div>
                 </div>
               ))}
               <Pagination page={page} total={total} limit={limit} basePath="/admin/moderation" searchParams={{ status, ...(type ? { type } : {}), ...(jobId > 0 ? { job_id: String(jobId) } : {}) }} />
             </div>
           )}
+          <ConfirmationDialog
+            open={deleteTarget !== null}
+            onOpenChange={(open) => !open && setDeleteTarget(null)}
+            title="确认违规并删除命中内容"
+            description={<>将确认 {deleteTarget?.label} 违规并软删除对应原始内容。该操作会更新计数和处罚记录。</>}
+            confirmLabel={`确认删除 ${deleteTarget?.ids.length || 0} 条内容`}
+            pending={deleteTarget?.ids.length === 1 ? actionPending : bulkPending}
+            finalFocus={deleteFinalFocusRef}
+            onConfirm={() => {
+              if (!deleteTarget) return;
+              if (deleteTarget.ids.length === 1) handleAction(deleteTarget.ids[0], "confirm");
+              else runBulkAction("confirm");
+            }}
+          />
         </AdminPanel>
       </AdminPage>
     </AdminLayout>

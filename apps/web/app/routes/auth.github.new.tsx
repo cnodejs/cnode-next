@@ -7,7 +7,6 @@ import { AuthShell } from "~/components/AuthShell";
 import { apiFetch } from "~/lib/api-client";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
-import { CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { getAvatarFallback, getAvatarUrl } from "~/lib/brand";
@@ -54,10 +53,8 @@ export default function GithubNew({ loaderData }: Route.ComponentProps) {
   return (
     <Layout>
       <AuthShell eyebrow="GITHUB" title="完成 GitHub 登录" description="选择创建新账号，或把 GitHub 绑定到已有 CNode 账号。">
-        <CardHeader>
-          <CardTitle>选择账号处理方式</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-5 pt-6">
+        <h2 className="mb-6 text-lg font-semibold tracking-tight">选择账号处理方式</h2>
+        <div className="space-y-5">
           {!profile ? (
             <div className="space-y-4 text-sm text-muted-foreground">
               <p>{error || "GitHub 登录状态已过期，请重新授权。"}</p>
@@ -67,8 +64,8 @@ export default function GithubNew({ loaderData }: Route.ComponentProps) {
             </div>
           ) : (
             <>
-              <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-subtle p-3">
-                <Avatar className="h-10 w-10 border border-border">
+              <div className="flex items-center gap-3 rounded-xl bg-surface-subtle p-3">
+                <Avatar className="size-10">
                   <AvatarImage src={getAvatarUrl(profile.avatar_url, 40)} alt={profile.loginname} />
                   <AvatarFallback>{getAvatarFallback(profile.loginname)}</AvatarFallback>
                 </Avatar>
@@ -82,7 +79,8 @@ export default function GithubNew({ loaderData }: Route.ComponentProps) {
                 <button
                   type="button"
                   onClick={() => setMode("new")}
-                  className={`rounded-xl border p-4 text-left text-sm ${mode === "new" ? "border-cnode-green bg-cnode-soft" : "border-border"}`}
+                  aria-pressed={mode === "new"}
+                  className={`rounded-lg p-4 text-left text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 ${mode === "new" ? "bg-cnode-soft" : "bg-surface-subtle hover:bg-accent"}`}
                 >
                   <div className="font-medium">注册新账号</div>
                   <div className="mt-1 text-muted-foreground">使用 GitHub 用户名创建新的 CNode 账号。</div>
@@ -90,7 +88,8 @@ export default function GithubNew({ loaderData }: Route.ComponentProps) {
                 <button
                   type="button"
                   onClick={() => setMode("bind")}
-                  className={`rounded-xl border p-4 text-left text-sm ${mode === "bind" ? "border-cnode-green bg-cnode-soft" : "border-border"}`}
+                  aria-pressed={mode === "bind"}
+                  className={`rounded-lg p-4 text-left text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 ${mode === "bind" ? "bg-cnode-soft" : "bg-surface-subtle hover:bg-accent"}`}
                 >
                   <div className="font-medium">关联老账号</div>
                   <div className="mt-1 text-muted-foreground">输入已有 CNode 账号密码完成绑定。</div>
@@ -115,7 +114,7 @@ export default function GithubNew({ loaderData }: Route.ComponentProps) {
               </Button>
             </>
           )}
-        </CardContent>
+        </div>
       </AuthShell>
     </Layout>
   );

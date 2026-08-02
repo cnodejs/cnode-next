@@ -7,7 +7,7 @@ import { apiFetch } from "~/lib/api-client";
 import { kvGet, kvSet } from "~/lib/kv-cache";
 import { Link, useRouteLoaderData } from "react-router";
 import { cn } from "~/lib/utils";
-import { Card, CardContent, CardHeader } from "~/components/ui/card";
+import { Card, CardContent } from "~/components/ui/card";
 import { FeedGrid } from "~/components/PageShell";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -57,9 +57,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
     <Layout>
       <FeedGrid className="items-start">
         <div className="min-w-0">
-          <Card className="overflow-hidden">
-            <CardHeader className="border-b border-border/80 bg-surface-subtle p-3 sm:p-4">
-              <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-background/70 p-1 ring-1 ring-border/70">
+          <nav aria-label="话题分类" className="mb-3 flex items-center gap-1 overflow-x-auto rounded-lg bg-surface-subtle p-1.5">
                 {tabs.map((t) => {
                   const params = new URLSearchParams();
                   if (t.key !== "all") params.set("tab", t.key);
@@ -69,7 +67,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
                       key={t.key}
                       to={`/${search}`}
                       className={cn(
-                        "rounded-lg px-3 py-1.5 text-sm whitespace-nowrap transition-colors",
+                        "rounded-md px-3 py-1.5 text-sm whitespace-nowrap transition-colors",
                         tab === t.key
                           ? "bg-cnode-ink text-white shadow-sm"
                           : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
@@ -79,8 +77,8 @@ export default function Index({ loaderData }: Route.ComponentProps) {
                     </Link>
                   );
                 })}
-              </div>
-            </CardHeader>
+          </nav>
+          <Card className="overflow-hidden">
             <CardContent className="p-0">
               <TopicList topics={topics} />
             </CardContent>

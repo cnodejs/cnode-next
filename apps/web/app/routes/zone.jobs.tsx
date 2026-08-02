@@ -3,7 +3,6 @@ import { JobFilterBar } from "~/components/JobFilterBar";
 import { JobCardGrid, type JobCardData } from "~/components/JobCardGrid";
 import { Pagination } from "~/components/Pagination";
 import { apiFetch } from "~/lib/api-client";
-import { PageContainer } from "~/components/PageShell";
 
 export function meta() {
   return [
@@ -29,6 +28,9 @@ export async function loader({ request }: { request: Request }) {
   if (remote) params.set("remote", remote);
   if (salaryMin) params.set("salary_min", salaryMin);
   if (tags) params.set("tags", tags);
+  const searchParams = Object.fromEntries(
+    Array.from(url.searchParams.entries()).filter(([key]) => key !== "page"),
+  );
 
   const cookie = request.headers.get("cookie") || "";
 
@@ -49,27 +51,27 @@ export async function loader({ request }: { request: Request }) {
     page,
     limit,
     locations: facetsRes.success ? facetsRes.data.locations : [],
+    searchParams,
   };
 }
 
 export default function ZoneJobs({ loaderData }: { loaderData: any }) {
-  const { jobs, total, page, limit, locations } = loaderData;
-  const searchParams: Record<string, string> = {};
-  if (typeof window !== "undefined") {
-    const url = new URL(window.location.href);
-    for (const [k, v] of url.searchParams.entries()) {
-      if (k !== "page") searchParams[k] = v;
-    }
-  }
+  const { jobs, total, page, limit, locations, searchParams } = loaderData;
 
   return (
     <Layout>
-      <PageContainer className="py-6">
-        <div className="mb-4">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">招聘专区</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Node.js 招聘信息</p>
-        </div>
-        <div className="space-y-4">
+      <div className="space-y-6">
+        <section className="rounded-3xl bg-cnode-ink p-6 text-white shadow-brand sm:p-8">
+          <p className="text-sm font-medium text-cnode-green">JOBS</p>
+          <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">招聘专区</h1>
+              <p className="mt-2 text-sm text-white/70">发现聚焦 Node.js 与现代 Web 技术栈的工作机会。</p>
+            </div>
+            <p className="text-sm text-white/60">当前 {total} 个职位</p>
+          </div>
+        </section>
+        <div className="space-y-5">
           <JobFilterBar locations={locations} />
           <JobCardGrid jobs={jobs} />
         </div>
@@ -82,7 +84,7 @@ export default function ZoneJobs({ loaderData }: { loaderData: any }) {
             searchParams={searchParams}
           />
         </div>
-      </PageContainer>
+      </div>
     </Layout>
   );
 }

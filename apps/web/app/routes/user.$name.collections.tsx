@@ -39,7 +39,7 @@ export default function UserCollections({ loaderData }: Route.ComponentProps) {
         {user && <UserHero user={user} />}
         <UserTabs loginname={loginname} active="collections" />
         <Card className="overflow-hidden">
-          <CardHeader className="border-b border-border/80 bg-surface-subtle"><CardTitle className="text-base">{loginname} 的收藏</CardTitle></CardHeader>
+          <CardHeader className="p-4 pb-3"><CardTitle className="text-base">{loginname} 的收藏</CardTitle></CardHeader>
           <CardContent className="p-0"><TopicList topics={topics} /></CardContent>
         </Card>
         <Pagination page={page} total={total} limit={limit} basePath={`/user/${loginname}/collections`} />

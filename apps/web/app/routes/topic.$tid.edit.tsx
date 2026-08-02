@@ -4,17 +4,18 @@ import { MarkdownEditor } from "~/components/MarkdownEditor";
 import { JobMetaForm, type JobMetaFormValue } from "~/components/JobMetaForm";
 import { apiFetch } from "~/lib/api-client";
 import { requireUser } from "~/lib/auth";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { Skeleton } from "~/components/ui/skeleton";
 import { ContentPage } from "~/components/PageShell";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { UnsavedChangesDialog, useUnsavedChanges } from "~/hooks/use-unsaved-changes";
 
 export function meta() {
   return [{ title: "编辑话题 · CNode" }];
@@ -49,18 +50,23 @@ export default function TopicEdit() {
     contact: "",
   });
   const [loading, setLoading] = useState(true);
+  const initialRef = useRef("");
   const navigate = useNavigate();
 
   useEffect(() => {
     apiFetch<{ success: boolean; data: any }>(`/api/v1/topic/${tid}?mdrender=false`)
       .then((res) => {
         if (res.success) {
-          setTitle(res.data.title);
-          setTab(res.data.tab);
-          setContent(res.data.content);
+          const nextTitle = res.data.title || "";
+          const nextTab = res.data.tab || "share";
+          const nextContent = res.data.content || "";
+          let nextJobMeta = jobMeta;
+          setTitle(nextTitle);
+          setTab(nextTab);
+          setContent(nextContent);
           if (res.data.job_meta) {
             const jm = res.data.job_meta;
-            setJobMeta({
+            nextJobMeta = {
               company: jm.company || "",
               company_logo: jm.company_logo ?? null,
               position: jm.position || "",
@@ -71,12 +77,19 @@ export default function TopicEdit() {
               experience: jm.experience || "",
               tech_tags: jm.tech_tags || [],
               contact: jm.contact || "",
-            });
+            };
+            setJobMeta(nextJobMeta);
           }
+          initialRef.current = JSON.stringify({ title: nextTitle, tab: nextTab, content: nextContent, jobMeta: nextJobMeta });
         }
       })
       .finally(() => setLoading(false));
   }, [tid]);
+
+  const isDirty =
+    !loading &&
+    initialRef.current !== JSON.stringify({ title, tab, content, jobMeta });
+  const { blocker, allowNavigation } = useUnsavedChanges(isDirty);
 
   const { run: submitTopic, pending: saving } = useAsyncAction(
     async () => {
@@ -104,6 +117,7 @@ export default function TopicEdit() {
       onSuccess: (res) => {
         if (res.success) {
           toast.success("已保存");
+          allowNavigation();
           navigate(`/topic/${tid}`);
         } else {
           toast.error(res.error_msg || "保存失败");
@@ -120,7 +134,7 @@ export default function TopicEdit() {
   if (loading) {
     return (
       <Layout>
-        <ContentPage className="space-y-4">
+        <ContentPage className="flex flex-col gap-4">
           <Skeleton className="h-28 w-full rounded-3xl" />
           <Skeleton className="h-96 w-full rounded-xl" />
         </ContentPage>
@@ -132,57 +146,59 @@ export default function TopicEdit() {
 
   return (
     <Layout>
-      <ContentPage className="space-y-6">
-        <section className="rounded-3xl border border-cnode-green/20 bg-cnode-soft p-6 sm:p-8">
+      <ContentPage className="flex flex-col gap-6">
+        <section className="rounded-3xl bg-cnode-soft p-6 shadow-sm sm:p-8">
           <p className="text-sm font-medium text-primary">EDIT</p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">编辑话题</h1>
           <p className="mt-2 text-sm text-muted-foreground">更新标题、分类和正文内容。</p>
         </section>
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <Card className="min-w-0">
-            <CardHeader className="border-b border-border/80 bg-surface-subtle">
+            <CardHeader>
               <CardTitle>话题内容</CardTitle>
             </CardHeader>
-            <CardContent className="pt-6">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
+            <CardContent>
+              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="title">标题</Label>
-                  <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
+                  <Input id="title" name="title" autoComplete="off" value={title} onChange={(e) => setTitle(e.target.value)} />
                 </div>
-                <div className="space-y-2">
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="tab">分类</Label>
                   <Select value={tab} onValueChange={(value) => value && setTab(value)}>
                     <SelectTrigger id="tab">
                       <SelectValue>{(value) => topicTabLabels[value] ?? value}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="share">分享</SelectItem>
-                      <SelectItem value="ask">问答</SelectItem>
-                      <SelectItem value="job">招聘</SelectItem>
+                      <SelectGroup>
+                        <SelectItem value="share">分享</SelectItem>
+                        <SelectItem value="ask">问答</SelectItem>
+                        <SelectItem value="job">招聘</SelectItem>
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label>正文</Label>
-                  <MarkdownEditor value={content} onChange={setContent} minHeight={280} />
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="content">正文</Label>
+                  <MarkdownEditor id="content" name="content" value={content} onChange={setContent} minHeight={280} />
                 </div>
                 <div className="flex justify-end">
                   <Button type="submit" disabled={saving}>
-                    {saving ? "保存中..." : "保存"}
+                    {saving ? "保存中…" : "保存"}
                   </Button>
                 </div>
               </form>
             </CardContent>
           </Card>
-          <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+          <aside className="flex flex-col gap-4 lg:sticky lg:top-24 lg:self-start">
             {isJobTab ? (
               <JobMetaForm value={jobMeta} onChange={setJobMeta} />
             ) : (
               <Card>
-                <CardHeader className="border-b border-border/80 bg-surface-subtle">
+                <CardHeader className="p-4 pb-3">
                   <CardTitle className="text-base">发布建议</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2 pt-6 text-sm text-muted-foreground">
+                <CardContent className="flex flex-col gap-2 px-4 pb-4 text-sm text-muted-foreground">
                   <p>问答类话题请包含环境、复现步骤、期望结果和实际错误。</p>
                   <p>分享类话题建议用标题分段，附上相关链接和代码片段。</p>
                   <p>招聘类话题请写清地点、远程方式、技术栈和联系方式。</p>
@@ -192,6 +208,7 @@ export default function TopicEdit() {
           </aside>
         </div>
       </ContentPage>
+      <UnsavedChangesDialog blocker={blocker} />
     </Layout>
   );
 }

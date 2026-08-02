@@ -15,16 +15,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "~/components/ui/dialog";
+import { ConfirmationDialog } from "~/components/ConfirmationDialog";
 import { useAsyncAction } from "~/hooks/use-async-action";
 import { UserIdentityBadges } from "~/components/UserIdentityBadges";
+import { EmptyState } from "~/components/EmptyState";
 import { externalUrlLabel, githubProfileUrl, safeExternalUrl } from "~/lib/public-profile";
 import {
   DropdownMenu,
@@ -74,26 +68,26 @@ export default function UserProfile({ loaderData }: Route.ComponentProps) {
         <UserHero user={user} currentUser={currentUser} />
         <UserTabs loginname={user.loginname} active="home" />
         <Card className="overflow-hidden">
-          <CardHeader className="border-b border-border/80 bg-surface-subtle">
+          <CardHeader className="p-4 pb-3">
             <CardTitle className="text-base">最近创建的话题</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {user.recent_topics?.length > 0 ? (
               <TopicList topics={user.recent_topics} />
             ) : (
-              <div className="py-10 text-center text-sm text-muted-foreground">暂无话题</div>
+              <EmptyState message="该用户还没有创建话题" />
             )}
           </CardContent>
         </Card>
         <Card className="overflow-hidden">
-          <CardHeader className="border-b border-border/80 bg-surface-subtle">
+          <CardHeader className="p-4 pb-3">
             <CardTitle className="text-base">最近参与的话题</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {user.recent_replies?.length > 0 ? (
               <TopicList topics={user.recent_replies} />
             ) : (
-              <div className="py-10 text-center text-sm text-muted-foreground">暂无回复</div>
+              <EmptyState message="该用户还没有参与回复" />
             )}
           </CardContent>
         </Card>
@@ -166,10 +160,10 @@ function UserHero({ user, currentUser }: { user: any; currentUser?: any }) {
   );
 
   return (
-    <section className="rounded-3xl border border-cnode-green/20 bg-cnode-soft p-6 shadow-card sm:p-8">
+    <section className="rounded-3xl bg-cnode-soft p-6 shadow-sm sm:p-8">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
         <div className="flex min-w-0 flex-col gap-5 sm:flex-row">
-          <Avatar className="h-20 w-20 shrink-0 border border-border ring-4 ring-cnode-green/10">
+          <Avatar className="size-20 shrink-0">
             <AvatarImage src={getAvatarUrl(user.avatar_url, 96)} alt={user.loginname} />
             <AvatarFallback>{getAvatarFallback(user.loginname)}</AvatarFallback>
           </Avatar>
@@ -230,32 +224,17 @@ function UserHero({ user, currentUser }: { user: any; currentUser?: any }) {
                   </DropdownMenuGroup>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Dialog
+              <ConfirmationDialog
                 open={!!actionTarget}
-                onOpenChange={(open, eventDetails) => {
-                  if (open) return;
-                  if (submitting) {
-                    eventDetails.cancel();
-                    return;
-                  }
-                  setActionTarget(null);
-                }}
-              >
-                <DialogContent finalFocus={managementTriggerRef}>
-                  <DialogHeader>
-                    <DialogTitle>{actionConfig?.title}</DialogTitle>
-                    <DialogDescription>{actionConfig?.description}</DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => setActionTarget(null)} disabled={submitting}>
-                      取消
-                    </Button>
-                    <Button type="button" variant={actionConfig?.variant as any} onClick={runUserAction} disabled={submitting}>
-                      {submitting ? "处理中" : actionConfig?.confirm}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+                onOpenChange={(open) => !open && setActionTarget(null)}
+                title={actionConfig?.title || "确认用户治理操作"}
+                description={actionConfig?.description || "请确认目标用户和操作影响。"}
+                confirmLabel={actionConfig?.confirm || "确认"}
+                pending={submitting}
+                destructive={actionConfig?.variant === "destructive"}
+                finalFocus={managementTriggerRef}
+                onConfirm={runUserAction}
+              />
             </>
           )}
           </div>
@@ -266,7 +245,7 @@ function UserHero({ user, currentUser }: { user: any; currentUser?: any }) {
               ["回复", user.reply_count || 0],
               ["收藏", user.collect_topic_count || 0],
             ].map(([label, value]) => (
-              <div key={label} className="rounded-xl border border-cnode-green/15 bg-background/75 px-3 py-2">
+              <div key={label} className="rounded-xl bg-background/75 px-3 py-2">
                 <dt className="text-xs text-muted-foreground">{label}</dt>
                 <dd className="mt-0.5 font-semibold text-foreground">{value}</dd>
               </div>
@@ -286,12 +265,12 @@ function UserTabs({ loginname, active }: { loginname: string; active: "home" | "
     ["collections", "收藏", `/user/${loginname}/collections`],
   ] as const;
   return (
-    <Card>
-      <CardContent className="flex gap-1 overflow-x-auto p-2">
+    <nav aria-label="用户内容" className="flex gap-1 overflow-x-auto rounded-2xl bg-surface-subtle p-1.5">
         {items.map(([key, label, to]) => (
           <Link
             key={key}
             to={to}
+            aria-current={active === key ? "page" : undefined}
             className={
               active === key
                 ? "rounded-lg bg-cnode-ink px-3 py-1.5 text-sm text-white shadow-sm"
@@ -301,8 +280,7 @@ function UserTabs({ loginname, active }: { loginname: string; active: "home" | "
             {label}
           </Link>
         ))}
-      </CardContent>
-    </Card>
+    </nav>
   );
 }
 

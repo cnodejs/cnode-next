@@ -7,6 +7,7 @@ class ResizeObserverMock implements ResizeObserver {
 }
 
 globalThis.ResizeObserver = ResizeObserverMock;
+Element.prototype.scrollIntoView = () => {};
 
 Object.defineProperty(window, "matchMedia", {
   writable: true,

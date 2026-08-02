@@ -34,12 +34,12 @@ export function Sidebar() {
   }, []);
 
   return (
-    <aside className="space-y-4">
-      <Card className="overflow-hidden border-cnode-green/20 bg-cnode-ink text-white shadow-brand">
-        <CardHeader>
+    <aside className="flex flex-col gap-4">
+      <Card className="overflow-hidden bg-cnode-ink text-white shadow-brand">
+        <CardHeader className="p-4 pb-3">
           <CardTitle className="text-sm text-white">CNode 社区</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="flex flex-col gap-3 px-4 pb-4">
           <p className="text-sm text-white/75">Node.js 专业中文社区，分享实践、提出问题、连接开发者。</p>
           <Button
             render={<Link to="/topic/create" />}
@@ -63,8 +63,8 @@ export function Sidebar() {
 
 function SidebarSkeleton() {
   return (
-    <Card>
-      <CardContent className="space-y-3 p-4">
+    <Card className="border-0 bg-surface-subtle shadow-none">
+      <CardContent className="flex flex-col gap-3 p-4">
         <Skeleton className="h-4 w-2/3" />
         <Skeleton className="h-4 w-full" />
         <Skeleton className="h-4 w-4/5" />
@@ -76,16 +76,16 @@ function SidebarSkeleton() {
 function LatestReplies({ replies }: { replies: SidebarData["latest_replies"] }) {
   if (replies.length === 0) return null;
   return (
-    <Card>
-      <CardHeader className="border-b border-border/80 bg-surface-subtle">
+    <Card className="border-0 bg-surface-subtle shadow-none">
+      <CardHeader className="p-4 pb-3">
         <CardTitle className="text-sm">最新回复</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3 pt-6">
+      <CardContent className="flex flex-col gap-3 px-4 pb-4">
         {replies.map((reply) => {
           const author = reply.author;
           return (
             <Link key={reply.id} to={`/topic/${reply.topic_id}#${reply.id}`} className="group flex gap-3">
-              <Avatar className="mt-0.5 h-8 w-8 border border-border">
+              <Avatar className="mt-0.5 size-8">
                 <AvatarImage src={getAvatarUrl(author?.avatar_url, 32)} alt={author?.loginname || "CNode"} />
                 <AvatarFallback>{getAvatarFallback(author?.loginname)}</AvatarFallback>
               </Avatar>
@@ -109,12 +109,12 @@ function NoReplyTopics({ topics }: { topics: SidebarData["no_reply_topics"] }) {
   if (topics.length === 0) return null;
 
   return (
-    <Card>
-      <CardHeader className="border-b border-border/80 bg-surface-subtle">
+    <Card className="border-0 bg-surface-subtle shadow-none">
+      <CardHeader className="p-4 pb-3">
         <CardTitle className="text-sm">无人回复的话题</CardTitle>
       </CardHeader>
-      <CardContent className="pt-6">
-        <ul className="space-y-2 text-xs">
+      <CardContent className="px-4 pb-4">
+        <ul className="flex flex-col gap-2 text-xs">
           {topics.map((t) => (
             <li key={t.id}>
               <Link to={`/topic/${t.id}`} className="block truncate font-medium text-foreground hover:text-primary">
@@ -135,17 +135,17 @@ function NoReplyTopics({ topics }: { topics: SidebarData["no_reply_topics"] }) {
 function Leaderboard({ users }: { users: SidebarData["top_users"] }) {
   if (users.length === 0) return null;
   return (
-    <Card>
-      <CardHeader className="border-b border-border/80 bg-surface-subtle">
+    <Card className="border-0 bg-surface-subtle shadow-none">
+      <CardHeader className="p-4 pb-3">
         <CardTitle className="flex items-center gap-2 text-sm">
           <Trophy className="h-4 w-4 text-cnode-green" /> 积分榜
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3 pt-6">
+      <CardContent className="flex flex-col gap-3 px-4 pb-4">
         {users.map((user, index) => (
           <Link key={user.id} to={`/user/${user.loginname}`} className="flex items-center gap-3 text-sm">
             <span className="w-5 text-xs font-semibold text-muted-foreground">#{index + 1}</span>
-            <Avatar className="h-8 w-8 border border-border">
+            <Avatar className="size-8">
               <AvatarImage src={getAvatarUrl(user.avatar_url, 32)} alt={user.loginname} />
               <AvatarFallback>{getAvatarFallback(user.loginname)}</AvatarFallback>
             </Avatar>
@@ -166,11 +166,11 @@ function CommunityLinks({
   resources: SidebarData["resources"];
 }) {
   return (
-    <Card>
-      <CardHeader className="border-b border-border/80 bg-surface-subtle">
+    <Card className="border-0 bg-surface-subtle shadow-none">
+      <CardHeader className="p-4 pb-3">
         <CardTitle className="text-sm">生态资源</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4 pt-6">
+      <CardContent className="flex flex-col gap-4 px-4 pb-4">
         <div className="grid gap-2">
           {partners.map((l) => (
             <a
@@ -178,7 +178,7 @@ function CommunityLinks({
               href={l.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-lg border border-border bg-surface-subtle p-3 text-xs transition-colors hover:border-cnode-green/40 hover:bg-accent"
+              className="rounded-lg bg-surface-subtle p-3 text-xs transition-colors hover:bg-accent"
             >
               <span className="flex items-center justify-between font-medium text-foreground">
                 {l.name} <ArrowUpRight className="h-3 w-3" />

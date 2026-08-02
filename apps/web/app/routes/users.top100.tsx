@@ -18,7 +18,7 @@ export default function Top100({ loaderData }: Route.ComponentProps) {
   return (
     <Layout>
       <ContentPage className="space-y-6">
-        <section className="rounded-3xl border border-cnode-green/20 bg-cnode-soft p-6 sm:p-8">
+        <section className="rounded-3xl bg-cnode-soft p-6 shadow-sm sm:p-8">
           <p className="text-sm font-medium text-primary">TOP 100</p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">积分榜</h1>
           <p className="mt-2 text-sm text-muted-foreground">未禁言用户按积分排序的前 100 名。</p>

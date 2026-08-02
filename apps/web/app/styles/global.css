@@ -60,8 +60,8 @@
   --accent-foreground: #18310d;
   --destructive: #dc2626;
   --destructive-foreground: #fff7f7;
-  --border: #7f9070;
-  --input: #788c6b;
+  --border: #dce5d4;
+  --input: #cbd8c2;
   --ring: #4f7300;
   --cnode-green: #80bd01;
   --cnode-green-hover: #6fa400;
@@ -95,8 +95,8 @@
   --accent-foreground: #eff8dd;
   --destructive: #dc2626;
   --destructive-foreground: #fff7f7;
-  --border: #526b48;
-  --input: #647f58;
+  --border: #283b24;
+  --input: #354b30;
   --ring: #9de330;
   --cnode-green: #9de330;
   --cnode-green-hover: #b2f34d;
@@ -173,12 +173,6 @@ html {
   line-height: 1.25;
   margin-bottom: 0.75rem;
   margin-top: 1.5rem;
-}
-
-.markdown-body h1,
-.markdown-body h2 {
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 0.45rem;
 }
 
 .markdown-body h1 {
@@ -279,7 +273,6 @@ html {
 
 .markdown-body pre {
   background-color: color-mix(in srgb, var(--muted) 88%, var(--foreground) 6%);
-  border: 1px solid var(--border);
   border-radius: 0.75rem;
   color: var(--foreground);
   overflow: auto;
@@ -326,7 +319,6 @@ html {
 .markdown-body img {
   background-color: var(--card);
   border-radius: 0.75rem;
-  box-shadow: 0 0 0 1px var(--border);
   height: auto;
   max-width: 100%;
 }

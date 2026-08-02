@@ -21,6 +21,8 @@ describe("Pagination", () => {
       "href",
       "/admin/reports?status=pending&q=node&page=3",
     );
+    expect(screen.getByRole("link", { name: "2" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("list")).toHaveClass("flex-wrap");
   });
 
   it("renders simple pagination without page numbers", () => {

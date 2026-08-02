@@ -23,6 +23,7 @@ describe("About 合并内容页", () => {
     expect(screen.getByRole("heading", { name: "参与指南" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "讨论与内容规范" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "常见问题" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Node.js 专业中文社区" })).toHaveClass("text-2xl", "sm:text-3xl", "lg:text-4xl");
     expect(container.querySelector("#guide")).toBeInTheDocument();
     expect(container.querySelector("#discussion")).toBeInTheDocument();
     expect(container.querySelector("#faq")).toBeInTheDocument();
@@ -30,6 +31,9 @@ describe("About 合并内容页", () => {
     expect(screen.getAllByRole("link", { name: "参与指南" })[0]).toHaveAttribute("href", "#guide");
     expect(container.querySelector('[href="/getstart"]')).not.toBeInTheDocument();
     expect(container.querySelectorAll('a[target="_blank"]')).toHaveLength(0);
+    const faq = container.querySelector("#faq")!;
+    expect(faq.querySelector(".divide-y")).not.toBeInTheDocument();
+    expect(faq.querySelector(".gap-5")).toBeInTheDocument();
   });
 
   it("keeps all section navigation available at a mobile viewport", () => {

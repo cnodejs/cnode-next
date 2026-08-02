@@ -9,7 +9,10 @@ allowBuilds:
   '@tree-sitter-grammars/tree-sitter-yaml': false
   core-js-pure: false
   esbuild: true
+  msw: true
   sharp: true
   tree-sitter: false
   tree-sitter-json: false
   workerd: true
+minimumReleaseAgeExclude:
+  - '@hookform/resolvers@5.7.1'

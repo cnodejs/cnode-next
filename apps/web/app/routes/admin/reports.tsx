@@ -1,7 +1,7 @@
 import { requireAdmin } from "~/lib/auth";
 import { AdminLayout } from "~/components/AdminLayout";
 import { apiFetch } from "~/lib/api-client";
-import { Form, useRevalidator } from "react-router";
+import { Form, useLocation, useNavigate, useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
@@ -10,6 +10,9 @@ import { EmptyState } from "~/components/EmptyState";
 import { AdminPage, AdminPageHeader, AdminPanel } from "~/components/AdminPage";
 import { Pagination } from "~/components/Pagination";
 import { NativeSelect } from "~/components/ui/native-select";
+import { useRef, useState } from "react";
+import { ConfirmationDialog } from "~/components/ConfirmationDialog";
+import { previousPageAfterRemoval } from "~/lib/post-mutation-navigation";
 
 export function meta() {
   return [{ title: "举报队列 · CNode Admin" }];
@@ -32,8 +35,12 @@ export async function loader({ request }: any) {
 export default function AdminReports({ loaderData }: any) {
   const { reports, total, page, limit, status } = loaderData;
   const { revalidate } = useRevalidator();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [confirmTarget, setConfirmTarget] = useState<any | null>(null);
+  const confirmTriggerRef = useRef<HTMLElement | null>(null);
 
-  const { run: handleAction } = useAsyncAction(
+  const { run: handleAction, pending: handling } = useAsyncAction(
     async (id: number, action: string) => {
       const res = await apiFetch<{ success: boolean; error_msg?: string }>(
         `/api/v1/admin/reports/${id}/${action}`,
@@ -45,7 +52,10 @@ export default function AdminReports({ loaderData }: any) {
       onSuccess: (result) => {
         if (result.success) {
           toast.success(result.action === "confirm" ? "已确认违规" : "已驳回");
-          revalidate();
+          if (result.action === "confirm") setConfirmTarget(null);
+          const fallback = previousPageAfterRemoval({ pathname: location.pathname, search: location.search, page, currentItemCount: reports.length, removedCount: 1 });
+          if (fallback) navigate(fallback, { replace: true });
+          else revalidate();
         } else {
           toast.error(result.error_msg || "操作失败");
         }
@@ -57,7 +67,7 @@ export default function AdminReports({ loaderData }: any) {
     <AdminLayout>
       <AdminPage>
         <AdminPageHeader title="举报队列" description="集中确认用户举报，区分违规内容和误报反馈。" />
-        <AdminPanel title="举报记录" description={`当前显示 ${reports.length} / ${total} 条举报记录`} contentClassName="p-4">
+        <AdminPanel title="举报记录" description={`当前显示 ${reports.length} / ${total} 条举报记录`}>
           <Form method="get" className="mb-4 flex max-w-xs gap-2">
             <NativeSelect name="status" defaultValue={status} aria-label="举报状态" className="flex-1">
               <option value="pending">待处理</option>
@@ -69,9 +79,9 @@ export default function AdminReports({ loaderData }: any) {
           {reports.length === 0 ? (
             <EmptyState message="暂无举报" />
           ) : (
-            <div className="space-y-3">
+            <div className="flex flex-col gap-3">
               {reports.map((r: any) => (
-                <div key={r.id} className="rounded-2xl border border-border bg-background p-4">
+                <div key={r.id} className="rounded-lg bg-surface-subtle p-4">
                   <div className="mb-2 flex items-center gap-2 text-sm">
                 <Badge variant="destructive">{r.type}</Badge>
                 <span className="text-muted-foreground">{r.reporter_count || 0} 人举报</span>
@@ -90,18 +100,32 @@ export default function AdminReports({ loaderData }: any) {
                 <Button
                   size="sm"
                   variant="destructive"
-                  onClick={() => handleAction(r.id, "confirm")}
+                  onClick={(event) => {
+                    confirmTriggerRef.current = event.currentTarget;
+                    setConfirmTarget(r);
+                  }}
                 >
                   确认违规
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => handleAction(r.id, "dismiss")}>
-                  驳回
+                <Button size="sm" variant="outline" disabled={handling} onClick={() => handleAction(r.id, "dismiss")}>
+                  {handling ? "处理中" : "驳回"}
                 </Button>
                   </div>
                 </div>
               ))}
             </div>
           )}
+          <ConfirmationDialog
+            open={confirmTarget !== null}
+            onOpenChange={(open) => !open && setConfirmTarget(null)}
+            title="确认违规并删除内容"
+            description={<>将确认举报 #{confirmTarget?.id} 违规，并删除{confirmTarget?.target_type === "reply" ? "回复" : "话题"} #{confirmTarget?.target_id}：{confirmTarget?.topic_title || "目标内容"}。</>}
+            confirmLabel="确认违规并删除"
+            pendingLabel="处理中"
+            pending={handling}
+            finalFocus={confirmTriggerRef}
+            onConfirm={() => confirmTarget && handleAction(confirmTarget.id, "confirm")}
+          />
           <Pagination page={page} total={total} limit={limit} basePath="/admin/reports" searchParams={{ status }} />
         </AdminPanel>
       </AdminPage>

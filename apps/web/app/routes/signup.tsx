@@ -18,7 +18,6 @@ import {
   FormMessage,
   FormDescription,
 } from "~/components/ui/form";
-import { CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { AuthShell } from "~/components/AuthShell";
 import { redirectIfAuthenticated } from "~/lib/auth";
 import { TurnstileWidget, getTurnstileToken } from "~/components/TurnstileWidget";
@@ -88,20 +87,27 @@ export default function Signup({ loaderData }: any) {
         title="创建社区账号"
         description="加入后可以发布问题、分享项目、参与讨论，并保存对你有价值的话题。"
       >
-          <CardHeader>
-            <CardTitle>注册</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
+          <h2 className="mb-6 text-lg font-semibold tracking-tight">注册</h2>
+          <div>
             {allowSignup ? (
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} aria-busy={loading} className="space-y-4">
                 <FormField
                   control={form.control}
                   name="loginname"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>用户名</FormLabel>
-                      <FormControl render={<Input placeholder="字母/数字/_/-" {...field} />} />
+                      <FormControl
+                        render={
+                          <Input
+                            autoComplete="username"
+                            spellCheck={false}
+                            placeholder="字母/数字/_/-"
+                            {...field}
+                          />
+                        }
+                      />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -112,7 +118,17 @@ export default function Signup({ loaderData }: any) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>密码</FormLabel>
-                      <FormControl render={<Input type="password" placeholder="至少8位,含字母和数字" {...field} />} />
+                      <FormControl
+                        render={
+                          <Input
+                            type="password"
+                            autoComplete="new-password"
+                            spellCheck={false}
+                            placeholder="至少8位,含字母和数字"
+                            {...field}
+                          />
+                        }
+                      />
                       <FormDescription>密码需至少 8 位,包含字母和数字</FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -124,7 +140,17 @@ export default function Signup({ loaderData }: any) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>确认密码</FormLabel>
-                      <FormControl render={<Input type="password" placeholder="再次输入密码" {...field} />} />
+                      <FormControl
+                        render={
+                          <Input
+                            type="password"
+                            autoComplete="new-password"
+                            spellCheck={false}
+                            placeholder="再次输入密码"
+                            {...field}
+                          />
+                        }
+                      />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -135,7 +161,17 @@ export default function Signup({ loaderData }: any) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>邮箱</FormLabel>
-                      <FormControl render={<Input type="email" placeholder="your@email.com" {...field} />} />
+                      <FormControl
+                        render={
+                          <Input
+                            type="email"
+                            autoComplete="email"
+                            spellCheck={false}
+                            placeholder="your@email.com"
+                            {...field}
+                          />
+                        }
+                      />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -144,10 +180,11 @@ export default function Signup({ loaderData }: any) {
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? "注册中..." : "注册"}
                 </Button>
+                {loading && <p role="status" className="text-center text-sm text-muted-foreground">正在注册账号</p>}
               </form>
             </Form>
             ) : (
-              <div className="rounded-xl border border-dashed border-border bg-surface-subtle p-6 text-center text-sm text-muted-foreground">
+              <div className="rounded-lg bg-surface-subtle p-6 text-center text-sm text-muted-foreground">
                 当前暂不开放注册。
               </div>
             )}
@@ -160,7 +197,7 @@ export default function Signup({ loaderData }: any) {
                 GitHub 登录
               </Link>
               </div>
-            </CardContent>
+          </div>
       </AuthShell>
     </Layout>
   );

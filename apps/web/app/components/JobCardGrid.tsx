@@ -55,9 +55,9 @@ function JobCardItem({ job }: { job: JobCardData }) {
   return (
     <Link to={`/topic/${job.id}`} className="block">
       <Card className="h-full overflow-hidden transition-shadow hover:shadow-md">
-        <CardContent className="space-y-3 p-4">
+        <CardContent className="flex flex-col gap-3 p-4">
           <div className="flex items-start gap-3">
-            <Avatar className="h-10 w-10 shrink-0 rounded-lg border border-border">
+            <Avatar className="size-10 shrink-0 rounded-md">
               {job.company_logo ? (
                 <AvatarImage src={job.company_logo} alt={job.company} />
               ) : (

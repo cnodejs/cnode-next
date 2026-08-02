@@ -3,10 +3,10 @@ import { apiFetch } from "~/lib/api-client";
 import { useState } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router";
 import { Button } from "~/components/ui/button";
-import { CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { AuthShell } from "~/components/AuthShell";
 import { useAsyncAction } from "~/hooks/use-async-action";
+import { Label } from "~/components/ui/label";
 
 export function meta() {
   return [{ title: "重置密码 · CNode" }];
@@ -63,33 +63,41 @@ export default function ResetPass() {
         title="重新设置你的访问凭证"
         description="使用邮件中的安全链接设置新密码，完成后即可继续参与社区讨论。"
       >
-          <CardHeader>
-            <CardTitle>重置密码</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            {error && <div className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
-            {success && <div className="mb-4 rounded-md bg-cnode-soft p-3 text-sm text-foreground">{success}</div>}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Input
-                type="password"
-                value={newPass}
-                onChange={(e) => setNewPass(e.target.value)}
-                placeholder="新密码 (至少8位,含字母和数字)"
-                required
-              />
-              {newPass.length > 0 && !passValid && (
-                <p className="text-xs text-muted-foreground">密码需至少 8 位,包含字母和数字</p>
-              )}
+          <h2 className="mb-6 text-lg font-semibold tracking-tight">重置密码</h2>
+          <div>
+            {error && <div id="new-password-error" role="alert" className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
+            {success && <div role="status" className="mb-4 rounded-md bg-cnode-soft p-3 text-sm text-foreground">{success}</div>}
+            <form onSubmit={handleSubmit} aria-busy={loading} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-password">新密码</Label>
+                <Input
+                  id="new-password"
+                  name="new-password"
+                  type="password"
+                  autoComplete="new-password"
+                  spellCheck={false}
+                  value={newPass}
+                  onChange={(e) => setNewPass(e.target.value)}
+                  aria-invalid={newPass.length > 0 && !passValid || !!error}
+                  aria-describedby="new-password-help new-password-error"
+                  placeholder="至少8位,含字母和数字"
+                  required
+                />
+                <p id="new-password-help" className="text-xs text-muted-foreground">
+                  密码需至少 8 位,包含字母和数字
+                </p>
+              </div>
               <Button type="submit" disabled={loading} className="w-full">
                 {loading ? "提交中..." : "重置密码"}
               </Button>
+              {loading && <p role="status" className="text-center text-sm text-muted-foreground">正在重置密码</p>}
             </form>
             <div className="mt-4 text-sm text-muted-foreground">
               <Link to="/signin" className="hover:text-primary">
                 返回登录
               </Link>
             </div>
-          </CardContent>
+          </div>
       </AuthShell>
     </Layout>
   );

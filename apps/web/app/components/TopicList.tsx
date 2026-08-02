@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import type { TopicDTO } from "~/lib/api-types";
-import { Eye, MessageSquare } from "lucide-react";import { TimeAgo } from "./TimeAgo";
+import { Eye, MessageSquare } from "lucide-react";
+import { TimeAgo } from "./TimeAgo";
 import { TagBadge, StatusBadge } from "./TagBadge";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { getAvatarFallback, getAvatarUrl } from "~/lib/brand";
@@ -12,9 +13,9 @@ export function TopicListItem({ topic }: { topic: TopicDTO }) {
   };
 
   return (
-    <article className="group flex items-start gap-3 border-b border-border px-2 py-4 last:border-0 sm:gap-4 sm:px-3">
+    <article className="group flex items-start gap-3 rounded-xl px-3 py-3 transition-colors hover:bg-surface-subtle sm:gap-4 sm:px-4">
       <Link to={`/user/${author.loginname}`} className="shrink-0">
-        <Avatar className="h-10 w-10 border border-border sm:h-11 sm:w-11">
+        <Avatar className="size-10 sm:size-11">
           <AvatarImage src={getAvatarUrl(author.avatar_url, 48)} alt={author.loginname} />
           <AvatarFallback>{getAvatarFallback(author.loginname)}</AvatarFallback>
         </Avatar>
@@ -64,7 +65,7 @@ export function TopicList({ topics }: { topics: TopicDTO[] }) {
     return <div className="py-12 text-center text-muted-foreground">暂无话题</div>;
   }
   return (
-    <div className="divide-y-0">
+    <div className="flex flex-col gap-1 p-2">
       {topics.map((t) => (
         <TopicListItem key={t.id} topic={t} />
       ))}

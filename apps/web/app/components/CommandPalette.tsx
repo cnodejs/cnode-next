@@ -1,25 +1,28 @@
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
-import { Link, useNavigate, useRouteLoaderData } from "react-router";
+import { useEffect, useRef, useState, type RefObject } from "react";
+import { useNavigate, useRouteLoaderData } from "react-router";
 import {
   FileText,
   Info,
   LayoutDashboard,
   MessageSquare,
   Pencil,
-  Search,
-  User,
   X,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "./ui/command";
 
 const quickActions = [
   { label: "发布话题", to: "/topic/create", icon: Pencil },
   { label: "我的消息", to: "/my/messages", icon: MessageSquare },
   { label: "API", to: "/api", icon: FileText },
   { label: "关于 CNode", to: "/about", icon: Info },
-  { label: "管理后台", to: "/admin", icon: LayoutDashboard, adminOnly: true },
 ];
 
 export function CommandPalette({
@@ -36,16 +39,12 @@ export function CommandPalette({
   const finalFocusRef = finalFocus ?? fallbackFinalFocusRef;
   const navigate = useNavigate();
   const rootData = useRouteLoaderData("root") as { user?: { is_admin?: boolean; is_mod?: boolean } } | undefined;
-  const canAccessAdmin = !!(rootData?.user?.is_admin || rootData?.user?.is_mod);
-  const actions = useMemo(
-    () =>
-      quickActions.filter(
-        (item) =>
-          (!item.adminOnly || canAccessAdmin) &&
-          item.label.toLowerCase().includes(query.toLowerCase()),
-      ),
-    [canAccessAdmin, query],
-  );
+  const managementAction = rootData?.user?.is_admin
+    ? { label: "管理后台", to: "/admin", icon: LayoutDashboard }
+    : rootData?.user?.is_mod
+      ? { label: "内容管理", to: "/admin/topics", icon: LayoutDashboard }
+      : null;
+  const actions = managementAction ? [...quickActions, managementAction] : quickActions;
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -61,6 +60,10 @@ export function CommandPalette({
     return () => document.removeEventListener("keydown", handler);
   }, [finalFocusRef, onOpenChange, open]);
 
+  useEffect(() => {
+    if (!open) setQuery("");
+  }, [open]);
+
   function submit(event: React.FormEvent) {
     event.preventDefault();
     const value = query.trim();
@@ -69,33 +72,50 @@ export function CommandPalette({
     navigate(`/search?q=${encodeURIComponent(value)}`);
   }
 
+  function go(to: string) {
+    onOpenChange(false);
+    navigate(to);
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showClose={false}
         finalFocus={finalFocusRef}
         viewportClassName="items-start pt-24"
-        className="gap-3 overflow-hidden border-cnode-green/20 bg-popover p-0 shadow-floating sm:max-w-2xl"
+        className="gap-3 overflow-hidden bg-popover p-0 shadow-floating sm:max-w-2xl"
       >
         <DialogHeader className="sr-only">
           <DialogTitle>搜索和快速操作</DialogTitle>
           <DialogDescription>搜索话题、用户，或跳转到常用页面。</DialogDescription>
         </DialogHeader>
-        <form onSubmit={submit} className="border-b border-border p-3 pr-14">
-          <div className="flex h-11 items-center gap-2 rounded-xl border border-input bg-background px-3 shadow-inner">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <Input
+        <Command label="搜索命令">
+          <form onSubmit={submit}>
+            <CommandInput
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onValueChange={setQuery}
               placeholder="搜索话题、用户，或输入关键词..."
-              className="border-0 bg-transparent shadow-none focus-visible:ring-0"
+              aria-label="搜索命令"
               autoFocus
             />
-            <kbd className="hidden rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground sm:block">
-              Enter
-            </kbd>
+          </form>
+          <CommandList>
+            <CommandEmpty>
+              <span role="status">没有匹配的快捷命令，可按 Enter 搜索“{query}”</span>
+            </CommandEmpty>
+            <CommandGroup heading="快捷操作">
+              {actions.map(({ label, to, icon: Icon }) => (
+                <CommandItem key={to} value={label} onSelect={() => go(to)}>
+                  <Icon />
+                  {label}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+          <div className="bg-surface-subtle p-2 text-xs text-muted-foreground">
+            {query.trim() ? `按 Enter 搜索“${query.trim()}”` : "使用方向键选择，Enter 打开，Escape 关闭"}
           </div>
-        </form>
+        </Command>
         <button
           type="button"
           onClick={() => onOpenChange(false)}
@@ -104,28 +124,6 @@ export function CommandPalette({
         >
           <X className="h-4 w-4" />
         </button>
-        <div className="grid gap-1 p-2">
-          {actions.map(({ label, to, icon: Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              onClick={() => onOpenChange(false)}
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-            >
-              <Icon className="h-4 w-4" />
-              {label}
-            </Link>
-          ))}
-          <Button
-            type="button"
-            variant="ghost"
-            className="justify-start gap-3 px-3 text-muted-foreground"
-            onClick={submit}
-            disabled={!query.trim()}
-          >
-            <User className="h-4 w-4" /> 搜索 “{query || "关键词"}”
-          </Button>
-        </div>
       </DialogContent>
     </Dialog>
   );

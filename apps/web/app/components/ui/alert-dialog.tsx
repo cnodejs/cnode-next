@@ -38,7 +38,7 @@ const AlertDialogContent = React.forwardRef<
       <AlertDialogPrimitive.Popup
         ref={ref}
         className={cn(
-          "relative my-auto grid max-h-[calc(100dvh-2rem)] w-full max-w-lg gap-4 overflow-y-auto overscroll-contain rounded-2xl border border-cnode-green/20 bg-popover p-6 text-popover-foreground shadow-floating duration-200 data-[open]:animate-in data-[closed]:animate-out data-[starting-style]:fade-out-0 data-[open]:fade-in-0 data-[ending-style]:fade-out-0 data-[ending-style]:zoom-out-95 data-[open]:zoom-in-95 data-[starting-style]:zoom-out-95",
+          "relative my-auto grid max-h-[calc(100dvh-2rem)] w-full max-w-lg gap-4 overflow-y-auto overscroll-contain rounded-lg bg-popover p-6 text-popover-foreground shadow-floating duration-200 data-[open]:animate-in data-[closed]:animate-out data-[starting-style]:fade-out-0 data-[open]:fade-in-0 data-[ending-style]:fade-out-0 data-[ending-style]:zoom-out-95 data-[open]:zoom-in-95 data-[starting-style]:zoom-out-95",
           className,
         )}
         {...props}

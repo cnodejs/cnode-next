@@ -25,6 +25,7 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
   const remote = searchParams.get("remote") || "";
   const salaryMin = searchParams.get("salary_min") || "";
   const tags = searchParams.get("tags") || "";
+  const activeFilterCount = [location, remote, salaryMin, tags].filter(Boolean).length;
 
   function updateParam(key: string, value: string) {
     const next = new URLSearchParams(searchParams);
@@ -40,8 +41,8 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
   }
 
   const filterControls = (
-    <div className="grid gap-3 md:grid-cols-[minmax(8rem,1fr)_minmax(8rem,1fr)_8rem_minmax(13rem,1.4fr)_6rem] md:items-end">
-      <div className="space-y-1.5">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="flex flex-col gap-1.5">
         <Label htmlFor="job-location-filter" className="text-xs">地点</Label>
         <NativeSelect
           id="job-location-filter"
@@ -57,7 +58,7 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
         </NativeSelect>
       </div>
 
-      <div className="space-y-1.5">
+      <div className="flex flex-col gap-1.5">
         <Label htmlFor="job-remote-filter" className="text-xs">远程</Label>
         <NativeSelect
           id="job-remote-filter"
@@ -73,9 +74,11 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
         </NativeSelect>
       </div>
 
-      <div className="space-y-1.5">
-        <Label className="text-xs">薪资下限 (K)</Label>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="job-salary-filter" className="text-xs">薪资下限 (K)</Label>
         <Input
+          id="job-salary-filter"
+          name="salary_min"
           type="number"
           value={salaryMin}
           onChange={(e) => updateParam("salary_min", e.target.value)}
@@ -84,36 +87,47 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
         />
       </div>
 
-      <div className="space-y-1.5">
-        <Label className="text-xs">技术栈</Label>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="job-tags-filter" className="text-xs">技术栈</Label>
         <Input
+          id="job-tags-filter"
+          name="tags"
           value={tags}
           onChange={(e) => updateParam("tags", e.target.value)}
           placeholder="如 Node,PostgreSQL"
           className="h-9 w-full"
         />
       </div>
-
-      <Button type="button" variant="ghost" className="h-9 w-full" onClick={clearAll}>
-        清除筛选
-      </Button>
     </div>
   );
 
   return (
     <>
-      <div className="hidden rounded-2xl border border-border bg-card p-3 shadow-sm md:block">
+      <div className="hidden rounded-3xl bg-surface-subtle p-4 shadow-sm md:block sm:p-5">
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 font-semibold text-foreground">
+              <Filter className="h-4 w-4 text-primary" /> 筛选职位
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">按地点、办公方式、薪资和技术栈缩小结果范围</p>
+          </div>
+          {activeFilterCount > 0 && (
+            <Button type="button" variant="ghost" size="sm" onClick={clearAll}>
+              清除 {activeFilterCount} 项
+            </Button>
+          )}
+        </div>
         {filterControls}
       </div>
 
       <div className="md:hidden">
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetTrigger render={<Button variant="outline" size="sm" className="w-full" />}>
+          <SheetTrigger render={<Button variant="secondary" size="sm" className="w-full" />}>
             <Filter className="h-4 w-4" />
             筛选
-            {(location || remote || salaryMin || tags) && (
+            {activeFilterCount > 0 && (
               <span className="ml-1 rounded-full bg-primary text-primary-foreground px-1.5 text-xs">
-                {[location, remote, salaryMin, tags].filter(Boolean).length}
+                {activeFilterCount}
               </span>
             )}
           </SheetTrigger>
@@ -122,6 +136,11 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
               <SheetTitle>筛选招聘</SheetTitle>
             </SheetHeader>
             <div className="py-4">{filterControls}</div>
+            {activeFilterCount > 0 && (
+              <Button type="button" variant="ghost" className="w-full" onClick={clearAll}>
+                清除全部筛选
+              </Button>
+            )}
           </SheetContent>
         </Sheet>
       </div>

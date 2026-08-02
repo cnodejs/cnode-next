@@ -21,6 +21,8 @@ import { cn } from "~/lib/utils";
 type EditorMode = "edit" | "preview" | "split";
 
 interface MarkdownEditorProps {
+  id?: string;
+  name?: string;
   value?: string;
   initialValue?: string;
   onChange?: (value: string) => void;
@@ -29,6 +31,8 @@ interface MarkdownEditorProps {
 }
 
 export function MarkdownEditor({
+  id,
+  name,
   value: valueProp,
   initialValue = "",
   onChange,
@@ -41,6 +45,7 @@ export function MarkdownEditor({
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -121,9 +126,11 @@ export function MarkdownEditor({
     if (!image) return;
     setUploading(true);
     setUploadError(null);
+    setUploadSuccess(false);
     try {
       const result = await uploadEditorImage(image);
       insertImageMarkdown(result.filename.replace(/\.[^.]+$/, "") || "image", result.url);
+      setUploadSuccess(true);
     } catch (error) {
       setUploadError(error instanceof Error ? error.message : "图片上传失败");
     } finally {
@@ -160,6 +167,8 @@ export function MarkdownEditor({
   const previewContent = value || "暂无内容可预览";
   const textarea = (
     <textarea
+      id={id}
+      name={name}
       ref={textareaRef}
       value={value}
       onChange={(e) => handleChange(e.target.value)}
@@ -176,7 +185,7 @@ export function MarkdownEditor({
       aria-label={placeholder || "支持 Markdown 格式"}
       style={{ minHeight }}
       className={cn(
-        "w-full resize-y rounded-md bg-transparent p-3 text-sm outline-none",
+        "w-full resize-y rounded-sm bg-background p-3 text-sm outline-none",
         isDragging && "bg-cnode-soft/70 ring-2 ring-cnode-green",
       )}
     />
@@ -188,8 +197,8 @@ export function MarkdownEditor({
   );
 
   return (
-    <div className="rounded-xl border border-input bg-background transition-[border-color,box-shadow] focus-within:border-cnode-green/70 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background">
-      <div className="flex flex-wrap items-center gap-1 border-b border-border px-2 py-1">
+    <div className="rounded-md bg-surface-subtle p-1 transition-shadow focus-within:ring-[3px] focus-within:ring-ring/50">
+      <div className="flex flex-wrap items-center gap-1 px-1 py-1">
         {toolbar.map((btn) => (
           <Button
             key={btn.title}
@@ -218,7 +227,7 @@ export function MarkdownEditor({
         />
         <div className="flex-1" />
         {uploading ? (
-          <span className="inline-flex items-center gap-1 px-2 text-xs text-muted-foreground">
+          <span role="status" className="inline-flex items-center gap-1 px-2 text-xs text-muted-foreground">
             <Loader2 className="h-3 w-3 animate-spin" /> 上传中
           </span>
         ) : null}
@@ -234,12 +243,13 @@ export function MarkdownEditor({
           </Button>
         </div>
       </div>
-      {uploadError ? <div className="border-b border-border px-3 py-2 text-xs text-destructive">{uploadError}</div> : null}
+      {uploadError ? <div role="alert" className="mx-1 mb-1 rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">{uploadError}</div> : null}
+      {uploadSuccess ? <div role="status" className="mx-1 mb-1 rounded-lg bg-background px-3 py-2 text-xs text-muted-foreground">图片上传成功，已插入正文</div> : null}
       {mode === "preview" ? preview : null}
       {mode === "edit" ? textarea : null}
       {mode === "split" ? (
-        <div className="grid min-h-[inherit] sm:grid-cols-2">
-          <div className="border-b border-border sm:border-b-0 sm:border-r">{textarea}</div>
+        <div className="grid min-h-[inherit] gap-1 sm:grid-cols-2">
+          <div>{textarea}</div>
           <div className="max-h-[70vh] overflow-auto">{preview}</div>
         </div>
       ) : null}

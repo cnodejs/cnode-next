@@ -56,7 +56,7 @@ const DropdownMenuSubContent = React.forwardRef<
       <DropdownMenuPrimitive.Popup
         ref={ref}
         className={cn(
-          "z-50 max-h-[min(24rem,var(--available-height))] min-w-[8rem] overflow-y-auto overscroll-contain rounded-xl border border-cnode-green/20 bg-popover p-1 text-popover-foreground shadow-floating data-[open]:animate-in data-[closed]:animate-out data-[starting-style]:fade-out-0 data-[open]:fade-in-0 data-[ending-style]:fade-out-0",
+          "z-50 max-h-[min(24rem,var(--available-height))] min-w-[8rem] overflow-y-auto overscroll-contain rounded-md bg-popover p-1 text-popover-foreground shadow-floating data-[open]:animate-in data-[closed]:animate-out data-[starting-style]:fade-out-0 data-[open]:fade-in-0 data-[ending-style]:fade-out-0",
           className,
         )}
         {...props}
@@ -81,7 +81,7 @@ const DropdownMenuContent = React.forwardRef<
       <DropdownMenuPrimitive.Popup
         ref={ref}
         className={cn(
-          "z-50 max-h-[min(24rem,var(--available-height))] min-w-[8rem] overflow-y-auto overscroll-contain rounded-xl border border-cnode-green/20 bg-popover p-1 text-popover-foreground shadow-floating data-[open]:animate-in data-[closed]:animate-out data-[starting-style]:fade-out-0 data-[open]:fade-in-0 data-[ending-style]:fade-out-0 data-[starting-style]:zoom-out-95 data-[open]:zoom-in-95 data-[ending-style]:zoom-out-95",
+          "z-50 max-h-[min(24rem,var(--available-height))] min-w-[8rem] overflow-y-auto overscroll-contain rounded-md bg-popover p-1 text-popover-foreground shadow-floating data-[open]:animate-in data-[closed]:animate-out data-[starting-style]:fade-out-0 data-[open]:fade-in-0 data-[ending-style]:fade-out-0 data-[starting-style]:zoom-out-95 data-[open]:zoom-in-95 data-[ending-style]:zoom-out-95",
           className,
         )}
         {...props}
@@ -195,7 +195,7 @@ const DropdownMenuSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DropdownMenuPrimitive.Separator
     ref={ref}
-    className={cn("-mx-1 my-1 h-px bg-border", className)}
+    className={cn("h-1", className)}
     {...props}
   />
 ));

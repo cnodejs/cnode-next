@@ -34,7 +34,7 @@
 
 ## Impact
 
-**In scope**：`apps/web/components.json`、Web 依赖与 lockfile、`apps/web/app/components/ui/`、所有受 primitive API 影响的消费者、全局 CSS/theme、公共与后台 Layout、CommandPalette、Pagination、表单与筛选控件、发布/编辑话题、话题详情管理动作及后台治理入口；对应迁移报告、Web 测试与 OpenSpec specs。
+**In scope**：`apps/web/components.json`、Web 依赖与 lockfile、`apps/web/app/components/ui/`、所有受 primitive API 影响的消费者、全局 CSS/theme、公共与后台 Layout、CommandPalette、Pagination、表单与筛选控件、发布/编辑话题、话题详情管理动作及后台治理入口；对应临时迁移审查、稳定治理文档、Web 测试与 OpenSpec specs。临时 `.migration/` 产物在结论同步到稳定文档后清理，不作为交付源码保留。
 
 **Out of scope / Non-goals**：不重新设计 CNode 品牌；不使用 `add --all` 或整体覆盖现有 shadcn 源码；不为迁移保留长期 Radix 兼容层；不修改 API、后端权限、审计、PostgreSQL schema 或数据；不在本次处理全部低优先级文案、图片尺寸和大列表虚拟化；不恢复 `../nodeclub/` 的 EJS 控件外观，只保留其内容治理权限与动作语义作为参考。
 

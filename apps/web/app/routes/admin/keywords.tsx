@@ -1,8 +1,8 @@
 import { requireAdmin } from "~/lib/auth";
 import { AdminLayout } from "~/components/AdminLayout";
 import { apiFetch } from "~/lib/api-client";
-import { useState } from "react";
-import { Form, useRevalidator } from "react-router";
+import { useRef, useState } from "react";
+import { Form, useLocation, useNavigate, useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
@@ -10,6 +10,8 @@ import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
 import { AdminPage, AdminPageHeader, AdminPanel, AdminToolbar } from "~/components/AdminPage";
 import { Pagination } from "~/components/Pagination";
+import { ConfirmationDialog } from "~/components/ConfirmationDialog";
+import { previousPageAfterRemoval } from "~/lib/post-mutation-navigation";
 import {
   Table,
   TableBody,
@@ -44,9 +46,13 @@ export default function AdminKeywords({ loaderData }: any) {
   const [newWord, setNewWord] = useState("");
   const [bulkText, setBulkText] = useState("");
   const [showBulk, setShowBulk] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; word: string } | null>(null);
+  const deleteTriggerRef = useRef<HTMLElement | null>(null);
   const { revalidate } = useRevalidator();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const { run: runAdd } = useAsyncAction(
+  const { run: runAdd, pending: adding } = useAsyncAction(
     () =>
       apiFetch<{ success: boolean; error_msg?: string }>("/api/v1/admin/keywords", {
         method: "POST",
@@ -70,14 +76,17 @@ export default function AdminKeywords({ loaderData }: any) {
     runAdd();
   };
 
-  const { run: handleDelete } = useAsyncAction(
+  const { run: handleDelete, pending: deleting } = useAsyncAction(
     (id: number) =>
       apiFetch<{ success: boolean; error_msg?: string }>(`/api/v1/admin/keywords/${id}`, { method: "DELETE" }),
     {
       onSuccess: (res) => {
         if (res.success) {
           toast.success("已删除");
-          revalidate();
+          setDeleteTarget(null);
+          const fallback = previousPageAfterRemoval({ pathname: location.pathname, search: location.search, page, currentItemCount: keywords.length, removedCount: 1 });
+          if (fallback) navigate(fallback, { replace: true });
+          else revalidate();
         } else {
           toast.error(res.error_msg || "删除失败");
         }
@@ -85,7 +94,7 @@ export default function AdminKeywords({ loaderData }: any) {
     },
   );
 
-  const { run: runBulk } = useAsyncAction(
+  const { run: runBulk, pending: importing } = useAsyncAction(
     async () => {
       const lines = bulkText.split("\n").filter(Boolean);
       const res = await apiFetch<{ success: boolean; error_msg?: string }>("/api/v1/admin/keywords/bulk", {
@@ -116,7 +125,7 @@ export default function AdminKeywords({ loaderData }: any) {
     <AdminLayout>
       <AdminPage>
         <AdminPageHeader title="敏感词管理" description="维护巡检词库，让内容审核有稳定、可追踪的判断依据。" />
-        <AdminPanel title="词库" description={`当前显示 ${keywords.length} / ${total} 个敏感词`}>
+        <AdminPanel title="词库" description={`当前显示 ${keywords.length} / ${total} 个敏感词`} flush>
           <AdminToolbar className="items-stretch sm:items-center">
             <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <Form method="get" className="flex w-full gap-2 sm:max-w-sm">
@@ -130,7 +139,7 @@ export default function AdminKeywords({ loaderData }: any) {
                 placeholder="添加敏感词"
                 className="flex-1"
               />
-              <Button onClick={handleAdd}>添加</Button>
+               <Button onClick={handleAdd} disabled={adding || !newWord.trim()}>{adding ? "添加中" : "添加"}</Button>
               <Button variant="outline" onClick={() => setShowBulk(!showBulk)}>
                 批量导入
               </Button>
@@ -138,15 +147,15 @@ export default function AdminKeywords({ loaderData }: any) {
             </div>
           </AdminToolbar>
           {showBulk && (
-            <div className="border-b border-border/80 bg-surface-subtle p-4">
+            <div className="bg-surface-subtle p-4">
               <Textarea
                 value={bulkText}
                 onChange={(e) => setBulkText(e.target.value)}
                 placeholder="一行一个词"
                 rows={5}
               />
-              <Button className="mt-2" onClick={handleBulk}>
-                导入
+               <Button className="mt-2" onClick={handleBulk} disabled={importing || !bulkText.trim()}>
+                 {importing ? "导入中" : "导入"}
               </Button>
             </div>
           )}
@@ -169,7 +178,10 @@ export default function AdminKeywords({ loaderData }: any) {
                     size="sm"
                     variant="ghost"
                     className="text-destructive"
-                    onClick={() => handleDelete(kw.id)}
+                    onClick={(event) => {
+                      deleteTriggerRef.current = event.currentTarget;
+                      setDeleteTarget({ id: kw.id, word: kw.word });
+                    }}
                   >
                     删除
                   </Button>
@@ -179,6 +191,17 @@ export default function AdminKeywords({ loaderData }: any) {
           </TableBody>
           </Table>
           </div>
+          <ConfirmationDialog
+            open={deleteTarget !== null}
+            onOpenChange={(open) => !open && setDeleteTarget(null)}
+            title="删除敏感词规则"
+            description={<>将删除敏感词“{deleteTarget?.word}”。删除后新内容不再匹配该规则，历史巡检记录不会被删除。</>}
+            confirmLabel="确认删除规则"
+            pendingLabel="删除中"
+            pending={deleting}
+            finalFocus={deleteTriggerRef}
+            onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
+          />
           <div className="px-4 pb-4">
             <Pagination page={page} total={total} limit={limit} basePath="/admin/keywords" searchParams={{ ...(q ? { q } : {}) }} />
           </div>

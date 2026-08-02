@@ -30,12 +30,12 @@ const sheetVariants = cva(
   {
     variants: {
       side: {
-        top: "inset-x-0 top-0 border-b data-ending-style:slide-out-to-top data-starting-style:slide-out-to-top data-open:slide-in-from-top",
+        top: "inset-x-0 top-0 data-ending-style:slide-out-to-top data-starting-style:slide-out-to-top data-open:slide-in-from-top",
         bottom:
-          "inset-x-0 bottom-0 border-t data-ending-style:slide-out-to-bottom data-starting-style:slide-out-to-bottom data-open:slide-in-from-bottom",
-        left: "inset-y-0 left-0 h-full w-3/4 border-r data-ending-style:slide-out-to-left data-starting-style:slide-out-to-left data-open:slide-in-from-left sm:max-w-sm",
+          "inset-x-0 bottom-0 data-ending-style:slide-out-to-bottom data-starting-style:slide-out-to-bottom data-open:slide-in-from-bottom",
+        left: "inset-y-0 left-0 h-full w-3/4 data-ending-style:slide-out-to-left data-starting-style:slide-out-to-left data-open:slide-in-from-left sm:max-w-sm",
         right:
-          "inset-y-0 right-0 h-full w-3/4 border-l data-ending-style:slide-out-to-right data-starting-style:slide-out-to-right data-open:slide-in-from-right sm:max-w-sm",
+          "inset-y-0 right-0 h-full w-3/4 data-ending-style:slide-out-to-right data-starting-style:slide-out-to-right data-open:slide-in-from-right sm:max-w-sm",
       },
     },
     defaultVariants: {
@@ -63,7 +63,7 @@ const SheetContent = React.forwardRef<HTMLDivElement, SheetContentProps>(
           {...props}
         >
           {children}
-          <DialogPrimitive.Close className="absolute right-[max(1rem,env(safe-area-inset-right))] top-[max(1rem,env(safe-area-inset-top))] rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+          <DialogPrimitive.Close className="absolute right-[max(1rem,env(safe-area-inset-right))] top-[max(1rem,env(safe-area-inset-top))] rounded-sm opacity-70 outline-none transition-opacity hover:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none">
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>
@@ -75,13 +75,13 @@ const SheetContent = React.forwardRef<HTMLDivElement, SheetContentProps>(
 SheetContent.displayName = "SheetContent";
 
 const SheetHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("flex flex-col space-y-2 text-center sm:text-left", className)} {...props} />
+  <div className={cn("flex flex-col gap-2 text-center sm:text-left", className)} {...props} />
 );
 SheetHeader.displayName = "SheetHeader";
 
 const SheetFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", className)}
+    className={cn("flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", className)}
     {...props}
   />
 );

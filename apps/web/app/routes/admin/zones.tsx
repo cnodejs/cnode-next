@@ -5,7 +5,7 @@ import { useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { Checkbox } from "~/components/ui/checkbox";
+import { Eye, EyeOff } from "lucide-react";
 import { AdminPage, AdminPageHeader, AdminPanel } from "~/components/AdminPage";
 import {
   Table,
@@ -89,7 +89,7 @@ export default function AdminZones({ loaderData }: { loaderData: any }) {
     <AdminLayout>
       <AdminPage>
         <AdminPageHeader title="专区管理" description="控制专区在导航栏的可见性与排序。" />
-        <AdminPanel title="专区列表" description={`共 ${zones.length} 个专区`}>
+        <AdminPanel title="专区列表" description={`共 ${zones.length} 个专区`} flush>
           <div className="overflow-x-auto">
             <Table className="min-w-[820px]">
               <TableHeader>
@@ -98,7 +98,7 @@ export default function AdminZones({ loaderData }: { loaderData: any }) {
                   <TableHead className="min-w-32">名称</TableHead>
                   <TableHead className="min-w-40">描述</TableHead>
                   <TableHead className="w-32">图标</TableHead>
-                  <TableHead className="w-20">可见</TableHead>
+                  <TableHead className="w-28">可见状态</TableHead>
                   <TableHead className="w-20">排序</TableHead>
                   <TableHead className="w-24 text-right">操作</TableHead>
                 </TableRow>
@@ -109,6 +109,7 @@ export default function AdminZones({ loaderData }: { loaderData: any }) {
                     <TableCell className="font-mono text-xs">{zone.slug}</TableCell>
                     <TableCell>
                       <Input
+                        aria-label={`${zone.slug} 名称`}
                         value={zone.name}
                         onChange={(e) => updateField(zone.id, "name", e.target.value)}
                         className="h-8"
@@ -116,6 +117,7 @@ export default function AdminZones({ loaderData }: { loaderData: any }) {
                     </TableCell>
                     <TableCell>
                       <Input
+                        aria-label={`${zone.slug} 描述`}
                         value={zone.description || ""}
                         onChange={(e) => updateField(zone.id, "description", e.target.value)}
                         className="h-8"
@@ -123,6 +125,7 @@ export default function AdminZones({ loaderData }: { loaderData: any }) {
                     </TableCell>
                     <TableCell>
                       <Input
+                        aria-label={`${zone.slug} 图标`}
                         value={zone.icon || ""}
                         onChange={(e) => updateField(zone.id, "icon", e.target.value)}
                         className="h-8"
@@ -130,14 +133,22 @@ export default function AdminZones({ loaderData }: { loaderData: any }) {
                       />
                     </TableCell>
                     <TableCell>
-                      <Checkbox
-                        checked={zone.visible}
-                        onCheckedChange={(v) => updateField(zone.id, "visible", !!v)}
-                        aria-label="专区可见"
-                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={zone.visible ? "secondary" : "ghost"}
+                        aria-pressed={zone.visible}
+                        aria-label={`${zone.slug} 当前${zone.visible ? "可见" : "隐藏"}，点击切换`}
+                        className="min-w-20 justify-start"
+                        onClick={() => updateField(zone.id, "visible", !zone.visible)}
+                      >
+                        {zone.visible ? <Eye /> : <EyeOff />}
+                        {zone.visible ? "显示" : "隐藏"}
+                      </Button>
                     </TableCell>
                     <TableCell>
                       <Input
+                        aria-label={`${zone.slug} 排序`}
                         type="number"
                         value={zone.sort_order}
                         onChange={(e) => updateField(zone.id, "sort_order", Number(e.target.value))}
@@ -151,7 +162,7 @@ export default function AdminZones({ loaderData }: { loaderData: any }) {
                         onClick={() => saveZone(zone.id)}
                         disabled={saving === zone.id}
                       >
-                        {saving === zone.id ? "保存中..." : "保存"}
+                        {saving === zone.id ? "保存中…" : "保存"}
                       </Button>
                     </TableCell>
                   </TableRow>

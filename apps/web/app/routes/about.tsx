@@ -1,7 +1,6 @@
 import { Link } from "react-router";
 import { Layout } from "~/components/Layout";
 import { ContentPage } from "~/components/PageShell";
-import { Card, CardContent } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 
 const communityValues = [
@@ -48,9 +47,9 @@ export default function About() {
   return (
     <Layout>
       <ContentPage className="space-y-10">
-        <section className="rounded-3xl bg-cnode-ink p-8 text-white shadow-brand sm:p-10">
+        <section className="rounded-3xl bg-cnode-ink p-6 text-white shadow-brand sm:p-8 lg:p-10">
           <p className="text-sm font-medium text-cnode-green">ABOUT CNODE</p>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Node.js 专业中文社区</h1>
+          <h1 className="mt-3 text-2xl font-bold leading-tight tracking-tight sm:text-3xl lg:text-4xl">Node.js 专业中文社区</h1>
           <p className="mt-4 max-w-2xl text-white/72">
             CNode 聚集 Node.js 和现代 Web 开发者，用话题、问答和实践分享沉淀中文技术经验。
           </p>
@@ -81,12 +80,10 @@ export default function About() {
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {communityValues.map(([title, body]) => (
-              <Card key={title}>
-                <CardContent className="p-5">
+              <article key={title} className="rounded-2xl bg-surface-subtle p-5">
                   <h3 className="font-semibold">{title}</h3>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">{body}</p>
-                </CardContent>
-              </Card>
+              </article>
             ))}
           </div>
         </section>
@@ -99,12 +96,10 @@ export default function About() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {guideSections.map(([title, body]) => (
-              <Card key={title}>
-                <CardContent className="p-5">
+              <article key={title} className="rounded-2xl bg-surface-subtle p-5">
                   <h3 className="font-semibold">{title}</h3>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">{body}</p>
-                </CardContent>
-              </Card>
+              </article>
             ))}
           </div>
         </section>
@@ -117,13 +112,11 @@ export default function About() {
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {discussionSections.map(([title, body], index) => (
-              <Card key={title} className={index === 0 ? "border-cnode-green/25 bg-cnode-soft" : undefined}>
-                <CardContent className="p-5">
+              <article key={title} className={`rounded-2xl p-5 ${index === 0 ? "bg-cnode-soft" : "bg-surface-subtle"}`}>
                   <p className="text-xs font-semibold text-primary">0{index + 1}</p>
                   <h3 className="mt-2 font-semibold">{title}</h3>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">{body}</p>
-                </CardContent>
-              </Card>
+              </article>
             ))}
           </div>
         </section>
@@ -135,19 +128,17 @@ export default function About() {
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             {faqGroups.map((group) => (
-              <Card key={group.title}>
-                <CardContent className="p-5">
+              <article key={group.title} className="rounded-2xl bg-surface-subtle p-5">
                   <h3 className="text-lg font-semibold">{group.title}</h3>
-                  <div className="mt-4 divide-y divide-border">
+                  <div className="mt-4 flex flex-col gap-5">
                     {group.items.map(([question, answer]) => (
-                      <div key={question} className="py-4 first:pt-0 last:pb-0">
+                      <div key={question}>
                         <h4 className="font-medium">{question}</h4>
                         <p className="mt-1 text-sm leading-6 text-muted-foreground">{answer}</p>
                       </div>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
+              </article>
             ))}
           </div>
         </section>

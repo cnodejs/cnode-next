@@ -7,6 +7,7 @@ import { getAvatarFallback, getAvatarUrl } from "~/lib/brand";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
 import { Card, CardContent } from "~/components/ui/card";
+import { EmptyState } from "~/components/EmptyState";
 
 export function meta() {
   return [{ title: "社区达人 · CNode" }];
@@ -22,7 +23,7 @@ export default function Stars({ loaderData }: Route.ComponentProps) {
   return (
     <Layout>
       <ContentPage className="space-y-6">
-        <section className="rounded-3xl border border-cnode-green/20 bg-cnode-soft p-6 sm:p-8">
+        <section className="rounded-3xl bg-cnode-soft p-6 shadow-sm sm:p-8">
           <p className="text-sm font-medium text-primary">STARS</p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">社区达人</h1>
           <p className="mt-2 text-sm text-muted-foreground">由管理员标记的 CNode 社区活跃成员。</p>
@@ -35,16 +36,16 @@ export default function Stars({ loaderData }: Route.ComponentProps) {
 
 export function UserGrid({ users, empty }: { users: any[]; empty: string }) {
   if (users.length === 0) {
-    return <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">{empty}</CardContent></Card>;
+    return <EmptyState title="暂无用户" message={empty} />;
   }
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {users.map((user, index) => (
         <Link key={user.id || user.loginname} to={`/user/${user.loginname}`} className="group">
-          <Card className="h-full transition-colors hover:border-cnode-green/40">
+          <Card className="h-full transition-shadow hover:shadow-floating">
             <CardContent className="flex items-center gap-4 p-5">
-              <Avatar className="h-12 w-12 border border-border">
+              <Avatar className="size-12">
                 <AvatarImage src={getAvatarUrl(user.avatar_url, 48)} alt={user.loginname} />
                 <AvatarFallback>{getAvatarFallback(user.loginname)}</AvatarFallback>
               </Avatar>

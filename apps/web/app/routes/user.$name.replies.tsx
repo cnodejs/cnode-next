@@ -7,6 +7,7 @@ import { ContentPage } from "~/components/PageShell";
 import { UserHero, UserTabs } from "./user.$name";
 import { Pagination } from "~/components/Pagination";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { EmptyState } from "~/components/EmptyState";
 
 export function meta({ data }: Route.MetaArgs) {
   if (!data?.loginname) return [{ title: "用户回复 · CNode" }];
@@ -33,14 +34,14 @@ export default function UserReplies({ loaderData }: Route.ComponentProps) {
         {user && <UserHero user={user} />}
         <UserTabs loginname={loginname} active="replies" />
         <Card className="overflow-hidden">
-          <CardHeader className="border-b border-border/80 bg-surface-subtle">
+          <CardHeader className="p-4 pb-3">
             <CardTitle className="text-base">{loginname} 参与的话题</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {replies.length > 0 ? (
-              <div className="divide-y divide-border">
+              <div className="flex flex-col gap-1 p-2">
                 {replies.map((topic: any) => (
-                  <article key={topic.id} className="p-4 sm:p-5">
+                  <article key={topic.id} className="rounded-xl p-3 transition-colors hover:bg-surface-subtle sm:p-4">
                     <div className="text-sm text-muted-foreground">
                       在话题中回复 · {topic.last_reply_at ? <TimeAgo date={topic.last_reply_at} /> : null}
                     </div>
@@ -54,7 +55,7 @@ export default function UserReplies({ loaderData }: Route.ComponentProps) {
                 ))}
               </div>
             ) : (
-              <div className="py-12 text-center text-sm text-muted-foreground">暂无回复</div>
+              <EmptyState message="该用户还没有参与回复" />
             )}
           </CardContent>
         </Card>

@@ -17,7 +17,6 @@ import {
   FormLabel,
   FormMessage,
 } from "~/components/ui/form";
-import { CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { AuthShell } from "~/components/AuthShell";
 import { redirectIfAuthenticated } from "~/lib/auth";
 
@@ -78,24 +77,31 @@ export default function Signin() {
         title="回到 CNode 社区"
         description="登录后可以发布话题、参与回复、收藏内容并接收与你相关的站内消息。"
       >
-          <CardHeader>
-            <CardTitle>登录</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
+          <h2 className="mb-6 text-lg font-semibold tracking-tight">登录</h2>
+          <div>
             {errParam && (
               <div className="mb-4 p-3 rounded-md bg-destructive/10 text-destructive text-sm">
                 {errorMsg[errParam] || errParam}
               </div>
             )}
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} aria-busy={loading} className="space-y-4">
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>用户名 / 邮箱</FormLabel>
-                      <FormControl render={<Input placeholder="用户名 / 邮箱" {...field} />} />
+                      <FormControl
+                        render={
+                          <Input
+                            autoComplete="username"
+                            spellCheck={false}
+                            placeholder="用户名 / 邮箱"
+                            {...field}
+                          />
+                        }
+                      />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -106,7 +112,17 @@ export default function Signin() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>密码</FormLabel>
-                      <FormControl render={<Input type="password" placeholder="密码" {...field} />} />
+                      <FormControl
+                        render={
+                          <Input
+                            type="password"
+                            autoComplete="current-password"
+                            spellCheck={false}
+                            placeholder="密码"
+                            {...field}
+                          />
+                        }
+                      />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -119,6 +135,7 @@ export default function Signin() {
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? "登录中..." : "登录"}
                 </Button>
+                {loading && <p role="status" className="text-center text-sm text-muted-foreground">正在登录</p>}
               </form>
             </Form>
             <div className="mt-4 text-sm text-muted-foreground text-center">
@@ -130,7 +147,7 @@ export default function Signin() {
                 GitHub 登录
               </Link>
               </div>
-            </CardContent>
+          </div>
       </AuthShell>
     </Layout>
   );

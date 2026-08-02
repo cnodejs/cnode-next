@@ -60,7 +60,7 @@ export default function AdminIndex({ loaderData }: any) {
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <AdminPanel title="最近注册用户" description="快速发现新增成员">
-          <div className="space-y-1 p-4">
+          <div className="flex flex-col gap-1">
           {recentUsers.length > 0 ? (
             recentUsers.map((u: any) => (
               <div key={u.id} className="flex items-center gap-3 rounded-xl px-2 py-2 text-sm hover:bg-surface-subtle">
@@ -85,7 +85,7 @@ export default function AdminIndex({ loaderData }: any) {
           </div>
         </AdminPanel>
         <AdminPanel title="最近发布话题" description="关注新增内容质量">
-          <div className="space-y-1 p-4">
+          <div className="flex flex-col gap-1">
           {recentTopics.length > 0 ? (
             recentTopics.map((t: any) => (
               <div key={t.id} className="rounded-xl px-2 py-2 text-sm hover:bg-surface-subtle">
@@ -115,7 +115,7 @@ function SummaryCard({
   emphasis?: boolean;
 }) {
   return (
-    <Card className={emphasis ? "border-cnode-green/30 bg-cnode-soft" : "border-cnode-green/15 bg-card"}>
+    <Card className={emphasis ? "bg-cnode-soft" : "bg-card"}>
       <CardContent className="p-4">
         <div className="text-sm font-semibold text-foreground">{title}</div>
         <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-none xl:grid-cols-3">

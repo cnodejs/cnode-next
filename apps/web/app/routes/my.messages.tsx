@@ -91,7 +91,7 @@ export default function Messages({ loaderData }: Route.ComponentProps) {
   return (
     <Layout>
       <ContentPage className="space-y-6">
-        <section className="rounded-3xl border border-cnode-green/20 bg-cnode-soft p-6 sm:p-8">
+        <section className="rounded-3xl bg-cnode-soft p-6 shadow-sm sm:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-sm font-medium text-primary">MESSAGES</p>
@@ -131,7 +131,7 @@ function MessageGroup({
 }) {
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0 border-b border-border/80 bg-surface-subtle">
+      <CardHeader className="flex flex-row items-center justify-between gap-3 p-4 pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           {icon}
           {title}
@@ -140,7 +140,7 @@ function MessageGroup({
       </CardHeader>
       <CardContent className="p-0">
         {messages.length > 0 ? (
-          <div className="divide-y divide-border">
+          <div className="flex flex-col gap-1 p-2">
             {messages.map((msg) => (
               <MessageItem key={msg.id} msg={msg} onMarkRead={onMarkRead} pending={pending} />
             ))}
@@ -163,9 +163,9 @@ function MessageItem({ msg, onMarkRead, pending }: { msg: any; onMarkRead: (id: 
   const topicHref = msg.topic ? `/topic/${msg.topic.id}${msg.reply?.id ? `#${msg.reply.id}` : ""}` : "#";
 
   return (
-    <article className="flex gap-3 p-4 sm:gap-4 sm:p-5">
+    <article className="flex gap-3 rounded-xl p-3 transition-colors hover:bg-surface-subtle sm:gap-4 sm:p-4">
       <Link to={`/user/${msg.author?.loginname}`} className="shrink-0">
-        <Avatar className="h-10 w-10 border border-border">
+        <Avatar className="size-10">
           <AvatarImage src={getAvatarUrl(msg.author?.avatar_url, 40)} alt={msg.author?.loginname || "CNode"} />
           <AvatarFallback>{getAvatarFallback(msg.author?.loginname)}</AvatarFallback>
         </Avatar>
@@ -184,7 +184,7 @@ function MessageItem({ msg, onMarkRead, pending }: { msg: any; onMarkRead: (id: 
           </Link>
         )}
         {msg.reply?.content && (
-          <div className="line-clamp-2 rounded-lg border border-border bg-surface-subtle px-3 py-2 text-sm text-muted-foreground">
+          <div className="line-clamp-2 rounded-lg bg-surface-subtle px-3 py-2 text-sm text-muted-foreground">
             {msg.reply.content}
           </div>
         )}

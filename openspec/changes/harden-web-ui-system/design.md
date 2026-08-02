@@ -149,7 +149,7 @@ Tailwind CSS v4 动画使用精确版本的 `tw-animate-css` CSS-first 支持，
 - [Base UI composition 和状态属性改变消费者 API] → 迁移前建立行为基线，逐 wrapper 迁移 `asChild`、menu events、positioning 和 state selector，并在每批后 typecheck/test/build。
 - [受控 overlay 没有同树 trigger 时焦点无法自动归还] → 为 CommandPalette、治理确认和受控 Sheet 保留触发 ref 或配置 final focus，pending 关闭使用 event details 取消。
 - [Checkbox hidden input 或 Tabs 默认激活方式改变表单/键盘行为] → 明确 wrapper DOM 与 `activateOnFocus` 决策，并用表单提交和方向键测试锁定。
-- [固定 CLI 后仍可能与 registry 当前输出不同] → lockfile 作为可复现依据，每个组件保留 dry-run/diff 审查，不为追随最新模板而升级。
+- [固定 CLI 后仍可能与 registry 当前输出不同] → lockfile 作为可复现依据，每个组件执行 dry-run/diff 审查并将稳定结论同步到 conventions，不为追随最新模板而升级；临时 `.migration/` 产物在归档前删除。
 - [品牌化合并可能遗漏上游无障碍属性] → review 时分别核对结构/ARIA/键盘行为与视觉 class，测试不得只比较截图。
 - [Select portal 在 SSR、移动键盘或 overlay 中出现定位问题] → 服务端保持确定 trigger 结构，portal 仅在客户端工作；覆盖窄屏、缩放、Dialog 内使用和 safe-area 测试。
 - [NativeSelect 与 Select 外观不可能完全一致] → 统一 token、控件高度、Label、错误和 focus 契约，接受原生下拉菜单由平台渲染以换取 GET/移动端可靠性。
@@ -164,7 +164,7 @@ Tailwind CSS v4 动画使用精确版本的 `tw-animate-css` CSS-first 支持，
 实施和发布按“基础先于消费方”排序，每阶段只扩展 Web，且必须保持可构建状态：
 
 1. **Toolchain/baseline**：固定 shadcn 4、Vite 7 和 Base UI 精确版本；建立现有 composition、菜单、overlay、Checkbox、Tabs 与 SSR 行为测试。
-2. **Base migration**：按依赖顺序迁移全部 wrapper 和消费者，生成逐组件迁移报告，移除 Web 直接 Radix 依赖/import/Slot/失效状态属性。
+2. **Base migration**：按依赖顺序迁移全部 wrapper 和消费者，执行逐组件迁移审查并把稳定结论同步到 conventions，移除临时报告及 Web 直接 Radix 依赖/import/Slot/失效状态属性。
 3. **Foundations/primitives**：修正 token、主题、Tailwind CSS v4 动画和 reduced motion；逐项审查 Base registry，并按四批引入品牌化组件。
 4. **Global shell/forms**：修公共/后台 shell、CommandPalette、公共创建/编辑表单与后台 NativeSelect GET 筛选；URL 继续作为 tabs/filter 真相来源，浏览器状态只在客户端接管。
 5. **Topic/admin actions**：按权限矩阵重组话题动作，用 AlertDialog 处理 destructive 确认，并迁移后台高风险和批量治理确认，不改变 API endpoint 或审计含义。

@@ -18,7 +18,7 @@ export default function ApiDocs() {
             基于 Hono、Zod OpenAPI 与 Swagger UI 自动生成。
           </p>
         </section>
-        <div className="overflow-hidden rounded-lg border border-border">
+        <div className="overflow-hidden rounded-lg bg-card shadow-card">
           <SwaggerUI url="/openapi.json" docExpansion="none" defaultModelsExpandDepth={1} />
         </div>
       </ContentPage>

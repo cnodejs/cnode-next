@@ -6,7 +6,7 @@ const Empty = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEleme
     <div
       ref={ref}
       className={cn(
-        "flex min-h-40 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-cnode-green/40 bg-cnode-soft/50 p-8 text-center",
+        "flex min-h-40 flex-col items-center justify-center gap-3 rounded-xl bg-cnode-soft/50 p-8 text-center",
         className,
       )}
       {...props}

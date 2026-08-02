@@ -32,7 +32,7 @@ export default function UserTopics({ loaderData }: Route.ComponentProps) {
         {user && <UserHero user={user} />}
         <UserTabs loginname={loginname} active="topics" />
         <Card className="overflow-hidden">
-          <CardHeader className="border-b border-border/80 bg-surface-subtle"><CardTitle className="text-base">{loginname} 的话题</CardTitle></CardHeader>
+          <CardHeader className="p-4 pb-3"><CardTitle className="text-base">{loginname} 的话题</CardTitle></CardHeader>
           <CardContent className="p-0"><TopicList topics={topics} /></CardContent>
         </Card>
         <Pagination page={page} total={total} limit={limit} basePath={`/user/${loginname}/topics`} />
