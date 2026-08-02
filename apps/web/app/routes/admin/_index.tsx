@@ -70,7 +70,7 @@ export default function AdminIndex({ loaderData }: any) {
                   alt=""
                 />
                 <div className="min-w-0 flex-1">
-                  <Link to={`/user/${u.loginname}`} className="font-medium text-cnode-ink hover:text-cnode-green">
+                  <Link to={`/user/${u.loginname}`} className="font-medium text-foreground hover:text-primary">
                     {u.loginname}
                   </Link>
                 </div>
@@ -89,7 +89,7 @@ export default function AdminIndex({ loaderData }: any) {
           {recentTopics.length > 0 ? (
             recentTopics.map((t: any) => (
               <div key={t.id} className="rounded-xl px-2 py-2 text-sm hover:bg-surface-subtle">
-                <Link to={`/topic/${t.id}`} className="block truncate font-medium text-cnode-ink hover:text-cnode-green">
+                <Link to={`/topic/${t.id}`} className="block truncate font-medium text-foreground hover:text-primary">
                   {t.title}
                 </Link>
               </div>
@@ -123,7 +123,7 @@ function SummaryCard({
             const body = (
               <>
                 <div className="text-xs text-muted-foreground">{label}</div>
-                <div className="mt-1 text-2xl font-semibold tracking-tight text-cnode-ink">{value}</div>
+                <div className="mt-1 text-2xl font-semibold tracking-tight text-foreground">{value}</div>
               </>
             );
             return href ? (

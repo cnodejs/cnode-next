@@ -1,12 +1,13 @@
 import { requireMod } from "~/lib/auth";
 import { AdminLayout } from "~/components/AdminLayout";
 import { apiFetch } from "~/lib/api-client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Form, Link, useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import { NativeSelect } from "~/components/ui/native-select";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Badge } from "~/components/ui/badge";
 import { TagBadge, StatusBadge } from "~/components/TagBadge";
@@ -69,6 +70,7 @@ export default function AdminTopics({ loaderData }: any) {
   const isAdmin = !!user?.is_admin;
   const [selected, setSelected] = useState<number[]>([]);
   const [permanentDeleteIds, setPermanentDeleteIds] = useState<number[]>([]);
+  const permanentDeleteFinalFocusRef = useRef<HTMLElement | null>(null);
   const { revalidate } = useRevalidator();
   const activeFilterCount = [q, tab, visibility !== "all" ? visibility : "", flag !== "all" ? flag : "", dateFrom, dateTo, dateField !== "create_at" ? dateField : "", sort !== "create_at_desc" ? sort : ""].filter(Boolean).length;
   const visibleDeleted = topics.filter((topic: any) => topic.deleted > 0 || topic.status === "deleted").length;
@@ -142,63 +144,63 @@ export default function AdminTopics({ loaderData }: any) {
           <div className="grid gap-3 border-b border-cnode-green/15 bg-gradient-to-r from-cnode-soft/80 via-card to-card p-4 sm:grid-cols-4">
             <div className="rounded-2xl border border-cnode-green/15 bg-card/80 p-3">
               <div className="text-xs text-muted-foreground">筛选结果</div>
-              <div className="mt-1 text-2xl font-semibold text-cnode-ink">{total}</div>
+              <div className="mt-1 text-2xl font-semibold text-foreground">{total}</div>
             </div>
             <div className="rounded-2xl border border-cnode-green/15 bg-card/80 p-3">
               <div className="text-xs text-muted-foreground">当前页重点</div>
-              <div className="mt-1 text-2xl font-semibold text-cnode-ink">{visibleFeatured}</div>
+              <div className="mt-1 text-2xl font-semibold text-foreground">{visibleFeatured}</div>
             </div>
             <div className="rounded-2xl border border-cnode-green/15 bg-card/80 p-3">
               <div className="text-xs text-muted-foreground">隐藏 / 删除</div>
-              <div className="mt-1 text-2xl font-semibold text-cnode-ink">{visibleMuted} / {visibleDeleted}</div>
+              <div className="mt-1 text-2xl font-semibold text-foreground">{visibleMuted} / {visibleDeleted}</div>
             </div>
             <div className="rounded-2xl border border-cnode-green/15 bg-card/80 p-3">
               <div className="text-xs text-muted-foreground">活跃筛选</div>
-              <div className="mt-1 text-2xl font-semibold text-cnode-ink">{activeFilterCount}</div>
+              <div className="mt-1 text-2xl font-semibold text-foreground">{activeFilterCount}</div>
             </div>
           </div>
           <AdminToolbar className="items-stretch bg-card/95 p-3 sm:flex-col sm:items-stretch">
             <Form method="get" className="grid gap-2 lg:grid-cols-[minmax(220px,1fr)_repeat(4,minmax(112px,auto))_auto_auto]">
               <Input name="q" defaultValue={q} placeholder="搜索话题标题" className="h-9" />
-              <select name="tab" defaultValue={tab || "all"} className="h-9 rounded-md border border-input bg-background px-2.5 text-sm">
+              <NativeSelect name="tab" defaultValue={tab || "all"} selectSize="sm" aria-label="Tab 筛选">
                 <option value="all">全部 Tab</option>
                 <option value="share">分享</option>
                 <option value="ask">问答</option>
                 <option value="job">招聘</option>
                 <option value="dev">dev</option>
                 <option value="test">test</option>
-              </select>
-              <select name="visibility" defaultValue={visibility} className="h-9 rounded-md border border-input bg-background px-2.5 text-sm">
+              </NativeSelect>
+              <NativeSelect name="visibility" defaultValue={visibility} selectSize="sm" aria-label="状态筛选">
                 <option value="all">全部状态</option>
                 <option value="normal">正常</option>
                 <option value="muted">已隐藏</option>
                 <option value="deleted">已删除</option>
-              </select>
-              <select name="flag" defaultValue={flag} className="h-9 rounded-md border border-input bg-background px-2.5 text-sm">
+              </NativeSelect>
+              <NativeSelect name="flag" defaultValue={flag} selectSize="sm" aria-label="标记筛选">
                 <option value="all">全部标记</option>
                 <option value="top">置顶</option>
                 <option value="good">精华</option>
                 <option value="locked">锁定</option>
                 <option value="archived">归档</option>
-              </select>
-              <select name="sort" defaultValue={sort} className="h-9 rounded-md border border-input bg-background px-2.5 text-sm">
+              </NativeSelect>
+              <NativeSelect name="sort" defaultValue={sort} selectSize="sm" aria-label="排序方式">
                 <option value="create_at_desc">最新创建</option>
                 <option value="update_at_desc">最近更新</option>
                 <option value="last_reply_at_desc">最近回复</option>
                 <option value="reply_count_desc">回复最多</option>
                 <option value="visit_count_desc">浏览最多</option>
                 <option value="collect_count_desc">收藏最多</option>
-              </select>
+              </NativeSelect>
               <Button type="submit" size="sm">筛选</Button>
-              <Button asChild type="button" size="sm" variant="ghost">
-                <Link to="/admin/topics">重置</Link>
+              <Button render={<Link to="/admin/topics" />} size="sm" variant="ghost">
+                重置
               </Button>
               <div className="grid gap-2 rounded-xl border border-border bg-surface-subtle p-2 lg:col-span-7 lg:grid-cols-[minmax(120px,160px)_minmax(120px,180px)_minmax(120px,180px)_1fr]">
-                <select name="date_field" defaultValue={dateField} className="h-8 rounded-md border border-input bg-background px-2 text-sm">
+                <NativeSelect name="date_field" defaultValue={dateField} selectSize="sm" aria-label="日期字段">
                   <option value="create_at">创建时间</option>
                   <option value="update_at">更新时间</option>
                   <option value="last_reply_at">最后回复</option>
-                </select>
+                </NativeSelect>
                 <Input type="date" name="date_from" defaultValue={dateFrom} aria-label="开始日期" className="h-8" />
                 <Input type="date" name="date_to" defaultValue={dateTo} aria-label="结束日期" className="h-8" />
                 <div className="flex items-center text-xs text-muted-foreground">日期是辅助筛选，默认按创建时间倒序。</div>
@@ -213,7 +215,14 @@ export default function AdminTopics({ loaderData }: any) {
                     <Button size="sm" variant="outline" onClick={() => handleAction("good")}>加精</Button>
                     <Button size="sm" variant="outline" onClick={() => handleAction("mute")}>隐藏</Button>
                     <Button size="sm" variant="destructive" onClick={() => handleAction("delete")}>删除</Button>
-                    <Button size="sm" variant="destructive" onClick={() => setPermanentDeleteIds(selected)}>永久删除</Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={(event) => {
+                        permanentDeleteFinalFocusRef.current = event.currentTarget;
+                        setPermanentDeleteIds(selected);
+                      }}
+                    >永久删除</Button>
                   </>
                 )}
               </div>
@@ -247,7 +256,7 @@ export default function AdminTopics({ loaderData }: any) {
                   <div className="flex min-w-0 items-start gap-3">
                     <TagBadge tab={t.tab} />
                     <div className="min-w-0 space-y-2">
-                      <a href={`/topic/${t.id}`} className="line-clamp-2 font-medium leading-6 text-cnode-ink hover:text-primary hover:underline">
+                      <a href={`/topic/${t.id}`} className="line-clamp-2 font-medium leading-6 text-foreground hover:text-primary hover:underline">
                         {t.title}
                       </a>
                       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -283,7 +292,16 @@ export default function AdminTopics({ loaderData }: any) {
                 <TableCell className="py-4 text-right">
                   <div className="flex justify-end gap-1">
                     <Button size="sm" variant="ghost" onClick={() => handleAction("top", t.id)}>置顶</Button>
-                    {isAdmin ? <Button size="sm" variant="destructive" onClick={() => setPermanentDeleteIds([t.id])}>永久删除</Button> : null}
+                    {isAdmin ? (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={(event) => {
+                          permanentDeleteFinalFocusRef.current = event.currentTarget;
+                          setPermanentDeleteIds([t.id]);
+                        }}
+                      >永久删除</Button>
+                    ) : null}
                   </div>
                 </TableCell>
               </TableRow>
@@ -294,8 +312,18 @@ export default function AdminTopics({ loaderData }: any) {
           <div className="px-4 pb-4">
             <Pagination page={page} total={total} limit={limit} basePath="/admin/topics" searchParams={paginationParams} />
           </div>
-          <Dialog open={permanentDeleteIds.length > 0} onOpenChange={(open) => !permanentDeletePending && !open && setPermanentDeleteIds([])}>
-            <DialogContent>
+          <Dialog
+            open={permanentDeleteIds.length > 0}
+            onOpenChange={(open, eventDetails) => {
+              if (open) return;
+              if (permanentDeletePending) {
+                eventDetails.cancel();
+                return;
+              }
+              setPermanentDeleteIds([]);
+            }}
+          >
+            <DialogContent finalFocus={permanentDeleteFinalFocusRef}>
               <DialogHeader>
                 <DialogTitle>确认从数据库永久删除话题</DialogTitle>
                 <DialogDescription>

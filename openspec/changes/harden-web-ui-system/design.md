@@ -1,8 +1,8 @@
 ## Context
 
-本设计说明 `proposal.md` 所述系统性 Web UI 整改的实现方式，不重复其动机。当前 `apps/web/components.json` 已把 `~/components/ui` 指向 `apps/web/app/components/ui/`，该目录中的 Button、Dialog、DropdownMenu 等是已进入仓库并经过 CNode 品牌化修改的 shadcn/ui 源码；Dialog 等交互组件以 Radix UI 为基础。它们不是应被 npm 黑盒组件或另一套 primitive 全量替换的临时代码。
+本设计说明 `proposal.md` 所述系统性 Web UI 整改的实现方式，不重复其动机。当前 `apps/web/components.json` 已把 `~/components/ui` 指向 `apps/web/app/components/ui/`，该目录中的 Button、Dialog、DropdownMenu 等是已进入仓库并经过 CNode 品牌化修改的 shadcn/ui 源码；现有交互 wrapper 以 Radix UI 为基础。本次保留源码所有权和 CNode 品牌差异，但将交互基础整体迁移到 Base UI，不把组件改为 npm 黑盒，也不以 registry 全量覆盖本地源码。
 
-当前实现存在三类会放大逐页迁移风险的基础差异：`global.css` 中 light/dark token 与主题基础行为尚未形成可靠契约；组件使用了 `animate-in` 等 class，但没有完整的 Tailwind CSS v4 动画支持；路由内仍混用手写 `select`、分页、确认 Dialog、焦点与状态逻辑。话题发布/编辑页需要适合公共表单的自定义选择器，后台 GET 筛选则依赖原生表单提交语义。React Router SSR 还要求首屏 HTML 与 hydration 前后的控件结构、权限入口和主题状态一致。
+当前实现存在四类会放大逐页迁移风险的基础差异：10 个 wrapper 混用 Radix Slot、`asChild`、`data-state`、menu/overlay 契约；`global.css` 中 light/dark token 与主题基础行为尚未形成可靠契约；组件使用了 `animate-in` 等 class，但没有完整的 Tailwind CSS v4 动画支持；路由内仍混用手写 `select`、分页、确认 Dialog、焦点与状态逻辑。话题发布/编辑页需要适合公共表单的自定义选择器，后台 GET 筛选则依赖原生表单提交语义。React Router SSR 还要求首屏 HTML 与 hydration 前后的控件结构、权限入口和主题状态一致。
 
 现有 API 已负责话题编辑和内容治理授权，数据库与审计语义也已存在。本次只改变 Web 的呈现、交互和共享组件边界，前端权限矩阵仅决定入口是否展示，不能替代后端校验。
 
@@ -10,7 +10,7 @@
 flowchart TD
     RR[React Router SSR 与 route loader] --> Route[路由/领域组合层]
     Route --> UI[仓库内 shadcn 源码层]
-    UI --> Radix[Radix 交互 primitives]
+    UI --> Base[Base UI 交互 primitives]
     UI --> Native[浏览器原生控件]
     Tokens[语义 token、主题与 Tailwind v4 动画] --> UI
     Tokens --> Route
@@ -33,7 +33,7 @@ flowchart TD
 
 **Non-Goals:**
 
-- 不从 Radix UI 迁移到 Base UI，不执行 shadcn 全量重生成，也不覆盖全部现有组件。
+- 不执行 shadcn 全量重生成，不覆盖全部现有组件，也不以长期兼容层同时维持两套 primitive API。
 - 不重新设计 CNode 品牌、页面信息架构或全站视觉语言；只处理高影响、可复用、系统性的缺陷。
 - 不改 API 契约、后端权限、审计语义、会话角色模型或内容生命周期。
 - 不进行全站低优先级文案润色、图片尺寸清理、大列表虚拟化或逐像素视觉重做。
@@ -41,17 +41,17 @@ flowchart TD
 
 ## Decisions
 
-### 1. 保持 shadcn 源码复制与 Radix 基础
+### 1. 保持 shadcn 源码所有权并迁移到 Base UI
 
-`apps/web/app/components/ui/` 继续作为项目拥有的 shadcn 源码层。registry 输出是待审查的上游参考，不是可无条件覆盖本地文件的生成产物。现有组件中的语义 token、圆角、阴影、中文无障碍文案和 CNode 品牌 class 均属于需要保留的本地差异。
+`apps/web/app/components/ui/` 继续作为项目拥有的 shadcn 源码层。现有 Radix wrapper 按依赖顺序迁移到 Base UI：原生 Label、Button/Form composition、Avatar/Checkbox/Tabs、Dialog/Sheet、Tooltip/DropdownMenu。registry 输出是待审查的上游参考，不是可无条件覆盖本地文件的生成产物；语义 token、圆角、阴影、中文无障碍文案和 CNode 品牌 class 均属于必须保留的本地差异。
 
-在任何 registry 操作前，先验证一个与当前 Tailwind CSS v4、React 19、`new-york` 样式、非 RSC 和 Radix 组件基础兼容的 shadcn CLI 版本，并将 CLI 以精确版本写入 Web workspace 的 `devDependencies` 和 `pnpm-lock.yaml`。新增的运行时依赖也使用精确版本。之后只从 `apps/web` 通过 workspace 内已锁定的 CLI 执行，不使用未固定版本的 `pnpm dlx shadcn@latest`。
+在任何 registry 操作前，先验证与 Tailwind CSS v4、React 19、React Router SSR 和 Base UI 兼容的 shadcn 4 CLI，并将 CLI、Vite 7 与 `@base-ui/react` 以精确版本写入 Web workspace 和 `pnpm-lock.yaml`。当前 legacy `new-york` 没有可直接三方合并的 `base-new-york` 对应物，因此已有 wrapper 使用转换引擎保留原 class；新增组件直接审查 Base registry 输出。之后只从 `apps/web` 通过 workspace 内已锁定的 CLI 执行，不使用未固定版本的 `pnpm dlx shadcn@latest`。
 
-每个候选组件分别执行 `shadcn add <component> --dry-run` 和 `shadcn add <component> --diff`，审查文件、依赖和 import 差异后再引入。若 diff 试图切换到 Base UI、覆盖品牌差异或改写无关组件，则拒绝该输出并手工合并所需上游结构。禁止 `add --all`，也禁止以一条命令更新整个 `ui/` 目录。
+迁移不保留 `asChild` 或 Radix Slot 兼容层：Button、trigger 和链接组合改用 Base UI `render`；菜单链接使用 LinkItem，动作使用 `onClick`；Dialog/Sheet 使用 Backdrop/Viewport/Popup 并为无同树 trigger 的受控场景配置 final focus；Checkbox 明确 native button/hidden input 行为；Tabs 明确 `activateOnFocus`；所有 state selector 映射到 Base UI 属性。每个候选新增组件分别执行 `shadcn add <component> --dry-run` 和 `--diff`，若输出重新引入 Radix、覆盖品牌差异或改写无关组件，则拒绝并手工合并。禁止 `add --all` 或整体更新 `ui/`。
 
 **拒绝的替代方案：**
 
-- 迁移到 Base UI：会同时改变焦点、portal、状态属性和依赖模型，扩大回归面，且没有当前需求驱动。
+- 保留 Radix 或建立长期双栈：会让新增 Base registry 组件与旧 wrapper 继续分叉，无法形成单一 composition、focus 和状态契约。
 - 全量覆盖现有 shadcn 文件：会丢失已验证的品牌和行为差异，并使 review 无法按组件确认影响。
 - 临时运行 latest CLI：同一提交在不同时间可能得到不同源码或依赖，无法从 lockfile 复现。
 - 将 shadcn 组件改为 npm 黑盒依赖：失去源码级定制和审查能力，违背当前组件所有权模式。
@@ -62,7 +62,7 @@ flowchart TD
 
 主题仍由 `root.tsx` 的同步 head script 在 hydration 前确定，客户端 theme store 在 hydration 后接管 `light`、`dark`、`system` 三态及系统主题监听。`color-scheme` 和浏览器 `theme-color` 必须与实际主题同步，但服务端首屏不得读取 `window`、`localStorage` 或 `matchMedia`。主题初始化只允许有一个持久化值来源，避免 React 首次 render 改写服务端结构。
 
-Tailwind CSS v4 动画使用精确版本的 `tw-animate-css` CSS-first 支持，并由全局样式入口导入，使 Radix `data-[state]` 动画 class 真正生效。`prefers-reduced-motion: reduce` 下，共享层关闭非必要 transform/transition、取消平滑滚动，并保留即时状态变化。不会引入 Tailwind v3 plugin 配置作为兼容旁路。
+Tailwind CSS v4 动画使用精确版本的 `tw-animate-css` CSS-first 支持，并由全局样式入口导入；overlay 动画改由 Base UI `data-open`、`data-closed`、`data-starting-style` 和 `data-ending-style` 驱动。`prefers-reduced-motion: reduce` 下，共享层关闭非必要 transform/transition、取消平滑滚动，并保留即时状态变化。不会引入 Tailwind v3 plugin 配置作为兼容旁路。
 
 **拒绝的替代方案：**
 
@@ -73,14 +73,14 @@ Tailwind CSS v4 动画使用精确版本的 `tw-animate-css` CSS-first 支持，
 
 ### 3. 按依赖与使用场景分四批引入 primitive
 
-组件按下列顺序引入，每个组件仍单独执行 dry-run/diff，每一批完成源码审查、类型检查和交互测试后才进入下一批：
+现有 wrapper 必须先按 Button/Form → Avatar/Checkbox/Tabs → Dialog/Sheet → Tooltip/DropdownMenu 的顺序迁移并清理 Radix 直接依赖，再按下列顺序引入新增组件。每个组件仍单独执行 dry-run/diff，每一批完成源码审查、类型检查和交互测试后才进入下一批：
 
 1. `Select` + `NativeSelect` + `Textarea`：先形成表单控件基线，并验证 Label、错误态、disabled、focus 和密度。
 2. `AlertDialog` + `Alert`：建立阻断式危险确认和非阻断说明/错误状态的不同语义。
 3. `Pagination` + `Empty`：统一导航语义和空结果表达。`ui/pagination.tsx` 只负责可访问的分页外观；现有领域 `components/Pagination.tsx` 可继续负责根据 `basePath`、page 和筛选参数生成 React Router URL，再组合 UI primitive，避免路由重复 URL 算法。
 4. `Command` + `RadioGroup`：最后迁移 CommandPalette 的键盘交互，并统一互斥选择组。Command 必须支持方向键、Enter、Escape、焦点归还和无结果状态；RadioGroup 必须有可感知组名和选项标签。
 
-共享 primitive 统一拥有以下默认行为：一致的 `focus-visible` ring；disabled/pending 的不可重复触发；reduced-motion 降级；Dialog、AlertDialog、Sheet、Command overlay 的 portal、背景滚动锁定、可滚动内容上限和焦点归还；使用 `100dvh` 与 `env(safe-area-inset-*)` 避免移动端内容或操作区被遮挡。具体 route 不得通过删掉 outline、关闭 focus trap 或自行复制 fixed overlay 来覆盖这些默认值。
+共享 primitive 统一拥有以下默认行为：一致的 `focus-visible` ring；disabled/pending 的不可重复触发；reduced-motion 降级；Base UI Dialog、AlertDialog、Sheet、Menu 和 Command overlay 的 Backdrop/Viewport/Positioner/Popup、背景滚动锁定、可滚动内容上限和焦点归还；使用 `100dvh` 与 `env(safe-area-inset-*)` 避免移动端内容或操作区被遮挡。具体 route 不得通过删掉 outline、关闭 focus trap 或自行复制 fixed overlay 来覆盖这些默认值。
 
 **拒绝的替代方案：**
 
@@ -145,6 +145,10 @@ Tailwind CSS v4 动画使用精确版本的 `tw-animate-css` CSS-first 支持，
 ## Risks / Trade-offs
 
 - [语义 token 调整会影响全站而非单一路由] → 先建立 light/dark token 对照和代表性 surface 快照，再迁移 route；禁止在 route 用字面量颜色规避问题。
+- [legacy `new-york` 没有 Base 对应模板] → 已有 wrapper 使用转换引擎保留原 class；新增组件审查明确的 Base registry 输出，不以切换 preset 为由重做视觉。
+- [Base UI composition 和状态属性改变消费者 API] → 迁移前建立行为基线，逐 wrapper 迁移 `asChild`、menu events、positioning 和 state selector，并在每批后 typecheck/test/build。
+- [受控 overlay 没有同树 trigger 时焦点无法自动归还] → 为 CommandPalette、治理确认和受控 Sheet 保留触发 ref 或配置 final focus，pending 关闭使用 event details 取消。
+- [Checkbox hidden input 或 Tabs 默认激活方式改变表单/键盘行为] → 明确 wrapper DOM 与 `activateOnFocus` 决策，并用表单提交和方向键测试锁定。
 - [固定 CLI 后仍可能与 registry 当前输出不同] → lockfile 作为可复现依据，每个组件保留 dry-run/diff 审查，不为追随最新模板而升级。
 - [品牌化合并可能遗漏上游无障碍属性] → review 时分别核对结构/ARIA/键盘行为与视觉 class，测试不得只比较截图。
 - [Select portal 在 SSR、移动键盘或 overlay 中出现定位问题] → 服务端保持确定 trigger 结构，portal 仅在客户端工作；覆盖窄屏、缩放、Dialog 内使用和 safe-area 测试。
@@ -159,26 +163,28 @@ Tailwind CSS v4 动画使用精确版本的 `tw-animate-css` CSS-first 支持，
 
 实施和发布按“基础先于消费方”排序，每阶段只扩展 Web，且必须保持可构建状态：
 
-1. **Foundations**：固定并记录 shadcn CLI；逐项审查 registry 配置；修正语义 token、light/dark/system 行为、浏览器主题元数据、Tailwind CSS v4 动画和 reduced-motion 基线。
-2. **Primitives**：按四批顺序引入并品牌化组件，补齐 shared focus、overlay scroll、safe-area 和键盘测试；不迁移无关 route。
-3. **Global shell/forms**：修公共/后台 shell、CommandPalette、公共创建/编辑表单与后台 NativeSelect GET 筛选；URL 继续作为 tabs/filter 真相来源，浏览器状态只在客户端接管。
-4. **Topic/admin actions**：按权限矩阵重组话题动作，用 AlertDialog 处理 destructive 确认，并迁移后台高风险和批量治理确认，不改变 API endpoint 或审计含义。
-5. **Verification**：执行针对性组件和 route 测试、权限矩阵、键盘、focus、移动端 safe-area、light/dark、reduced-motion、SSR/hydration 和未保存守卫检查；随后运行 `pnpm verify`，构建并记录不可变 Web image SHA/digest，完成公开页面、发帖/编辑、话题治理和后台筛选 smoke。
+1. **Toolchain/baseline**：固定 shadcn 4、Vite 7 和 Base UI 精确版本；建立现有 composition、菜单、overlay、Checkbox、Tabs 与 SSR 行为测试。
+2. **Base migration**：按依赖顺序迁移全部 wrapper 和消费者，生成逐组件迁移报告，移除 Web 直接 Radix 依赖/import/Slot/失效状态属性。
+3. **Foundations/primitives**：修正 token、主题、Tailwind CSS v4 动画和 reduced motion；逐项审查 Base registry，并按四批引入品牌化组件。
+4. **Global shell/forms**：修公共/后台 shell、CommandPalette、公共创建/编辑表单与后台 NativeSelect GET 筛选；URL 继续作为 tabs/filter 真相来源，浏览器状态只在客户端接管。
+5. **Topic/admin actions**：按权限矩阵重组话题动作，用 AlertDialog 处理 destructive 确认，并迁移后台高风险和批量治理确认，不改变 API endpoint 或审计含义。
+6. **Verification**：执行迁移等价性、组件和 route 测试、权限矩阵、键盘、focus、移动端 safe-area、light/dark、reduced-motion、SSR/hydration 和未保存守卫检查；随后运行 `pnpm verify`，确认 Web 无直接 Radix 残留并完成 smoke。
 
 ```mermaid
 flowchart LR
-    A[固定 CLI 与基础 token/主题/动画] --> B[四批 primitives]
-    B --> C[全局 shell 与表单]
-    C --> D[话题与后台动作]
-    D --> E[pnpm verify 与 Web smoke]
-    E --> F{验证通过?}
-    F -- 否 --> G[停止发布并修复当前阶段]
-    G --> E
-    F -- 是 --> H[部署新 CNODE_WEB_IMAGE digest]
-    H --> I{生产 Web smoke 通过?}
-    I -- 是 --> J[记录 Web digest 与结果]
-    I -- 否 --> K[仅恢复旧 CNODE_WEB_IMAGE digest]
-    K --> L[重新验证 Web health/smoke]
+    A[固定 shadcn 4、Vite 7、Base UI 与基线测试] --> B[迁移 wrapper 和消费者并移除 Radix]
+    B --> C[token、主题、动画与四批 primitives]
+    C --> D[全局 shell 与表单]
+    D --> E[话题与后台动作]
+    E --> F[pnpm verify 与 Web smoke]
+    F --> G{验证通过?}
+    G -- 否 --> H[停止发布并修复当前阶段]
+    H --> F
+    G -- 是 --> I[部署新 CNODE_WEB_IMAGE digest]
+    I --> J{生产 Web smoke 通过?}
+    J -- 是 --> K[记录 Web digest 与结果]
+    J -- 否 --> L[仅恢复旧 CNODE_WEB_IMAGE digest]
+    L --> M[重新验证 Web health/smoke]
 ```
 
 发布前记录当前 Web image SHA tag/digest。由于本 change 不含 API 或数据库变更，生产切换只更新 `CNODE_WEB_IMAGE`；API、worker 和 PostgreSQL 保持原版本。若 Web health、SSR、hydration、关键表单或权限 smoke 失败，恢复上一次成功的 Web image digest 并重新验证，不执行 API 回滚或数据库回滚。不得使用 `latest` 解析回滚目标。

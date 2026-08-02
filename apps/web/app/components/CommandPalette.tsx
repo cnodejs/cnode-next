@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Link, useNavigate, useRouteLoaderData } from "react-router";
 import {
   FileText,
@@ -25,11 +25,15 @@ const quickActions = [
 export function CommandPalette({
   open,
   onOpenChange,
+  finalFocus,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  finalFocus?: RefObject<HTMLElement | null>;
 }) {
   const [query, setQuery] = useState("");
+  const fallbackFinalFocusRef = useRef<HTMLElement | null>(null);
+  const finalFocusRef = finalFocus ?? fallbackFinalFocusRef;
   const navigate = useNavigate();
   const rootData = useRouteLoaderData("root") as { user?: { is_admin?: boolean; is_mod?: boolean } } | undefined;
   const canAccessAdmin = !!(rootData?.user?.is_admin || rootData?.user?.is_mod);
@@ -47,12 +51,15 @@ export function CommandPalette({
     const handler = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
+        if (!open && document.activeElement instanceof HTMLElement) {
+          finalFocusRef.current = document.activeElement;
+        }
         onOpenChange(true);
       }
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [onOpenChange]);
+  }, [finalFocusRef, onOpenChange, open]);
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -66,7 +73,9 @@ export function CommandPalette({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showClose={false}
-        className="top-24 translate-y-0 gap-3 overflow-hidden border-cnode-green/20 bg-popover p-0 shadow-floating sm:max-w-2xl"
+        finalFocus={finalFocusRef}
+        viewportClassName="items-start pt-24"
+        className="gap-3 overflow-hidden border-cnode-green/20 bg-popover p-0 shadow-floating sm:max-w-2xl"
       >
         <DialogHeader className="sr-only">
           <DialogTitle>搜索和快速操作</DialogTitle>

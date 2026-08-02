@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { NativeSelect } from "./ui/native-select";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { uploadJobLogo } from "~/lib/upload-client";
 import { Image as ImageIcon, Loader2, X } from "lucide-react";
@@ -159,18 +160,17 @@ export function JobMetaForm({ value, onChange }: JobMetaFormProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="remote">远程模式 *</Label>
-            <select
+            <NativeSelect
               id="remote"
               value={value.remote}
               onChange={(e) => update("remote", e.target.value as JobMetaFormValue["remote"])}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
               {REMOTE_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
                   {o.label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </div>
         </div>
 

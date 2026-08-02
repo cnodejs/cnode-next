@@ -1,6 +1,8 @@
 packages:
   - "apps/*"
   - "packages/*"
+overrides:
+  "shadcn>zod": "3.25.76"
 allowBuilds:
   '@fission-ai/openspec': true
   '@scarf/scarf': false

@@ -84,7 +84,7 @@ export function AdminMetricCard({ label, value }: { label: string; value: React.
     <Card className="overflow-hidden border-cnode-green/15 bg-card">
       <CardContent className="p-4">
         <div className="text-xs font-medium text-muted-foreground">{label}</div>
-        <div className="mt-2 text-2xl font-semibold tracking-tight text-cnode-ink">{value}</div>
+        <div className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{value}</div>
       </CardContent>
     </Card>
   );

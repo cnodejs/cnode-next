@@ -16,6 +16,17 @@ function resolveDark(theme: Theme): boolean {
   return typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
 
+export function applyResolvedTheme(dark: boolean) {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  root.classList.toggle("dark", dark);
+  root.style.colorScheme = dark ? "dark" : "light";
+  root.dataset.theme = dark ? "dark" : "light";
+  document
+    .querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+    ?.setAttribute("content", dark ? "#071207" : "#fbfdf7");
+}
+
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set, get) => ({
@@ -32,9 +43,7 @@ export const useThemeStore = create<ThemeState>()(
         get().applyToDocument();
       },
       applyToDocument: () => {
-        if (typeof document === "undefined") return;
-        const dark = resolveDark(get().theme);
-        document.documentElement.classList.toggle("dark", dark);
+        applyResolvedTheme(resolveDark(get().theme));
       },
     }),
     {

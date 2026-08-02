@@ -118,7 +118,7 @@ function JobCardItem({ job }: { job: JobCardData }) {
 
 function Badge({ icon: Icon, text }: { icon: React.ElementType; text: string }) {
   return (
-    <span className="inline-flex items-center gap-0.5 rounded-md bg-cnode-soft px-1.5 py-0.5 text-xs text-cnode-ink">
+    <span className="inline-flex items-center gap-0.5 rounded-md bg-cnode-soft px-1.5 py-0.5 text-xs text-foreground">
       <Icon className="h-3 w-3" />
       {text}
     </span>

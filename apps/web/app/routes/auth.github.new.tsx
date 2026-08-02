@@ -61,8 +61,8 @@ export default function GithubNew({ loaderData }: Route.ComponentProps) {
           {!profile ? (
             <div className="space-y-4 text-sm text-muted-foreground">
               <p>{error || "GitHub 登录状态已过期，请重新授权。"}</p>
-              <Button asChild className="w-full">
-                <a href="/auth/github">重新授权</a>
+              <Button render={<a href="/auth/github" />} className="w-full">
+                重新授权
               </Button>
             </div>
           ) : (

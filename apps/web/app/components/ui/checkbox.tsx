@@ -1,16 +1,16 @@
 import * as React from "react";
-import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
+import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox";
 import { Check } from "lucide-react";
 import { cn } from "~/lib/utils";
 
 const Checkbox = React.forwardRef<
-  React.ElementRef<typeof CheckboxPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>
+  HTMLElement,
+  CheckboxPrimitive.Root.Props
 >(({ className, ...props }, ref) => (
   <CheckboxPrimitive.Root
     ref={ref}
     className={cn(
-      "peer h-4 w-4 shrink-0 rounded-sm border border-cnode-green shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-cnode-ink data-[state=checked]:bg-cnode-ink data-[state=checked]:text-white",
+      "peer h-4 w-4 shrink-0 rounded-sm border border-cnode-green shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-disabled:cursor-not-allowed data-disabled:opacity-50 data-checked:border-cnode-ink data-checked:bg-cnode-ink data-checked:text-white",
       className,
     )}
     {...props}

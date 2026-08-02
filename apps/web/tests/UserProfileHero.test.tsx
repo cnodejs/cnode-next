@@ -72,7 +72,7 @@ describe("用户公开资料 Hero", () => {
 
     expect(screen.queryByRole("button", { name: "删除所有发言" })).not.toBeInTheDocument();
     await operator.click(screen.getByRole("button", { name: "管理" }));
-    await operator.click(screen.getByRole("menuitem", { name: "删除所有发言" }));
+    await operator.click(await screen.findByRole("menuitem", { name: "删除所有发言" }));
 
     const dialog = screen.getByRole("dialog", { name: "删除用户所有发言" });
     await operator.click(within(dialog).getByRole("button", { name: "确认删除所有发言" }));
@@ -89,7 +89,7 @@ describe("用户公开资料 Hero", () => {
     expect(screen.getByText("内容已屏蔽")).toBeInTheDocument();
     expect(screen.queryByText("已禁言")).not.toBeInTheDocument();
     await operator.click(screen.getByRole("button", { name: "管理" }));
-    expect(screen.getByRole("menuitem", { name: "禁言用户" })).toBeInTheDocument();
+    expect(await screen.findByRole("menuitem", { name: "禁言用户" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "恢复用户内容" })).toBeInTheDocument();
   });
 

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -23,6 +24,8 @@
   --color-cnode-green-hover: var(--cnode-green-hover);
   --color-cnode-soft: var(--cnode-soft);
   --color-cnode-ink: var(--cnode-ink);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-on: var(--brand-on);
   --color-surface-raised: var(--surface-raised);
   --color-surface-subtle: var(--surface-subtle);
   --color-border: var(--border);
@@ -40,14 +43,15 @@
 }
 
 :root {
+  color-scheme: light;
   --background: #fbfdf7;
   --foreground: #10210c;
   --card: #ffffff;
   --card-foreground: #10210c;
   --popover: #ffffff;
   --popover-foreground: #10210c;
-  --primary: #80bd01;
-  --primary-foreground: #10210c;
+  --primary: #4f7300;
+  --primary-foreground: #ffffff;
   --secondary: #edf5df;
   --secondary-foreground: #24351a;
   --muted: #f2f7ea;
@@ -56,13 +60,15 @@
   --accent-foreground: #18310d;
   --destructive: #dc2626;
   --destructive-foreground: #fff7f7;
-  --border: #dfe8d8;
-  --input: #d8e4cf;
-  --ring: #80bd01;
+  --border: #7f9070;
+  --input: #788c6b;
+  --ring: #4f7300;
   --cnode-green: #80bd01;
   --cnode-green-hover: #6fa400;
   --cnode-soft: #eff8dd;
   --cnode-ink: #10210c;
+  --brand-ink: #10210c;
+  --brand-on: #ffffff;
   --surface-raised: #f8fbf1;
   --surface-subtle: #f6faef;
   --shadow-card: 0 10px 30px -20px rgb(16 33 12 / 0.35);
@@ -72,6 +78,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: #071207;
   --foreground: #edf8e7;
   --card: #0d1a0b;
@@ -86,15 +93,17 @@
   --muted-foreground: #9eb092;
   --accent: #1e3516;
   --accent-foreground: #eff8dd;
-  --destructive: #ef4444;
+  --destructive: #dc2626;
   --destructive-foreground: #fff7f7;
-  --border: #21381a;
-  --input: #29431f;
+  --border: #526b48;
+  --input: #647f58;
   --ring: #9de330;
   --cnode-green: #9de330;
   --cnode-green-hover: #b2f34d;
   --cnode-soft: #182b11;
   --cnode-ink: #071207;
+  --brand-ink: #10210c;
+  --brand-on: #071207;
   --surface-raised: #0f1d0c;
   --surface-subtle: #0a1608;
   --shadow-card: 0 14px 40px -24px rgb(0 0 0 / 0.75);
@@ -116,6 +125,22 @@
 html {
   scroll-behavior: smooth;
   scrollbar-gutter: stable;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @supports not (scrollbar-gutter: stable) {

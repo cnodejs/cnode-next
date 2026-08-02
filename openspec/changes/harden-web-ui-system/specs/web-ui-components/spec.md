@@ -2,7 +2,7 @@
 
 ### Requirement: shadcn/ui 原子组件层
 
-Web UI SHALL 继续使用仓库内源码所有权的 shadcn/ui 原子组件层，并 SHALL 提供 `button`、`input`、`label`、`card`、`badge`、`avatar`、`dropdown-menu`、`dialog`、`sheet`、`tabs`、`table`、`tooltip`、`skeleton`、`sonner`、`form`、`select`、`native-select`、`textarea`、`alert-dialog`、`alert`、`pagination`、`empty`、`command` 和 `radio-group`。这些组件 MUST 共享语义颜色、尺寸、焦点和禁用状态，且不得以另一套不兼容的基础组件替换现有层。
+Web UI SHALL 继续使用仓库内源码所有权的 shadcn/ui 原子组件层，并 SHALL 以 Base UI 作为交互 primitive 基础，提供 `button`、`input`、`label`、`card`、`badge`、`avatar`、`dropdown-menu`、`dialog`、`sheet`、`tabs`、`table`、`tooltip`、`skeleton`、`sonner`、`form`、`select`、`native-select`、`textarea`、`alert-dialog`、`alert`、`pagination`、`empty`、`command` 和 `radio-group`。这些组件 MUST 共享语义颜色、尺寸、焦点和禁用状态；迁移完成后 Web 源码和直接依赖 MUST NOT 保留 Radix primitive 或 Slot 兼容层。
 
 #### Scenario: 页面使用一致的语义组件
 
@@ -14,7 +14,26 @@ Web UI SHALL 继续使用仓库内源码所有权的 shadcn/ui 原子组件层�
 
 - **WHEN** 共享原子组件新增能力或样式更新
 - **THEN** 已使用该组件的页面 MUST 保持原有可执行动作和导航结果
-- **AND** 不得因基础组件整体替换而改变既有业务行为。
+- **AND** 不得因 Base UI 迁移而改变既有业务动作、导航结果或权限入口。
+
+#### Scenario: 组件组合使用 Base UI render
+
+- **WHEN** Button、Dialog trigger、Sheet trigger 或菜单项组合 React Router Link 或其他元素
+- **THEN** 组件 MUST 使用 Base UI `render` 或等价原生语义完成组合
+- **AND** DOM MUST NOT 产生嵌套 button、重复交互元素或长期 `asChild`/Radix Slot 兼容层。
+
+#### Scenario: Base UI 状态驱动样式
+
+- **WHEN** overlay 打开或关闭、Checkbox 选中、Tabs 激活或菜单高亮
+- **THEN** 样式 MUST 由对应 Base UI open/closed/checked/active/highlighted 状态属性驱动
+- **AND** 不得依赖已失效的 Radix `data-state` 或 `--radix-*` 变量。
+
+#### Scenario: 迁移完成后清理 Radix
+
+- **WHEN** Web primitive 与消费者迁移完成
+- **THEN** `apps/web` 源码 MUST 不再 import `@radix-ui/*` 或 `radix-ui`
+- **AND** Web package MUST 不再直接声明 Radix dependencies
+- **AND** cmdk、sonner 等非 Radix 库 MUST 保持其既有职责，不得为追求文本零匹配而被无关替换。
 
 ## ADDED Requirements
 
@@ -40,6 +59,19 @@ Dialog、AlertDialog、Sheet、下拉菜单和 Command overlay SHALL 管理打�
 
 - **WHEN** 用户在可滚动 overlay 内到达内容顶部或底部并继续滚动
 - **THEN** 滚动 MUST NOT 穿透到背景页面。
+
+#### Scenario: 受控 overlay 阻止关闭并恢复焦点
+
+- **WHEN** 受控 Dialog、AlertDialog 或 Sheet 在 pending 时收到 Escape、外部点击或关闭请求
+- **THEN** 页面 MUST 使用 Base UI close event details 阻止不允许的关闭
+- **AND** 最终关闭且未导航时焦点 MUST 返回实际触发控件或明确配置的 final focus target。
+
+#### Scenario: 菜单动作保持键盘与链接语义
+
+- **WHEN** 用户以指针、Enter 或 Space 激活 Base UI 菜单中的动作或链接
+- **THEN** 动作 MUST 仅执行一次并按预期关闭菜单
+- **AND** 导航项 MUST 保持链接语义
+- **AND** 打开确认对话框的菜单动作 MUST 将焦点正确移入对话框并在取消后返回入口。
 
 ### Requirement: Pagination 与 Empty 语义
 

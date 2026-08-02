@@ -12,6 +12,7 @@ import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { ContentPage } from "~/components/PageShell";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { TurnstileWidget, getTurnstileToken } from "~/components/TurnstileWidget";
@@ -19,6 +20,12 @@ import { TurnstileWidget, getTurnstileToken } from "~/components/TurnstileWidget
 export function meta() {
   return [{ title: "发帖 · CNode" }];
 }
+
+const topicTabLabels: Record<string, string> = {
+  share: "分享",
+  ask: "问答",
+  job: "招聘",
+};
 
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -119,17 +126,17 @@ export default function TopicCreate({ loaderData }: Route.ComponentProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="tab">分类</Label>
-            <select
-              id="tab"
-              value={tab}
-              onChange={(e) => setTab(e.target.value)}
-              className="h-9 w-full rounded-xl border border-input bg-card px-3 text-sm shadow-sm transition-colors hover:border-cnode-green/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <option value="share">分享</option>
-              <option value="ask">问答</option>
-              {canPostJob ? <option value="job">招聘</option> : <option value="job" disabled>招聘（需要授权）</option>}
-            </select>
-            {!canPostJob && <p className="text-xs text-muted-foreground">招聘发布需要猎头角色授权。</p>}
+            <Select value={tab} onValueChange={(value) => value && setTab(value)}>
+              <SelectTrigger id="tab" aria-describedby={!canPostJob ? "tab-description" : undefined}>
+                <SelectValue>{(value) => topicTabLabels[value] ?? value}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="share">分享</SelectItem>
+                <SelectItem value="ask">问答</SelectItem>
+                <SelectItem value="job" disabled={!canPostJob}>招聘{canPostJob ? "" : "（需要授权）"}</SelectItem>
+              </SelectContent>
+            </Select>
+            {!canPostJob && <p id="tab-description" className="text-xs text-muted-foreground">招聘发布需要猎头角色授权。</p>}
           </div>
           <div className="space-y-2">
             <Label>正文</Label>

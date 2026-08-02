@@ -101,9 +101,7 @@ export default function Signup({ loaderData }: any) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>用户名</FormLabel>
-                      <FormControl>
-                        <Input placeholder="字母/数字/_/-" {...field} />
-                      </FormControl>
+                      <FormControl render={<Input placeholder="字母/数字/_/-" {...field} />} />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -114,9 +112,7 @@ export default function Signup({ loaderData }: any) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>密码</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="至少8位,含字母和数字" {...field} />
-                      </FormControl>
+                      <FormControl render={<Input type="password" placeholder="至少8位,含字母和数字" {...field} />} />
                       <FormDescription>密码需至少 8 位,包含字母和数字</FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -128,9 +124,7 @@ export default function Signup({ loaderData }: any) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>确认密码</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="再次输入密码" {...field} />
-                      </FormControl>
+                      <FormControl render={<Input type="password" placeholder="再次输入密码" {...field} />} />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -141,9 +135,7 @@ export default function Signup({ loaderData }: any) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>邮箱</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="your@email.com" {...field} />
-                      </FormControl>
+                      <FormControl render={<Input type="email" placeholder="your@email.com" {...field} />} />
                       <FormMessage />
                     </FormItem>
                   )}

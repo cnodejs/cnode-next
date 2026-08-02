@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import { Textarea } from "~/components/ui/textarea";
 import { AdminPage, AdminPageHeader, AdminPanel, AdminToolbar } from "~/components/AdminPage";
 import { Pagination } from "~/components/Pagination";
 import {
@@ -138,12 +139,11 @@ export default function AdminKeywords({ loaderData }: any) {
           </AdminToolbar>
           {showBulk && (
             <div className="border-b border-border/80 bg-surface-subtle p-4">
-              <textarea
+              <Textarea
                 value={bulkText}
                 onChange={(e) => setBulkText(e.target.value)}
                 placeholder="一行一个词"
                 rows={5}
-                className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
               />
               <Button className="mt-2" onClick={handleBulk}>
                 导入

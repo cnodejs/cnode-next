@@ -180,11 +180,11 @@ export default function AdminBans({ loaderData }: any) {
             <AdminToolbar>
               <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex gap-2">
-                  <Button asChild size="sm" variant={userStatus === "muted" ? "default" : "outline"}>
-                    <Link to={`/admin/bans?tab=users&status=muted&limit=${limit}`}>禁言用户</Link>
+                  <Button render={<Link to={`/admin/bans?tab=users&status=muted&limit=${limit}`} />} size="sm" variant={userStatus === "muted" ? "default" : "outline"}>
+                    禁言用户
                   </Button>
-                  <Button asChild size="sm" variant={userStatus === "blocked" ? "default" : "outline"}>
-                    <Link to={`/admin/bans?tab=users&status=blocked&limit=${limit}`}>内容已屏蔽用户</Link>
+                  <Button render={<Link to={`/admin/bans?tab=users&status=blocked&limit=${limit}`} />} size="sm" variant={userStatus === "blocked" ? "default" : "outline"}>
+                    内容已屏蔽用户
                   </Button>
                 </div>
                 <Button size="sm" onClick={handleBulkUserGovernance} disabled={bulkUserPending || selectedCurrentUserIds.length === 0}>

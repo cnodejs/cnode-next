@@ -55,11 +55,11 @@ export default function About() {
             CNode 聚集 Node.js 和现代 Web 开发者，用话题、问答和实践分享沉淀中文技术经验。
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button asChild>
-              <Link to="/topic/create">发布话题</Link>
+            <Button render={<Link to="/topic/create" />}>
+              发布话题
             </Button>
-            <Button asChild variant="outline" className="border-white/25 bg-white/10 text-white hover:bg-white/15">
-              <a href="#guide">参与指南</a>
+            <Button render={<a href="#guide" />} variant="outline" className="border-white/25 bg-white/10 text-white hover:bg-white/15">
+              参与指南
             </Button>
           </div>
         </section>

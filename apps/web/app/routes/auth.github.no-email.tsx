@@ -17,8 +17,8 @@ export default function GithubNoEmail() {
         </CardHeader>
         <CardContent className="space-y-4 pt-6 text-sm text-muted-foreground">
           <p>请到 GitHub 设置中公开邮箱，或确认主邮箱可通过 GitHub emails API 读取，然后重新登录。</p>
-          <Button asChild className="w-full">
-            <Link to="/signin">返回登录</Link>
+          <Button render={<Link to="/signin" />} className="w-full">
+            返回登录
           </Button>
         </CardContent>
       </AuthShell>

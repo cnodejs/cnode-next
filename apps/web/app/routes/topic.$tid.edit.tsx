@@ -11,6 +11,7 @@ import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { Skeleton } from "~/components/ui/skeleton";
 import { ContentPage } from "~/components/PageShell";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -18,6 +19,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 export function meta() {
   return [{ title: "编辑话题 · CNode" }];
 }
+
+const topicTabLabels: Record<string, string> = {
+  share: "分享",
+  ask: "问答",
+  job: "招聘",
+};
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireUser(request);
@@ -144,16 +151,16 @@ export default function TopicEdit() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="tab">分类</Label>
-                  <select
-                    id="tab"
-                    value={tab}
-                    onChange={(e) => setTab(e.target.value)}
-                    className="h-9 w-full rounded-xl border border-input bg-card px-3 text-sm shadow-sm transition-colors hover:border-cnode-green/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <option value="share">分享</option>
-                    <option value="ask">问答</option>
-                    <option value="job">招聘</option>
-                  </select>
+                  <Select value={tab} onValueChange={(value) => value && setTab(value)}>
+                    <SelectTrigger id="tab">
+                      <SelectValue>{(value) => topicTabLabels[value] ?? value}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="share">分享</SelectItem>
+                      <SelectItem value="ask">问答</SelectItem>
+                      <SelectItem value="job">招聘</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>正文</Label>

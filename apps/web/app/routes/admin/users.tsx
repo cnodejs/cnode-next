@@ -1,7 +1,7 @@
 import { requireAdmin } from "~/lib/auth";
 import { AdminLayout } from "~/components/AdminLayout";
 import { apiFetch } from "~/lib/api-client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Form, Link, useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { useAsyncAction } from "~/hooks/use-async-action";
@@ -29,6 +29,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -69,7 +70,9 @@ export async function loader({ request }: any) {
 export default function AdminUsers({ loaderData }: any) {
   const { users, total, page, limit, q, currentUser } = loaderData;
   const [resetTarget, setResetTarget] = useState<{ id: number; loginname: string } | null>(null);
+  const [resetting, setResetting] = useState(false);
   const [deleteAllTarget, setDeleteAllTarget] = useState<string | null>(null);
+  const managementTriggerRef = useRef<HTMLElement | null>(null);
   const { revalidate } = useRevalidator();
 
   const handleBlock = async (name: string, block: boolean) => {
@@ -141,17 +144,22 @@ export default function AdminUsers({ loaderData }: any) {
   };
 
   const handleResetPass = async () => {
-    if (!resetTarget) return;
-    const res = await apiFetch<{ success: boolean; newPassword?: string; error_msg?: string }>(
-      `/api/v1/user/${resetTarget.loginname}/reset_password`,
-      { method: "POST" },
-    );
-    if (res.success && res.newPassword) {
-      toast.success("密码已重置", { description: `新密码: ${res.newPassword}` });
-    } else {
-      toast.error(res.error_msg || "重置失败");
+    if (!resetTarget || resetting) return;
+    setResetting(true);
+    try {
+      const res = await apiFetch<{ success: boolean; newPassword?: string; error_msg?: string }>(
+        `/api/v1/user/${resetTarget.loginname}/reset_password`,
+        { method: "POST" },
+      );
+      if (res.success && res.newPassword) {
+        toast.success("密码已重置", { description: `新密码: ${res.newPassword}` });
+      } else {
+        toast.error(res.error_msg || "重置失败");
+      }
+      setResetTarget(null);
+    } finally {
+      setResetting(false);
     }
-    setResetTarget(null);
   };
 
   return (
@@ -202,39 +210,55 @@ export default function AdminUsers({ loaderData }: any) {
                 </TableCell>
                 <TableCell className="w-36 text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <Button asChild size="sm" variant="ghost">
-                      <Link to={`/user/${u.loginname}`}>查看</Link>
+                    <Button render={<Link to={`/user/${u.loginname}`} />} size="sm" variant="ghost">
+                      查看
                     </Button>
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button size="sm" variant="outline">管理</Button>
+                      <DropdownMenuTrigger
+                        render={<Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(event) => {
+                            managementTriggerRef.current = event.currentTarget;
+                          }}
+                        />}
+                      >
+                        管理
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-52">
-                        <DropdownMenuLabel>{USER_MANAGEMENT_GROUP_LABELS.governance}</DropdownMenuLabel>
-                        <DropdownMenuItem disabled={isSelf} onSelect={() => handleBlock(u.loginname, !u.is_block)}>
-                          {userBlockActionLabel(u.is_block)}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem disabled={isSelf} onSelect={() => handleMute(u.loginname, !u.is_muted)}>
-                          {u.is_muted ? "解除禁言" : "禁言"}
-                        </DropdownMenuItem>
+                        <DropdownMenuGroup>
+                          <DropdownMenuLabel>{USER_MANAGEMENT_GROUP_LABELS.governance}</DropdownMenuLabel>
+                          <DropdownMenuItem disabled={isSelf} onClick={() => handleBlock(u.loginname, !u.is_block)}>
+                            {userBlockActionLabel(u.is_block)}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem disabled={isSelf} onClick={() => handleMute(u.loginname, !u.is_muted)}>
+                            {u.is_muted ? "解除禁言" : "禁言"}
+                          </DropdownMenuItem>
+                        </DropdownMenuGroup>
                         <DropdownMenuSeparator />
-                        <DropdownMenuLabel>{USER_MANAGEMENT_GROUP_LABELS.roles}</DropdownMenuLabel>
-                        <DropdownMenuItem disabled={isSelf} onSelect={() => handleRole(u.id, "moderator", !(u.roles || []).includes("moderator"))}>
-                          {(u.roles || []).includes("moderator") ? "撤销版主" : "授予版主"}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem disabled={isSelf} onSelect={() => handleRole(u.id, "recruiter", !(u.roles || []).includes("recruiter"))}>
-                          {(u.roles || []).includes("recruiter") ? "撤销猎头" : "授予猎头"}
-                        </DropdownMenuItem>
+                        <DropdownMenuGroup>
+                          <DropdownMenuLabel>{USER_MANAGEMENT_GROUP_LABELS.roles}</DropdownMenuLabel>
+                          <DropdownMenuItem disabled={isSelf} onClick={() => handleRole(u.id, "moderator", !(u.roles || []).includes("moderator"))}>
+                            {(u.roles || []).includes("moderator") ? "撤销版主" : "授予版主"}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem disabled={isSelf} onClick={() => handleRole(u.id, "recruiter", !(u.roles || []).includes("recruiter"))}>
+                            {(u.roles || []).includes("recruiter") ? "撤销猎头" : "授予猎头"}
+                          </DropdownMenuItem>
+                        </DropdownMenuGroup>
                         <DropdownMenuSeparator />
-                        <DropdownMenuLabel>{USER_MANAGEMENT_GROUP_LABELS.security}</DropdownMenuLabel>
-                        <DropdownMenuItem onSelect={() => setResetTarget({ id: u.id, loginname: u.loginname })}>
-                          重置密码
-                        </DropdownMenuItem>
+                        <DropdownMenuGroup>
+                          <DropdownMenuLabel>{USER_MANAGEMENT_GROUP_LABELS.security}</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => setResetTarget({ id: u.id, loginname: u.loginname })}>
+                            重置密码
+                          </DropdownMenuItem>
+                        </DropdownMenuGroup>
                         <DropdownMenuSeparator />
-                        <DropdownMenuLabel>{USER_MANAGEMENT_GROUP_LABELS.danger}</DropdownMenuLabel>
-                        <DropdownMenuItem disabled={isSelf} className="text-destructive focus:text-destructive" onSelect={() => setDeleteAllTarget(u.loginname)}>
-                          删除所有发言
-                        </DropdownMenuItem>
+                        <DropdownMenuGroup>
+                          <DropdownMenuLabel>{USER_MANAGEMENT_GROUP_LABELS.danger}</DropdownMenuLabel>
+                          <DropdownMenuItem disabled={isSelf} className="text-destructive data-[highlighted]:text-destructive" onClick={() => setDeleteAllTarget(u.loginname)}>
+                            删除所有发言
+                          </DropdownMenuItem>
+                        </DropdownMenuGroup>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -247,8 +271,18 @@ export default function AdminUsers({ loaderData }: any) {
           <div className="px-4 pb-4">
             <Pagination page={page} total={total} limit={limit} basePath="/admin/users" searchParams={{ ...(q ? { q } : {}) }} />
           </div>
-          <Dialog open={!!deleteAllTarget} onOpenChange={(open) => !deletingAll && !open && setDeleteAllTarget(null)}>
-            <DialogContent>
+          <Dialog
+            open={!!deleteAllTarget}
+            onOpenChange={(open, eventDetails) => {
+              if (open) return;
+              if (deletingAll) {
+                eventDetails.cancel();
+                return;
+              }
+              setDeleteAllTarget(null);
+            }}
+          >
+            <DialogContent finalFocus={managementTriggerRef}>
               <DialogHeader>
                 <DialogTitle>确认删除用户所有发言</DialogTitle>
                 <DialogDescription>
@@ -268,8 +302,18 @@ export default function AdminUsers({ loaderData }: any) {
         </AdminPanel>
       </AdminPage>
 
-      <Dialog open={!!resetTarget} onOpenChange={(open) => !open && setResetTarget(null)}>
-        <DialogContent>
+      <Dialog
+        open={!!resetTarget}
+        onOpenChange={(open, eventDetails) => {
+          if (open) return;
+          if (resetting) {
+            eventDetails.cancel();
+            return;
+          }
+          setResetTarget(null);
+        }}
+      >
+        <DialogContent finalFocus={managementTriggerRef}>
           <DialogHeader>
             <DialogTitle>重置密码</DialogTitle>
             <DialogDescription>
@@ -277,10 +321,10 @@ export default function AdminUsers({ loaderData }: any) {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setResetTarget(null)}>
+            <Button variant="outline" onClick={() => setResetTarget(null)} disabled={resetting}>
               取消
             </Button>
-            <Button onClick={handleResetPass}>确认</Button>
+            <Button onClick={handleResetPass} disabled={resetting}>{resetting ? "重置中" : "确认"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

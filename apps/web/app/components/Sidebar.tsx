@@ -42,15 +42,13 @@ export function Sidebar() {
         <CardContent className="space-y-3">
           <p className="text-sm text-white/75">Node.js 专业中文社区，分享实践、提出问题、连接开发者。</p>
           <Button
-            asChild
+            render={<Link to="/topic/create" />}
             variant="inverse"
             className="w-full"
             size="sm"
           >
-            <Link to="/topic/create">
-              <Pencil className="h-4 w-4" />
-              发布话题
-            </Link>
+            <Pencil className="h-4 w-4" />
+            发布话题
           </Button>
         </CardContent>
       </Card>

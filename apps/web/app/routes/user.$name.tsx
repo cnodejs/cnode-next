@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { PublicIdentity } from "@cnode/shared";
 import type { Route } from "../../.react-router/types/app/routes/+types/user.$name";
 import { Link, useRevalidator } from "react-router";
@@ -29,6 +29,7 @@ import { externalUrlLabel, githubProfileUrl, safeExternalUrl } from "~/lib/publi
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -103,6 +104,7 @@ export default function UserProfile({ loaderData }: Route.ComponentProps) {
 
 function UserHero({ user, currentUser }: { user: any; currentUser?: any }) {
   const [actionTarget, setActionTarget] = useState<"block" | "mute" | "delete_all" | null>(null);
+  const managementTriggerRef = useRef<HTMLElement | null>(null);
   const { revalidate } = useRevalidator();
   const canManage = !!currentUser?.is_admin;
   const isSelf = currentUser?.loginname === user.loginname;
@@ -204,28 +206,42 @@ function UserHero({ user, currentUser }: { user: any; currentUser?: any }) {
           {canManage && !isSelf && (
             <>
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button type="button" variant="outline" size="sm" disabled={submitting}>
-                    <MoreHorizontal className="h-4 w-4" />管理
-                  </Button>
+                <DropdownMenuTrigger
+                  render={<Button ref={managementTriggerRef} type="button" variant="outline" size="sm" disabled={submitting} />}
+                >
+                  <MoreHorizontal className="h-4 w-4" />管理
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
-                  <DropdownMenuLabel>用户治理</DropdownMenuLabel>
-                  <DropdownMenuItem onSelect={() => setActionTarget("block")}>
-                    {user.is_block ? "恢复用户内容" : "屏蔽用户内容"}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setActionTarget("mute")}>
-                    {user.is_muted ? "解除禁言" : "禁言用户"}
-                  </DropdownMenuItem>
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>用户治理</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => setActionTarget("block")}>
+                      {user.is_block ? "恢复用户内容" : "屏蔽用户内容"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setActionTarget("mute")}>
+                      {user.is_muted ? "解除禁言" : "禁言用户"}
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel>危险操作</DropdownMenuLabel>
-                  <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => setActionTarget("delete_all")}>
-                    删除所有发言
-                  </DropdownMenuItem>
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>危险操作</DropdownMenuLabel>
+                    <DropdownMenuItem className="text-destructive data-[highlighted]:text-destructive" onClick={() => setActionTarget("delete_all")}>
+                      删除所有发言
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Dialog open={!!actionTarget} onOpenChange={(open) => !submitting && !open && setActionTarget(null)}>
-                <DialogContent>
+              <Dialog
+                open={!!actionTarget}
+                onOpenChange={(open, eventDetails) => {
+                  if (open) return;
+                  if (submitting) {
+                    eventDetails.cancel();
+                    return;
+                  }
+                  setActionTarget(null);
+                }}
+              >
+                <DialogContent finalFocus={managementTriggerRef}>
                   <DialogHeader>
                     <DialogTitle>{actionConfig?.title}</DialogTitle>
                     <DialogDescription>{actionConfig?.description}</DialogDescription>

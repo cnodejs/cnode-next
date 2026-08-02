@@ -20,7 +20,7 @@ import { CNodeLogo } from "./CNodeLogo";
 import { CommandPalette } from "./CommandPalette";
 import { PageContainer } from "./PageShell";
 import { ScrollTopButton } from "./ScrollTopButton";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useAuthStore } from "~/lib/stores/auth-store";
 
 const NAV_GROUPS = [
@@ -62,6 +62,7 @@ const NAV_GROUPS = [
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [commandOpen, setCommandOpen] = useState(false);
+  const commandFinalFocusRef = useRef<HTMLElement | null>(null);
   const isNavigating = useNavTransition();
   const isAdmin = !!useAuthStore((s) => s.user?.is_admin);
 
@@ -73,7 +74,10 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             <CNodeLogo admin />
             <button
               type="button"
-              onClick={() => setCommandOpen(true)}
+              onClick={(event) => {
+                commandFinalFocusRef.current = event.currentTarget;
+                setCommandOpen(true);
+              }}
               className="hidden h-9 w-[260px] items-center gap-2 rounded-xl border border-input bg-card px-3 text-sm text-muted-foreground shadow-sm transition-colors hover:border-cnode-green/40 hover:bg-accent hover:text-accent-foreground lg:inline-flex"
               aria-label="搜索后台内容"
             >
@@ -115,7 +119,10 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               variant="ghost"
               size="icon"
               className="lg:hidden"
-              onClick={() => setCommandOpen(true)}
+              onClick={(event) => {
+                commandFinalFocusRef.current = event.currentTarget;
+                setCommandOpen(true);
+              }}
               aria-label="搜索后台"
             >
               <Search className="h-4 w-4" />
@@ -124,7 +131,11 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             <HeaderUserArea />
           </div>
         </PageContainer>
-        <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
+        <CommandPalette
+          open={commandOpen}
+          onOpenChange={setCommandOpen}
+          finalFocus={commandFinalFocusRef}
+        />
       </header>
 
       <PageContainer className="max-w-screen-2xl py-6">
@@ -158,7 +169,7 @@ function AdminTopLink({
     <Link
       to={to}
       className={cn(
-        "box-border inline-flex h-9 items-center rounded-lg px-3 leading-none text-muted-foreground transition-colors hover:bg-cnode-soft hover:text-cnode-ink",
+        "box-border inline-flex h-9 items-center rounded-lg px-3 leading-none text-muted-foreground transition-colors hover:bg-cnode-soft hover:text-foreground",
         active && "bg-cnode-ink text-white hover:bg-cnode-ink hover:text-white",
       )}
     >
@@ -219,7 +230,7 @@ function AdminNavItem({
     <Link
       to={href}
       className={cn(
-        "box-border flex items-center whitespace-nowrap rounded-xl text-muted-foreground transition-colors hover:bg-cnode-soft hover:text-cnode-ink",
+        "box-border flex items-center whitespace-nowrap rounded-xl text-muted-foreground transition-colors hover:bg-cnode-soft hover:text-foreground",
         compact ? "h-9 shrink-0 gap-2 px-3 text-sm" : "h-10 gap-2 px-3 leading-none",
         active && "bg-cnode-ink text-white hover:bg-cnode-ink hover:text-white",
       )}

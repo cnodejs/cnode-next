@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { NativeSelect } from "./ui/native-select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
 import { Filter } from "lucide-react";
 
@@ -38,17 +39,14 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
     setSearchParams(next);
   }
 
-  const controlClass =
-    "h-9 w-full rounded-xl border border-input bg-card px-3 text-sm shadow-sm transition-colors hover:border-cnode-green/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
-
   const filterControls = (
     <div className="grid gap-3 md:grid-cols-[minmax(8rem,1fr)_minmax(8rem,1fr)_8rem_minmax(13rem,1.4fr)_6rem] md:items-end">
       <div className="space-y-1.5">
-        <Label className="text-xs">地点</Label>
-        <select
+        <Label htmlFor="job-location-filter" className="text-xs">地点</Label>
+        <NativeSelect
+          id="job-location-filter"
           value={location}
           onChange={(e) => updateParam("location", e.target.value)}
-          className={controlClass}
         >
           <option value="">全部</option>
           {locations.map((l) => (
@@ -56,15 +54,15 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
               {l}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs">远程</Label>
-        <select
+        <Label htmlFor="job-remote-filter" className="text-xs">远程</Label>
+        <NativeSelect
+          id="job-remote-filter"
           value={remote}
           onChange={(e) => updateParam("remote", e.target.value)}
-          className={controlClass}
         >
           <option value="">全部</option>
           {REMOTE_OPTIONS.map((o) => (
@@ -72,7 +70,7 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
               {o.label}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </div>
 
       <div className="space-y-1.5">
@@ -110,16 +108,14 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
 
       <div className="md:hidden">
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="sm" className="w-full">
-              <Filter className="h-4 w-4" />
-              筛选
-              {(location || remote || salaryMin || tags) && (
-                <span className="ml-1 rounded-full bg-primary text-primary-foreground px-1.5 text-xs">
-                  {[location, remote, salaryMin, tags].filter(Boolean).length}
-                </span>
-              )}
-            </Button>
+          <SheetTrigger render={<Button variant="outline" size="sm" className="w-full" />}>
+            <Filter className="h-4 w-4" />
+            筛选
+            {(location || remote || salaryMin || tags) && (
+              <span className="ml-1 rounded-full bg-primary text-primary-foreground px-1.5 text-xs">
+                {[location, remote, salaryMin, tags].filter(Boolean).length}
+              </span>
+            )}
           </SheetTrigger>
           <SheetContent side="bottom" className="max-h-[82vh] overflow-y-auto">
             <SheetHeader className="text-left">

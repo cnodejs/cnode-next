@@ -23,7 +23,12 @@ export function ScrollTopButton({ className }: { className?: string }) {
         "fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] right-4 z-50 h-11 rounded-full px-3 shadow-floating sm:bottom-6 sm:right-6 sm:px-4",
         className,
       )}
-      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      onClick={() =>
+        window.scrollTo({
+          top: 0,
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        })
+      }
       aria-label="回到顶部"
       title="回到顶部"
     >

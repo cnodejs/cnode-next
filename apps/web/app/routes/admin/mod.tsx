@@ -2,7 +2,7 @@ import { requireAdmin } from "~/lib/auth";
 import { AdminLayout } from "~/components/AdminLayout";
 import { apiFetch } from "~/lib/api-client";
 import { Link, useRevalidator } from "react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
@@ -48,6 +48,8 @@ export default function AdminMod({ loaderData }: any) {
   const [selected, setSelected] = useState<number[]>([]);
   const [cancelJobId, setCancelJobId] = useState<number | null>(null);
   const [confirmJobId, setConfirmJobId] = useState<number | null>(null);
+  const cancelJobFinalFocusRef = useRef<HTMLElement | null>(null);
+  const confirmJobFinalFocusRef = useRef<HTMLElement | null>(null);
   const { revalidate } = useRevalidator();
 
   const toggleSelect = (id: number) => {
@@ -179,11 +181,22 @@ export default function AdminMod({ loaderData }: any) {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button size="sm" variant={jobId === job.id ? "default" : "outline"} asChild>
-                        <Link to={`/admin/moderation?status=${encodeURIComponent(status)}${type ? `&type=${encodeURIComponent(type)}` : ""}&job_id=${job.id}`}>查看命中</Link>
+                      <Button
+                        render={<Link to={`/admin/moderation?status=${encodeURIComponent(status)}${type ? `&type=${encodeURIComponent(type)}` : ""}&job_id=${job.id}`} />}
+                        size="sm"
+                        variant={jobId === job.id ? "default" : "outline"}
+                      >
+                        查看命中
                       </Button>
                       {(job.pendingHitCount || 0) > 0 ? (
-                        <Button size="sm" variant="destructive" onClick={() => setConfirmJobId(job.id)}>批量确认删除</Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={(event) => {
+                            confirmJobFinalFocusRef.current = event.currentTarget;
+                            setConfirmJobId(job.id);
+                          }}
+                        >批量确认删除</Button>
                       ) : null}
                       {job.status === "running" ? <Button size="sm" variant="outline" onClick={() => updateJob(job.id, "pause")}>暂停</Button> : null}
                       {job.status === "paused" || job.status === "failed" ? <Button size="sm" variant="outline" onClick={() => updateJob(job.id, "resume")}>恢复</Button> : null}
@@ -191,7 +204,15 @@ export default function AdminMod({ loaderData }: any) {
                         <Button size="sm" variant="outline" onClick={() => updateJob(job.id, "run")} disabled={jobPending}>立即执行</Button>
                       ) : null}
                       {["pending", "paused", "running"].includes(job.status) ? (
-                        <Button size="sm" variant="destructive" onClick={() => setCancelJobId(job.id)} disabled={jobPending}>取消</Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={(event) => {
+                            cancelJobFinalFocusRef.current = event.currentTarget;
+                            setCancelJobId(job.id);
+                          }}
+                          disabled={jobPending}
+                        >取消</Button>
                       ) : null}
                     </div>
                   </div>
@@ -207,8 +228,18 @@ export default function AdminMod({ loaderData }: any) {
               ))}
             </div>
           )}
-          <Dialog open={cancelJobId !== null} onOpenChange={(open) => !jobPending && !open && setCancelJobId(null)}>
-            <DialogContent>
+          <Dialog
+            open={cancelJobId !== null}
+            onOpenChange={(open, eventDetails) => {
+              if (open) return;
+              if (jobPending) {
+                eventDetails.cancel();
+                return;
+              }
+              setCancelJobId(null);
+            }}
+          >
+            <DialogContent finalFocus={cancelJobFinalFocusRef}>
               <DialogHeader>
                 <DialogTitle>确认取消巡检任务</DialogTitle>
                 <DialogDescription>
@@ -225,8 +256,18 @@ export default function AdminMod({ loaderData }: any) {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-          <Dialog open={confirmJobId !== null} onOpenChange={(open) => !jobBulkPending && !open && setConfirmJobId(null)}>
-            <DialogContent>
+          <Dialog
+            open={confirmJobId !== null}
+            onOpenChange={(open, eventDetails) => {
+              if (open) return;
+              if (jobBulkPending) {
+                eventDetails.cancel();
+                return;
+              }
+              setConfirmJobId(null);
+            }}
+          >
+            <DialogContent finalFocus={confirmJobFinalFocusRef}>
               <DialogHeader>
                 <DialogTitle>确认批量删除巡检命中的原始内容</DialogTitle>
                 <DialogDescription>
@@ -244,7 +285,7 @@ export default function AdminMod({ loaderData }: any) {
             </DialogContent>
           </Dialog>
         </AdminPanel>
-        <AdminPanel title={jobId > 0 ? `任务 #${jobId} 待复核内容` : "待复核内容"} description={`当前页 ${results.length} 条 / 共 ${total} 条`} action={jobId > 0 ? <Button size="sm" variant="outline" asChild><Link to="/admin/moderation">查看全部</Link></Button> : null} contentClassName="p-4">
+        <AdminPanel title={jobId > 0 ? `任务 #${jobId} 待复核内容` : "待复核内容"} description={`当前页 ${results.length} 条 / 共 ${total} 条`} action={jobId > 0 ? <Button render={<Link to="/admin/moderation" />} size="sm" variant="outline">查看全部</Button> : null} contentClassName="p-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface-subtle p-3 text-sm">
             <div className="flex flex-wrap gap-2">
               <Badge variant="outline">话题 {summary.by_type?.topic || 0}</Badge>

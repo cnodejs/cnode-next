@@ -7,6 +7,7 @@ import { Pagination } from "~/components/Pagination";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import { NativeSelect } from "~/components/ui/native-select";
 import { Form, Link } from "react-router";
 
 type AuditLog = {
@@ -101,14 +102,14 @@ export default function AdminAudit({ loaderData }: any) {
             <Form method="get" className="grid w-full gap-2 md:grid-cols-4 xl:grid-cols-7">
               <Input type="date" name="date_from" defaultValue={filters.date_from || ""} aria-label="开始日期" />
               <Input type="date" name="date_to" defaultValue={filters.date_to || ""} aria-label="结束日期" />
-              <select name="category" defaultValue={filters.category || ""} className="h-9 rounded-xl border border-input bg-card px-3 text-sm">
+              <NativeSelect name="category" defaultValue={filters.category || ""} aria-label="审计类型">
                 <option value="">全部类型</option>
                 {Object.entries(categoryLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-              </select>
-              <select name="risk" defaultValue={filters.risk || ""} className="h-9 rounded-xl border border-input bg-card px-3 text-sm">
+              </NativeSelect>
+              <NativeSelect name="risk" defaultValue={filters.risk || ""} aria-label="风险等级">
                 <option value="">全部风险</option>
                 {Object.entries(riskLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-              </select>
+              </NativeSelect>
               <Input name="operator" defaultValue={filters.operator || ""} placeholder="操作人" />
               <Input name="q" defaultValue={filters.q || ""} placeholder="搜索 action/目标/detail" />
               <Button type="submit" variant="outline">筛选</Button>
@@ -126,7 +127,7 @@ export default function AdminAudit({ loaderData }: any) {
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge variant={riskVariant(log.risk)}>{riskLabels[log.risk]}</Badge>
                         <Badge variant="secondary">{categoryLabels[log.category] || log.category}</Badge>
-                        <span className="font-semibold text-cnode-ink">{log.label}</span>
+                        <span className="font-semibold text-foreground">{log.label}</span>
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {log.operator_name || "system"} · <TimeAgo date={log.create_at} /> · {log.result || "unknown"}
@@ -139,10 +140,10 @@ export default function AdminAudit({ loaderData }: any) {
                   </div>
 
                   <details className="mt-3 rounded-xl bg-surface-subtle p-3 text-sm">
-                    <summary className="cursor-pointer font-medium text-cnode-ink">查看审计字段</summary>
+                    <summary className="cursor-pointer font-medium text-foreground">查看审计字段</summary>
                     <div className="mt-3 grid gap-3 lg:grid-cols-[16rem_minmax(0,1fr)]">
                       <dl className="space-y-1 text-xs text-muted-foreground">
-                        <div className="mb-2 font-semibold text-cnode-ink">基础字段</div>
+                        <div className="mb-2 font-semibold text-foreground">基础字段</div>
                         <div><dt className="inline font-semibold">id: </dt><dd className="inline">{log.id}</dd></div>
                         <div><dt className="inline font-semibold">action: </dt><dd className="inline">{log.action}</dd></div>
                         <div><dt className="inline font-semibold">operator_id: </dt><dd className="inline">{log.operator_id ?? ""}</dd></div>
@@ -150,7 +151,7 @@ export default function AdminAudit({ loaderData }: any) {
                         <div><dt className="inline font-semibold">target_id: </dt><dd className="inline">{log.target_id || ""}</dd></div>
                       </dl>
                       <div className="min-w-0 space-y-2">
-                        <div className="text-xs font-semibold text-cnode-ink">附加详情 detail</div>
+                        <div className="text-xs font-semibold text-foreground">附加详情 detail</div>
                         <DetailBlock detail={log.detail} />
                       </div>
                     </div>

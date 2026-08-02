@@ -176,7 +176,7 @@ export function MarkdownEditor({
       aria-label={placeholder || "支持 Markdown 格式"}
       style={{ minHeight }}
       className={cn(
-        "w-full bg-transparent p-3 text-sm outline-none resize-y rounded-md",
+        "w-full resize-y rounded-md bg-transparent p-3 text-sm outline-none",
         isDragging && "bg-cnode-soft/70 ring-2 ring-cnode-green",
       )}
     />
@@ -188,7 +188,7 @@ export function MarkdownEditor({
   );
 
   return (
-    <div className="rounded-md border border-input bg-background">
+    <div className="rounded-xl border border-input bg-background transition-[border-color,box-shadow] focus-within:border-cnode-green/70 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background">
       <div className="flex flex-wrap items-center gap-1 border-b border-border px-2 py-1">
         {toolbar.map((btn) => (
           <Button

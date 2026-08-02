@@ -56,7 +56,7 @@ export default function SearchPass() {
           </CardHeader>
           <CardContent className="pt-6">
             {error && <div className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
-            {success && <div className="mb-4 rounded-md bg-cnode-soft p-3 text-sm text-cnode-ink">{success}</div>}
+            {success && <div className="mb-4 rounded-md bg-cnode-soft p-3 text-sm text-foreground">{success}</div>}
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input
                 type="email"

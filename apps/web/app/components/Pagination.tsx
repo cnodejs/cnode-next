@@ -1,4 +1,12 @@
-import { Link } from "react-router";
+import {
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationList,
+  PaginationNav,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination";
 
 interface PaginationProps {
   page: number;
@@ -31,59 +39,52 @@ export function Pagination({
   const end = Math.min(totalPages, page + 2);
   for (let i = start; i <= end; i++) pages.push(i);
 
-  const linkClass =
-    "inline-flex h-9 items-center rounded-xl border border-input bg-card px-3 text-sm shadow-sm hover:bg-accent hover:text-accent-foreground";
-  const activeClass =
-    "border-cnode-ink bg-cnode-ink text-white hover:bg-cnode-ink/90 hover:text-white";
-
   if (variant === "simple") {
     return (
-      <div className="mt-4 flex items-center justify-between gap-2">
-        {page > 1 ? (
-          <Link to={buildUrl(page - 1)} className={linkClass}>
-            ← 上一页
-          </Link>
-        ) : (
-          <span />
-        )}
-        {page < totalPages ? (
-          <Link to={buildUrl(page + 1)} className={linkClass}>
-            下一页 →
-          </Link>
-        ) : null}
-      </div>
+      <PaginationNav className="mt-4 justify-between">
+        <PaginationList className="w-full justify-between">
+          <PaginationItem>
+            {page > 1 ? <PaginationPrevious to={buildUrl(page - 1)} /> : <span />}
+          </PaginationItem>
+          <PaginationItem>
+            {page < totalPages ? <PaginationNext to={buildUrl(page + 1)} /> : null}
+          </PaginationItem>
+        </PaginationList>
+      </PaginationNav>
     );
   }
 
   return (
-    <div className="mt-4 flex items-center gap-2">
+    <PaginationNav className="mt-4">
+      <PaginationList>
       {page > 1 && (
-        <Link to={buildUrl(page - 1)} className={linkClass}>
-          ← 上一页
-        </Link>
+        <PaginationItem>
+          <PaginationPrevious to={buildUrl(page - 1)} />
+        </PaginationItem>
       )}
       {start > 1 && (
-        <Link to={buildUrl(1)} className={linkClass}>
-          1
-        </Link>
+        <PaginationItem>
+          <PaginationLink to={buildUrl(1)}>1</PaginationLink>
+        </PaginationItem>
       )}
-      {start > 2 && <span className="px-2 text-muted-foreground">...</span>}
+      {start > 2 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
       {pages.map((p) => (
-        <Link key={p} to={buildUrl(p)} className={`${linkClass} ${p === page ? activeClass : ""}`}>
-          {p}
-        </Link>
+        <PaginationItem key={p}>
+          <PaginationLink to={buildUrl(p)} isActive={p === page}>{p}</PaginationLink>
+        </PaginationItem>
       ))}
-      {end < totalPages - 1 && <span className="px-2 text-muted-foreground">...</span>}
+      {end < totalPages - 1 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
       {end < totalPages && (
-        <Link to={buildUrl(totalPages)} className={linkClass}>
-          {totalPages}
-        </Link>
+        <PaginationItem>
+          <PaginationLink to={buildUrl(totalPages)}>{totalPages}</PaginationLink>
+        </PaginationItem>
       )}
       {page < totalPages && (
-        <Link to={buildUrl(page + 1)} className={linkClass}>
-          下一页 →
-        </Link>
+        <PaginationItem>
+          <PaginationNext to={buildUrl(page + 1)} />
+        </PaginationItem>
       )}
-    </div>
+      </PaginationList>
+    </PaginationNav>
   );
 }

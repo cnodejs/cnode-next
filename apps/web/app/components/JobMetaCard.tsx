@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
@@ -44,6 +44,7 @@ function isUrl(s: string): boolean {
 export function JobMetaCard({ meta }: { meta: JobMetaCardData }) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const ctaRef = useRef<HTMLElement | null>(null);
 
   function handleCta() {
     if (isEmail(meta.contact)) {
@@ -107,7 +108,7 @@ export function JobMetaCard({ meta }: { meta: JobMetaCardData }) {
       )}
 
       <div className="mt-4">
-        <Button type="button" size="sm" onClick={handleCta}>
+        <Button ref={ctaRef} type="button" size="sm" onClick={handleCta}>
           <CtaIcon className="h-4 w-4" />
           {ctaLabel}
           {isUrl(meta.contact) && <ExternalLink className="h-3 w-3" />}
@@ -115,7 +116,7 @@ export function JobMetaCard({ meta }: { meta: JobMetaCardData }) {
       </div>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="bottom">
+        <SheetContent side="bottom" finalFocus={ctaRef}>
           <SheetHeader className="text-left">
             <SheetTitle>联系方式</SheetTitle>
           </SheetHeader>
@@ -138,7 +139,7 @@ export function JobMetaCard({ meta }: { meta: JobMetaCardData }) {
 
 function Badge({ icon: Icon, text }: { icon: React.ElementType; text: string }) {
   return (
-    <span className="inline-flex items-center gap-0.5 rounded-md bg-background px-1.5 py-0.5 text-xs text-cnode-ink ring-1 ring-cnode-green/15">
+    <span className="inline-flex items-center gap-0.5 rounded-md bg-background px-1.5 py-0.5 text-xs text-foreground ring-1 ring-cnode-green/40">
       <Icon className="h-3 w-3" />
       {text}
     </span>

@@ -13,6 +13,8 @@ import { JobMetaCard } from "~/components/JobMetaCard";
 import { ReadingGrid } from "~/components/PageShell";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
+import { NativeSelect } from "~/components/ui/native-select";
+import { Textarea } from "~/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import {
   Dialog,
@@ -82,8 +84,8 @@ export default function TopicDetail({ loaderData }: Route.ComponentProps) {
           <CardContent className="space-y-3 py-12">
             <h1 className="text-xl font-semibold">话题不存在或已被删除</h1>
             <p className="text-sm text-muted-foreground">返回首页继续浏览社区最新内容。</p>
-            <Button asChild>
-              <Link to="/">返回首页</Link>
+            <Button render={<Link to="/" />}>
+              返回首页
             </Button>
           </CardContent>
         </Card>
@@ -225,8 +227,8 @@ function TopicContext({ topic, authorProfile }: { topic: any; authorProfile?: an
         <CardContent className="space-y-3 p-4">
           <p className="text-sm font-medium text-foreground">参与讨论前</p>
           <p className="text-xs text-muted-foreground">请提供可复现信息、尊重不同经验背景，并善用 Markdown 格式化代码。</p>
-          <Button asChild variant="outline" size="sm" className="w-full bg-background">
-            <Link to="/about#discussion">查看讨论规范</Link>
+          <Button render={<Link to="/about#discussion" />} variant="outline" size="sm" className="w-full bg-background">
+            查看讨论规范
           </Button>
         </CardContent>
       </Card>
@@ -292,8 +294,8 @@ function TopicAuthorCard({ author, profile }: { author: any; profile?: any }) {
           </dl>
         )}
 
-        <Button asChild variant="outline" size="sm" className="w-full">
-          <Link to={`/user/${loginname}`}>查看用户主页</Link>
+        <Button render={<Link to={`/user/${loginname}`} />} variant="outline" size="sm" className="w-full">
+          查看用户主页
         </Button>
       </CardContent>
     </Card>
@@ -302,6 +304,7 @@ function TopicAuthorCard({ author, profile }: { author: any; profile?: any }) {
 
 function TopicActions({ topic, currentUser }: { topic: any; currentUser: any }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const deleteTriggerRef = useRef<HTMLElement | null>(null);
   const { revalidate } = useRevalidator();
   const canManage = !!currentUser?.is_mod;
   const canEdit = canEditTopic(topic, currentUser);
@@ -367,19 +370,15 @@ function TopicActions({ topic, currentUser }: { topic: any; currentUser: any }) 
         <Button variant={topic.is_collect ? "default" : "outline"} size="sm" onClick={() => toggleCollect()} disabled={collecting}>
           <Star className="h-4 w-4" /> {collecting ? "处理中" : topic.is_collect ? "取消收藏" : "收藏话题"}
         </Button>
-        <Button asChild variant="ghost" size="sm">
-          <a href="#replies">
-            <MessageSquare className="h-4 w-4" /> 查看回复
-          </a>
+        <Button render={<a href="#replies" />} variant="ghost" size="sm">
+          <MessageSquare className="h-4 w-4" /> 查看回复
         </Button>
       </div>
       {(canEdit || currentUser || canManage) && (
         <div className="flex flex-wrap gap-2" aria-label="更多话题操作">
           {canEdit && (
-            <Button asChild variant="outline" size="sm">
-              <Link to={`/topic/${topic.id}/edit`}>
-                <Edit3 className="h-4 w-4" /> 编辑话题
-              </Link>
+            <Button render={<Link to={`/topic/${topic.id}/edit`} />} variant="outline" size="sm">
+              <Edit3 className="h-4 w-4" /> 编辑话题
             </Button>
           )}
           {currentUser && <ReportButton targetType="topic" targetId={topic.id} />}
@@ -391,13 +390,22 @@ function TopicActions({ topic, currentUser }: { topic: any; currentUser: any }) 
               <Button type="button" variant="outline" size="sm" onClick={() => runTopicAction("good")} disabled={adminPending}>
                 {adminPending ? "处理中" : topic.good ? "取消高亮" : "高亮帖子"}
               </Button>
-              <Button type="button" variant="destructive" size="sm" onClick={() => setDeleteOpen(true)} disabled={adminPending}>
+              <Button ref={deleteTriggerRef} type="button" variant="destructive" size="sm" onClick={() => setDeleteOpen(true)} disabled={adminPending}>
                 <Trash2 className="h-4 w-4" /> {adminPending ? "删除中" : "删除帖子"}
               </Button>
             </>
           )}
-          <Dialog open={deleteOpen} onOpenChange={(open) => !adminPending && setDeleteOpen(open)}>
-            <DialogContent>
+          <Dialog
+            open={deleteOpen}
+            onOpenChange={(open, eventDetails) => {
+              if (!open && adminPending) {
+                eventDetails.cancel();
+                return;
+              }
+              setDeleteOpen(open);
+            }}
+          >
+            <DialogContent finalFocus={deleteTriggerRef}>
               <DialogHeader>
                 <DialogTitle>确认删除帖子</DialogTitle>
                 <DialogDescription>
@@ -440,7 +448,10 @@ function ReplySection({
 
   function focusReplyEditor() {
     window.setTimeout(() => {
-      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      formRef.current?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "start",
+      });
       formRef.current?.querySelector("textarea")?.focus();
     }, 0);
   }
@@ -530,8 +541,8 @@ function ReplySection({
           ) : (
             <div className="rounded-xl border border-border bg-surface-subtle p-4 text-sm text-muted-foreground">
               登录后即可参与回复。
-              <Button asChild size="sm" className="ml-3">
-                <Link to="/signin">登录</Link>
+              <Button render={<Link to="/signin" />} size="sm" className="ml-3">
+                登录
               </Button>
             </div>
           )}
@@ -554,6 +565,7 @@ function ReplyItem({
 }) {
   const author = reply.author;
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const deleteTriggerRef = useRef<HTMLElement | null>(null);
   const { revalidate } = useRevalidator();
 
   const { run: toggleUp, pending: upping } = useAsyncAction(
@@ -654,6 +666,7 @@ function ReplyItem({
               {currentUser && <ReportButton targetType="reply" targetId={reply.id} compact />}
               {canDelete && (
                 <Button
+                  ref={deleteTriggerRef}
                   type="button"
                   variant="ghost"
                   size="sm"
@@ -664,8 +677,17 @@ function ReplyItem({
                   <Trash2 className="h-3 w-3" /> {deleting ? "删除中" : "删除回复"}
                 </Button>
               )}
-              <Dialog open={deleteOpen} onOpenChange={(open) => !deleting && setDeleteOpen(open)}>
-                <DialogContent>
+              <Dialog
+                open={deleteOpen}
+                onOpenChange={(open, eventDetails) => {
+                  if (!open && deleting) {
+                    eventDetails.cancel();
+                    return;
+                  }
+                  setDeleteOpen(open);
+                }}
+              >
+                <DialogContent finalFocus={deleteTriggerRef}>
                   <DialogHeader>
                     <DialogTitle>确认删除回复</DialogTitle>
                     <DialogDescription>
@@ -694,6 +716,7 @@ function ReportButton({ targetType, targetId, compact = false }: { targetType: "
   const [open, setOpen] = useState(false);
   const [type, setType] = useState("spam");
   const [description, setDescription] = useState("");
+  const triggerRef = useRef<HTMLElement | null>(null);
 
   const { run: submitReport, pending: submitting } = useAsyncAction(
     async () => {
@@ -717,28 +740,36 @@ function ReportButton({ targetType, targetId, compact = false }: { targetType: "
 
   return (
     <>
-      <Button type="button" variant="ghost" size="sm" className={compact ? "h-8 px-2 text-xs" : undefined} onClick={() => setOpen(true)}>
+      <Button ref={triggerRef} type="button" variant="ghost" size="sm" className={compact ? "h-8 px-2 text-xs" : undefined} onClick={() => setOpen(true)}>
         <Flag className={compact ? "h-3 w-3" : "h-4 w-4"} /> 举报
       </Button>
-      <Dialog open={open} onOpenChange={(value) => !submitting && setOpen(value)}>
-        <DialogContent>
+      <Dialog
+        open={open}
+        onOpenChange={(value, eventDetails) => {
+          if (!value && submitting) {
+            eventDetails.cancel();
+            return;
+          }
+          setOpen(value);
+        }}
+      >
+        <DialogContent finalFocus={triggerRef}>
           <DialogHeader>
             <DialogTitle>举报内容</DialogTitle>
             <DialogDescription>请选择举报类型，也可以补充说明，管理员会在后台处理。</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <select value={type} onChange={(event) => setType(event.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+            <NativeSelect value={type} onChange={(event) => setType(event.target.value)} aria-label="举报类型">
               <option value="spam">垃圾广告</option>
               <option value="attack">攻击辱骂</option>
               <option value="irrelevant">无关内容</option>
               <option value="other">其他</option>
-            </select>
-            <textarea
+            </NativeSelect>
+            <Textarea
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               placeholder="可选说明"
               rows={4}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             />
           </div>
           <DialogFooter>

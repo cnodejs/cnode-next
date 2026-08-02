@@ -58,10 +58,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#fbfdf7" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var raw=localStorage.getItem('theme');var t='system';if(raw){try{var parsed=JSON.parse(raw);t=parsed&&parsed.state&&parsed.state.theme||raw}catch(e){t=raw}}var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);document.documentElement.classList.toggle('dark',d)}catch(e){}})()`,
+            __html: `(function(){try{var raw=localStorage.getItem('theme');var t='system';if(raw){try{var parsed=JSON.parse(raw);t=parsed&&parsed.state&&parsed.state.theme||raw}catch(e){t=raw}}var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);var e=document.documentElement;e.classList.toggle('dark',d);e.style.colorScheme=d?'dark':'light';e.dataset.theme=d?'dark':'light';var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',d?'#071207':'#fbfdf7')}catch(e){}})()`,
           }}
         />
         <Meta />

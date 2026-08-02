@@ -3,7 +3,7 @@ import { Layout } from "~/components/Layout";
 import { apiFetch } from "~/lib/api-client";
 import { requireUser } from "~/lib/auth";
 import { githubUnbindSchema, type GithubUnbindInput } from "@cnode/shared";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useRevalidator, useSearchParams } from "react-router";
 import { Mail } from "lucide-react";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import { Textarea } from "~/components/ui/textarea";
 import { Checkbox } from "~/components/ui/checkbox";
 import {
   Form,
@@ -70,6 +71,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
   const [params] = useSearchParams();
   const revalidator = useRevalidator();
   const [unbindOpen, setUnbindOpen] = useState(false);
+  const unbindTriggerRef = useRef<HTMLElement | null>(null);
 
   const profileForm = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
@@ -183,7 +185,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
               <CardContent className="divide-y divide-border/70 p-0">
                 <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-cnode-soft text-cnode-ink">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-cnode-soft text-foreground">
                       <Mail aria-hidden="true" className="size-5" />
                     </div>
                     <div className="min-w-0">
@@ -199,7 +201,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                 </div>
                 <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-cnode-ink text-white dark:bg-cnode-green dark:text-cnode-ink">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-cnode-ink text-brand-on dark:bg-cnode-green">
                       <svg
                         aria-hidden="true"
                         className="size-5"
@@ -225,6 +227,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                   </div>
                   {user?.github_bound ? (
                     <Button
+                      ref={unbindTriggerRef}
                       type="button"
                       variant="outline"
                       size="sm"
@@ -234,8 +237,8 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       解除绑定
                     </Button>
                   ) : (
-                    <Button asChild variant="outline" size="sm" className="self-start sm:self-auto">
-                      <Link to="/auth/github?intent=bind">绑定 GitHub</Link>
+                    <Button render={<Link to="/auth/github?intent=bind" />} variant="outline" size="sm" className="self-start sm:self-auto">
+                      绑定 GitHub
                     </Button>
                   )}
                 </div>
@@ -254,9 +257,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>个人网站</FormLabel>
-                          <FormControl>
-                            <Input placeholder="https://" {...field} />
-                          </FormControl>
+                          <FormControl render={<Input placeholder="https://" {...field} />} />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -267,9 +268,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>所在地</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
+                          <FormControl render={<Input {...field} />} />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -280,13 +279,9 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>签名</FormLabel>
-                          <FormControl>
-                            <textarea
-                              className="w-full rounded-xl border border-input bg-card px-3 py-2 text-sm shadow-sm transition-colors hover:border-cnode-green/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                              rows={2}
-                              {...field}
-                            />
-                          </FormControl>
+                          <FormControl
+                            render={<Textarea rows={2} {...field} />}
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -297,9 +292,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>微博</FormLabel>
-                          <FormControl>
-                            <Input placeholder="https://weibo.com/xxx" {...field} />
-                          </FormControl>
+                          <FormControl render={<Input placeholder="https://weibo.com/xxx" {...field} />} />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -309,9 +302,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       name="receive_reply_mail"
                       render={({ field }) => (
                         <FormItem className="flex items-center gap-2 space-y-0">
-                          <FormControl>
-                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                          </FormControl>
+                          <FormControl render={<Checkbox checked={field.value} onCheckedChange={field.onChange} />} />
                           <FormLabel className="!text-muted-foreground font-normal">
                             有人回复我的话题时邮件通知
                           </FormLabel>
@@ -323,9 +314,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       name="receive_at_mail"
                       render={({ field }) => (
                         <FormItem className="flex items-center gap-2 space-y-0">
-                          <FormControl>
-                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                          </FormControl>
+                          <FormControl render={<Checkbox checked={field.value} onCheckedChange={field.onChange} />} />
                           <FormLabel className="!text-muted-foreground font-normal">
                             有人 @我 时邮件通知
                           </FormLabel>
@@ -351,9 +340,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>当前密码</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="当前密码" {...field} />
-                          </FormControl>
+                          <FormControl render={<Input type="password" placeholder="当前密码" {...field} />} />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -364,9 +351,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>新密码</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="至少8位,含字母和数字" {...field} />
-                          </FormControl>
+                          <FormControl render={<Input type="password" placeholder="至少8位,含字母和数字" {...field} />} />
                           <FormDescription>密码需至少 8 位,包含字母和数字</FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -405,8 +390,17 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
           </aside>
         </div>
       </ContentPage>
-      <Dialog open={unbindOpen} onOpenChange={handleUnbindOpenChange}>
-        <DialogContent>
+      <Dialog
+        open={unbindOpen}
+        onOpenChange={(open, eventDetails) => {
+          if (!open && unbindForm.formState.isSubmitting) {
+            eventDetails.cancel();
+            return;
+          }
+          handleUnbindOpenChange(open);
+        }}
+      >
+        <DialogContent finalFocus={unbindTriggerRef}>
           <DialogHeader>
             <DialogTitle>解除 GitHub 绑定</DialogTitle>
             <DialogDescription>
@@ -421,9 +415,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>当前密码</FormLabel>
-                    <FormControl>
-                      <Input type="password" autoComplete="current-password" {...field} />
-                    </FormControl>
+                    <FormControl render={<Input type="password" autoComplete="current-password" {...field} />} />
                     <FormMessage />
                   </FormItem>
                 )}

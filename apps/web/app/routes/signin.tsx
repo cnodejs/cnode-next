@@ -95,9 +95,7 @@ export default function Signin() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>用户名 / 邮箱</FormLabel>
-                      <FormControl>
-                        <Input placeholder="用户名 / 邮箱" {...field} />
-                      </FormControl>
+                      <FormControl render={<Input placeholder="用户名 / 邮箱" {...field} />} />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -108,9 +106,7 @@ export default function Signin() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>密码</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="密码" {...field} />
-                      </FormControl>
+                      <FormControl render={<Input type="password" placeholder="密码" {...field} />} />
                       <FormMessage />
                     </FormItem>
                   )}

@@ -9,6 +9,7 @@ import { Badge } from "~/components/ui/badge";
 import { EmptyState } from "~/components/EmptyState";
 import { AdminPage, AdminPageHeader, AdminPanel } from "~/components/AdminPage";
 import { Pagination } from "~/components/Pagination";
+import { NativeSelect } from "~/components/ui/native-select";
 
 export function meta() {
   return [{ title: "举报队列 · CNode Admin" }];
@@ -58,11 +59,11 @@ export default function AdminReports({ loaderData }: any) {
         <AdminPageHeader title="举报队列" description="集中确认用户举报，区分违规内容和误报反馈。" />
         <AdminPanel title="举报记录" description={`当前显示 ${reports.length} / ${total} 条举报记录`} contentClassName="p-4">
           <Form method="get" className="mb-4 flex max-w-xs gap-2">
-            <select name="status" defaultValue={status} className="h-9 flex-1 rounded-md border border-input bg-background px-3 text-sm">
+            <NativeSelect name="status" defaultValue={status} aria-label="举报状态" className="flex-1">
               <option value="pending">待处理</option>
               <option value="confirmed">已确认</option>
               <option value="dismissed">已驳回</option>
-            </select>
+            </NativeSelect>
             <Button type="submit" variant="outline">筛选</Button>
           </Form>
           {reports.length === 0 ? (
@@ -77,7 +78,7 @@ export default function AdminReports({ loaderData }: any) {
                 <span className="text-muted-foreground">{r.target_type} #{r.target_id}</span>
                   </div>
                   <div className="mb-2 text-sm">
-                <a href={r.topic_id ? `/topic/${r.topic_id}` : "#"} className="break-words font-medium text-cnode-ink hover:text-cnode-green">
+                <a href={r.topic_id ? `/topic/${r.topic_id}` : "#"} className="break-words font-medium text-foreground hover:text-primary">
                   {r.topic_title || "目标内容已不可见"}
                 </a>
                 {r.target_type === "reply" && <p className="mt-1 break-words text-muted-foreground">{r.target_summary}</p>}
