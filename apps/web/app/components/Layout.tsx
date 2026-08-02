@@ -6,14 +6,11 @@ import {
   Bell,
   Menu,
   Info,
-  HelpCircle,
   Code,
   Shield,
   User,
   Settings,
   LogOut,
-  Rss,
-  ChevronDown,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { useNavTransition } from "./NavProgress";
@@ -53,7 +50,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Header() {
+export function Header() {
   const [commandOpen, setCommandOpen] = useState(false);
   const rootData = useRouteLoaderData("root") as { zones?: any[]; tabs?: any[] } | undefined;
   const visibleZones = (rootData?.zones || []).filter((z: any) => z.visible).sort((a: any, b: any) => a.sort_order - b.sort_order);
@@ -90,26 +87,10 @@ function Header() {
               <Code className="h-4 w-4" />
               API
             </NavLink>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="inline-flex h-9 items-center gap-1 rounded-lg px-3 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground">
-                  <Info className="h-4 w-4" />
-                  关于
-                  <ChevronDown className="h-3 w-3" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-36">
-                <DropdownMenuItem asChild>
-                  <Link to="/getstart" className="w-full justify-start">新手指南</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/faq" className="w-full justify-start">常见问题</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/about" className="w-full justify-start">关于我们</Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <NavLink to="/about">
+              <Info className="h-4 w-4" />
+              关于
+            </NavLink>
           </nav>
           <Button
             type="button"
@@ -316,28 +297,16 @@ function MobileNavTrigger({ visibleZones = [] }: { visibleZones?: any[] }) {
               <Bell className="h-5 w-5 text-primary" /> 消息
             </Link>
             <Link
-              to="/getstart"
-              className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
-            >
-              <HelpCircle className="h-5 w-5 text-primary" /> 新手指南
-            </Link>
-            <Link
               to="/api"
               className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
             >
               <Code className="h-5 w-5 text-primary" /> API
             </Link>
             <Link
-              to="/faq"
-              className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
-            >
-              <HelpCircle className="h-5 w-5 text-primary" /> 常见问题
-            </Link>
-            <Link
               to="/about"
               className="flex min-h-12 items-center gap-3 rounded-xl border border-cnode-green/15 bg-card px-3 text-sm text-foreground shadow-sm hover:bg-cnode-soft hover:text-cnode-ink"
             >
-              <Info className="h-5 w-5 text-primary" /> 关于我们
+              <Info className="h-5 w-5 text-primary" /> 关于
             </Link>
             {user ? (
               <>
@@ -377,7 +346,7 @@ function MobileNavTrigger({ visibleZones = [] }: { visibleZones?: any[] }) {
   );
 }
 
-function Footer() {
+export function Footer() {
   return (
     <footer className="mt-16 border-t border-border bg-background">
       <PageContainer className="py-10">
@@ -404,7 +373,7 @@ function Footer() {
                     size="sm"
                     className="border-white/20 bg-white/8 text-white hover:bg-white/12 hover:text-white"
                   >
-                    <Link to="/getstart">新手指南</Link>
+                    <Link to="/about">了解社区</Link>
                   </Button>
                 </div>
               </div>
@@ -413,17 +382,16 @@ function Footer() {
               <FooterGroup
                 title="社区"
                 links={[
-                  ["新手指南", "/getstart"],
-                  ["FAQ", "/faq"],
                   ["关于", "/about"],
                   ["发布话题", "/topic/create"],
+                  ["用户排行", "/users/top100"],
+                  ["精华话题", "/stars"],
                 ]}
               />
               <FooterGroup
                 title="资源"
                 links={[
                   ["API", "/api"],
-                  ["搜索", "/search"],
                   ["RSS", "/rss"],
                 ]}
               />
@@ -439,14 +407,6 @@ function Footer() {
                     <Code className="h-4 w-4" />
                     GitHub
                   </a>
-                  <a className="flex items-center gap-2 hover:text-primary" href="/rss">
-                    <Rss className="h-4 w-4" />
-                    RSS 订阅
-                  </a>
-                  <Link className="flex items-center gap-2 hover:text-primary" to="/about">
-                    <Info className="h-4 w-4" />
-                    社区介绍
-                  </Link>
                 </div>
               </div>
             </section>

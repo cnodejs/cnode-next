@@ -41,11 +41,13 @@ export function ReadingGrid({
   toc,
   children,
   aside,
+  afterAside,
   className,
 }: {
   toc?: React.ReactNode;
   children: React.ReactNode;
   aside?: React.ReactNode;
+  afterAside?: React.ReactNode;
   className?: string;
 }) {
   return (
@@ -57,8 +59,13 @@ export function ReadingGrid({
       )}
     >
       {toc && <aside className="hidden xl:block">{toc}</aside>}
-      <main className="min-w-0">{children}</main>
-      {aside && <aside className="min-w-0">{aside}</aside>}
+      <div className={cn("min-w-0", toc ? "xl:col-start-2" : "xl:col-start-1")}>{children}</div>
+      {aside && (
+        <aside className={cn("min-w-0 xl:row-span-2 xl:row-start-1", toc ? "xl:col-start-3" : "xl:col-start-2")}>
+          {aside}
+        </aside>
+      )}
+      {afterAside && <div className={cn("min-w-0", toc ? "xl:col-start-2" : "xl:col-start-1")}>{afterAside}</div>}
     </div>
   );
 }

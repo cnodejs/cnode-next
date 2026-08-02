@@ -1,6 +1,8 @@
 import { useState } from "react";
+import type { PublicIdentity } from "@cnode/shared";
 import type { Route } from "../../.react-router/types/app/routes/+types/user.$name";
 import { Link, useRevalidator } from "react-router";
+import { Code, ExternalLink, MapPin, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { Layout } from "~/components/Layout";
 import { TopicList } from "~/components/TopicList";
@@ -22,6 +24,16 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog";
 import { useAsyncAction } from "~/hooks/use-async-action";
+import { UserIdentityBadges } from "~/components/UserIdentityBadges";
+import { externalUrlLabel, githubProfileUrl, safeExternalUrl } from "~/lib/public-profile";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 
 export async function loader({ params, context, request }: Route.LoaderArgs) {
   const name = params.name!;
@@ -59,47 +71,31 @@ export default function UserProfile({ loaderData }: Route.ComponentProps) {
     <Layout>
       <ContentPage className="space-y-6">
         <UserHero user={user} currentUser={currentUser} />
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
-          <div className="min-w-0 space-y-6">
-            <UserTabs loginname={user.loginname} active="home" />
-            <Card className="overflow-hidden">
-              <CardHeader className="border-b border-border/80 bg-surface-subtle">
-                <CardTitle className="text-base">最近创建的话题</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {user.recent_topics?.length > 0 ? (
-                  <TopicList topics={user.recent_topics} />
-                ) : (
-                  <div className="py-10 text-center text-sm text-muted-foreground">暂无话题</div>
-                )}
-              </CardContent>
-            </Card>
-            <Card className="overflow-hidden">
-              <CardHeader className="border-b border-border/80 bg-surface-subtle">
-                <CardTitle className="text-base">最近参与的话题</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {user.recent_replies?.length > 0 ? (
-                  <TopicList topics={user.recent_replies} />
-                ) : (
-                  <div className="py-10 text-center text-sm text-muted-foreground">暂无回复</div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-          <aside className="min-w-0 space-y-4 lg:sticky lg:top-24 lg:self-start">
-            <Card>
-              <CardHeader className="border-b border-border/80 bg-surface-subtle">
-                <CardTitle className="text-base">社区资料</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 pt-6 text-sm text-muted-foreground">
-                <div className="flex justify-between"><span>积分</span><span className="font-medium text-foreground">{user.score || 0}</span></div>
-                <div className="flex justify-between"><span>话题</span><span className="font-medium text-foreground">{user.recent_topics?.length || 0}</span></div>
-                <div className="flex justify-between"><span>参与</span><span className="font-medium text-foreground">{user.recent_replies?.length || 0}</span></div>
-              </CardContent>
-            </Card>
-          </aside>
-        </div>
+        <UserTabs loginname={user.loginname} active="home" />
+        <Card className="overflow-hidden">
+          <CardHeader className="border-b border-border/80 bg-surface-subtle">
+            <CardTitle className="text-base">最近创建的话题</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {user.recent_topics?.length > 0 ? (
+              <TopicList topics={user.recent_topics} />
+            ) : (
+              <div className="py-10 text-center text-sm text-muted-foreground">暂无话题</div>
+            )}
+          </CardContent>
+        </Card>
+        <Card className="overflow-hidden">
+          <CardHeader className="border-b border-border/80 bg-surface-subtle">
+            <CardTitle className="text-base">最近参与的话题</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {user.recent_replies?.length > 0 ? (
+              <TopicList topics={user.recent_replies} />
+            ) : (
+              <div className="py-10 text-center text-sm text-muted-foreground">暂无回复</div>
+            )}
+          </CardContent>
+        </Card>
       </ContentPage>
     </Layout>
   );
@@ -110,13 +106,15 @@ function UserHero({ user, currentUser }: { user: any; currentUser?: any }) {
   const { revalidate } = useRevalidator();
   const canManage = !!currentUser?.is_admin;
   const isSelf = currentUser?.loginname === user.loginname;
+  const websiteUrl = safeExternalUrl(user.url);
+  const githubUrl = githubProfileUrl(user.githubUsername);
 
   const actionConfig = actionTarget === "block"
     ? {
-        title: user.is_block ? "恢复用户内容可见" : "隐藏用户内容",
+        title: user.is_block ? "恢复用户内容可见" : "屏蔽用户内容",
         description: user.is_block
           ? `恢复 ${user.loginname} 的历史内容可见性。若该用户仍被禁言，仍不能新增发帖或回复。`
-          : `隐藏 ${user.loginname} 创建的话题和相关回复聚合。该操作不等同于禁言。`,
+          : `屏蔽 ${user.loginname} 创建的话题和相关回复聚合。该操作不等同于禁言。`,
         confirm: user.is_block ? "确认恢复可见" : "确认隐藏内容",
         variant: user.is_block ? "default" : "destructive",
       }
@@ -167,34 +165,65 @@ function UserHero({ user, currentUser }: { user: any; currentUser?: any }) {
 
   return (
     <section className="rounded-3xl border border-cnode-green/20 bg-cnode-soft p-6 shadow-card sm:p-8">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-center gap-4">
-          <Avatar className="h-20 w-20 border border-border ring-4 ring-cnode-green/10">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+        <div className="flex min-w-0 flex-col gap-5 sm:flex-row">
+          <Avatar className="h-20 w-20 shrink-0 border border-border ring-4 ring-cnode-green/10">
             <AvatarImage src={getAvatarUrl(user.avatar_url, 96)} alt={user.loginname} />
             <AvatarFallback>{getAvatarFallback(user.loginname)}</AvatarFallback>
           </Avatar>
-          <div className="min-w-0">
-            <h1 className="truncate text-2xl font-bold tracking-tight sm:text-3xl">{user.loginname}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              注册于 <TimeAgo date={user.create_at} />
-            </p>
+          <div className="min-w-0 space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="truncate text-2xl font-bold tracking-tight sm:text-3xl">{user.loginname}</h1>
+              <UserIdentityBadges identities={(user.identities || []) as PublicIdentity[]} />
+            </div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+              <span>注册于 <TimeAgo date={user.create_at} /></span>
+              {user.location && <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{user.location}</span>}
+            </div>
+            {(websiteUrl || githubUrl) && (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+                {websiteUrl && (
+                  <a className="inline-flex items-center gap-1 text-primary hover:underline" href={websiteUrl} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-4 w-4" />{externalUrlLabel(websiteUrl)}
+                  </a>
+                )}
+                {githubUrl && (
+                  <a className="inline-flex items-center gap-1 text-primary hover:underline" href={githubUrl} target="_blank" rel="noopener noreferrer">
+                    <Code className="h-4 w-4" />@{user.githubUsername}
+                  </a>
+                )}
+              </div>
+            )}
+            {user.signature && <p className="max-w-2xl whitespace-pre-wrap break-words text-sm leading-6 text-foreground/80">{user.signature}</p>}
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {user.is_block && <Badge variant="destructive">内容隐藏</Badge>}
-          {user.is_muted && <Badge variant="destructive">已禁言</Badge>}
-          <Badge className="w-fit">积分 {user.score || 0}</Badge>
+        <div className="space-y-4 lg:min-w-72">
+          <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
+            {user.is_block && <Badge variant="destructive">内容已屏蔽</Badge>}
+            {user.is_muted && <Badge variant="destructive">已禁言</Badge>}
           {canManage && !isSelf && (
             <>
-              <Button type="button" variant={user.is_block ? "outline" : "destructive"} size="sm" onClick={() => setActionTarget("block")} disabled={submitting}>
-                {user.is_block ? "恢复内容可见" : "隐藏用户内容"}
-              </Button>
-              <Button type="button" variant={user.is_muted ? "outline" : "destructive"} size="sm" onClick={() => setActionTarget("mute")} disabled={submitting}>
-                {user.is_muted ? "解除禁言" : "禁言用户"}
-              </Button>
-              <Button type="button" variant="destructive" size="sm" onClick={() => setActionTarget("delete_all")} disabled={submitting}>
-                删除所有发言
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button type="button" variant="outline" size="sm" disabled={submitting}>
+                    <MoreHorizontal className="h-4 w-4" />管理
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuLabel>用户治理</DropdownMenuLabel>
+                  <DropdownMenuItem onSelect={() => setActionTarget("block")}>
+                    {user.is_block ? "恢复用户内容" : "屏蔽用户内容"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setActionTarget("mute")}>
+                    {user.is_muted ? "解除禁言" : "禁言用户"}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel>危险操作</DropdownMenuLabel>
+                  <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => setActionTarget("delete_all")}>
+                    删除所有发言
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Dialog open={!!actionTarget} onOpenChange={(open) => !submitting && !open && setActionTarget(null)}>
                 <DialogContent>
                   <DialogHeader>
@@ -213,6 +242,20 @@ function UserHero({ user, currentUser }: { user: any; currentUser?: any }) {
               </Dialog>
             </>
           )}
+          </div>
+          <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-2">
+            {[
+              ["积分", user.score || 0],
+              ["话题", user.topic_count || 0],
+              ["回复", user.reply_count || 0],
+              ["收藏", user.collect_topic_count || 0],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-xl border border-cnode-green/15 bg-background/75 px-3 py-2">
+                <dt className="text-xs text-muted-foreground">{label}</dt>
+                <dd className="mt-0.5 font-semibold text-foreground">{value}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </div>
     </section>

@@ -1,11 +1,12 @@
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
-import { userQueries, topicQueries, replyQueries, getDb } from "../lib/db";
+import { userQueries, topicQueries, replyQueries, roleQueries, getDb } from "../lib/db";
 import { replies, topicCollects, topics, users } from "@cnode/db";
 import { and, count, desc, eq, inArray, sql } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { boolEq } from "../lib/db-compat";
 import type { AuthVars } from "../middleware/auth";
+import { resolveUserAccess } from "../lib/user-access";
 import {
   publicUserSchema,
   userDetailSchema,
@@ -164,8 +165,11 @@ user.openapi(userDetailRoute, async (c) => {
   const { loginname } = c.req.valid("param");
   const userData = await userQueries.getByLoginName(loginname);
   if (!userData) return c.json({ success: false as const, error_msg: "用户不存在" }, 404);
-  const recentTopics = await topicQueries.getByQuery({ authorId: userData.id, publicVisible: true }, { limit: 15, orderBy: undefined });
-  const userReplies = await replyQueries.getByAuthorId(userData.id, { limit: 20 });
+  const [recentTopics, userReplies, roles] = await Promise.all([
+    topicQueries.getByQuery({ authorId: userData.id, publicVisible: true }, { limit: 15, orderBy: undefined }),
+    replyQueries.getByAuthorId(userData.id, { limit: 20 }),
+    roleQueries.listByUserId(userData.id),
+  ]);
   const replyTopicIds = [...new Set<number>(userReplies.map((r) => r.topicId))];
   const replyTopics = await Promise.all(replyTopicIds.map((tid) => topicQueries.getById(tid)));
   const recentRepliesTopics: any[] = [];
@@ -177,7 +181,8 @@ user.openapi(userDetailRoute, async (c) => {
     if (recentRepliesTopics.length >= 5) break;
   }
   const fmtTopic = (t: any) => ({ id: String(t.id), author: { loginname: userData.loginname, avatar_url: userData.avatar }, title: t.title, last_reply_at: t.lastReplyAt });
-  return c.json({ success: true as const, data: { loginname: userData.loginname, avatar_url: userData.avatar, githubUsername: userData.githubUsername || "", create_at: userData.createAt, score: userData.score, topic_count: userData.topicCount || 0, reply_count: userData.replyCount || 0, collect_topic_count: userData.collectTopicCount || 0, is_block: !!userData.isBlock, is_muted: !!userData.isMuted || !!userData.isBlock, recent_topics: recentTopics.map(fmtTopic), recent_replies: recentRepliesTopics.map(fmtTopic) } }, 200);
+  const { identities } = resolveUserAccess(userData.loginname, roles);
+  return c.json({ success: true as const, data: { loginname: userData.loginname, avatar_url: userData.avatar, githubUsername: userData.githubUsername?.trim() || "", location: userData.location?.trim() || null, url: userData.url?.trim() || null, signature: userData.signature?.trim() || null, identities, create_at: userData.createAt, score: userData.score || 0, topic_count: userData.topicCount || 0, reply_count: userData.replyCount || 0, collect_topic_count: userData.collectTopicCount || 0, is_block: !!userData.isBlock, is_muted: !!userData.isMuted, recent_topics: recentTopics.map(fmtTopic), recent_replies: recentRepliesTopics.map(fmtTopic) } }, 200);
 });
 
 // POST /accesstoken

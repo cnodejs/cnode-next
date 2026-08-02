@@ -180,13 +180,15 @@ export const userQueries = {
   },
 };
 
+export const activeUserRoleCondition = isNull(userRoles.revokedAt);
+
 export const roleQueries = {
   async listByUserId(userId: number): Promise<string[]> {
     const db = getDb();
     const rows = await db
       .select({ role: userRoles.role })
       .from(userRoles)
-      .where(and(eq(userRoles.userId, userId), isNull(userRoles.revokedAt)));
+      .where(and(eq(userRoles.userId, userId), activeUserRoleCondition));
     return rows.map((row) => row.role);
   },
 
@@ -198,7 +200,7 @@ export const roleQueries = {
     const rows = await db
       .select({ userId: userRoles.userId, role: userRoles.role })
       .from(userRoles)
-      .where(and(inArray(userRoles.userId, userIds), isNull(userRoles.revokedAt)));
+      .where(and(inArray(userRoles.userId, userIds), activeUserRoleCondition));
     for (const row of rows) {
       const roles = result.get(row.userId) || [];
       roles.push(row.role);

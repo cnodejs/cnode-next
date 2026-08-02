@@ -1,8 +1,9 @@
 import { useRef, useState, type FormEvent } from "react";
+import type { PublicIdentity } from "@cnode/shared";
 import type { Route } from "../../.react-router/types/app/routes/+types/topic.$tid";
 import { Link, useRevalidator } from "react-router";
 import { toast } from "sonner";
-import { Edit3, Flag, MessageSquare, Star, ThumbsUp, Trash2 } from "lucide-react";
+import { Code, Edit3, ExternalLink, Flag, MapPin, MessageSquare, Star, ThumbsUp, Trash2 } from "lucide-react";
 import { Layout } from "~/components/Layout";
 import { MarkdownView } from "~/components/MarkdownView";
 import { TimeAgo } from "~/components/TimeAgo";
@@ -27,6 +28,8 @@ import { kvGet, kvSet } from "~/lib/kv-cache";
 import { extractMarkdownHeadings } from "~/lib/markdown-headings";
 import { TurnstileWidget, getTurnstileToken } from "~/components/TurnstileWidget";
 import { useAsyncAction } from "~/hooks/use-async-action";
+import { UserIdentityBadges } from "~/components/UserIdentityBadges";
+import { externalUrlLabel, githubProfileUrl, safeExternalUrl } from "~/lib/public-profile";
 
 export async function loader({ params, request, context }: Route.LoaderArgs) {
   const tid = params.tid!;
@@ -34,15 +37,31 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
   const kv = (context as any)?.cloudflare?.env?.KV;
   const currentUser = await getCurrentUser(request);
   const cached = currentUser ? null : await kvGet<any>(kv, cacheKey);
-  if (cached) return { topic: cached, kv, currentUser };
-
   const cookie = request.headers.get("cookie") || "";
-  const res = await apiFetch<{ success: boolean; data: any }>(`/api/v1/topic/${tid}?mdrender=false`, {
-    headers: { cookie },
-  });
-  if (!res.success) return { topic: null, kv, currentUser };
-  if (!currentUser) await kvSet(kv, cacheKey, res.data, 60);
-  return { topic: res.data, kv, currentUser };
+  let topic = cached;
+
+  if (!topic) {
+    const res = await apiFetch<{ success: boolean; data: any }>(`/api/v1/topic/${tid}?mdrender=false`, {
+      headers: { cookie },
+    });
+    if (!res.success) return { topic: null, authorProfile: null, kv, currentUser };
+    topic = res.data;
+    if (!currentUser) await kvSet(kv, cacheKey, topic, 60);
+  }
+
+  const authorName = topic.author?.loginname;
+  let authorProfile = authorName && !currentUser ? await kvGet<any>(kv, `user:${authorName}`) : null;
+  if (authorName && !authorProfile) {
+    const profileResponse = await apiFetch<{ success: boolean; data: any }>(`/api/v1/user/${encodeURIComponent(authorName)}`, {
+      headers: { cookie },
+    }).catch(() => null);
+    if (profileResponse?.success) {
+      authorProfile = profileResponse.data;
+      if (!currentUser) await kvSet(kv, `user:${authorName}`, authorProfile, 60);
+    }
+  }
+
+  return { topic, authorProfile, kv, currentUser };
 }
 
 export function meta({ data }: Route.MetaArgs) {
@@ -55,7 +74,7 @@ export function meta({ data }: Route.MetaArgs) {
 }
 
 export default function TopicDetail({ loaderData }: Route.ComponentProps) {
-  const { topic, currentUser } = loaderData as any;
+  const { topic, authorProfile, currentUser } = loaderData as any;
   if (!topic) {
     return (
       <Layout>
@@ -77,7 +96,16 @@ export default function TopicDetail({ loaderData }: Route.ComponentProps) {
 
   return (
     <Layout>
-      <ReadingGrid toc={toc} aside={<TopicContext topic={topic} />}>
+      <ReadingGrid
+        toc={toc}
+        aside={<TopicContext topic={topic} authorProfile={authorProfile} />}
+        afterAside={(
+          <div className="space-y-5">
+            <TopicActions topic={topic} currentUser={currentUser} />
+            <ReplySection replies={topic.replies || []} topicId={topic.id} currentUser={currentUser} />
+          </div>
+        )}
+      >
         <article className="space-y-5">
           <TopicHeader topic={topic} />
           {toc && (
@@ -99,8 +127,6 @@ export default function TopicDetail({ loaderData }: Route.ComponentProps) {
               />
             </CardContent>
           </Card>
-          <TopicActions topic={topic} currentUser={currentUser} />
-          <ReplySection replies={topic.replies || []} topicId={topic.id} currentUser={currentUser} />
         </article>
       </ReadingGrid>
     </Layout>
@@ -180,27 +206,11 @@ function TopicToc({ headings }: { headings: ReturnType<typeof extractMarkdownHea
   );
 }
 
-function TopicContext({ topic }: { topic: any }) {
+function TopicContext({ topic, authorProfile }: { topic: any; authorProfile?: any }) {
   const author = topic.author;
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader className="border-b border-border/80 bg-surface-subtle">
-          <CardTitle className="text-sm">作者</CardTitle>
-        </CardHeader>
-        <CardContent className="flex items-center gap-3 pt-6">
-          <Avatar className="h-10 w-10 border border-border">
-            <AvatarImage src={getAvatarUrl(author?.avatar_url, 48)} alt={author?.loginname || "CNode"} />
-            <AvatarFallback>{getAvatarFallback(author?.loginname)}</AvatarFallback>
-          </Avatar>
-          <div className="min-w-0">
-            <Link to={`/user/${author?.loginname}`} className="block truncate font-medium hover:text-primary">
-              {author?.loginname || "社区成员"}
-            </Link>
-            <p className="text-xs text-muted-foreground">CNode 社区成员</p>
-          </div>
-        </CardContent>
-      </Card>
+      <TopicAuthorCard author={author} profile={authorProfile} />
       <Card>
         <CardHeader className="border-b border-border/80 bg-surface-subtle">
           <CardTitle className="text-sm">话题信息</CardTitle>
@@ -216,11 +226,77 @@ function TopicContext({ topic }: { topic: any }) {
           <p className="text-sm font-medium text-foreground">参与讨论前</p>
           <p className="text-xs text-muted-foreground">请提供可复现信息、尊重不同经验背景，并善用 Markdown 格式化代码。</p>
           <Button asChild variant="outline" size="sm" className="w-full bg-background">
-            <Link to="/getstart">查看新手指南</Link>
+            <Link to="/about#discussion">查看讨论规范</Link>
           </Button>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function TopicAuthorCard({ author, profile }: { author: any; profile?: any }) {
+  const loginname = profile?.loginname || author?.loginname || "社区成员";
+  const avatarUrl = profile?.avatar_url || author?.avatar_url;
+  const websiteUrl = safeExternalUrl(profile?.url);
+  const githubUrl = githubProfileUrl(profile?.githubUsername);
+
+  return (
+    <Card>
+      <CardHeader className="border-b border-border/80 bg-surface-subtle">
+        <CardTitle className="text-sm">作者</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4 pt-5">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-12 w-12 shrink-0 border border-border">
+            <AvatarImage src={getAvatarUrl(avatarUrl, 56)} alt={loginname} />
+            <AvatarFallback>{getAvatarFallback(loginname)}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 space-y-1.5">
+            <Link to={`/user/${loginname}`} className="block truncate font-semibold hover:text-primary">
+              {loginname}
+            </Link>
+            <UserIdentityBadges identities={(profile?.identities || []) as PublicIdentity[]} />
+          </div>
+        </div>
+
+        {profile?.signature && <p className="whitespace-pre-wrap break-words text-sm leading-5 text-foreground/80">{profile.signature}</p>}
+
+        {(profile?.location || websiteUrl || githubUrl) && (
+          <div className="space-y-2 text-xs text-muted-foreground">
+            {profile?.location && <div className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" /><span className="truncate">{profile.location}</span></div>}
+            {websiteUrl && (
+              <a className="flex items-center gap-2 hover:text-primary" href={websiteUrl} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-3.5 w-3.5" /><span className="truncate">{externalUrlLabel(websiteUrl)}</span>
+              </a>
+            )}
+            {githubUrl && (
+              <a className="flex items-center gap-2 hover:text-primary" href={githubUrl} target="_blank" rel="noopener noreferrer">
+                <Code className="h-3.5 w-3.5" /><span className="truncate">@{profile.githubUsername}</span>
+              </a>
+            )}
+          </div>
+        )}
+
+        {profile && (
+          <dl className="grid grid-cols-3 divide-x divide-border rounded-xl border border-border bg-surface-subtle py-2 text-center">
+            {[
+              ["积分", profile.score || 0],
+              ["话题", profile.topic_count || 0],
+              ["回复", profile.reply_count || 0],
+            ].map(([label, value]) => (
+              <div key={label} className="px-1">
+                <dt className="text-[11px] text-muted-foreground">{label}</dt>
+                <dd className="mt-0.5 text-sm font-semibold text-foreground">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+
+        <Button asChild variant="outline" size="sm" className="w-full">
+          <Link to={`/user/${loginname}`}>查看用户主页</Link>
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -674,3 +750,5 @@ function ReportButton({ targetType, targetId, compact = false }: { targetType: "
     </>
   );
 }
+
+export { TopicAuthorCard, TopicContext };

@@ -1,10 +1,4 @@
-# content-page-system Specification
-
-## Purpose
-
-定义关于、FAQ、入门指南和 API 文档等内容页面的共享布局、信息结构、响应式行为和开发者文档呈现要求，避免静态页面退化为占位文本。
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: 共享内容页布局
 
@@ -34,20 +28,16 @@ About 页面 SHALL 说明 CNode 身份、社区目的和价值观，并 SHALL �
 - **THEN** 页面定位到对应的参与指南、讨论规范或常见问题区块
 - **AND** 移动端和桌面端均保持内容可读且目标不被固定 Header 遮挡。
 
-### Requirement: API 文档页
+## REMOVED Requirements
 
-API 页面 SHALL 展示开发者文档，包括认证说明、endpoint 分组、示例和错误/rate-limit 说明。
+### Requirement: Getstart 新用户引导
 
-#### Scenario: API endpoint 文档
+**Reason**: 独立 `/getstart` 内容较少，与 `/about` 的参与指南和讨论规范重复。
 
-- **WHEN** API 页面渲染
-- **THEN** 它包含 endpoint cards 或 sections，展示 method、path、用途和 request/response 示例。
+**Migration**: 将账号、分类、提问、Markdown 和礼仪内容重新组织到 `/about#guide` 与 `/about#discussion`；不保留 `/getstart` 路由或重定向。
 
-### Requirement: 内容页响应式行为
+### Requirement: FAQ 分组问答
 
-内容页导航、TOC 和 related sections SHALL 在移动端适配且不产生横向溢出。
+**Reason**: 独立 `/faq` 页面访问频率低，内容适合作为 `/about` 的常见问题区块统一呈现。
 
-#### Scenario: 移动端内容页
-
-- **WHEN** 内容页在移动端渲染
-- **THEN** hero、sections、code blocks 和 TOC/related navigation 保持可读且无布局溢出。
+**Migration**: 将问题分组迁移到 `/about#faq`；不保留 `/faq` 路由或重定向。

@@ -26,10 +26,7 @@ export default [
   route("my/messages", "routes/my.messages.tsx"),
   route("search", "routes/search.tsx"),
   route("about", "routes/about.tsx"),
-  route("faq", "routes/faq.tsx"),
-  route("getstart", "routes/getstart.tsx"),
   route("api", "routes/api.tsx"),
-  route("help", "routes/help.tsx"),
   route("rss", "routes/rss.tsx"),
   route("sitemap.xml", "routes/sitemap.tsx"),
   route("robots.txt", "routes/robots.tsx"),
@@ -46,5 +43,4 @@ export default [
   route("admin/settings", "routes/admin/settings.tsx"),
   route("admin/zones", "routes/admin/zones.tsx"),
   route("admin/tabs", "routes/admin/tabs.tsx"),
-  route(":name", "routes/legacy-user-redirect.$name.tsx"),
 ] satisfies RouteConfig;

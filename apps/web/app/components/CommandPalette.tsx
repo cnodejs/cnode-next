@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useRouteLoaderData } from "react-router";
 import {
   FileText,
-  HelpCircle,
   Info,
   LayoutDashboard,
   MessageSquare,
@@ -18,9 +17,7 @@ import { Button } from "./ui/button";
 const quickActions = [
   { label: "发布话题", to: "/topic/create", icon: Pencil },
   { label: "我的消息", to: "/my/messages", icon: MessageSquare },
-  { label: "新手指南", to: "/getstart", icon: HelpCircle },
   { label: "API", to: "/api", icon: FileText },
-  { label: "常见问题", to: "/faq", icon: HelpCircle },
   { label: "关于 CNode", to: "/about", icon: Info },
   { label: "管理后台", to: "/admin", icon: LayoutDashboard, adminOnly: true },
 ];
