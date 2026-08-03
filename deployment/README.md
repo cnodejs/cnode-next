@@ -23,11 +23,7 @@ Product schema migrations remain in `packages/db/migrations/pg/`. Add deployment
 | Secrets | Never print, commit, paste, or record real `.env`, tokens, private keys, database URLs, cookies, or user data. |
 | Audit | Record only redacted commit/image/check summaries. Use `production-audit-template.md`. |
 
-Validate compose syntax locally with placeholders:
-
-```bash
-docker compose -f deployment/docker-compose.prod.yml --env-file deployment/.env.production.example config --quiet
-```
+Compose validation belongs to the deployment-host preflight. Repository verification MUST NOT invoke local Docker Compose.
 
 ## Release Images
 
@@ -48,12 +44,22 @@ Before deployment:
 4. Confirm whether schema or data migration is required.
 5. Start a redacted audit record from `production-audit-template.md`.
 6. Record the current running API/Web image tags or digests for rollback.
+7. For the environment-contract release, prepare all `CNODE_*`, `POSTGRES_*`, and `REDIS_*` values before switching images; do not rely on legacy aliases.
 
 Record rollback images:
 
 ```bash
 docker compose -f deployment/docker-compose.prod.yml images api web worker
 ```
+
+## Environment Contract Cutover
+
+1. Schedule one maintenance window for the new `.env`, Compose file, and application images; do not deploy them separately.
+2. Record the previous images, Compose file, and environment variable names without printing secret values.
+3. Have an operator update the server-local `.env` from `APP_*` and `DB_*` to `CNODE_*` and `POSTGRES_*`; Redis keeps its standard `REDIS_*` names.
+4. Validate the rendered Compose config without displaying container environments or secret values.
+5. Recreate application containers without running schema/data migrations and without recreating PostgreSQL or Redis volumes.
+6. Run health and smoke checks. If startup fails, restore the previous images, Compose file, and environment variable names as one rollback unit.
 
 ## Deploy Steps
 
@@ -104,18 +110,29 @@ curl -fsS https://api.cnodejs.org/health
 
 If a migration changed production data, image rollback is not database rollback. Use the migration audit record to decide whether to restore, repair, or roll forward.
 
+Environment-contract rollback is atomic: restore the previous images, Compose file, and previous environment variable names together. New images do not accept legacy PostgreSQL or Redis variables. Do not recreate the PostgreSQL volume, and do not treat changing the PostgreSQL container environment as a database password rotation.
+
 ## Runtime Configuration
 
 Key production environment groups live in `.env.production.example`.
 
 ```bash
-APP_WEB_BASE_URL=https://cnodejs.org
-APP_API_INTERNAL_BASE_URL=http://api:3001
-APP_API_BASE_URL=https://api.cnodejs.org
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=cnode
+POSTGRES_USER=cnode
+POSTGRES_PASSWORD=<secret>
+REDIS_HOST=redis
+REDIS_PORT=6379
+REDIS_DB=0
+REDIS_PASSWORD=
+CNODE_WEB_BASE_URL=https://cnodejs.org
+CNODE_API_INTERNAL_BASE_URL=http://api:3001
+CNODE_API_BASE_URL=https://api.cnodejs.org
 TURNSTILE_SITE_KEY=
 TURNSTILE_SECRET_KEY=
 ```
 
-`APP_API_INTERNAL_BASE_URL` is used by Web SSR inside Docker. `APP_API_BASE_URL` is injected into browser runtime config. `APP_WEB_BASE_URL` is used for OAuth redirects and email links. `TURNSTILE_SITE_KEY` may be public; `TURNSTILE_SECRET_KEY` is API-server only.
+`CNODE_API_INTERNAL_BASE_URL` is used by Web SSR inside Docker. `CNODE_API_BASE_URL` is injected into browser runtime config. `CNODE_WEB_BASE_URL` is used for OAuth redirects and email links. `TURNSTILE_SITE_KEY` may be public; `TURNSTILE_SECRET_KEY` is API-server only.
 
 The moderation worker uses the API image and starts with `pnpm --filter @cnode/api worker:moderation`. It can be stopped independently from API/Web if resource pressure appears.

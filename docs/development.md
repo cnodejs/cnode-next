@@ -24,19 +24,21 @@ Root `.env` is the single default local environment source for Web, API, DB scri
 Minimum local values:
 
 ```bash
-APP_ENV=development
-APP_WEB_BASE_URL=http://localhost:5173
-APP_API_BASE_URL=http://localhost:3001
-APP_API_INTERNAL_BASE_URL=http://localhost:3001
+CNODE_ENV=development
+CNODE_WEB_BASE_URL=http://localhost:5173
+CNODE_API_BASE_URL=http://localhost:3001
+CNODE_API_INTERNAL_BASE_URL=http://localhost:3001
 
-DB_HOST=127.0.0.1
-DB_PORT=5432
-DB_NAME=cnode_local
-DB_USER=cnode
-DB_PASSWORD=<local-password>
+POSTGRES_HOST=127.0.0.1
+POSTGRES_PORT=5432
+POSTGRES_DB=cnode_local
+POSTGRES_USER=cnode
+POSTGRES_PASSWORD=<local-password>
 
 REDIS_HOST=127.0.0.1
 REDIS_PORT=6379
+REDIS_DB=0
+REDIS_PASSWORD=
 ```
 
 ## Local Services
@@ -58,7 +60,7 @@ docker run --name cnode-redis \
   -d redis:7-bookworm redis-server --appendonly yes
 ```
 
-If you use an SSH tunnel to a private database for migration rehearsal, keep that configuration in an explicit ignored profile such as `.env.remote.local`, point `DB_HOST` and `DB_PORT` at the local tunnel listener, and run commands with `CNODE_ENV_FILE=.env.remote.local`. Do not expose databases publicly.
+If you use an SSH tunnel to a private database for migration rehearsal, keep that configuration in an explicit ignored profile such as `.env.remote.local`, point `POSTGRES_HOST` and `POSTGRES_PORT` at the local tunnel listener, and run commands with `CNODE_ENV_FILE=.env.remote.local`. Do not expose databases publicly. Existing real dotenv profiles remain human-managed and must not be printed or changed by repository automation.
 
 ## Start
 
@@ -112,7 +114,7 @@ Runtime commands keep their default command shape and load root `.env` from thei
 | `pnpm db:push:pg`, `pnpm db:generate` | Keep `drizzle-kit` commands; Drizzle config loads root `.env`. |
 | `pnpm db:migrate`, `pnpm db:seed` | Keep `tsx src/*` commands; DB scripts load root `.env`. |
 | `pnpm migrate:mongo-to-pg`, `pnpm migrate:reconcile` | Keep root `tsx scripts/*` commands; scripts load root `.env`; use `CNODE_ENV_FILE=.env.remote.local` for remote rehearsal. |
-| `pnpm lint`, `pnpm format`, `pnpm secrets:scan`, `pnpm verify:compose-config` | Do not load local dotenv files. |
+| `pnpm lint`, `pnpm format`, `pnpm secrets:scan` | Do not load local dotenv files. |
 
 Example remote rehearsal profile:
 

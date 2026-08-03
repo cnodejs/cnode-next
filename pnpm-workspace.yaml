@@ -1,13 +1,18 @@
 packages:
   - "apps/*"
   - "packages/*"
+overrides:
+  "shadcn>zod": "3.25.76"
 allowBuilds:
   '@fission-ai/openspec': true
   '@scarf/scarf': false
   '@tree-sitter-grammars/tree-sitter-yaml': false
   core-js-pure: false
   esbuild: true
+  msw: true
   sharp: true
   tree-sitter: false
   tree-sitter-json: false
   workerd: true
+minimumReleaseAgeExclude:
+  - '@hookform/resolvers@5.7.1'

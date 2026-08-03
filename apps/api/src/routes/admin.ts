@@ -1062,7 +1062,7 @@ admin.get("/sitemap.xml", async (c) => {
 // ── Search ──
 admin.get("/search", async (c) => {
   const q = c.req.query("q") || "";
-  const engine = c.req.query("engine") || process.env.APP_SEARCH_ENGINE || "google";
+  const engine = c.req.query("engine") || process.env.CNODE_SEARCH_ENGINE || "google";
   if (engine === "local") {
     const db = getDb();
     const results = await db.select().from(topics).where(and(sql`(${topics.title} LIKE ${`%${q}%`} OR ${topics.content} LIKE ${`%${q}%`})`, boolEq(topics.deleted, false), sql`${topics.status} != 'deleted'`, sql`${topics.tab} NOT IN ('dev', 'test')`)).orderBy(desc(topics.lastReplyAt)).limit(20);

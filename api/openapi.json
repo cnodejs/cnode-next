@@ -61,7 +61,6 @@
           {
             "schema": {
               "type": "boolean",
-              "nullable": true,
               "default": true
             },
             "required": false,
@@ -460,7 +459,6 @@
           {
             "schema": {
               "type": "boolean",
-              "nullable": true,
               "default": true
             },
             "required": false,
@@ -2856,6 +2854,29 @@
                         "githubUsername": {
                           "type": "string"
                         },
+                        "location": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "url": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "signature": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "identities": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "admin",
+                              "moderator",
+                              "recruiter"
+                            ]
+                          }
+                        },
                         "create_at": {
                           "type": "string"
                         },
@@ -2960,6 +2981,10 @@
                         "loginname",
                         "avatar_url",
                         "githubUsername",
+                        "location",
+                        "url",
+                        "signature",
+                        "identities",
                         "create_at",
                         "score",
                         "topic_count",

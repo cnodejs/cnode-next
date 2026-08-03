@@ -1,5 +1,5 @@
 import { useRouteLoaderData } from "react-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type RootData = {
   publicConfig?: {
@@ -49,9 +49,11 @@ export function TurnstileWidget() {
   const data = useRouteLoaderData("root") as RootData | undefined;
   const siteKey = data?.publicConfig?.turnstileSiteKey;
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [status, setStatus] = useState<"loading" | "ready" | "verified" | "error">("loading");
 
   useEffect(() => {
     if (!siteKey || !containerRef.current) return;
+    setStatus("loading");
     let cancelled = false;
     let widgetId: string | null = null;
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
@@ -65,12 +67,15 @@ export function TurnstileWidget() {
           action: "turnstile-spin-v2",
           callback: (token: string) => {
             currentToken = token;
+            setStatus("verified");
           },
           "expired-callback": () => {
             currentToken = "";
+            setStatus("ready");
           },
           "error-callback": (code: string) => {
             currentToken = "";
+            setStatus("error");
             if (retryTimer) clearTimeout(retryTimer);
             if (code.startsWith("600") || code.startsWith("300") || code === "200500") {
               retryTimer = setTimeout(() => {
@@ -79,9 +84,11 @@ export function TurnstileWidget() {
             }
           },
         });
+        setStatus("ready");
       })
       .catch(() => {
         currentToken = "";
+        setStatus("error");
       });
 
     return () => {
@@ -93,7 +100,23 @@ export function TurnstileWidget() {
   }, [siteKey]);
 
   if (!siteKey) return null;
-  return <div ref={containerRef} />;
+  const message = {
+    loading: "人机验证加载中",
+    ready: "请完成人机验证",
+    verified: "人机验证已完成",
+    error: "人机验证加载失败，请刷新后重试",
+  }[status];
+  return (
+    <div className="flex flex-col gap-2" aria-busy={status === "loading"}>
+      <div ref={containerRef} />
+      <p
+        role={status === "error" ? "alert" : "status"}
+        className={status === "error" ? "text-sm text-destructive" : "text-sm text-muted-foreground"}
+      >
+        {message}
+      </p>
+    </div>
+  );
 }
 
 export function getTurnstileToken() {

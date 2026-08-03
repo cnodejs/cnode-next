@@ -17,10 +17,29 @@ describe("Pagination", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole("link", { name: "下一页 →" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "下一页" })).toHaveAttribute(
       "href",
       "/admin/reports?status=pending&q=node&page=3",
     );
+    expect(screen.getByRole("link", { name: "2" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("list")).toHaveClass("flex-wrap");
+    expect(screen.getByRole("link", { name: "5" })).toBeInTheDocument();
+  });
+
+  it("renders a stable five-page window with boundary links", () => {
+    render(
+      <MemoryRouter>
+        <Pagination page={6} total={120} limit={10} basePath="/zone/jobs" />
+      </MemoryRouter>,
+    );
+
+    for (const page of [4, 5, 6, 7, 8]) {
+      expect(screen.getByRole("link", { name: String(page) })).toBeInTheDocument();
+    }
+    expect(screen.getByRole("link", { name: "1" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "12" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "上一页" })).toHaveAttribute("href", "/zone/jobs?page=5");
+    expect(screen.getByRole("link", { name: "下一页" })).toHaveAttribute("href", "/zone/jobs?page=7");
   });
 
   it("renders simple pagination without page numbers", () => {
@@ -31,6 +50,6 @@ describe("Pagination", () => {
     );
 
     expect(screen.queryByRole("link", { name: "1" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "下一页 →" })).toHaveAttribute("href", "/?page=2");
+    expect(screen.getByRole("link", { name: "下一页" })).toHaveAttribute("href", "/?page=2");
   });
 });

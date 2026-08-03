@@ -3,7 +3,7 @@ import { Layout } from "~/components/Layout";
 import { apiFetch } from "~/lib/api-client";
 import { requireUser } from "~/lib/auth";
 import { githubUnbindSchema, type GithubUnbindInput } from "@cnode/shared";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useRevalidator, useSearchParams } from "react-router";
 import { Mail } from "lucide-react";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import { Textarea } from "~/components/ui/textarea";
 import { Checkbox } from "~/components/ui/checkbox";
 import {
   Form,
@@ -21,7 +22,7 @@ import {
   FormLabel,
   FormMessage,
   FormDescription,
-} from "~/components/ui/form";
+} from "~/components/Form";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
 import {
@@ -32,7 +33,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
-import { ContentPage } from "~/components/PageShell";
+import { AccountPage, PageHeader } from "~/components/PageShell";
 import { useAsyncAction } from "~/hooks/use-async-action";
 
 const profileSchema = z.object({
@@ -70,6 +71,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
   const [params] = useSearchParams();
   const revalidator = useRevalidator();
   const [unbindOpen, setUnbindOpen] = useState(false);
+  const unbindTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   const profileForm = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
@@ -165,31 +167,25 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
 
   return (
     <Layout>
-      <ContentPage className="space-y-6">
-        <section className="rounded-3xl border border-cnode-green/20 bg-cnode-soft p-6 sm:p-8">
-          <p className="text-sm font-medium text-primary">SETTINGS</p>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">用户设置</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            维护个人资料、通知偏好、密码和 API Token。
-          </p>
-        </section>
+      <AccountPage className="max-w-6xl">
+        <PageHeader breadcrumbs={[{ label: "首页", to: "/" }, { label: "用户设置" }]} title="用户设置" description="维护个人资料、通知偏好、密码和 API Token。" />
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-          <div className="min-w-0 space-y-6">
+          <div className="flex min-w-0 flex-col gap-6">
             <Card>
-              <CardHeader className="border-b border-border/80 bg-surface-subtle">
+              <CardHeader>
                 <CardTitle>账号身份</CardTitle>
               </CardHeader>
-              <CardContent className="divide-y divide-border/70 p-0">
-                <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
+              <CardContent className="flex flex-col gap-2">
+                <div className="flex flex-col gap-4 rounded-xl bg-muted p-4 sm:flex-row sm:items-center">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-cnode-soft text-cnode-ink">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-secondary-foreground">
                       <Mail aria-hidden="true" className="size-5" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-medium">邮箱</span>
-                        <Badge variant="success">已设置</Badge>
+                        <Badge variant="secondary">已设置</Badge>
                       </div>
                       <div className="mt-1 break-all text-sm text-muted-foreground">
                         {user?.email || "-"}
@@ -197,9 +193,9 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
+                <div className="flex flex-col gap-4 rounded-xl bg-muted p-4 sm:flex-row sm:items-center">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-cnode-ink text-white dark:bg-cnode-green dark:text-cnode-ink">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand text-brand-foreground">
                       <svg
                         aria-hidden="true"
                         className="size-5"
@@ -212,7 +208,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-medium">GitHub</span>
-                        <Badge variant={user?.github_bound ? "success" : "outline"}>
+                        <Badge variant={user?.github_bound ? "secondary" : "outline"}>
                           {user?.github_bound ? "已绑定" : "未绑定"}
                         </Badge>
                       </div>
@@ -225,6 +221,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                   </div>
                   {user?.github_bound ? (
                     <Button
+                      ref={unbindTriggerRef}
                       type="button"
                       variant="outline"
                       size="sm"
@@ -234,29 +231,31 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       解除绑定
                     </Button>
                   ) : (
-                    <Button asChild variant="outline" size="sm" className="self-start sm:self-auto">
-                      <Link to="/auth/github?intent=bind">绑定 GitHub</Link>
+                    <Button render={<Link to="/auth/github?intent=bind" />} variant="outline" size="sm" className="self-start sm:self-auto">
+                      绑定 GitHub
                     </Button>
                   )}
                 </div>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader className="border-b border-border/80 bg-surface-subtle">
+              <CardHeader>
                 <CardTitle>个人资料</CardTitle>
               </CardHeader>
-              <CardContent className="pt-6">
+              <CardContent>
                 <Form {...profileForm}>
-                  <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
+                  <form
+                    onSubmit={profileForm.handleSubmit(onProfileSubmit)}
+                    aria-busy={profileForm.formState.isSubmitting}
+                    className="flex flex-col gap-4"
+                  >
                     <FormField
                       control={profileForm.control}
                       name="url"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>个人网站</FormLabel>
-                          <FormControl>
-                            <Input placeholder="https://" {...field} />
-                          </FormControl>
+                          <FormControl render={<Input type="url" autoComplete="url" spellCheck={false} placeholder="https://" {...field} />} />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -267,9 +266,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>所在地</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
+                          <FormControl render={<Input autoComplete="address-level2" {...field} />} />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -280,13 +277,9 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>签名</FormLabel>
-                          <FormControl>
-                            <textarea
-                              className="w-full rounded-xl border border-input bg-card px-3 py-2 text-sm shadow-sm transition-colors hover:border-cnode-green/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                              rows={2}
-                              {...field}
-                            />
-                          </FormControl>
+                          <FormControl
+                            render={<Textarea rows={2} autoComplete="off" spellCheck={true} {...field} />}
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -297,9 +290,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>微博</FormLabel>
-                          <FormControl>
-                            <Input placeholder="https://weibo.com/xxx" {...field} />
-                          </FormControl>
+                          <FormControl render={<Input type="url" autoComplete="url" spellCheck={false} placeholder="https://weibo.com/xxx" {...field} />} />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -308,11 +299,9 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       control={profileForm.control}
                       name="receive_reply_mail"
                       render={({ field }) => (
-                        <FormItem className="flex items-center gap-2 space-y-0">
-                          <FormControl>
-                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                          </FormControl>
-                          <FormLabel className="!text-muted-foreground font-normal">
+                        <FormItem orientation="horizontal">
+                          <FormControl render={<Checkbox checked={field.value} onCheckedChange={field.onChange} />} />
+                          <FormLabel className="font-normal text-muted-foreground">
                             有人回复我的话题时邮件通知
                           </FormLabel>
                         </FormItem>
@@ -322,38 +311,41 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       control={profileForm.control}
                       name="receive_at_mail"
                       render={({ field }) => (
-                        <FormItem className="flex items-center gap-2 space-y-0">
-                          <FormControl>
-                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                          </FormControl>
-                          <FormLabel className="!text-muted-foreground font-normal">
+                        <FormItem orientation="horizontal">
+                          <FormControl render={<Checkbox checked={field.value} onCheckedChange={field.onChange} />} />
+                          <FormLabel className="font-normal text-muted-foreground">
                             有人 @我 时邮件通知
                           </FormLabel>
                         </FormItem>
                       )}
                     />
-                    <Button type="submit">保存</Button>
+                    <Button type="submit" disabled={profileForm.formState.isSubmitting}>
+                      {profileForm.formState.isSubmitting ? "保存中..." : "保存"}
+                    </Button>
+                    {profileForm.formState.isSubmitting && <p role="status" className="text-sm text-muted-foreground">正在保存个人资料</p>}
                   </form>
                 </Form>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className="border-b border-border/80 bg-surface-subtle">
+              <CardHeader>
                 <CardTitle>修改密码</CardTitle>
               </CardHeader>
-              <CardContent className="pt-6">
+              <CardContent>
                 <Form {...passForm}>
-                  <form onSubmit={passForm.handleSubmit(onPassSubmit)} className="space-y-4">
+                  <form
+                    onSubmit={passForm.handleSubmit(onPassSubmit)}
+                    aria-busy={passForm.formState.isSubmitting}
+                    className="flex flex-col gap-4"
+                  >
                     <FormField
                       control={passForm.control}
                       name="oldPass"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>当前密码</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="当前密码" {...field} />
-                          </FormControl>
+                          <FormControl render={<Input type="password" autoComplete="current-password" spellCheck={false} placeholder="当前密码" {...field} />} />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -364,27 +356,28 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>新密码</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="至少8位,含字母和数字" {...field} />
-                          </FormControl>
+                          <FormControl render={<Input type="password" autoComplete="new-password" spellCheck={false} placeholder="至少8位,含字母和数字" {...field} />} />
                           <FormDescription>密码需至少 8 位,包含字母和数字</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <Button type="submit">修改密码</Button>
+                    <Button type="submit" disabled={passForm.formState.isSubmitting}>
+                      {passForm.formState.isSubmitting ? "修改中..." : "修改密码"}
+                    </Button>
+                    {passForm.formState.isSubmitting && <p role="status" className="text-sm text-muted-foreground">正在修改密码</p>}
                   </form>
                 </Form>
               </CardContent>
             </Card>
           </div>
 
-          <aside className="min-w-0 space-y-6 lg:sticky lg:top-24 lg:self-start">
+          <aside className="flex min-w-0 flex-col gap-6 lg:sticky lg:top-24 lg:self-start">
             <Card>
-              <CardHeader className="border-b border-border/80 bg-surface-subtle">
+              <CardHeader>
                 <CardTitle>API Token</CardTitle>
               </CardHeader>
-              <CardContent className="pt-6">
+              <CardContent>
                 <p className="text-sm text-muted-foreground mb-2">
                   刷新你的 accessToken,用于调用 CNode API
                 </p>
@@ -393,20 +386,29 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                 </Button>
               </CardContent>
             </Card>
-            <Card className="border-cnode-green/20 bg-surface-subtle">
-              <CardHeader className="border-b border-cnode-green/20 bg-cnode-soft">
-                <CardTitle className="text-base">通知说明</CardTitle>
+            <Card size="sm">
+              <CardHeader>
+                <CardTitle>通知说明</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2 p-6 text-sm text-muted-foreground">
+              <CardContent className="flex flex-col gap-2 text-sm text-muted-foreground">
                 <p>站内消息会展示在消息中心。</p>
                 <p>邮件通知取决于这里的两个偏好开关。</p>
               </CardContent>
             </Card>
           </aside>
         </div>
-      </ContentPage>
-      <Dialog open={unbindOpen} onOpenChange={handleUnbindOpenChange}>
-        <DialogContent>
+      </AccountPage>
+      <Dialog
+        open={unbindOpen}
+        onOpenChange={(open, eventDetails) => {
+          if (!open && unbindForm.formState.isSubmitting) {
+            eventDetails.cancel();
+            return;
+          }
+          handleUnbindOpenChange(open);
+        }}
+      >
+        <DialogContent finalFocus={unbindTriggerRef}>
           <DialogHeader>
             <DialogTitle>解除 GitHub 绑定</DialogTitle>
             <DialogDescription>
@@ -414,16 +416,14 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
             </DialogDescription>
           </DialogHeader>
           <Form {...unbindForm}>
-            <form onSubmit={unbindForm.handleSubmit(onUnbindSubmit)} className="space-y-5">
+            <form onSubmit={unbindForm.handleSubmit(onUnbindSubmit)} className="flex flex-col gap-5">
               <FormField
                 control={unbindForm.control}
                 name="password"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>当前密码</FormLabel>
-                    <FormControl>
-                      <Input type="password" autoComplete="current-password" {...field} />
-                    </FormControl>
+                    <FormControl render={<Input type="password" autoComplete="current-password" {...field} />} />
                     <FormMessage />
                   </FormItem>
                 )}

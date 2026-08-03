@@ -12,7 +12,7 @@ const app = new Hono<{
 }>();
 
 function allowedCorsOrigin(origin: string | undefined) {
-  const webBaseUrl = process.env.APP_WEB_BASE_URL || "http://localhost:5173";
+  const webBaseUrl = process.env.CNODE_WEB_BASE_URL || "http://localhost:5173";
   const allowed = new Set([
     webBaseUrl.replace(/\/+$/g, ""),
     "http://localhost:5173",
@@ -39,8 +39,8 @@ app.get("/health", (c) =>
     ok: true,
     service: "cnode-api",
     version: packageJson.version,
-    commit: process.env.APP_GIT_SHA || process.env.GIT_SHA || process.env.COMMIT_SHA || "unknown",
-    buildTime: process.env.APP_BUILD_TIME || process.env.BUILD_TIME || "unknown",
+    commit: process.env.CNODE_GIT_SHA || process.env.GIT_SHA || process.env.COMMIT_SHA || "unknown",
+    buildTime: process.env.CNODE_BUILD_TIME || process.env.BUILD_TIME || "unknown",
   }),
 );
 

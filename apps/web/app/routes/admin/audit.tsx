@@ -7,7 +7,11 @@ import { Pagination } from "~/components/Pagination";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import { NativeSelect } from "~/components/ui/native-select";
 import { Form, Link } from "react-router";
+import { EmptyState } from "~/components/EmptyState";
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemHeader, ItemTitle } from "~/components/ui/item";
+import { Separator } from "~/components/ui/separator";
 
 type AuditLog = {
   id: number;
@@ -51,7 +55,7 @@ export function meta() {
 
 function riskVariant(risk: AuditLog["risk"]) {
   if (risk === "critical") return "destructive";
-  if (risk === "high") return "warning";
+  if (risk === "high") return "destructive";
   if (risk === "medium") return "secondary";
   return "outline";
 }
@@ -65,11 +69,11 @@ function targetHref(log: AuditLog) {
 }
 
 function DetailBlock({ detail }: { detail: string | null }) {
-  if (!detail) return <div className="rounded-xl border border-dashed border-border bg-card p-3 text-xs text-muted-foreground">该审计事件没有附加详情。</div>;
+  if (!detail) return <div className="min-w-0 bg-muted p-3 text-xs text-muted-foreground">该审计事件没有附加详情。</div>;
   try {
-    return <pre className="overflow-auto rounded-xl bg-surface-subtle p-3 text-xs">{JSON.stringify(JSON.parse(detail), null, 2)}</pre>;
+    return <pre className="max-w-full overflow-auto bg-muted p-3 text-xs">{JSON.stringify(JSON.parse(detail), null, 2)}</pre>;
   } catch {
-    return <pre className="overflow-auto rounded-xl bg-surface-subtle p-3 text-xs whitespace-pre-wrap">{detail}</pre>;
+    return <pre className="max-w-full overflow-auto bg-muted p-3 text-xs whitespace-pre-wrap break-all">{detail}</pre>;
   }
 }
 
@@ -85,7 +89,7 @@ export default function AdminAudit({ loaderData }: any) {
 
   return (
     <AdminLayout>
-      <AdminPage>
+      <AdminPage archetype="workflow">
         <AdminPageHeader title="审计中心" description="追踪后台关键操作、权限变更、内容治理和系统设置变更。" />
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
@@ -96,73 +100,79 @@ export default function AdminAudit({ loaderData }: any) {
           <AdminMetricCard label="失败/异常" value={summary.failures} />
         </div>
 
-        <AdminPanel title="审计事件" description={`当前显示 ${logs.length} / ${total} 条记录`}>
+        <AdminPanel title="审计事件" description={`当前显示 ${logs.length} / ${total} 条记录`} contentClassName="flex flex-col gap-4">
           <AdminToolbar>
             <Form method="get" className="grid w-full gap-2 md:grid-cols-4 xl:grid-cols-7">
               <Input type="date" name="date_from" defaultValue={filters.date_from || ""} aria-label="开始日期" />
               <Input type="date" name="date_to" defaultValue={filters.date_to || ""} aria-label="结束日期" />
-              <select name="category" defaultValue={filters.category || ""} className="h-9 rounded-xl border border-input bg-card px-3 text-sm">
+              <NativeSelect name="category" defaultValue={filters.category || ""} aria-label="审计类型">
                 <option value="">全部类型</option>
                 {Object.entries(categoryLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-              </select>
-              <select name="risk" defaultValue={filters.risk || ""} className="h-9 rounded-xl border border-input bg-card px-3 text-sm">
+              </NativeSelect>
+              <NativeSelect name="risk" defaultValue={filters.risk || ""} aria-label="风险等级">
                 <option value="">全部风险</option>
                 {Object.entries(riskLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-              </select>
+              </NativeSelect>
               <Input name="operator" defaultValue={filters.operator || ""} placeholder="操作人" />
               <Input name="q" defaultValue={filters.q || ""} placeholder="搜索 action/目标/detail" />
               <Button type="submit" variant="outline">筛选</Button>
             </Form>
           </AdminToolbar>
 
-          <div className="space-y-3 p-4">
-            {logs.length === 0 && <div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">暂无审计记录</div>}
+          <Separator />
+
+          <ItemGroup className="min-w-0">
+            {logs.length === 0 && (
+              <EmptyState
+                title="没有匹配的审计记录"
+                message="当前日期、类型、风险或关键词筛选没有结果。"
+                action={<Button render={<Link to="/admin/audit" />} variant="outline">清除筛选</Button>}
+              />
+            )}
             {logs.map((log) => {
               const href = targetHref(log);
               return (
-                <article key={log.id} className="rounded-2xl border border-cnode-green/15 bg-card p-4 shadow-sm">
-                  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="min-w-0 space-y-2">
-                      <div className="flex flex-wrap items-center gap-2">
+                <Item key={log.id} variant="outline" className="min-w-0">
+                  <ItemContent className="min-w-0">
+                    <ItemHeader>
+                      <ItemTitle className="w-full flex-wrap whitespace-normal">
                         <Badge variant={riskVariant(log.risk)}>{riskLabels[log.risk]}</Badge>
                         <Badge variant="secondary">{categoryLabels[log.category] || log.category}</Badge>
-                        <span className="font-semibold text-cnode-ink">{log.label}</span>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
+                        <span className="font-semibold text-foreground">{log.label}</span>
+                      </ItemTitle>
+                    </ItemHeader>
+                    <ItemDescription>
                         {log.operator_name || "system"} · <TimeAgo date={log.create_at} /> · {log.result || "unknown"}
-                      </div>
-                      <div className="text-sm">
+                    </ItemDescription>
+                    <div className="min-w-0 break-all text-sm">
                         目标：{href ? <Link to={href} className="text-primary hover:underline">{log.target_name || log.target_id}</Link> : <span>{log.target_name || log.target_id || "无"}</span>}
                         {log.target_type && <span className="ml-2 text-xs text-muted-foreground">{log.target_type}</span>}
-                      </div>
                     </div>
-                  </div>
 
-                  <details className="mt-3 rounded-xl bg-surface-subtle p-3 text-sm">
-                    <summary className="cursor-pointer font-medium text-cnode-ink">查看审计字段</summary>
+                  <details className="border-t pt-3 text-sm">
+                    <summary className="cursor-pointer font-medium text-foreground">查看审计字段</summary>
                     <div className="mt-3 grid gap-3 lg:grid-cols-[16rem_minmax(0,1fr)]">
-                      <dl className="space-y-1 text-xs text-muted-foreground">
-                        <div className="mb-2 font-semibold text-cnode-ink">基础字段</div>
+                      <dl className="flex min-w-0 flex-col gap-1 break-all text-xs text-muted-foreground">
+                        <div className="mb-2 font-semibold text-foreground">基础字段</div>
                         <div><dt className="inline font-semibold">id: </dt><dd className="inline">{log.id}</dd></div>
                         <div><dt className="inline font-semibold">action: </dt><dd className="inline">{log.action}</dd></div>
                         <div><dt className="inline font-semibold">operator_id: </dt><dd className="inline">{log.operator_id ?? ""}</dd></div>
                         <div><dt className="inline font-semibold">target_type: </dt><dd className="inline">{log.target_type || ""}</dd></div>
                         <div><dt className="inline font-semibold">target_id: </dt><dd className="inline">{log.target_id || ""}</dd></div>
                       </dl>
-                      <div className="min-w-0 space-y-2">
-                        <div className="text-xs font-semibold text-cnode-ink">附加详情 detail</div>
+                      <div className="flex min-w-0 flex-col gap-2">
+                        <div className="text-xs font-semibold text-foreground">附加详情 detail</div>
                         <DetailBlock detail={log.detail} />
                       </div>
                     </div>
                   </details>
-                </article>
+                  </ItemContent>
+                </Item>
               );
             })}
-          </div>
+          </ItemGroup>
 
-          <div className="px-4 pb-4">
-            <Pagination page={page} total={total} limit={limit} basePath="/admin/audit" searchParams={filters} />
-          </div>
+          <Pagination page={page} total={total} limit={limit} basePath="/admin/audit" searchParams={filters} />
         </AdminPanel>
       </AdminPage>
     </AdminLayout>

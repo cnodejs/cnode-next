@@ -1,15 +1,16 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { UserHero } from "~/routes/user.$name";
 
-const { apiFetch } = vi.hoisted(() => ({ apiFetch: vi.fn() }));
+const { apiFetch, toastError, toastSuccess } = vi.hoisted(() => ({ apiFetch: vi.fn(), toastError: vi.fn(), toastSuccess: vi.fn() }));
 
 vi.mock("~/lib/api-client", async () => {
   const actual = await vi.importActual<typeof import("~/lib/api-client")>("~/lib/api-client");
   return { ...actual, apiFetch };
 });
+vi.mock("sonner", () => ({ toast: { error: toastError, success: toastSuccess } }));
 
 const baseUser: any = {
   loginname: "alice",
@@ -39,7 +40,11 @@ function renderHero(user = baseUser, currentUser: any = null) {
 }
 
 describe("用户公开资料 Hero", () => {
-  beforeEach(() => apiFetch.mockReset());
+  beforeEach(() => {
+    apiFetch.mockReset();
+    toastError.mockReset();
+    toastSuccess.mockReset();
+  });
 
   it("shows independent identities, public profile links, signature and total counts", () => {
     renderHero();
@@ -72,9 +77,9 @@ describe("用户公开资料 Hero", () => {
 
     expect(screen.queryByRole("button", { name: "删除所有发言" })).not.toBeInTheDocument();
     await operator.click(screen.getByRole("button", { name: "管理" }));
-    await operator.click(screen.getByRole("menuitem", { name: "删除所有发言" }));
+    await operator.click(await screen.findByRole("menuitem", { name: "删除所有发言" }));
 
-    const dialog = screen.getByRole("dialog", { name: "删除用户所有发言" });
+    const dialog = screen.getByRole("alertdialog", { name: "删除用户所有发言" });
     await operator.click(within(dialog).getByRole("button", { name: "确认删除所有发言" }));
     expect(apiFetch).toHaveBeenCalledWith("/api/v1/user/alice/delete_all", {
       method: "POST",
@@ -89,12 +94,27 @@ describe("用户公开资料 Hero", () => {
     expect(screen.getByText("内容已屏蔽")).toBeInTheDocument();
     expect(screen.queryByText("已禁言")).not.toBeInTheDocument();
     await operator.click(screen.getByRole("button", { name: "管理" }));
-    expect(screen.getByRole("menuitem", { name: "禁言用户" })).toBeInTheDocument();
+    expect(await screen.findByRole("menuitem", { name: "禁言用户" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "恢复用户内容" })).toBeInTheDocument();
   });
 
   it("does not expose governance controls on the admin's own profile", () => {
     renderHero(baseUser, { loginname: "alice", is_admin: true });
     expect(screen.queryByRole("button", { name: "管理" })).not.toBeInTheDocument();
+  });
+
+  it("keeps the confirmation context and reports a backend 403 failure", async () => {
+    apiFetch.mockResolvedValue({ success: false, error_msg: "403 无权执行此操作" });
+    const operator = userEvent.setup();
+    renderHero(baseUser, { loginname: "admin", is_admin: true });
+
+    await operator.click(screen.getByRole("button", { name: "管理" }));
+    await operator.click(await screen.findByRole("menuitem", { name: "屏蔽用户内容" }));
+    const dialog = screen.getByRole("alertdialog", { name: "屏蔽用户内容" });
+    await operator.click(within(dialog).getByRole("button", { name: "确认隐藏内容" }));
+
+    await waitFor(() => expect(toastError).toHaveBeenCalledWith("403 无权执行此操作"));
+    expect(screen.getByRole("alertdialog", { name: "屏蔽用户内容" })).toBeInTheDocument();
+    expect(screen.getByText("alice")).toBeInTheDocument();
   });
 });

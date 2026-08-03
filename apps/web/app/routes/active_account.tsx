@@ -1,10 +1,10 @@
 import { Layout } from "~/components/Layout";
-import { FormPage } from "~/components/PageShell";
-import { Card, CardContent } from "~/components/ui/card";
+import { AccountPage, PageHeader } from "~/components/PageShell";
 import { apiFetch } from "~/lib/api-client";
 import { useSearchParams, useNavigate } from "react-router";
 import { useState, useEffect } from "react";
-import { CheckCircle, XCircle } from "lucide-react";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "~/components/ui/empty";
+import { Button } from "~/components/ui/button";
 
 export function meta() {
   return [{ title: "账号激活 · CNode" }];
@@ -45,29 +45,18 @@ export default function ActiveAccount() {
 
   return (
     <Layout>
-      <FormPage>
-        <Card className="text-center">
-          <CardContent className="py-12">
+      <AccountPage>
+        <PageHeader breadcrumbs={[{ label: "首页", to: "/" }, { label: "账号激活" }]} title="账号激活" description="验证激活链接并启用你的社区账号。" />
+        <Empty>
             {status === "loading" && <p className="text-muted-foreground">正在激活账号...</p>}
             {status === "success" && (
-              <>
-                <CheckCircle className="mx-auto mb-2 h-8 w-8 text-primary" />
-                <p className="mb-2 text-primary">{message}</p>
-                <p className="text-sm text-muted-foreground">即将跳转到登录页...</p>
-              </>
+              <EmptyHeader><EmptyTitle>{message}</EmptyTitle><EmptyDescription>即将跳转到登录页...</EmptyDescription></EmptyHeader>
             )}
             {status === "error" && (
-              <>
-                <XCircle className="mx-auto mb-2 h-8 w-8 text-destructive" />
-                <p className="mb-4 text-destructive">{message}</p>
-                <a href="/signin" className="text-sm text-primary hover:underline">
-                  返回登录
-                </a>
-              </>
+              <><EmptyHeader><EmptyTitle>{message}</EmptyTitle></EmptyHeader><EmptyContent><Button render={<a href="/signin" />} variant="outline">返回登录</Button></EmptyContent></>
             )}
-          </CardContent>
-        </Card>
-      </FormPage>
+        </Empty>
+      </AccountPage>
     </Layout>
   );
 }

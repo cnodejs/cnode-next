@@ -57,5 +57,22 @@ describe("MarkdownEditor", () => {
         "![avatar](https://static.cnodejs.org/cnode-next/uploads/avatar.png)\n正文",
       );
     });
+    expect(screen.getByRole("status")).toHaveTextContent("图片上传成功，已插入正文");
+  });
+
+  it("announces upload errors without changing the draft", async () => {
+    const { uploadEditorImage } = await import("~/lib/upload-client");
+    vi.mocked(uploadEditorImage).mockRejectedValue(new Error("文件格式不支持"));
+    const onChange = vi.fn();
+    render(<MarkdownEditor value="未保存正文" onChange={onChange} />);
+
+    await userEvent.upload(
+      screen.getByLabelText("上传图片文件"),
+      new File(["bad"], "bad.png", { type: "image/png" }),
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("文件格式不支持");
+    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByRole("textbox")).toHaveValue("未保存正文");
   });
 });

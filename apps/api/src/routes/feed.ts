@@ -14,7 +14,7 @@ const INTERNAL_TABS = ["dev", "test"];
 const RSS_LIMIT = 50;
 
 function webBaseUrl() {
-  return (process.env.APP_WEB_BASE_URL || "https://cnodejs.org").replace(/\/+$/g, "");
+  return (process.env.CNODE_WEB_BASE_URL || "https://cnodejs.org").replace(/\/+$/g, "");
 }
 
 export function topicUrl(topicId: number, baseUrl = webBaseUrl()) {

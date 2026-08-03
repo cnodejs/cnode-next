@@ -1,4 +1,5 @@
 import Redis from "ioredis";
+import { parseRedisConfig, type RuntimeEnv } from "@cnode/shared";
 import { MockRedis } from "./mock-redis";
 import type { MockRedis as MockRedisType } from "./mock-redis";
 
@@ -6,18 +7,23 @@ export type RedisClient = MockRedisType;
 
 let client: RedisClient | null = null;
 
+export function createRedisOptions(env: RuntimeEnv = process.env) {
+  const config = parseRedisConfig(env);
+  return {
+    host: config.host,
+    port: config.port,
+    password: config.password,
+    db: config.database,
+  };
+}
+
 export function getRedis(): RedisClient {
   if (client) return client;
 
-  const hasRedis = process.env.REDIS_HOST && process.env.REDIS_PORT;
-
-  if (hasRedis) {
-    const instance = new Redis({
-      host: process.env.REDIS_HOST,
-      port: Number(process.env.REDIS_PORT),
-      password: process.env.REDIS_PASSWORD || undefined,
-      db: Number(process.env.REDIS_DB) || 0,
-    });
+  if (process.env.NODE_ENV === "test") {
+    client = new MockRedis();
+  } else {
+    const instance = new Redis(createRedisOptions());
     // Wrap to match MockRedis interface
     client = {
       get: (key: string) => instance.get(key),
@@ -32,8 +38,6 @@ export function getRedis(): RedisClient {
       flushall: () => instance.flushall(),
       disconnect: () => instance.disconnect(),
     } as RedisClient;
-  } else {
-    client = new MockRedis();
   }
 
   return client;

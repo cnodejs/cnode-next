@@ -7,7 +7,7 @@ import { excerptMarkdown } from "./format";
 import { sendAtNotifyMail, sendReplyNotifyMail } from "./mail";
 
 function topicUrl(topicId: number, replyId?: number) {
-  const base = process.env.APP_WEB_BASE_URL || "https://cnodejs.org";
+  const base = process.env.CNODE_WEB_BASE_URL || "https://cnodejs.org";
   return `${base.replace(/\/+$/g, "")}/topic/${topicId}${replyId ? `#${replyId}` : ""}`;
 }
 

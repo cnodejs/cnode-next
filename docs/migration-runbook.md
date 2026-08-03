@@ -65,11 +65,11 @@ Example placeholders:
 ```bash
 MONGO_URI=mongodb://<mongo-host>:<mongo-port>/<legacy-db-name>
 MONGO_DB=<legacy-db-name>
-DB_HOST=postgres
-DB_PORT=5432
-DB_NAME=cnode_rehearsal
-DB_USER=cnode
-DB_PASSWORD=<rehearsal-password>
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=cnode_rehearsal
+POSTGRES_USER=cnode
+POSTGRES_PASSWORD=<rehearsal-password>
 ```
 
 ## Reconciliation Gate

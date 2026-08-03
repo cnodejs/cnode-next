@@ -1,5 +1,23 @@
-function EmptyState({ message }: { message: string }) {
-  return <div className="py-12 text-center text-muted-foreground">{message}</div>;
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "./ui/empty";
+
+function EmptyState({
+  message,
+  title = "暂无内容",
+  action,
+}: {
+  message: string;
+  title?: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <Empty className="my-4">
+      <EmptyHeader>
+        <EmptyTitle>{title}</EmptyTitle>
+        <EmptyDescription>{message}</EmptyDescription>
+      </EmptyHeader>
+      {action && <EmptyContent>{action}</EmptyContent>}
+    </Empty>
+  );
 }
 
 export { EmptyState };

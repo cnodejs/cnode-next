@@ -32,6 +32,24 @@ This repository keeps public project documentation concise, task-oriented, and s
 - Keep API and workers in `apps/api` (Hono on Node.js).
 - Do not lint, test, build, edit, or ship legacy reference code outside this repository.
 
+## Web UI Source Governance
+
+The mandatory component, theme, composition, responsive, page-archetype, and Markdown rules live in [`docs/design-system.md`](design-system.md). `apps/web/app/components/ui/` is repository-owned shadcn `base-nova` source on Base UI, using the pinned toolchain in `apps/web/package.json` and `pnpm-lock.yaml`.
+
+- Review one registry component at a time from the Web workspace:
+
+```bash
+pnpm --filter @cnode/web exec shadcn add <component> --dry-run
+pnpm --filter @cnode/web exec shadcn add <component> --diff
+```
+
+- Inspect every registry dependency and diff. Preserve only documented alias, React Router composition, localization, and tested behavior patches.
+- Never run `shadcn add --all`, bulk-overwrite `components/ui/`, reintroduce Radix/Slot compatibility, or use an unpinned CLI.
+- CNode branding is expressed through semantic theme roles. Primitive source and routes must not use raw CNode palette utilities or redefine primitive appearance with `className`.
+- `pnpm test` runs the design-system governance gate; UI work is incomplete while it fails.
+
+These are current implementation conventions, so no `wiki/` synchronization is required.
+
 ## Git Workflow
 
 | Item | Rule |
@@ -78,7 +96,7 @@ This repository keeps public project documentation concise, task-oriented, and s
 | Naming | `apps/api` tests live under `apps/api/test/**/*.test.ts`; other packages use `*.test.ts` next to source or under `__tests__`. |
 | Running | `apps/api` runs `vitest run` with automatic test discovery. Use `pnpm test` per package, `pnpm -r test` across the workspace. |
 
-API tests must not require `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, or any real PostgreSQL test database. Tests that need database-backed branches should fake the service/query boundary and state that they verify route behavior, not PostgreSQL semantics.
+API tests must not require `POSTGRES_HOST`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, or any real PostgreSQL test database. Tests that need database-backed branches should fake the service/query boundary and state that they verify route behavior, not PostgreSQL semantics.
 
 ## OpenSpec And Design Process
 

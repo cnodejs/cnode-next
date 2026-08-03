@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { PublicIdentity } from "@cnode/shared";
 import type { Route } from "../../.react-router/types/app/routes/+types/user.$name";
 import { Link, useRevalidator } from "react-router";
@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Layout } from "~/components/Layout";
 import { TopicList } from "~/components/TopicList";
 import { TimeAgo } from "~/components/TimeAgo";
-import { ContentPage } from "~/components/PageShell";
+import { DirectoryPage, PageHeader } from "~/components/PageShell";
 import { apiFetch, getCurrentUser } from "~/lib/api-client";
 import { getAvatarFallback, getAvatarUrl } from "~/lib/brand";
 import { kvGet, kvSet } from "~/lib/kv-cache";
@@ -15,20 +15,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "~/components/ui/dialog";
+import { ConfirmationDialog } from "~/components/ConfirmationDialog";
 import { useAsyncAction } from "~/hooks/use-async-action";
 import { UserIdentityBadges } from "~/components/UserIdentityBadges";
+import { EmptyState } from "~/components/EmptyState";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "~/components/ui/empty";
 import { externalUrlLabel, githubProfileUrl, safeExternalUrl } from "~/lib/public-profile";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -61,48 +57,47 @@ export default function UserProfile({ loaderData }: Route.ComponentProps) {
   if (!user)
     return (
       <Layout>
-        <Card className="mx-auto max-w-2xl text-center">
-          <CardContent className="py-12 text-muted-foreground">用户不存在</CardContent>
-        </Card>
+        <Empty><EmptyHeader><EmptyTitle>用户不存在</EmptyTitle><EmptyDescription>请检查用户名后重试。</EmptyDescription></EmptyHeader></Empty>
       </Layout>
     );
 
   return (
     <Layout>
-      <ContentPage className="space-y-6">
+      <DirectoryPage>
         <UserHero user={user} currentUser={currentUser} />
         <UserTabs loginname={user.loginname} active="home" />
-        <Card className="overflow-hidden">
-          <CardHeader className="border-b border-border/80 bg-surface-subtle">
-            <CardTitle className="text-base">最近创建的话题</CardTitle>
+        <Card>
+          <CardHeader>
+            <CardTitle>最近创建的话题</CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent>
             {user.recent_topics?.length > 0 ? (
               <TopicList topics={user.recent_topics} />
             ) : (
-              <div className="py-10 text-center text-sm text-muted-foreground">暂无话题</div>
+              <EmptyState message="该用户还没有创建话题" />
             )}
           </CardContent>
         </Card>
-        <Card className="overflow-hidden">
-          <CardHeader className="border-b border-border/80 bg-surface-subtle">
-            <CardTitle className="text-base">最近参与的话题</CardTitle>
+        <Card>
+          <CardHeader>
+            <CardTitle>最近参与的话题</CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent>
             {user.recent_replies?.length > 0 ? (
               <TopicList topics={user.recent_replies} />
             ) : (
-              <div className="py-10 text-center text-sm text-muted-foreground">暂无回复</div>
+              <EmptyState message="该用户还没有参与回复" />
             )}
           </CardContent>
         </Card>
-      </ContentPage>
+      </DirectoryPage>
     </Layout>
   );
 }
 
 function UserHero({ user, currentUser }: { user: any; currentUser?: any }) {
   const [actionTarget, setActionTarget] = useState<"block" | "mute" | "delete_all" | null>(null);
+  const managementTriggerRef = useRef<HTMLButtonElement | null>(null);
   const { revalidate } = useRevalidator();
   const canManage = !!currentUser?.is_admin;
   const isSelf = currentUser?.loginname === user.loginname;
@@ -164,18 +159,16 @@ function UserHero({ user, currentUser }: { user: any; currentUser?: any }) {
   );
 
   return (
-    <section className="rounded-3xl border border-cnode-green/20 bg-cnode-soft p-6 shadow-card sm:p-8">
+    <section className="flex flex-col gap-6">
+      <PageHeader breadcrumbs={[{ label: "首页", to: "/" }, { label: "用户" }]} title={user.loginname} description={user.signature || "CNode 社区成员"} />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
         <div className="flex min-w-0 flex-col gap-5 sm:flex-row">
-          <Avatar className="h-20 w-20 shrink-0 border border-border ring-4 ring-cnode-green/10">
+          <Avatar className="size-20 shrink-0">
             <AvatarImage src={getAvatarUrl(user.avatar_url, 96)} alt={user.loginname} />
             <AvatarFallback>{getAvatarFallback(user.loginname)}</AvatarFallback>
           </Avatar>
-          <div className="min-w-0 space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="truncate text-2xl font-bold tracking-tight sm:text-3xl">{user.loginname}</h1>
-              <UserIdentityBadges identities={(user.identities || []) as PublicIdentity[]} />
-            </div>
+          <div className="flex min-w-0 flex-col gap-3">
+            <UserIdentityBadges identities={(user.identities || []) as PublicIdentity[]} />
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
               <span>注册于 <TimeAgo date={user.create_at} /></span>
               {user.location && <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{user.location}</span>}
@@ -194,52 +187,50 @@ function UserHero({ user, currentUser }: { user: any; currentUser?: any }) {
                 )}
               </div>
             )}
-            {user.signature && <p className="max-w-2xl whitespace-pre-wrap break-words text-sm leading-6 text-foreground/80">{user.signature}</p>}
           </div>
         </div>
-        <div className="space-y-4 lg:min-w-72">
+        <div className="flex flex-col gap-4 lg:min-w-72">
           <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
             {user.is_block && <Badge variant="destructive">内容已屏蔽</Badge>}
             {user.is_muted && <Badge variant="destructive">已禁言</Badge>}
           {canManage && !isSelf && (
             <>
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button type="button" variant="outline" size="sm" disabled={submitting}>
-                    <MoreHorizontal className="h-4 w-4" />管理
-                  </Button>
+                <DropdownMenuTrigger
+                  render={<Button ref={managementTriggerRef} type="button" variant="outline" size="sm" disabled={submitting} />}
+                >
+                  <MoreHorizontal className="h-4 w-4" />管理
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
-                  <DropdownMenuLabel>用户治理</DropdownMenuLabel>
-                  <DropdownMenuItem onSelect={() => setActionTarget("block")}>
-                    {user.is_block ? "恢复用户内容" : "屏蔽用户内容"}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setActionTarget("mute")}>
-                    {user.is_muted ? "解除禁言" : "禁言用户"}
-                  </DropdownMenuItem>
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>用户治理</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => setActionTarget("block")}>
+                      {user.is_block ? "恢复用户内容" : "屏蔽用户内容"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setActionTarget("mute")}>
+                      {user.is_muted ? "解除禁言" : "禁言用户"}
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel>危险操作</DropdownMenuLabel>
-                  <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => setActionTarget("delete_all")}>
-                    删除所有发言
-                  </DropdownMenuItem>
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>危险操作</DropdownMenuLabel>
+                    <DropdownMenuItem variant="destructive" onClick={() => setActionTarget("delete_all")}>
+                      删除所有发言
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Dialog open={!!actionTarget} onOpenChange={(open) => !submitting && !open && setActionTarget(null)}>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>{actionConfig?.title}</DialogTitle>
-                    <DialogDescription>{actionConfig?.description}</DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => setActionTarget(null)} disabled={submitting}>
-                      取消
-                    </Button>
-                    <Button type="button" variant={actionConfig?.variant as any} onClick={runUserAction} disabled={submitting}>
-                      {submitting ? "处理中" : actionConfig?.confirm}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+              <ConfirmationDialog
+                open={!!actionTarget}
+                onOpenChange={(open) => !open && setActionTarget(null)}
+                title={actionConfig?.title || "确认用户治理操作"}
+                description={actionConfig?.description || "请确认目标用户和操作影响。"}
+                confirmLabel={actionConfig?.confirm || "确认"}
+                pending={submitting}
+                destructive={actionConfig?.variant === "destructive"}
+                finalFocus={managementTriggerRef}
+                onConfirm={runUserAction}
+              />
             </>
           )}
           </div>
@@ -250,7 +241,7 @@ function UserHero({ user, currentUser }: { user: any; currentUser?: any }) {
               ["回复", user.reply_count || 0],
               ["收藏", user.collect_topic_count || 0],
             ].map(([label, value]) => (
-              <div key={label} className="rounded-xl border border-cnode-green/15 bg-background/75 px-3 py-2">
+              <div key={label} className="rounded-lg bg-muted px-3 py-2">
                 <dt className="text-xs text-muted-foreground">{label}</dt>
                 <dd className="mt-0.5 font-semibold text-foreground">{value}</dd>
               </div>
@@ -270,23 +261,22 @@ function UserTabs({ loginname, active }: { loginname: string; active: "home" | "
     ["collections", "收藏", `/user/${loginname}/collections`],
   ] as const;
   return (
-    <Card>
-      <CardContent className="flex gap-1 overflow-x-auto p-2">
+    <nav aria-label="用户内容" className="flex gap-1 overflow-x-auto">
         {items.map(([key, label, to]) => (
           <Link
             key={key}
             to={to}
+            aria-current={active === key ? "page" : undefined}
             className={
               active === key
-                ? "rounded-lg bg-cnode-ink px-3 py-1.5 text-sm text-white shadow-sm"
+                ? "rounded-lg bg-accent px-3 py-1.5 text-sm text-accent-foreground"
                 : "rounded-lg px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             }
           >
             {label}
           </Link>
         ))}
-      </CardContent>
-    </Card>
+    </nav>
   );
 }
 

@@ -64,7 +64,7 @@ function uploadPrefix(purpose?: string | null) {
 function staticUploadUrl(filename: string) { return `${(process.env.OSS_STATIC_HOST || "https://static.cnodejs.org").replace(/\/+$/g, "")}/${filename}`; }
 function safeOriginalName(name: string) { return name.replace(/[/\\]/g, "").trim().slice(0, 255) || "image"; }
 function extensionForFilename(name: string) { return name.toLowerCase().match(/\.[a-z0-9]+$/)?.[0] || ""; }
-function webBaseUrl() { return process.env.APP_WEB_BASE_URL || "http://localhost:5173"; }
+function webBaseUrl() { return process.env.CNODE_WEB_BASE_URL || "http://localhost:5173"; }
 function cookieSecret() { return process.env.AUTH_SESSION_SECRET || "local-dev-secret"; }
 
 function setPendingGithubProfile(c: any, profile: PendingGithubProfile) {
@@ -147,7 +147,7 @@ auth.openapi(signupRoute, async (c) => {
   const retrieveKey = uuidv4();
   const user = await userQueries.newAndSave({ loginname: loginname.toLowerCase(), pass: passhash, email, active: false });
   await userQueries.updateRetrieveKey(user.id, retrieveKey, Date.now());
-  if (process.env.APP_ENV !== "development") await sendActiveMail(email, retrieveKey);
+  if (process.env.CNODE_ENV !== "development") await sendActiveMail(email, retrieveKey);
   return c.json({ success: true as const, message: "注册成功,请查收邮件激活账号" }, 200);
 });
 
@@ -180,7 +180,7 @@ auth.openapi(searchPassRoute, async (c) => {
   if (!user) return c.json({ success: false as const, error_msg: "邮箱不存在" }, 404);
   const key = uuidv4();
   await userQueries.updateRetrieveKey(user.id, key, Date.now());
-  if (process.env.APP_ENV !== "development") await sendResetPassMail(email, key);
+  if (process.env.CNODE_ENV !== "development") await sendResetPassMail(email, key);
   return c.json({ success: true as const, message: "重置密码邮件已发送" }, 200);
 });
 

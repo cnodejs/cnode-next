@@ -259,13 +259,13 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 #### Scenario: 密码找回邮件链接
 - **WHEN** 用户通过 `/api/v1/auth/local/search_pass` 发起密码找回
 - **THEN** 系统 MUST 持久化 `retrieve_key` 和 `retrieve_time`
-- **AND** 重置邮件中的链接 MUST 指向 `${APP_WEB_BASE_URL}/reset_pass?key=<retrieve_key>`
-- **AND** 链接 MUST NOT 指向 `${APP_API_BASE_URL}/reset_pass`
+- **AND** 重置邮件中的链接 MUST 指向 `${CNODE_WEB_BASE_URL}/reset_pass?key=<retrieve_key>`
+- **AND** 链接 MUST NOT 指向 `${CNODE_API_BASE_URL}/reset_pass`
 
 #### Scenario: 账号激活邮件链接
 - **WHEN** 用户提交本地账号注册并需要激活邮箱
 - **THEN** 系统 MUST 持久化激活用 `retrieve_key` 和 `retrieve_time`
-- **AND** 激活邮件中的链接 MUST 指向 `${APP_WEB_BASE_URL}/active_account?key=<retrieve_key>`
+- **AND** 激活邮件中的链接 MUST 指向 `${CNODE_WEB_BASE_URL}/active_account?key=<retrieve_key>`
 - **AND** Web 页面 MUST 调用 API 完成激活状态写入
 
 ### Requirement: 登录页必须提供找回密码入口

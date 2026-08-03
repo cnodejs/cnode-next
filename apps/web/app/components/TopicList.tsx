@@ -1,9 +1,11 @@
 import { Link } from "react-router";
 import type { TopicDTO } from "~/lib/api-types";
-import { Eye, MessageSquare } from "lucide-react";import { TimeAgo } from "./TimeAgo";
+import { Eye, MessageSquare } from "lucide-react";
+import { TimeAgo } from "./TimeAgo";
 import { TagBadge, StatusBadge } from "./TagBadge";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { getAvatarFallback, getAvatarUrl } from "~/lib/brand";
+import { Item, ItemContent, ItemGroup, ItemMedia } from "./ui/item";
 
 export function TopicListItem({ topic }: { topic: TopicDTO }) {
   const author = topic.author || {
@@ -12,15 +14,17 @@ export function TopicListItem({ topic }: { topic: TopicDTO }) {
   };
 
   return (
-    <article className="group flex items-start gap-3 border-b border-border px-2 py-4 last:border-0 sm:gap-4 sm:px-3">
-      <Link to={`/user/${author.loginname}`} className="shrink-0">
-        <Avatar className="h-10 w-10 border border-border sm:h-11 sm:w-11">
+    <Item render={<article />}>
+      <ItemMedia variant="image">
+        <Link to={`/user/${author.loginname}`}>
+        <Avatar>
           <AvatarImage src={getAvatarUrl(author.avatar_url, 48)} alt={author.loginname} />
           <AvatarFallback>{getAvatarFallback(author.loginname)}</AvatarFallback>
         </Avatar>
-      </Link>
+        </Link>
+      </ItemMedia>
 
-      <div className="min-w-0 flex-1">
+      <ItemContent className="min-w-0">
         <div className="flex min-w-0 items-start gap-3">
           <Link
             to={`/topic/${topic.id}`}
@@ -42,10 +46,10 @@ export function TopicListItem({ topic }: { topic: TopicDTO }) {
             {author.loginname}
           </Link>
           <span className="flex items-center gap-1">
-            <MessageSquare className="h-3 w-3" /> {topic.reply_count}
+            <MessageSquare className="size-3.5" /> {topic.reply_count}
           </span>
           <span className="flex items-center gap-1">
-            <Eye className="h-3 w-3" /> {topic.visit_count}
+            <Eye className="size-3.5" /> {topic.visit_count}
           </span>
           {topic.last_reply_at && <TimeAgo date={topic.last_reply_at} />}
           <span className="flex items-center gap-2 sm:hidden">
@@ -54,8 +58,8 @@ export function TopicListItem({ topic }: { topic: TopicDTO }) {
             <TagBadge tab={topic.tab} />
           </span>
         </div>
-      </div>
-    </article>
+      </ItemContent>
+    </Item>
   );
 }
 
@@ -64,10 +68,10 @@ export function TopicList({ topics }: { topics: TopicDTO[] }) {
     return <div className="py-12 text-center text-muted-foreground">暂无话题</div>;
   }
   return (
-    <div className="divide-y-0">
+    <ItemGroup>
       {topics.map((t) => (
         <TopicListItem key={t.id} topic={t} />
       ))}
-    </div>
+    </ItemGroup>
   );
 }

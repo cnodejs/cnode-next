@@ -11,14 +11,22 @@ import { toast } from "sonner";
 import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
-import { ContentPage } from "~/components/PageShell";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+import { ComposePage, PageHeader } from "~/components/PageShell";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "~/components/ui/field";
 import { TurnstileWidget, getTurnstileToken } from "~/components/TurnstileWidget";
+import { UnsavedChangesDialog, useUnsavedChanges } from "~/hooks/use-unsaved-changes";
 
 export function meta() {
   return [{ title: "发帖 · CNode" }];
 }
+
+const topicTabLabels: Record<string, string> = {
+  share: "分享",
+  ask: "问答",
+  job: "招聘",
+};
 
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -44,6 +52,21 @@ export default function TopicCreate({ loaderData }: Route.ComponentProps) {
     contact: "",
   });
   const navigate = useNavigate();
+  const isDirty =
+    title !== "" ||
+    tab !== "share" ||
+    content !== "" ||
+    jobMeta.company !== "" ||
+    jobMeta.company_logo !== null ||
+    jobMeta.position !== "" ||
+    jobMeta.location !== "" ||
+    jobMeta.remote !== "on-site" ||
+    jobMeta.salary_min !== null ||
+    jobMeta.salary_max !== null ||
+    (jobMeta.experience ?? "") !== "" ||
+    (jobMeta.tech_tags?.length ?? 0) > 0 ||
+    jobMeta.contact !== "";
+  const { blocker, allowNavigation } = useUnsavedChanges(isDirty);
 
   const { run: submitTopic, pending: saving } = useAsyncAction(
     async () => {
@@ -74,6 +97,7 @@ export default function TopicCreate({ loaderData }: Route.ComponentProps) {
       onSuccess: (res) => {
         if (res.success) {
           toast.success("发布成功");
+          allowNavigation();
           navigate(`/topic/${res.topic_id}`);
         } else {
           toast.error(res.error_msg || "发布失败");
@@ -95,69 +119,73 @@ export default function TopicCreate({ loaderData }: Route.ComponentProps) {
 
   return (
     <Layout>
-      <ContentPage className="space-y-6">
-        <section className="rounded-3xl border border-cnode-green/20 bg-cnode-soft p-6 sm:p-8">
-          <p className="text-sm font-medium text-primary">COMPOSE</p>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">发布话题</h1>
-          <p className="mt-2 text-sm text-muted-foreground">选择正确分类，写清楚上下文，代码和日志请使用 Markdown 代码块。</p>
-        </section>
+      <ComposePage>
+        <PageHeader breadcrumbs={[{ label: "首页", to: "/" }, { label: "发布话题" }]} title="发布话题" description="选择正确分类，写清楚上下文，代码和日志请使用 Markdown 代码块。" />
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <Card className="min-w-0">
-          <CardHeader className="border-b border-border/80 bg-surface-subtle">
-            <CardTitle>话题内容</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">标题</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="标题 (5-100字)"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="tab">分类</Label>
-            <select
-              id="tab"
-              value={tab}
-              onChange={(e) => setTab(e.target.value)}
-              className="h-9 w-full rounded-xl border border-input bg-card px-3 text-sm shadow-sm transition-colors hover:border-cnode-green/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <option value="share">分享</option>
-              <option value="ask">问答</option>
-              {canPostJob ? <option value="job">招聘</option> : <option value="job" disabled>招聘（需要授权）</option>}
-            </select>
-            {!canPostJob && <p className="text-xs text-muted-foreground">招聘发布需要猎头角色授权。</p>}
-          </div>
-          <div className="space-y-2">
-            <Label>正文</Label>
-            <MarkdownEditor
-              value={content}
-              onChange={setContent}
-              placeholder="支持 Markdown 格式"
-              minHeight={320}
-            />
-          </div>
-          <TurnstileWidget />
-          <div className="flex justify-end">
-            <Button type="submit" disabled={saving}>
-              {saving ? "发布中..." : "发布"}
-            </Button>
-          </div>
-            </form>
-          </CardContent>
-        </Card>
-          <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+            <CardHeader>
+              <CardTitle>话题内容</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit}>
+                <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="title">标题</FieldLabel>
+                  <Input
+                    id="title"
+                    name="title"
+                    autoComplete="off"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="例如：如何在 Node.js 中定位内存泄漏…"
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="tab">分类</FieldLabel>
+                  <Select value={tab} onValueChange={(value) => value && setTab(value)}>
+                    <SelectTrigger id="tab" aria-describedby={!canPostJob ? "tab-description" : undefined}>
+                      <SelectValue>{(value) => topicTabLabels[value] ?? value}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value="share">分享</SelectItem>
+                        <SelectItem value="ask">问答</SelectItem>
+                        <SelectItem value="job" disabled={!canPostJob}>招聘{canPostJob ? "" : "（需要授权）"}</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                  {!canPostJob && <FieldDescription id="tab-description">招聘发布需要猎头角色授权。</FieldDescription>}
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="content">正文</FieldLabel>
+                  <MarkdownEditor
+                    id="content"
+                    name="content"
+                    value={content}
+                    onChange={setContent}
+                    placeholder="支持 Markdown 格式…"
+                    minHeight={320}
+                  />
+                </Field>
+                <TurnstileWidget />
+                <div className="flex justify-end">
+                  <Button type="submit" disabled={saving}>
+                    {saving ? "发布中…" : "发布"}
+                  </Button>
+                </div>
+                </FieldGroup>
+              </form>
+            </CardContent>
+          </Card>
+          <aside className="flex flex-col gap-4 lg:sticky lg:top-24 lg:self-start">
             {isJobTab ? (
               <JobMetaForm value={jobMeta} onChange={setJobMeta} />
             ) : (
-              <Card>
-                <CardHeader className="border-b border-border/80 bg-surface-subtle">
-                  <CardTitle className="text-base">发布建议</CardTitle>
+              <Card size="sm">
+                <CardHeader>
+                  <CardTitle>发布建议</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2 pt-6 text-sm text-muted-foreground">
+                <CardContent className="flex flex-col gap-2">
                   <p>问答类话题请包含环境、复现步骤、期望结果和实际错误。</p>
                   <p>分享类话题建议用标题分段，附上相关链接和代码片段。</p>
                   <p>招聘类话题请写清地点、远程方式、技术栈和联系方式。</p>
@@ -166,7 +194,8 @@ export default function TopicCreate({ loaderData }: Route.ComponentProps) {
             )}
           </aside>
         </div>
-      </ContentPage>
+      </ComposePage>
+      <UnsavedChangesDialog blocker={blocker} />
     </Layout>
   );
 }

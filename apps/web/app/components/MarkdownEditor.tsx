@@ -1,6 +1,8 @@
-import { useRef, useState, type ClipboardEvent, type DragEvent } from "react";
+import { useEffect, useRef, useState, type ClipboardEvent, type DragEvent } from "react";
 import { MarkdownView } from "./MarkdownView";
 import { Button } from "./ui/button";
+import { Spinner } from "./ui/spinner";
+import { Textarea } from "./ui/textarea";
 import {
   Bold,
   Italic,
@@ -11,7 +13,6 @@ import {
   Pencil,
   Columns2,
   List,
-  Loader2,
   Quote,
   Upload,
 } from "lucide-react";
@@ -21,6 +22,8 @@ import { cn } from "~/lib/utils";
 type EditorMode = "edit" | "preview" | "split";
 
 interface MarkdownEditorProps {
+  id?: string;
+  name?: string;
   value?: string;
   initialValue?: string;
   onChange?: (value: string) => void;
@@ -29,6 +32,8 @@ interface MarkdownEditorProps {
 }
 
 export function MarkdownEditor({
+  id,
+  name,
   value: valueProp,
   initialValue = "",
   onChange,
@@ -41,8 +46,19 @@ export function MarkdownEditor({
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 64rem)");
+    const syncMode = () => {
+      if (!query.matches) setMode((current) => current === "split" ? "edit" : current);
+    };
+    syncMode();
+    query.addEventListener("change", syncMode);
+    return () => query.removeEventListener("change", syncMode);
+  }, []);
 
   const handleChange = (v: string) => {
     setInternalValue(v);
@@ -121,9 +137,11 @@ export function MarkdownEditor({
     if (!image) return;
     setUploading(true);
     setUploadError(null);
+    setUploadSuccess(false);
     try {
       const result = await uploadEditorImage(image);
       insertImageMarkdown(result.filename.replace(/\.[^.]+$/, "") || "image", result.url);
+      setUploadSuccess(true);
     } catch (error) {
       setUploadError(error instanceof Error ? error.message : "图片上传失败");
     } finally {
@@ -159,7 +177,9 @@ export function MarkdownEditor({
 
   const previewContent = value || "暂无内容可预览";
   const textarea = (
-    <textarea
+    <Textarea
+      id={id}
+      name={name}
       ref={textareaRef}
       value={value}
       onChange={(e) => handleChange(e.target.value)}
@@ -176,8 +196,8 @@ export function MarkdownEditor({
       aria-label={placeholder || "支持 Markdown 格式"}
       style={{ minHeight }}
       className={cn(
-        "w-full bg-transparent p-3 text-sm outline-none resize-y rounded-md",
-        isDragging && "bg-cnode-soft/70 ring-2 ring-cnode-green",
+        "resize-y",
+        isDragging && "ring-2 ring-ring",
       )}
     />
   );
@@ -188,21 +208,20 @@ export function MarkdownEditor({
   );
 
   return (
-    <div className="rounded-md border border-input bg-background">
-      <div className="flex flex-wrap items-center gap-1 border-b border-border px-2 py-1">
+    <div className="rounded-lg border bg-background p-1 transition-shadow focus-within:ring-3 focus-within:ring-ring/50">
+      <div className="flex flex-wrap items-center gap-1 px-1 py-1">
         {toolbar.map((btn) => (
           <Button
             key={btn.title}
             type="button"
             variant="ghost"
-            size="icon"
-            className="h-7 w-7"
+            size="icon-sm"
             onClick={btn.action}
             disabled={uploading}
             title={btn.title}
             aria-label={btn.title}
           >
-            <btn.icon className="h-4 w-4" />
+            <btn.icon />
           </Button>
         ))}
         <input
@@ -218,28 +237,29 @@ export function MarkdownEditor({
         />
         <div className="flex-1" />
         {uploading ? (
-          <span className="inline-flex items-center gap-1 px-2 text-xs text-muted-foreground">
-            <Loader2 className="h-3 w-3 animate-spin" /> 上传中
+          <span role="status" className="inline-flex items-center gap-1 px-2 text-xs text-muted-foreground">
+            <Spinner /> 上传中
           </span>
         ) : null}
         <div className="flex items-center gap-1" role="group" aria-label="编辑器视图">
-          <Button type="button" variant={mode === "edit" ? "secondary" : "ghost"} size="sm" className="h-7" onClick={() => setMode("edit")}>
-            <Pencil className="h-3 w-3" /> 编辑
+          <Button type="button" variant={mode === "edit" ? "secondary" : "ghost"} size="sm" onClick={() => setMode("edit")}>
+            <Pencil data-icon="inline-start" /> 编辑
           </Button>
-          <Button type="button" variant={mode === "preview" ? "secondary" : "ghost"} size="sm" className="h-7" onClick={() => setMode("preview")}>
-            <Eye className="h-3 w-3" /> 预览
+          <Button type="button" variant={mode === "preview" ? "secondary" : "ghost"} size="sm" onClick={() => setMode("preview")}>
+            <Eye data-icon="inline-start" /> 预览
           </Button>
-          <Button type="button" variant={mode === "split" ? "secondary" : "ghost"} size="sm" className="hidden h-7 sm:inline-flex" onClick={() => setMode("split")}>
-            <Columns2 className="h-3 w-3" /> 双栏
+          <Button type="button" variant={mode === "split" ? "secondary" : "ghost"} size="sm" className="hidden lg:inline-flex" onClick={() => setMode("split")}>
+            <Columns2 data-icon="inline-start" /> 双栏
           </Button>
         </div>
       </div>
-      {uploadError ? <div className="border-b border-border px-3 py-2 text-xs text-destructive">{uploadError}</div> : null}
+      {uploadError ? <div role="alert" className="mx-1 mb-1 rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">{uploadError}</div> : null}
+      {uploadSuccess ? <div role="status" className="mx-1 mb-1 rounded-lg bg-background px-3 py-2 text-xs text-muted-foreground">图片上传成功，已插入正文</div> : null}
       {mode === "preview" ? preview : null}
       {mode === "edit" ? textarea : null}
       {mode === "split" ? (
-        <div className="grid min-h-[inherit] sm:grid-cols-2">
-          <div className="border-b border-border sm:border-b-0 sm:border-r">{textarea}</div>
+        <div className="grid min-h-[inherit] gap-1 lg:grid-cols-2">
+          <div>{textarea}</div>
           <div className="max-h-[70vh] overflow-auto">{preview}</div>
         </div>
       ) : null}

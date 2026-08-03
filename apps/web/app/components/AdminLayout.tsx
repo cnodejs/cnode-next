@@ -6,6 +6,7 @@ import {
   Flag,
   LayoutDashboard,
   LayoutGrid,
+  Menu,
   ScrollText,
   Search,
   Settings,
@@ -14,14 +15,16 @@ import {
 import { ThemeToggle } from "./ThemeToggle";
 import { HeaderUserArea } from "./Layout";
 import { useNavTransition } from "./NavProgress";
-import { Button } from "./ui/button";
+import { Button, buttonVariants } from "./ui/button";
 import { cn } from "~/lib/utils";
 import { CNodeLogo } from "./CNodeLogo";
 import { CommandPalette } from "./CommandPalette";
 import { PageContainer } from "./PageShell";
 import { ScrollTopButton } from "./ScrollTopButton";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useAuthStore } from "~/lib/stores/auth-store";
+import { Card, CardContent } from "./ui/card";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
 
 const NAV_GROUPS = [
   {
@@ -62,78 +65,99 @@ const NAV_GROUPS = [
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [commandOpen, setCommandOpen] = useState(false);
+  const commandFinalFocusRef = useRef<HTMLElement | null>(null);
   const isNavigating = useNavTransition();
   const isAdmin = !!useAuthStore((s) => s.user?.is_admin);
 
   return (
-    <div className="min-h-screen bg-surface-subtle text-foreground dark:bg-background">
-      <header className="sticky top-0 z-40 border-b border-cnode-ink/10 bg-background/90 backdrop-blur-xl">
+    <div data-admin-shell className="min-h-screen bg-muted/30 text-foreground">
+      <a
+        href="#main-content"
+        onClick={() => document.getElementById("main-content")?.focus()}
+        className="fixed left-4 top-4 z-[100] -translate-y-20 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground opacity-0 shadow-lg transition-[transform,opacity] focus:translate-y-0 focus:opacity-100"
+      >
+        跳到主要内容
+      </a>
+      <header className="sticky top-0 z-40 bg-background/90 shadow-sm backdrop-blur-xl">
         <PageContainer className="flex h-16 max-w-screen-2xl items-center justify-between">
-          <div className="flex min-w-0 items-center gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="md:hidden">
+              <Sheet>
+                <SheetTrigger render={<Button variant="ghost" size="icon" aria-label="打开后台导航" />}>
+                  <Menu />
+                </SheetTrigger>
+                <SheetContent side="left" className="w-72 max-w-[calc(100%-2rem)]">
+                  <SheetHeader>
+                    <SheetTitle>后台导航</SheetTitle>
+                  </SheetHeader>
+                  <AdminNavigation isAdmin={isAdmin} />
+                </SheetContent>
+              </Sheet>
+            </div>
             <CNodeLogo admin />
-            <button
-              type="button"
-              onClick={() => setCommandOpen(true)}
-              className="hidden h-9 w-[260px] items-center gap-2 rounded-xl border border-input bg-card px-3 text-sm text-muted-foreground shadow-sm transition-colors hover:border-cnode-green/40 hover:bg-accent hover:text-accent-foreground lg:inline-flex"
-              aria-label="搜索后台内容"
-            >
-              <Search className="h-4 w-4" />
-              <span className="min-w-0 flex-1 truncate text-left">搜索后台内容...</span>
-              <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                ⌘K
-              </kbd>
-            </button>
-            <nav className="hidden md:flex items-center gap-1 text-sm">
-              {isAdmin && <AdminTopLink to="/admin">概览</AdminTopLink>}
-              <AdminTopLink
-                to="/admin/topics"
-                match={["/admin/topics", "/admin/moderation", "/admin/reports", "/admin/keywords", "/admin/zones", "/admin/tabs"]}
+            <Button
+                type="button"
+                variant="secondary"
+                className="hidden w-64 justify-start lg:inline-flex"
+                onClick={(event) => {
+                  commandFinalFocusRef.current = event.currentTarget;
+                  setCommandOpen(true);
+                }}
+                aria-label="搜索后台内容"
               >
-                内容
-              </AdminTopLink>
-              {isAdmin && (
-                <AdminTopLink to="/admin/users" match={["/admin/users", "/admin/bans"]}>
-                  用户
-                </AdminTopLink>
-              )}
-              {isAdmin && (
-                <AdminTopLink to="/admin/audit">
-                  审计
-                </AdminTopLink>
-              )}
-              {isAdmin && (
-                <AdminTopLink to="/admin/settings">
-                  系统
-                </AdminTopLink>
-              )}
-            </nav>
+                <Search />
+                <span className="min-w-0 flex-1 truncate text-left">搜索后台内容...</span>
+                <kbd className="text-xs text-muted-foreground">⌘K</kbd>
+              </Button>
+            <AdminTopNavigation isAdmin={isAdmin} />
           </div>
 
           <div className="flex items-center gap-2 md:gap-3">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="lg:hidden"
-              onClick={() => setCommandOpen(true)}
-              aria-label="搜索后台"
-            >
-              <Search className="h-4 w-4" />
-            </Button>
-            <ThemeToggle />
-            <HeaderUserArea />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="lg:hidden"
+                onClick={(event) => {
+                  commandFinalFocusRef.current = event.currentTarget;
+                  setCommandOpen(true);
+                }}
+                aria-label="搜索后台"
+              >
+                <Search />
+              </Button>
+              <ThemeToggle />
+              <HeaderUserArea />
           </div>
         </PageContainer>
-        <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
+        <CommandPalette
+          open={commandOpen}
+          onOpenChange={setCommandOpen}
+          finalFocus={commandFinalFocusRef}
+        />
       </header>
 
-      <PageContainer className="max-w-screen-2xl py-6">
-        <AdminMobileNav isAdmin={isAdmin} />
-        <div className="grid min-w-0 gap-6 md:grid-cols-[220px_minmax(0,1fr)]">
+      <PageContainer className="max-w-screen-2xl py-4 sm:py-6">
+        <div className="grid min-w-0 gap-4 md:grid-cols-[14rem_minmax(0,1fr)] lg:gap-6">
           <aside className="hidden md:block">
-            <AdminSideNav isAdmin={isAdmin} />
+            <div className="sticky top-20">
+              <Card size="sm">
+                <CardContent>
+                  <AdminNavigation isAdmin={isAdmin} />
+                </CardContent>
+              </Card>
+            </div>
           </aside>
-          <main className={cn("min-h-[calc(100vh-8rem)] min-w-0 pb-8 transition-opacity duration-200", isNavigating ? "opacity-60" : "opacity-100")}>{children}</main>
+          <main
+            id="main-content"
+            tabIndex={-1}
+            className={cn(
+              "min-h-[calc(100vh-8rem)] min-w-0 pb-6 transition-opacity duration-200",
+              isNavigating ? "opacity-60" : "opacity-100",
+            )}
+          >
+            {children}
+          </main>
         </div>
       </PageContainer>
       <ScrollTopButton />
@@ -141,29 +165,57 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-function AdminTopLink({
-  to,
-  match,
-  children,
-}: {
-  to: string;
-  match?: string[];
-  children: React.ReactNode;
-}) {
+function AdminNavigation({ isAdmin }: { isAdmin: boolean }) {
   const { pathname } = useLocation();
-  const active = match
-    ? match.some((path) => pathname === path || pathname.startsWith(`${path}/`))
-    : pathname === to;
+
   return (
-    <Link
-      to={to}
-      className={cn(
-        "box-border inline-flex h-9 items-center rounded-lg px-3 leading-none text-muted-foreground transition-colors hover:bg-cnode-soft hover:text-cnode-ink",
-        active && "bg-cnode-ink text-white hover:bg-cnode-ink hover:text-white",
-      )}
-    >
-      {children}
-    </Link>
+    <nav aria-label="后台导航" className="flex flex-col gap-4">
+      {visibleGroups(isAdmin).map((group) => (
+        <div key={group.label} className="flex flex-col gap-1">
+          <p className="px-2 text-xs font-medium text-muted-foreground">{group.label}</p>
+          <div className="flex flex-col gap-1">
+              {group.items.map(({ href, icon: Icon, label }) => {
+                const active = pathname === href || (href !== "/admin" && pathname.startsWith(href));
+
+                return (
+                  <Link
+                    key={href}
+                    to={href}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(buttonVariants({ variant: active ? "default" : "ghost", size: "sm" }), "w-full justify-start")}
+                  >
+                    <Icon data-icon="inline-start" />
+                    <span>{label}</span>
+                  </Link>
+                );
+              })}
+          </div>
+        </div>
+      ))}
+    </nav>
+  );
+}
+
+function AdminTopNavigation({ isAdmin }: { isAdmin: boolean }) {
+  const { pathname } = useLocation();
+
+  return (
+    <nav aria-label="后台分区" className="hidden items-center gap-1 xl:flex">
+      {visibleGroups(isAdmin).map((group) => {
+        const href = group.items[0].href;
+        const active = group.items.some((item) => pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href)));
+        return (
+          <Link
+            key={group.label}
+            to={href}
+            aria-current={active ? "page" : undefined}
+            className={buttonVariants({ variant: active ? "default" : "ghost", size: "sm" })}
+          >
+            {group.label}
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
 
@@ -172,62 +224,4 @@ function visibleGroups(isAdmin: boolean) {
     ...group,
     items: group.items.filter((item) => isAdmin || !("adminOnly" in item && item.adminOnly)),
   })).filter((group) => group.items.length > 0);
-}
-
-function AdminSideNav({ isAdmin }: { isAdmin: boolean }) {
-  return (
-    <nav className="sticky top-24 rounded-2xl border border-cnode-ink/10 bg-card p-3 text-sm shadow-card">
-      {visibleGroups(isAdmin).map((group) => (
-        <div key={group.label} className="space-y-1 [&+&]:mt-4">
-          <div className="box-border flex h-6 items-center px-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            {group.label}
-          </div>
-          {group.items.map((item) => (
-            <AdminNavItem key={item.href} {...item} />
-          ))}
-        </div>
-      ))}
-    </nav>
-  );
-}
-
-function AdminMobileNav({ isAdmin }: { isAdmin: boolean }) {
-  return (
-    <nav className="-mx-4 mb-4 flex gap-2 overflow-x-auto border-b border-border px-4 pb-3 md:hidden">
-      {visibleGroups(isAdmin).flatMap((group) => group.items).map((item) => (
-        <AdminNavItem key={item.href} {...item} compact />
-      ))}
-    </nav>
-  );
-}
-
-function AdminNavItem({
-  href,
-  icon: Icon,
-  label,
-  compact = false,
-}: {
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  adminOnly?: boolean;
-  compact?: boolean;
-}) {
-  const { pathname } = useLocation();
-  const active = pathname === href || (href !== "/admin" && pathname.startsWith(href));
-  return (
-    <Link
-      to={href}
-      className={cn(
-        "box-border flex items-center whitespace-nowrap rounded-xl text-muted-foreground transition-colors hover:bg-cnode-soft hover:text-cnode-ink",
-        compact ? "h-9 shrink-0 gap-2 px-3 text-sm" : "h-10 gap-2 px-3 leading-none",
-        active && "bg-cnode-ink text-white hover:bg-cnode-ink hover:text-white",
-      )}
-    >
-      <span className="grid h-5 w-5 shrink-0 place-items-center">
-        <Icon className="h-4 w-4" />
-      </span>
-      <span className="truncate">{label}</span>
-    </Link>
-  );
 }

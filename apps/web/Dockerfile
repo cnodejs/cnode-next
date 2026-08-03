@@ -15,8 +15,8 @@ RUN pnpm install --store-dir=$PNPM_STORE_DIR --frozen-lockfile --config.verify-s
 FROM deps AS build
 ARG GIT_SHA=unknown
 ARG BUILD_TIME=unknown
-ENV APP_GIT_SHA=$GIT_SHA
-ENV APP_BUILD_TIME=$BUILD_TIME
+ENV CNODE_GIT_SHA=$GIT_SHA
+ENV CNODE_BUILD_TIME=$BUILD_TIME
 COPY apps/web apps/web
 COPY packages/db packages/db
 COPY packages/shared packages/shared
@@ -27,8 +27,8 @@ FROM base AS runtime
 ARG GIT_SHA=unknown
 ARG BUILD_TIME=unknown
 ENV NODE_ENV=production
-ENV APP_GIT_SHA=$GIT_SHA
-ENV APP_BUILD_TIME=$BUILD_TIME
+ENV CNODE_GIT_SHA=$GIT_SHA
+ENV CNODE_BUILD_TIME=$BUILD_TIME
 COPY --from=deps /app/node_modules /app/node_modules
 COPY --from=deps /app/apps/web/node_modules /app/apps/web/node_modules
 COPY --from=deps /app/packages/db/node_modules /app/packages/db/node_modules

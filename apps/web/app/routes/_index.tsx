@@ -5,10 +5,11 @@ import { Sidebar } from "~/components/Sidebar";
 import { Pagination } from "~/components/Pagination";
 import { apiFetch } from "~/lib/api-client";
 import { kvGet, kvSet } from "~/lib/kv-cache";
-import { Link, useRouteLoaderData } from "react-router";
-import { cn } from "~/lib/utils";
+import { Link, useNavigate, useRouteLoaderData } from "react-router";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
-import { FeedGrid } from "~/components/PageShell";
+import { FeedGrid, FeedPage, PageHeader } from "~/components/PageShell";
+import { Button } from "~/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -45,6 +46,7 @@ export function meta() {
 
 export default function Index({ loaderData }: Route.ComponentProps) {
   const { topics, page, tab, limit, total } = loaderData as any;
+  const navigate = useNavigate();
   const rootData = useRouteLoaderData("root") as { tabs?: any[]; user?: any } | undefined;
   const allTabs = rootData?.tabs || [];
   const isAdmin = !!rootData?.user?.is_admin;
@@ -55,36 +57,46 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 
   return (
     <Layout>
-      <FeedGrid className="items-start">
+      <FeedPage>
+        <PageHeader
+          variant="marketing"
+          eyebrow="COMMUNITY"
+          title="Node.js 专业中文社区"
+          description="浏览最新讨论、技术问答与实践分享。"
+          action={(
+            <div className="flex flex-wrap gap-2">
+              <Button render={<Link to="/topic/create" />}>发布话题</Button>
+              <Button render={<Link to="/about" />} variant="secondary">了解社区</Button>
+            </div>
+          )}
+        />
+        <FeedGrid className="items-start">
         <div className="min-w-0">
-          <Card className="overflow-hidden">
-            <CardHeader className="border-b border-border/80 bg-surface-subtle p-3 sm:p-4">
-              <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-background/70 p-1 ring-1 ring-border/70">
+          <Tabs
+            value={tab}
+            onValueChange={(value) => {
+              const params = new URLSearchParams();
+              if (value !== "all") params.set("tab", value);
+              navigate(params.size ? `/?${params.toString()}` : "/");
+            }}
+          >
+          <Card>
+            <CardHeader>
+              <TabsList aria-label="话题分类" className="w-full max-w-full justify-start overflow-x-auto">
                 {tabs.map((t) => {
-                  const params = new URLSearchParams();
-                  if (t.key !== "all") params.set("tab", t.key);
-                  const search = params.toString() ? `?${params.toString()}` : "";
                   return (
-                    <Link
-                      key={t.key}
-                      to={`/${search}`}
-                      className={cn(
-                        "rounded-lg px-3 py-1.5 text-sm whitespace-nowrap transition-colors",
-                        tab === t.key
-                          ? "bg-cnode-ink text-white shadow-sm"
-                          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                      )}
-                    >
-                      {t.label}
-                    </Link>
+                    <TabsTrigger key={t.key} value={t.key} className="flex-none">{t.label}</TabsTrigger>
                   );
                 })}
-              </div>
+              </TabsList>
             </CardHeader>
-            <CardContent className="p-0">
-              <TopicList topics={topics} />
+            <CardContent>
+              <TabsContent value={tab}>
+                <TopicList topics={topics} />
+              </TabsContent>
             </CardContent>
           </Card>
+          </Tabs>
 
           <Pagination
             page={page}
@@ -99,7 +111,8 @@ export default function Index({ loaderData }: Route.ComponentProps) {
         <div className="min-w-0 lg:sticky lg:top-24">
           <Sidebar />
         </div>
-      </FeedGrid>
+        </FeedGrid>
+      </FeedPage>
     </Layout>
   );
 }

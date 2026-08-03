@@ -102,7 +102,7 @@ TBD - created by archiving change add-user-roles-and-restricted-jobs. Update Pur
 
 #### Scenario: 管理员同时拥有猎头角色
 
-- **WHEN** 用户 loginname 位于 `APP_ADMINS` 且拥有有效 `recruiter` role，但没有 `moderator` role
+- **WHEN** 用户 loginname 位于 `CNODE_ADMINS` 且拥有有效 `recruiter` role，但没有 `moderator` role
 - **THEN** 公开身份为 `admin` 和 `recruiter`
 - **AND** 不包含 `moderator`，即使管理员具备内容治理能力。
 
@@ -120,7 +120,7 @@ TBD - created by archiving change add-user-roles-and-restricted-jobs. Update Pur
 
 ### Requirement: 版主身份只来自数据库角色
 
-系统 SHALL 使用 `APP_ADMINS` 判定管理员身份，并使用有效 `user_roles` 的 `moderator`、`recruiter` 判定版主和猎头身份。系统 MUST NOT 读取 `APP_MODERATORS`。
+系统 SHALL 使用 `CNODE_ADMINS` 判定管理员身份，并使用有效 `user_roles` 的 `moderator`、`recruiter` 判定版主和猎头身份。系统 MUST NOT 读取 `CNODE_MODERATORS`。
 
 #### Scenario: 计算版主权限与身份
 
@@ -132,10 +132,10 @@ TBD - created by archiving change add-user-roles-and-restricted-jobs. Update Pur
 
 - **WHEN** 管理员没有有效 `moderator` role
 - **THEN** 后端仍可授予管理员内容治理能力
-- **AND** 公开身份仅因 `APP_ADMINS` 包含 `admin`，不包含 `moderator`。
+- **AND** 公开身份仅因 `CNODE_ADMINS` 包含 `admin`，不包含 `moderator`。
 
 #### Scenario: 遗留环境变量不影响身份
 
-- **WHEN** 运行环境意外存在 `APP_MODERATORS`
+- **WHEN** 运行环境意外存在 `CNODE_MODERATORS`
 - **THEN** 系统忽略该变量
 - **AND** 版主身份和权限只根据有效 `moderator` role 判定，管理员能力继承除外。

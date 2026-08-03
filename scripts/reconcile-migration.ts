@@ -1,5 +1,6 @@
 import { MongoClient } from "mongodb";
 import { Pool } from "pg";
+import { parsePostgresConfig } from "@cnode/shared";
 import { readFile } from "fs/promises";
 import { loadRootEnv } from "./env";
 
@@ -18,13 +19,7 @@ function required(name: string): string {
 }
 
 function pgPool() {
-  return new Pool({
-    host: required("DB_HOST"),
-    port: Number(process.env.DB_PORT || 5432),
-    database: required("DB_NAME"),
-    user: required("DB_USER"),
-    password: required("DB_PASSWORD"),
-  });
+  return new Pool(parsePostgresConfig());
 }
 
 async function mongoCount(client: MongoClient, collection: string) {

@@ -28,8 +28,8 @@ FROM base AS runtime
 ARG GIT_SHA=unknown
 ARG BUILD_TIME=unknown
 ENV NODE_ENV=production
-ENV APP_GIT_SHA=$GIT_SHA
-ENV APP_BUILD_TIME=$BUILD_TIME
+ENV CNODE_GIT_SHA=$GIT_SHA
+ENV CNODE_BUILD_TIME=$BUILD_TIME
 COPY --from=deps /app/node_modules /app/node_modules
 COPY --from=deps /app/apps/api/node_modules /app/apps/api/node_modules
 COPY --from=deps /app/packages/db/node_modules /app/packages/db/node_modules

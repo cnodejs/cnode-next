@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { NativeSelect } from "./ui/native-select";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { uploadJobLogo } from "~/lib/upload-client";
 import { Image as ImageIcon, Loader2, X } from "lucide-react";
@@ -33,6 +34,7 @@ const REMOTE_OPTIONS: { value: JobMetaFormValue["remote"]; label: string }[] = [
 export function JobMetaForm({ value, onChange }: JobMetaFormProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
   const [tagInput, setTagInput] = useState("");
 
   function update<K extends keyof JobMetaFormValue>(key: K, v: JobMetaFormValue[K]) {
@@ -42,9 +44,11 @@ export function JobMetaForm({ value, onChange }: JobMetaFormProps) {
   async function handleLogoUpload(file: File) {
     setUploading(true);
     setUploadError(null);
+    setUploadSuccess(false);
     try {
       const result = await uploadJobLogo(file);
       update("company_logo", result.url);
+      setUploadSuccess(true);
     } catch (error) {
       setUploadError(error instanceof Error ? error.message : "图片上传失败");
     } finally {
@@ -69,29 +73,31 @@ export function JobMetaForm({ value, onChange }: JobMetaFormProps) {
 
   return (
     <Card>
-      <CardHeader className="border-b border-border/80 bg-surface-subtle">
-        <CardTitle className="text-base">招聘信息</CardTitle>
+      <CardHeader>
+        <CardTitle>招聘信息</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4 pt-6">
-        <div className="space-y-2">
+      <CardContent className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="company">公司 *</Label>
           <Input
             id="company"
+            name="company"
+            autoComplete="organization"
             value={value.company}
             onChange={(e) => update("company", e.target.value)}
             placeholder="公司名称"
           />
         </div>
 
-        <div className="space-y-2">
-          <Label>公司 Logo</Label>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="company-logo-upload">公司 Logo</Label>
           <div className="flex items-center gap-3">
             {value.company_logo ? (
               <div className="relative">
                 <img
                   src={value.company_logo}
                   alt="公司 logo"
-                  className="h-12 w-12 rounded-lg border border-border object-cover"
+                  className="size-12 rounded-md object-cover"
                 />
                 <button
                   type="button"
@@ -103,7 +109,7 @@ export function JobMetaForm({ value, onChange }: JobMetaFormProps) {
                 </button>
               </div>
             ) : (
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-dashed border-border text-muted-foreground">
+              <div className="flex size-12 items-center justify-center rounded-md bg-muted text-muted-foreground">
                 <ImageIcon className="h-5 w-5" />
               </div>
             )}
@@ -134,13 +140,16 @@ export function JobMetaForm({ value, onChange }: JobMetaFormProps) {
               )}
             </Button>
           </div>
-          {uploadError && <p className="text-xs text-destructive">{uploadError}</p>}
+          {uploadError && <p role="alert" className="text-xs text-destructive">{uploadError}</p>}
+          {uploadSuccess && <p role="status" className="text-xs text-muted-foreground">公司 Logo 上传成功</p>}
         </div>
 
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="position">职位类别 *</Label>
           <Input
             id="position"
+            name="position"
+            autoComplete="organization-title"
             value={value.position}
             onChange={(e) => update("position", e.target.value)}
             placeholder="如：Node.js 后端工程师"
@@ -148,47 +157,51 @@ export function JobMetaForm({ value, onChange }: JobMetaFormProps) {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="location">地点 *</Label>
-            <Input
-              id="location"
+              <Input
+                id="location"
+                name="location"
+                autoComplete="address-level2"
               value={value.location}
               onChange={(e) => update("location", e.target.value)}
               placeholder="如：上海"
             />
           </div>
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="remote">远程模式 *</Label>
-            <select
+            <NativeSelect
               id="remote"
+              name="remote"
               value={value.remote}
               onChange={(e) => update("remote", e.target.value as JobMetaFormValue["remote"])}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
               {REMOTE_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
                   {o.label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="salary_min">薪资下限 (K)</Label>
             <Input
               id="salary_min"
+              name="salary_min"
               type="number"
               value={value.salary_min ?? ""}
               onChange={(e) => update("salary_min", e.target.value ? Number(e.target.value) : null)}
               placeholder="如：20"
             />
           </div>
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="salary_max">薪资上限 (K)</Label>
             <Input
               id="salary_max"
+              name="salary_max"
               type="number"
               value={value.salary_max ?? ""}
               onChange={(e) => update("salary_max", e.target.value ? Number(e.target.value) : null)}
@@ -197,20 +210,23 @@ export function JobMetaForm({ value, onChange }: JobMetaFormProps) {
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="experience">经验要求</Label>
           <Input
             id="experience"
+            name="experience"
             value={value.experience ?? ""}
             onChange={(e) => update("experience", e.target.value || undefined)}
             placeholder="如：3-5 年"
           />
         </div>
 
-        <div className="space-y-2">
-          <Label>技术栈</Label>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="tech-tags">技术栈</Label>
           <div className="flex gap-2">
             <Input
+              id="tech-tags"
+              name="tech_tags"
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
               onKeyDown={(e) => {
@@ -247,10 +263,12 @@ export function JobMetaForm({ value, onChange }: JobMetaFormProps) {
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="contact">联系方式 *</Label>
           <Input
             id="contact"
+            name="contact"
+            autoComplete="email"
             value={value.contact}
             onChange={(e) => update("contact", e.target.value)}
             placeholder="邮箱 / 链接 / 微信号"

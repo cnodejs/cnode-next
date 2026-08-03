@@ -15,8 +15,8 @@ import { Badge } from "./ui/badge";
 
 export function StatusBadge({ type }: { type: "top" | "good" | "lock" | "muted" | "archived" }) {
   const config = {
-    top: { label: "置顶", variant: "warning" as const },
-    good: { label: "精华", variant: "success" as const },
+    top: { label: "置顶", variant: "outline" as const },
+    good: { label: "精华", variant: "default" as const },
     lock: { label: "锁定", variant: "secondary" as const },
     muted: { label: "已隐藏", variant: "destructive" as const },
     archived: { label: "已归档", variant: "secondary" as const },

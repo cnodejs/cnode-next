@@ -17,11 +17,11 @@ export function getApiBaseUrl(): string {
   if (typeof window !== "undefined") {
     return window.__CNODE_CONFIG__?.apiBaseUrl || "https://api.cnodejs.org";
   }
-  if (typeof process !== "undefined" && process.env?.APP_API_INTERNAL_BASE_URL) {
-    return process.env.APP_API_INTERNAL_BASE_URL;
+  if (typeof process !== "undefined" && process.env?.CNODE_API_INTERNAL_BASE_URL) {
+    return process.env.CNODE_API_INTERNAL_BASE_URL;
   }
-  if (typeof process !== "undefined" && process.env?.APP_API_BASE_URL) {
-    return process.env.APP_API_BASE_URL;
+  if (typeof process !== "undefined" && process.env?.CNODE_API_BASE_URL) {
+    return process.env.CNODE_API_BASE_URL;
   }
   return "http://localhost:3001";
 }

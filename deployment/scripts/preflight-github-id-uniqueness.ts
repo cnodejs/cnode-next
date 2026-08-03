@@ -1,22 +1,10 @@
 import { Pool } from "pg";
+import { parsePostgresConfig } from "@cnode/shared";
 import { loadRootEnv } from "../../scripts/env";
 
 loadRootEnv({ cwd: import.meta.dirname });
 
-const required = ["DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME"] as const;
-const missing = required.filter((name) => !process.env[name]);
-
-if (missing.length > 0) {
-  throw new Error(`Missing database environment variables: ${missing.join(", ")}`);
-}
-
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT),
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-});
+const pool = new Pool(parsePostgresConfig());
 
 try {
   const result = await pool.query<{

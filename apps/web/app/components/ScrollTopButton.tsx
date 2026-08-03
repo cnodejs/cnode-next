@@ -19,15 +19,21 @@ export function ScrollTopButton({ className }: { className?: string }) {
     <Button
       type="button"
       variant="default"
+      size="lg"
       className={cn(
-        "fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] right-4 z-50 h-11 rounded-full px-3 shadow-floating sm:bottom-6 sm:right-6 sm:px-4",
+        "fixed right-4 bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-50 sm:right-6 sm:bottom-6",
         className,
       )}
-      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      onClick={() =>
+        window.scrollTo({
+          top: 0,
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        })
+      }
       aria-label="回到顶部"
       title="回到顶部"
     >
-      <ArrowUp className="h-4 w-4" />
+      <ArrowUp data-icon="inline-start" />
       <span className="hidden sm:inline">顶部</span>
     </Button>
   );

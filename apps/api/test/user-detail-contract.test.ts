@@ -3,16 +3,16 @@ import { userDetailSchema } from "@cnode/shared";
 import app from "../src/app";
 import { replyQueries, roleQueries, topicQueries, userQueries } from "../src/lib/db";
 
-const originalAdmins = process.env.APP_ADMINS;
+const originalAdmins = process.env.CNODE_ADMINS;
 
 afterEach(() => {
   vi.restoreAllMocks();
-  if (originalAdmins === undefined) delete process.env.APP_ADMINS;
-  else process.env.APP_ADMINS = originalAdmins;
+  if (originalAdmins === undefined) delete process.env.CNODE_ADMINS;
+  else process.env.CNODE_ADMINS = originalAdmins;
 });
 
 test("GET /api/v1/user/:loginname returns public profile and independent identities", async () => {
-  process.env.APP_ADMINS = "alice";
+  process.env.CNODE_ADMINS = "alice";
   vi.spyOn(userQueries, "getByLoginName").mockResolvedValue({
     id: 1,
     loginname: "alice",
