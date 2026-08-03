@@ -3,6 +3,7 @@ import { Card, CardContent } from "./ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { getAvatarFallback } from "~/lib/brand";
 import { MapPin, Wifi, DollarSign, Briefcase, MessageSquare, Eye } from "lucide-react";
+import { Badge as UiBadge } from "./ui/badge";
 
 export interface JobCardData {
   id: string;
@@ -54,8 +55,8 @@ export function JobCardGrid({ jobs }: { jobs: JobCardData[] }) {
 function JobCardItem({ job }: { job: JobCardData }) {
   return (
     <Link to={`/topic/${job.id}`} className="block">
-      <Card className="h-full overflow-hidden transition-shadow hover:shadow-md">
-        <CardContent className="flex flex-col gap-3 p-4">
+      <Card className="h-full">
+        <CardContent className="flex flex-col gap-3">
           <div className="flex items-start gap-3">
             <Avatar className="size-10 shrink-0 rounded-md">
               {job.company_logo ? (
@@ -118,9 +119,9 @@ function JobCardItem({ job }: { job: JobCardData }) {
 
 function Badge({ icon: Icon, text }: { icon: React.ElementType; text: string }) {
   return (
-    <span className="inline-flex items-center gap-0.5 rounded-md bg-cnode-soft px-1.5 py-0.5 text-xs text-foreground">
-      <Icon className="h-3 w-3" />
+    <UiBadge variant="secondary">
+      <Icon data-icon="inline-start" />
       {text}
-    </span>
+    </UiBadge>
   );
 }

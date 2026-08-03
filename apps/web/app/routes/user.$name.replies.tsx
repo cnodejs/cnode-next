@@ -3,11 +3,12 @@ import { Layout } from "~/components/Layout";
 import { apiFetch } from "~/lib/api-client";
 import { Link } from "react-router";
 import { TimeAgo } from "~/components/TimeAgo";
-import { ContentPage } from "~/components/PageShell";
+import { FeedPage } from "~/components/PageShell";
 import { UserHero, UserTabs } from "./user.$name";
 import { Pagination } from "~/components/Pagination";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { EmptyState } from "~/components/EmptyState";
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "~/components/ui/item";
 
 export function meta({ data }: Route.MetaArgs) {
   if (!data?.loginname) return [{ title: "用户回复 · CNode" }];
@@ -30,37 +31,34 @@ export default function UserReplies({ loaderData }: Route.ComponentProps) {
 
   return (
     <Layout>
-      <ContentPage className="space-y-6">
+      <FeedPage>
         {user && <UserHero user={user} />}
         <UserTabs loginname={loginname} active="replies" />
-        <Card className="overflow-hidden">
-          <CardHeader className="p-4 pb-3">
-            <CardTitle className="text-base">{loginname} 参与的话题</CardTitle>
+        <Card>
+          <CardHeader>
+            <CardTitle>{loginname} 参与的话题</CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent>
             {replies.length > 0 ? (
-              <div className="flex flex-col gap-1 p-2">
+              <ItemGroup>
                 {replies.map((topic: any) => (
-                  <article key={topic.id} className="rounded-xl p-3 transition-colors hover:bg-surface-subtle sm:p-4">
-                    <div className="text-sm text-muted-foreground">
+                  <Item key={topic.id} render={<Link to={`/topic/${topic.id}`} />}>
+                    <ItemContent>
+                    <ItemDescription>
                       在话题中回复 · {topic.last_reply_at ? <TimeAgo date={topic.last_reply_at} /> : null}
-                    </div>
-                    <Link
-                      to={`/topic/${topic.id}`}
-                      className="mt-1 block truncate font-medium text-foreground hover:text-primary"
-                    >
-                      {topic.title}
-                    </Link>
-                  </article>
+                    </ItemDescription>
+                    <ItemTitle>{topic.title}</ItemTitle>
+                    </ItemContent>
+                  </Item>
                 ))}
-              </div>
+              </ItemGroup>
             ) : (
               <EmptyState message="该用户还没有参与回复" />
             )}
           </CardContent>
         </Card>
         <Pagination page={page} total={total} limit={limit} basePath={`/user/${loginname}/replies`} />
-      </ContentPage>
+      </FeedPage>
     </Layout>
   );
 }

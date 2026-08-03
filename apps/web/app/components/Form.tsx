@@ -9,8 +9,12 @@ import {
   type FieldPath,
   type FieldValues,
 } from "react-hook-form";
-import { Label } from "~/components/ui/label";
-import { cn } from "~/lib/utils";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "~/components/ui/field";
 
 const Form = FormProvider;
 
@@ -64,25 +68,33 @@ type FormItemContextValue = {
 
 const FormItemContext = React.createContext<FormItemContextValue>({} as FormItemContextValue);
 
-const FormItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+const FormItem = React.forwardRef<HTMLDivElement, React.ComponentProps<typeof Field>>(
   ({ className, ...props }, ref) => {
     const id = React.useId();
     return (
       <FormItemContext.Provider value={{ id }}>
-        <div ref={ref} className={cn("flex flex-col gap-2", className)} {...props} />
+        <FormItemBody ref={ref} className={className} {...props} />
       </FormItemContext.Provider>
     );
   },
 );
 FormItem.displayName = "FormItem";
 
+const FormItemBody = React.forwardRef<HTMLDivElement, React.ComponentProps<typeof Field>>(
+  ({ ...props }, ref) => {
+    const { error } = useFormField();
+    return <Field ref={ref} data-invalid={!!error} {...props} />;
+  },
+);
+FormItemBody.displayName = "FormItemBody";
+
 const FormLabel = React.forwardRef<HTMLLabelElement, React.ComponentPropsWithoutRef<"label">>(
   ({ className, ...props }, ref) => {
-  const { error, formItemId } = useFormField();
+  const { formItemId } = useFormField();
   return (
-    <Label
+    <FieldLabel
       ref={ref}
-      className={cn(error && "text-destructive", className)}
+      className={className}
       htmlFor={formItemId}
       {...props}
     />
@@ -118,10 +130,10 @@ const FormDescription = React.forwardRef<
 >(({ className, ...props }, ref) => {
   const { formDescriptionId } = useFormField();
   return (
-    <p
+    <FieldDescription
       ref={ref}
       id={formDescriptionId}
-      className={cn("text-sm text-muted-foreground", className)}
+      className={className}
       {...props}
     />
   );
@@ -136,14 +148,14 @@ const FormMessage = React.forwardRef<
   const body = error ? String(error?.message ?? "") : children;
   if (!body) return null;
   return (
-    <p
+    <FieldError
       ref={ref}
       id={formMessageId}
-      className={cn("text-sm font-medium text-destructive", className)}
+      className={className}
       {...props}
     >
       {body}
-    </p>
+    </FieldError>
   );
 });
 FormMessage.displayName = "FormMessage";

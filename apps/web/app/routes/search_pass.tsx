@@ -7,7 +7,9 @@ import { Input } from "~/components/ui/input";
 import { AuthShell } from "~/components/AuthShell";
 import { TurnstileWidget, getTurnstileToken } from "~/components/TurnstileWidget";
 import { useAsyncAction } from "~/hooks/use-async-action";
-import { Label } from "~/components/ui/label";
+import { AccountPage } from "~/components/PageShell";
+import { Alert, AlertDescription } from "~/components/ui/alert";
+import { Field, FieldError, FieldGroup, FieldLabel } from "~/components/ui/field";
 
 export function meta() {
   return [{ title: "找回密码 · CNode" }];
@@ -46,6 +48,7 @@ export default function SearchPass() {
 
   return (
     <Layout>
+      <AccountPage className="max-w-none">
       <AuthShell
         eyebrow="ACCOUNT RECOVERY"
         title="找回你的 CNode 账号"
@@ -53,11 +56,11 @@ export default function SearchPass() {
       >
           <h2 className="mb-6 text-lg font-semibold tracking-tight">找回密码</h2>
           <div>
-            {error && <div id="email-error" role="alert" className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
-            {success && <div role="status" className="mb-4 rounded-md bg-cnode-soft p-3 text-sm text-foreground">{success}</div>}
-            <form onSubmit={handleSubmit} aria-busy={loading} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="recovery-email">注册邮箱</Label>
+            {success && <Alert><AlertDescription role="status">{success}</AlertDescription></Alert>}
+            <form onSubmit={handleSubmit} aria-busy={loading}>
+              <FieldGroup>
+              <Field data-invalid={!!error}>
+                <FieldLabel htmlFor="recovery-email">注册邮箱</FieldLabel>
                 <Input
                   id="recovery-email"
                   name="email"
@@ -71,12 +74,14 @@ export default function SearchPass() {
                   placeholder="your@email.com"
                   required
                 />
-              </div>
+                <FieldError id="email-error">{error}</FieldError>
+              </Field>
               <TurnstileWidget />
               <Button type="submit" disabled={loading} className="w-full">
                 {loading ? "发送中..." : "发送重置邮件"}
               </Button>
               {loading && <p role="status" className="text-center text-sm text-muted-foreground">正在发送重置邮件</p>}
+              </FieldGroup>
             </form>
             <div className="mt-4 text-sm text-muted-foreground">
               <Link to="/signin" className="hover:text-primary">
@@ -85,6 +90,7 @@ export default function SearchPass() {
             </div>
           </div>
       </AuthShell>
+      </AccountPage>
     </Layout>
   );
 }

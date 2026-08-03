@@ -10,6 +10,8 @@ import { Input } from "~/components/ui/input";
 import { NativeSelect } from "~/components/ui/native-select";
 import { Form, Link } from "react-router";
 import { EmptyState } from "~/components/EmptyState";
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemHeader, ItemTitle } from "~/components/ui/item";
+import { Separator } from "~/components/ui/separator";
 
 type AuditLog = {
   id: number;
@@ -53,7 +55,7 @@ export function meta() {
 
 function riskVariant(risk: AuditLog["risk"]) {
   if (risk === "critical") return "destructive";
-  if (risk === "high") return "warning";
+  if (risk === "high") return "destructive";
   if (risk === "medium") return "secondary";
   return "outline";
 }
@@ -67,11 +69,11 @@ function targetHref(log: AuditLog) {
 }
 
 function DetailBlock({ detail }: { detail: string | null }) {
-  if (!detail) return <div className="rounded-lg bg-surface-subtle p-3 text-xs text-muted-foreground">该审计事件没有附加详情。</div>;
+  if (!detail) return <div className="min-w-0 bg-muted p-3 text-xs text-muted-foreground">该审计事件没有附加详情。</div>;
   try {
-    return <pre className="overflow-auto rounded-xl bg-surface-subtle p-3 text-xs">{JSON.stringify(JSON.parse(detail), null, 2)}</pre>;
+    return <pre className="max-w-full overflow-auto bg-muted p-3 text-xs">{JSON.stringify(JSON.parse(detail), null, 2)}</pre>;
   } catch {
-    return <pre className="overflow-auto rounded-xl bg-surface-subtle p-3 text-xs whitespace-pre-wrap">{detail}</pre>;
+    return <pre className="max-w-full overflow-auto bg-muted p-3 text-xs whitespace-pre-wrap break-all">{detail}</pre>;
   }
 }
 
@@ -87,7 +89,7 @@ export default function AdminAudit({ loaderData }: any) {
 
   return (
     <AdminLayout>
-      <AdminPage>
+      <AdminPage archetype="workflow">
         <AdminPageHeader title="审计中心" description="追踪后台关键操作、权限变更、内容治理和系统设置变更。" />
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
@@ -98,7 +100,7 @@ export default function AdminAudit({ loaderData }: any) {
           <AdminMetricCard label="失败/异常" value={summary.failures} />
         </div>
 
-        <AdminPanel title="审计事件" description={`当前显示 ${logs.length} / ${total} 条记录`} flush>
+        <AdminPanel title="审计事件" description={`当前显示 ${logs.length} / ${total} 条记录`} contentClassName="flex flex-col gap-4">
           <AdminToolbar>
             <Form method="get" className="grid w-full gap-2 md:grid-cols-4 xl:grid-cols-7">
               <Input type="date" name="date_from" defaultValue={filters.date_from || ""} aria-label="开始日期" />
@@ -117,7 +119,9 @@ export default function AdminAudit({ loaderData }: any) {
             </Form>
           </AdminToolbar>
 
-          <div className="flex flex-col gap-3 p-3 sm:p-4">
+          <Separator />
+
+          <ItemGroup className="min-w-0">
             {logs.length === 0 && (
               <EmptyState
                 title="没有匹配的审计记录"
@@ -128,28 +132,27 @@ export default function AdminAudit({ loaderData }: any) {
             {logs.map((log) => {
               const href = targetHref(log);
               return (
-                <article key={log.id} className="rounded-lg bg-card p-4 shadow-sm">
-                  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="flex min-w-0 flex-col gap-2">
-                      <div className="flex flex-wrap items-center gap-2">
+                <Item key={log.id} variant="outline" className="min-w-0">
+                  <ItemContent className="min-w-0">
+                    <ItemHeader>
+                      <ItemTitle className="w-full flex-wrap whitespace-normal">
                         <Badge variant={riskVariant(log.risk)}>{riskLabels[log.risk]}</Badge>
                         <Badge variant="secondary">{categoryLabels[log.category] || log.category}</Badge>
                         <span className="font-semibold text-foreground">{log.label}</span>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
+                      </ItemTitle>
+                    </ItemHeader>
+                    <ItemDescription>
                         {log.operator_name || "system"} · <TimeAgo date={log.create_at} /> · {log.result || "unknown"}
-                      </div>
-                      <div className="text-sm">
+                    </ItemDescription>
+                    <div className="min-w-0 break-all text-sm">
                         目标：{href ? <Link to={href} className="text-primary hover:underline">{log.target_name || log.target_id}</Link> : <span>{log.target_name || log.target_id || "无"}</span>}
                         {log.target_type && <span className="ml-2 text-xs text-muted-foreground">{log.target_type}</span>}
-                      </div>
                     </div>
-                  </div>
 
-                  <details className="mt-3 rounded-xl bg-surface-subtle p-3 text-sm">
+                  <details className="border-t pt-3 text-sm">
                     <summary className="cursor-pointer font-medium text-foreground">查看审计字段</summary>
                     <div className="mt-3 grid gap-3 lg:grid-cols-[16rem_minmax(0,1fr)]">
-                      <dl className="flex flex-col gap-1 text-xs text-muted-foreground">
+                      <dl className="flex min-w-0 flex-col gap-1 break-all text-xs text-muted-foreground">
                         <div className="mb-2 font-semibold text-foreground">基础字段</div>
                         <div><dt className="inline font-semibold">id: </dt><dd className="inline">{log.id}</dd></div>
                         <div><dt className="inline font-semibold">action: </dt><dd className="inline">{log.action}</dd></div>
@@ -163,14 +166,13 @@ export default function AdminAudit({ loaderData }: any) {
                       </div>
                     </div>
                   </details>
-                </article>
+                  </ItemContent>
+                </Item>
               );
             })}
-          </div>
+          </ItemGroup>
 
-          <div className="px-4 pb-4">
-            <Pagination page={page} total={total} limit={limit} basePath="/admin/audit" searchParams={filters} />
-          </div>
+          <Pagination page={page} total={total} limit={limit} basePath="/admin/audit" searchParams={filters} />
         </AdminPanel>
       </AdminPage>
     </AdminLayout>

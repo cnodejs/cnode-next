@@ -84,10 +84,9 @@ export default function AdminTabs({ loaderData }: { loaderData: any }) {
 
   return (
     <AdminLayout>
-      <AdminPage>
+      <AdminPage archetype="data-list">
           <AdminPageHeader title="Tab 管理" description="控制首页 tab 按钮的可见性、标签和排序；内部 tab 仅管理员可见。" />
         <AdminPanel title="Tab 列表" description={`共 ${tabs.length} 个 tab`} flush>
-          <div className="overflow-x-auto">
             <Table className="min-w-[640px]">
               <TableHeader>
                 <TableRow>
@@ -108,7 +107,6 @@ export default function AdminTabs({ loaderData }: { loaderData: any }) {
                         aria-label={`${tab.key} 标签`}
                         value={tab.label}
                         onChange={(e) => updateField(tab.id, "label", e.target.value)}
-                        className="h-8"
                       />
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
@@ -134,7 +132,7 @@ export default function AdminTabs({ loaderData }: { loaderData: any }) {
                         type="number"
                         value={tab.sort_order}
                         onChange={(e) => updateField(tab.id, "sort_order", Number(e.target.value))}
-                        className="h-8 w-16"
+                        className="w-20"
                       />
                     </TableCell>
                     <TableCell className="text-right">
@@ -151,7 +149,6 @@ export default function AdminTabs({ loaderData }: { loaderData: any }) {
                 ))}
               </TableBody>
             </Table>
-          </div>
         </AdminPanel>
       </AdminPage>
     </AdminLayout>

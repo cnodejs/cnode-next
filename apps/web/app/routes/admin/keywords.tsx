@@ -123,7 +123,7 @@ export default function AdminKeywords({ loaderData }: any) {
 
   return (
     <AdminLayout>
-      <AdminPage>
+      <AdminPage archetype="data-list">
         <AdminPageHeader title="敏感词管理" description="维护巡检词库，让内容审核有稳定、可追踪的判断依据。" />
         <AdminPanel title="词库" description={`当前显示 ${keywords.length} / ${total} 个敏感词`} flush>
           <AdminToolbar className="items-stretch sm:items-center">
@@ -147,37 +147,40 @@ export default function AdminKeywords({ loaderData }: any) {
             </div>
           </AdminToolbar>
           {showBulk && (
-            <div className="bg-surface-subtle p-4">
+            <div className="flex flex-col gap-2 border-t pt-4">
               <Textarea
                 value={bulkText}
                 onChange={(e) => setBulkText(e.target.value)}
                 placeholder="一行一个词"
                 rows={5}
               />
-               <Button className="mt-2" onClick={handleBulk} disabled={importing || !bulkText.trim()}>
+               <Button onClick={handleBulk} disabled={importing || !bulkText.trim()}>
                  {importing ? "导入中" : "导入"}
               </Button>
             </div>
           )}
-          <div className="overflow-x-auto">
           <Table className="min-w-[560px]">
+          <colgroup>
+            <col />
+            <col className="w-32" />
+            <col className="w-24" />
+          </colgroup>
           <TableHeader>
             <TableRow>
               <TableHead>敏感词</TableHead>
-              <TableHead>命中次数</TableHead>
-              <TableHead>操作</TableHead>
+              <TableHead className="text-right">命中次数</TableHead>
+              <TableHead className="text-right">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {keywords.map((kw: any) => (
               <TableRow key={kw.id}>
                 <TableCell className="max-w-md break-all">{kw.word}</TableCell>
-                <TableCell className="text-muted-foreground">{kw.hit_count}</TableCell>
-                <TableCell>
+                <TableCell className="text-right tabular-nums text-muted-foreground">{kw.hit_count}</TableCell>
+                <TableCell className="text-right">
                   <Button
                     size="sm"
-                    variant="ghost"
-                    className="text-destructive"
+                    variant="destructive"
                     onClick={(event) => {
                       deleteTriggerRef.current = event.currentTarget;
                       setDeleteTarget({ id: kw.id, word: kw.word });
@@ -190,7 +193,6 @@ export default function AdminKeywords({ loaderData }: any) {
             ))}
           </TableBody>
           </Table>
-          </div>
           <ConfirmationDialog
             open={deleteTarget !== null}
             onOpenChange={(open) => !open && setDeleteTarget(null)}
@@ -202,9 +204,7 @@ export default function AdminKeywords({ loaderData }: any) {
             finalFocus={deleteTriggerRef}
             onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
           />
-          <div className="px-4 pb-4">
-            <Pagination page={page} total={total} limit={limit} basePath="/admin/keywords" searchParams={{ ...(q ? { q } : {}) }} />
-          </div>
+          <Pagination page={page} total={total} limit={limit} basePath="/admin/keywords" searchParams={{ ...(q ? { q } : {}) }} />
         </AdminPanel>
       </AdminPage>
     </AdminLayout>

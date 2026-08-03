@@ -5,11 +5,13 @@ import { Link, useSearchParams } from "react-router";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { Card } from "~/components/ui/card";
+import { Card, CardContent } from "~/components/ui/card";
 import { Skeleton } from "~/components/ui/skeleton";
 import { EmptyState } from "~/components/EmptyState";
 import { Search as SearchIcon } from "lucide-react";
-import { ContentPage } from "~/components/PageShell";
+import { FeedPage, PageHeader } from "~/components/PageShell";
+import { Alert, AlertDescription } from "~/components/ui/alert";
+import { Field, FieldLabel } from "~/components/ui/field";
 
 export function meta() {
   return [{ title: "搜索 · CNode" }];
@@ -87,15 +89,11 @@ export default function Search() {
 
   return (
     <Layout>
-      <ContentPage className="space-y-6">
-        <section className="rounded-3xl bg-cnode-soft p-6 shadow-sm sm:p-8">
-          <p className="text-sm font-medium text-primary">SEARCH</p>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">搜索 CNode 内容</h1>
-          <p className="mt-2 text-sm text-muted-foreground">输入关键词查找话题标题、内容和社区讨论。</p>
-        </section>
+      <FeedPage>
+        <PageHeader breadcrumbs={[{ label: "首页", to: "/" }, { label: "搜索" }]} title="搜索 CNode 内容" description="输入关键词查找话题标题、内容和社区讨论。" />
         <form onSubmit={handleSubmit} aria-busy={loading}>
-          <div className="flex gap-2">
-            <label htmlFor="site-search" className="sr-only">搜索话题</label>
+          <Field orientation="horizontal">
+            <FieldLabel htmlFor="site-search" className="sr-only">搜索话题</FieldLabel>
             <Input
               id="site-search"
               name="q"
@@ -106,13 +104,13 @@ export default function Search() {
               autoFocus
             />
             <Button type="submit" disabled={loading}>
-              <SearchIcon className="h-4 w-4" /> 搜索
+              <SearchIcon /> 搜索
             </Button>
-          </div>
+          </Field>
         </form>
 
         {loading && (
-          <div role="status" aria-label={`正在搜索 ${q}`} className="space-y-2">
+          <div role="status" aria-label={`正在搜索 ${q}`} className="flex flex-col gap-2">
             <Skeleton className="h-12 w-full" />
             <Skeleton className="h-12 w-full" />
             <Skeleton className="h-12 w-full" />
@@ -120,22 +118,24 @@ export default function Search() {
         )}
 
         {!loading && error && (
-          <div role="alert" className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive">
-            {error}
-            <Button type="button" variant="outline" size="sm" className="ml-3" onClick={() => setRetryCount((count) => count + 1)}>
+          <Alert variant="destructive">
+            <AlertDescription className="flex items-center justify-between gap-3">{error}
+            <Button type="button" variant="outline" size="sm" onClick={() => setRetryCount((count) => count + 1)}>
               重试
-            </Button>
-          </div>
+            </Button></AlertDescription>
+          </Alert>
         )}
 
         {!loading && !error && q && results !== null && (
           <>
             {results.length > 0 ? (
-              <Card className="overflow-hidden">
-                <div role="status" className="mx-2 mt-2 rounded-xl bg-surface-subtle px-3 py-2 text-sm text-muted-foreground">
+              <Card>
+                <CardContent>
+                <p role="status" className="text-sm text-muted-foreground">
                   找到 {results.length} 条与 “{q}” 相关的结果
-                </div>
+                </p>
                 <TopicList topics={results} />
+                </CardContent>
               </Card>
             ) : (
               <EmptyState
@@ -146,7 +146,7 @@ export default function Search() {
             )}
           </>
         )}
-      </ContentPage>
+      </FeedPage>
     </Layout>
   );
 }

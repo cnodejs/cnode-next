@@ -6,7 +6,9 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { AuthShell } from "~/components/AuthShell";
 import { useAsyncAction } from "~/hooks/use-async-action";
-import { Label } from "~/components/ui/label";
+import { AccountPage } from "~/components/PageShell";
+import { Alert, AlertDescription } from "~/components/ui/alert";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "~/components/ui/field";
 
 export function meta() {
   return [{ title: "重置密码 · CNode" }];
@@ -58,6 +60,7 @@ export default function ResetPass() {
 
   return (
     <Layout>
+      <AccountPage className="max-w-none">
       <AuthShell
         eyebrow="RESET PASSWORD"
         title="重新设置你的访问凭证"
@@ -65,11 +68,11 @@ export default function ResetPass() {
       >
           <h2 className="mb-6 text-lg font-semibold tracking-tight">重置密码</h2>
           <div>
-            {error && <div id="new-password-error" role="alert" className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
-            {success && <div role="status" className="mb-4 rounded-md bg-cnode-soft p-3 text-sm text-foreground">{success}</div>}
-            <form onSubmit={handleSubmit} aria-busy={loading} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="new-password">新密码</Label>
+            {success && <Alert><AlertDescription role="status">{success}</AlertDescription></Alert>}
+            <form onSubmit={handleSubmit} aria-busy={loading}>
+              <FieldGroup>
+              <Field data-invalid={newPass.length > 0 && !passValid || !!error}>
+                <FieldLabel htmlFor="new-password">新密码</FieldLabel>
                 <Input
                   id="new-password"
                   name="new-password"
@@ -83,14 +86,16 @@ export default function ResetPass() {
                   placeholder="至少8位,含字母和数字"
                   required
                 />
-                <p id="new-password-help" className="text-xs text-muted-foreground">
+                <FieldDescription id="new-password-help">
                   密码需至少 8 位,包含字母和数字
-                </p>
-              </div>
+                </FieldDescription>
+                <FieldError id="new-password-error">{error}</FieldError>
+              </Field>
               <Button type="submit" disabled={loading} className="w-full">
                 {loading ? "提交中..." : "重置密码"}
               </Button>
               {loading && <p role="status" className="text-center text-sm text-muted-foreground">正在重置密码</p>}
+              </FieldGroup>
             </form>
             <div className="mt-4 text-sm text-muted-foreground">
               <Link to="/signin" className="hover:text-primary">
@@ -99,6 +104,7 @@ export default function ResetPass() {
             </div>
           </div>
       </AuthShell>
+      </AccountPage>
     </Layout>
   );
 }

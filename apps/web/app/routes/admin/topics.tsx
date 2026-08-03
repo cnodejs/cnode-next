@@ -146,31 +146,31 @@ export default function AdminTopics({ loaderData }: any) {
 
   return (
     <AdminLayout>
-      <AdminPage>
+      <AdminPage archetype="data-list">
         <AdminPageHeader title="话题管理" description="集中处理置顶、加精、隐藏和删除等内容运营动作。" />
         <AdminPanel title="内容治理队列" description={`当前页 ${topics.length} 条 / 共 ${total} 条`} flush>
-          <div className="grid gap-1 bg-surface-subtle p-3 sm:grid-cols-4">
-            <div className="rounded-md px-2 py-1.5">
+          <div className="grid gap-3 sm:grid-cols-4">
+            <div>
               <div className="text-xs text-muted-foreground">筛选结果</div>
               <div className="mt-1 text-2xl font-semibold text-foreground">{total}</div>
             </div>
-            <div className="rounded-md px-2 py-1.5">
+            <div>
               <div className="text-xs text-muted-foreground">当前页重点</div>
               <div className="mt-1 text-2xl font-semibold text-foreground">{visibleFeatured}</div>
             </div>
-            <div className="rounded-md px-2 py-1.5">
+            <div>
               <div className="text-xs text-muted-foreground">隐藏 / 删除</div>
               <div className="mt-1 text-2xl font-semibold text-foreground">{visibleMuted} / {visibleDeleted}</div>
             </div>
-            <div className="rounded-md px-2 py-1.5">
+            <div>
               <div className="text-xs text-muted-foreground">活跃筛选</div>
               <div className="mt-1 text-2xl font-semibold text-foreground">{activeFilterCount}</div>
             </div>
           </div>
-          <AdminToolbar className="items-stretch bg-card/95 sm:flex-col sm:items-stretch">
+          <AdminToolbar className="items-stretch sm:flex-col sm:items-stretch">
             <Form method="get" className="grid gap-2 lg:grid-cols-[minmax(220px,1fr)_repeat(4,minmax(112px,auto))_auto_auto]">
-              <Input name="q" defaultValue={q} placeholder="搜索话题标题" className="h-9" />
-              <NativeSelect name="tab" defaultValue={tab || "all"} selectSize="sm" aria-label="Tab 筛选">
+              <Input name="q" defaultValue={q} placeholder="搜索话题标题" />
+              <NativeSelect name="tab" defaultValue={tab || "all"} size="sm" aria-label="Tab 筛选">
                 <option value="all">全部 Tab</option>
                 <option value="share">分享</option>
                 <option value="ask">问答</option>
@@ -178,20 +178,20 @@ export default function AdminTopics({ loaderData }: any) {
                 <option value="dev">dev</option>
                 <option value="test">test</option>
               </NativeSelect>
-              <NativeSelect name="visibility" defaultValue={visibility} selectSize="sm" aria-label="状态筛选">
+              <NativeSelect name="visibility" defaultValue={visibility} size="sm" aria-label="状态筛选">
                 <option value="all">全部状态</option>
                 <option value="normal">正常</option>
                 <option value="muted">已隐藏</option>
                 <option value="deleted">已删除</option>
               </NativeSelect>
-              <NativeSelect name="flag" defaultValue={flag} selectSize="sm" aria-label="标记筛选">
+              <NativeSelect name="flag" defaultValue={flag} size="sm" aria-label="标记筛选">
                 <option value="all">全部标记</option>
                 <option value="top">置顶</option>
                 <option value="good">精华</option>
                 <option value="locked">锁定</option>
                 <option value="archived">归档</option>
               </NativeSelect>
-              <NativeSelect name="sort" defaultValue={sort} selectSize="sm" aria-label="排序方式">
+              <NativeSelect name="sort" defaultValue={sort} size="sm" aria-label="排序方式">
                 <option value="create_at_desc">最新创建</option>
                 <option value="update_at_desc">最近更新</option>
                 <option value="last_reply_at_desc">最近回复</option>
@@ -203,19 +203,19 @@ export default function AdminTopics({ loaderData }: any) {
               <Button render={<Link to="/admin/topics" />} size="sm" variant="ghost">
                 重置
               </Button>
-              <div className="grid gap-2 rounded-xl bg-surface-subtle p-2 lg:col-span-7 lg:grid-cols-[minmax(120px,160px)_minmax(120px,180px)_minmax(120px,180px)_1fr]">
-                <NativeSelect name="date_field" defaultValue={dateField} selectSize="sm" aria-label="日期字段">
+              <div className="grid gap-2 border-t pt-2 lg:col-span-7 lg:grid-cols-[minmax(120px,160px)_minmax(120px,180px)_minmax(120px,180px)_1fr]">
+                <NativeSelect name="date_field" defaultValue={dateField} size="sm" aria-label="日期字段">
                   <option value="create_at">创建时间</option>
                   <option value="update_at">更新时间</option>
                   <option value="last_reply_at">最后回复</option>
                 </NativeSelect>
-                <Input type="date" name="date_from" defaultValue={dateFrom} aria-label="开始日期" className="h-8" />
-                <Input type="date" name="date_to" defaultValue={dateTo} aria-label="结束日期" className="h-8" />
+                <Input type="date" name="date_from" defaultValue={dateFrom} aria-label="开始日期" />
+                <Input type="date" name="date_to" defaultValue={dateTo} aria-label="结束日期" />
                 <div className="flex items-center text-xs text-muted-foreground">日期是辅助筛选，默认按创建时间倒序。</div>
               </div>
             </Form>
             {selected.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2 rounded-md bg-cnode-soft p-3 text-sm">
+              <div className="flex flex-wrap items-center gap-2 border-t pt-3 text-sm">
                 <Badge variant="default">已选 {selected.length}</Badge>
                 <Button size="sm" variant="outline" disabled={actionPending} onClick={() => handleAction("top")}>{actionPending ? "处理中" : "切换置顶"}</Button>
                 {isAdmin && (
@@ -242,10 +242,9 @@ export default function AdminTopics({ loaderData }: any) {
               </div>
             )}
           </AdminToolbar>
-          <div className="overflow-x-auto bg-card">
           <Table className="min-w-[1040px]">
           <TableHeader>
-            <TableRow className="bg-surface-subtle/60">
+            <TableRow>
               <TableHead className="w-10">
                 <Checkbox
                   aria-label="选择全部话题"
@@ -262,7 +261,7 @@ export default function AdminTopics({ loaderData }: any) {
           </TableHeader>
           <TableBody>
             {topics.map((t: any) => (
-              <TableRow key={t.id} className="align-top hover:bg-cnode-soft/40">
+              <TableRow key={t.id} className="align-top">
                 <TableCell>
                   <Checkbox aria-label={`选择话题 ${t.title}`} checked={selected.includes(t.id)} onCheckedChange={() => toggleSelect(t.id)} />
                 </TableCell>
@@ -293,9 +292,9 @@ export default function AdminTopics({ loaderData }: any) {
                 </TableCell>
                 <TableCell className="text-sm">
                   <div className="grid grid-cols-3 gap-2 text-center">
-                    <span className="rounded-lg bg-surface-subtle px-2 py-1"><b>{t.reply_count}</b><br /><span className="text-xs text-muted-foreground">回复</span></span>
-                    <span className="rounded-lg bg-surface-subtle px-2 py-1"><b>{t.visit_count}</b><br /><span className="text-xs text-muted-foreground">浏览</span></span>
-                    <span className="rounded-lg bg-surface-subtle px-2 py-1"><b>{t.collect_count}</b><br /><span className="text-xs text-muted-foreground">收藏</span></span>
+                    <span><b>{t.reply_count}</b><br /><span className="text-xs text-muted-foreground">回复</span></span>
+                    <span><b>{t.visit_count}</b><br /><span className="text-xs text-muted-foreground">浏览</span></span>
+                    <span><b>{t.collect_count}</b><br /><span className="text-xs text-muted-foreground">收藏</span></span>
                   </div>
                 </TableCell>
                 <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
@@ -322,10 +321,7 @@ export default function AdminTopics({ loaderData }: any) {
             ))}
           </TableBody>
           </Table>
-          </div>
-          <div className="px-4 pb-4">
-            <Pagination page={page} total={total} limit={limit} basePath="/admin/topics" searchParams={paginationParams} />
-          </div>
+          <Pagination page={page} total={total} limit={limit} basePath="/admin/topics" searchParams={paginationParams} />
           <ConfirmationDialog
             open={muteIds.length > 0}
             onOpenChange={(open) => !open && setMuteIds([])}

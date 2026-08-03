@@ -97,7 +97,7 @@ describe("shared primitives", () => {
   it("sets alert live-region semantics by variant", () => {
     render(
       <>
-        <Alert variant="status" live="polite">
+        <Alert role="status" aria-live="polite">
           <AlertTitle>已保存</AlertTitle>
           <AlertDescription>设置已经保存。</AlertDescription>
         </Alert>
@@ -118,7 +118,7 @@ describe("shared primitives", () => {
 
     expect(screen.getByRole("navigation", { name: "分页导航" })).toBeInTheDocument();
     expect(screen.getByRole("link", { current: "page" })).toHaveTextContent("3");
-    expect(screen.getByRole("link", { name: "← 上一页" })).toHaveAttribute("href", "/topics?tab=share&page=2");
+    expect(screen.getByRole("link", { name: "上一页" })).toHaveAttribute("href", "/topics?tab=share&page=2");
   });
 
   it("renders branded empty and command empty states", () => {

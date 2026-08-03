@@ -207,7 +207,7 @@ export default function AdminBans({ loaderData }: any) {
 
   return (
     <AdminLayout>
-      <AdminPage>
+      <AdminPage archetype="data-list">
       <AdminPageHeader title="封禁管理" description="管理用户禁言、内容屏蔽和 IP 风控规则，保持社区秩序。" />
       <Tabs
         value={tab}
@@ -219,9 +219,8 @@ export default function AdminBans({ loaderData }: any) {
           if (value === "ips") next.delete("status");
           setSearchParams(next);
         }}
-        className="flex flex-col gap-4"
       >
-        <TabsList className="bg-card shadow-card">
+        <TabsList>
           <TabsTrigger value="users">用户治理</TabsTrigger>
           <TabsTrigger value="ips">IP 封禁</TabsTrigger>
         </TabsList>
@@ -245,7 +244,6 @@ export default function AdminBans({ loaderData }: any) {
                 </Button>
               </div>
             </AdminToolbar>
-            <div className="overflow-x-auto">
             <Table className="min-w-[680px]">
               <TableHeader>
                 <TableRow>
@@ -289,10 +287,7 @@ export default function AdminBans({ loaderData }: any) {
                 )}
               </TableBody>
             </Table>
-            </div>
-            <div className="px-4 pb-4">
-              <Pagination page={page} total={bannedUsersTotal} limit={limit} basePath="/admin/bans" searchParams={{ tab: "users", status: userStatus }} />
-            </div>
+            <Pagination page={page} total={bannedUsersTotal} limit={limit} basePath="/admin/bans" searchParams={{ tab: "users", status: userStatus }} />
             <ConfirmationDialog
               open={singleUserTarget !== null}
               onOpenChange={(open) => !open && setSingleUserTarget(null)}
@@ -333,7 +328,6 @@ export default function AdminBans({ loaderData }: any) {
                 {savingIp ? "添加中" : "添加"}
               </Button>
             </AdminToolbar>
-            <div className="overflow-x-auto">
             <Table className="min-w-[680px]">
               <TableHeader>
                 <TableRow>
@@ -348,7 +342,7 @@ export default function AdminBans({ loaderData }: any) {
                     <TableCell className="break-all">{ip.ip}</TableCell>
                     <TableCell className="break-words text-muted-foreground">{ip.reason}</TableCell>
                     <TableCell>
-                      <Button size="sm" variant="ghost" className="text-destructive" onClick={(event) => {
+                      <Button size="sm" variant="destructive" onClick={(event) => {
                         removeIpTriggerRef.current = event.currentTarget;
                         setRemoveIpTarget({ id: ip.id, ip: ip.ip });
                       }}>
@@ -359,10 +353,7 @@ export default function AdminBans({ loaderData }: any) {
                 ))}
               </TableBody>
             </Table>
-            </div>
-            <div className="px-4 pb-4">
-              <Pagination page={page} total={bannedIpsTotal} limit={limit} basePath="/admin/bans" searchParams={{ tab: "ips" }} />
-            </div>
+            <Pagination page={page} total={bannedIpsTotal} limit={limit} basePath="/admin/bans" searchParams={{ tab: "ips" }} />
             <ConfirmationDialog
               open={addIpConfirmOpen}
               onOpenChange={setAddIpConfirmOpen}

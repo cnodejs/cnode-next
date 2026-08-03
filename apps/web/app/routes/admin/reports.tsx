@@ -13,6 +13,7 @@ import { NativeSelect } from "~/components/ui/native-select";
 import { useRef, useState } from "react";
 import { ConfirmationDialog } from "~/components/ConfirmationDialog";
 import { previousPageAfterRemoval } from "~/lib/post-mutation-navigation";
+import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemHeader, ItemTitle } from "~/components/ui/item";
 
 export function meta() {
   return [{ title: "举报队列 · CNode Admin" }];
@@ -65,7 +66,7 @@ export default function AdminReports({ loaderData }: any) {
 
   return (
     <AdminLayout>
-      <AdminPage>
+      <AdminPage archetype="workflow">
         <AdminPageHeader title="举报队列" description="集中确认用户举报，区分违规内容和误报反馈。" />
         <AdminPanel title="举报记录" description={`当前显示 ${reports.length} / ${total} 条举报记录`}>
           <Form method="get" className="mb-4 flex max-w-xs gap-2">
@@ -79,24 +80,23 @@ export default function AdminReports({ loaderData }: any) {
           {reports.length === 0 ? (
             <EmptyState message="暂无举报" />
           ) : (
-            <div className="flex flex-col gap-3">
+            <ItemGroup>
               {reports.map((r: any) => (
-                <div key={r.id} className="rounded-lg bg-surface-subtle p-4">
-                  <div className="mb-2 flex items-center gap-2 text-sm">
-                <Badge variant="destructive">{r.type}</Badge>
-                <span className="text-muted-foreground">{r.reporter_count || 0} 人举报</span>
-                <span className="text-muted-foreground">{r.target_type} #{r.target_id}</span>
-                  </div>
-                  <div className="mb-2 text-sm">
-                <a href={r.topic_id ? `/topic/${r.topic_id}` : "#"} className="break-words font-medium text-foreground hover:text-primary">
-                  {r.topic_title || "目标内容已不可见"}
-                </a>
-                {r.target_type === "reply" && <p className="mt-1 break-words text-muted-foreground">{r.target_summary}</p>}
-                  </div>
+                <Item key={r.id} variant="outline">
+                  <ItemContent>
+                    <ItemHeader>
+                      <ItemTitle>
+                        <Badge variant="destructive">{r.type}</Badge>
+                        <a href={r.topic_id ? `/topic/${r.topic_id}` : "#"}>{r.topic_title || "目标内容已不可见"}</a>
+                      </ItemTitle>
+                    </ItemHeader>
+                    <ItemDescription>{r.reporter_count || 0} 人举报 · {r.target_type} #{r.target_id}</ItemDescription>
+                    {r.target_type === "reply" && <p className="break-words text-sm text-muted-foreground">{r.target_summary}</p>}
               {r.description && (
-                    <p className="mb-3 rounded-xl bg-surface-subtle p-3 text-sm break-words text-muted-foreground">{r.description}</p>
+                    <p className="border-l-2 pl-3 text-sm break-words text-muted-foreground">{r.description}</p>
               )}
-                  <div className="flex flex-wrap gap-2">
+                  </ItemContent>
+                  <ItemActions className="basis-full flex-wrap sm:basis-auto">
                 <Button
                   size="sm"
                   variant="destructive"
@@ -110,10 +110,10 @@ export default function AdminReports({ loaderData }: any) {
                 <Button size="sm" variant="outline" disabled={handling} onClick={() => handleAction(r.id, "dismiss")}>
                   {handling ? "处理中" : "驳回"}
                 </Button>
-                  </div>
-                </div>
+                  </ItemActions>
+                </Item>
               ))}
-            </div>
+            </ItemGroup>
           )}
           <ConfirmationDialog
             open={confirmTarget !== null}

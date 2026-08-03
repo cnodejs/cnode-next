@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
 import { getAvatarFallback } from "~/lib/brand";
 import { MapPin, Wifi, DollarSign, Briefcase, Mail, ExternalLink, Copy } from "lucide-react";
+import { Badge as UiBadge } from "./ui/badge";
 
 export interface JobMetaCardData {
   company: string;
@@ -44,7 +45,7 @@ function isUrl(s: string): boolean {
 export function JobMetaCard({ meta }: { meta: JobMetaCardData }) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const ctaRef = useRef<HTMLElement | null>(null);
+  const ctaRef = useRef<HTMLButtonElement | null>(null);
 
   function handleCta() {
     if (isEmail(meta.contact)) {
@@ -70,7 +71,7 @@ export function JobMetaCard({ meta }: { meta: JobMetaCardData }) {
   const ctaLabel = "立即投递";
 
   return (
-    <div className="rounded-xl bg-cnode-soft/60 p-4">
+    <div className="rounded-xl bg-accent/60 p-4">
       <div className="flex items-start gap-3">
         <Avatar className="size-12 shrink-0 rounded-md">
           {meta.company_logo ? (
@@ -121,7 +122,7 @@ export function JobMetaCard({ meta }: { meta: JobMetaCardData }) {
             <SheetTitle>联系方式</SheetTitle>
           </SheetHeader>
           <div className="py-4">
-            <div className="flex items-center gap-2 rounded-lg bg-surface-subtle p-3">
+            <div className="flex items-center gap-2 rounded-lg bg-muted p-3">
               <span className="min-w-0 flex-1 text-sm font-medium text-foreground">
                 {meta.contact}
               </span>
@@ -139,9 +140,9 @@ export function JobMetaCard({ meta }: { meta: JobMetaCardData }) {
 
 function Badge({ icon: Icon, text }: { icon: React.ElementType; text: string }) {
   return (
-    <span className="inline-flex items-center gap-0.5 rounded-md bg-background px-1.5 py-0.5 text-xs text-foreground">
-      <Icon className="h-3 w-3" />
+    <UiBadge variant="secondary">
+      <Icon data-icon="inline-start" />
       {text}
-    </span>
+    </UiBadge>
   );
 }

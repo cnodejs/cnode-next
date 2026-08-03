@@ -30,7 +30,6 @@ export default [
   route("rss", "routes/rss.tsx"),
   route("sitemap.xml", "routes/sitemap.tsx"),
   route("robots.txt", "routes/robots.tsx"),
-  route("app/download", "routes/app.download.tsx"),
   route("admin", "routes/admin/_index.tsx"),
   route("admin/topics", "routes/admin/topics.tsx"),
   route("admin/mod", "routes/admin/mod-redirect.tsx"),

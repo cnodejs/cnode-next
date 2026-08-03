@@ -31,7 +31,6 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuLinkItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
@@ -43,7 +42,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <a
         href="#main-content"
         onClick={() => document.getElementById("main-content")?.focus()}
-        className="fixed left-4 top-4 z-[100] -translate-y-20 rounded-lg bg-cnode-ink px-4 py-2 text-sm font-medium text-white opacity-0 shadow-lg transition-[transform,opacity] focus:translate-y-0 focus:opacity-100"
+        className="fixed left-4 top-4 z-[100] -translate-y-20 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground opacity-0 shadow-lg transition-[transform,opacity] focus:translate-y-0 focus:opacity-100"
       >
         跳到主要内容
       </a>
@@ -169,7 +168,7 @@ export function HeaderUserArea() {
     return (
       <Link
         to="/signin"
-        className="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-sm text-muted-foreground transition-colors hover:bg-cnode-soft hover:text-foreground sm:px-3"
+        className="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground sm:px-3"
         aria-label="登录"
       >
         <User className="h-4 w-4 sm:hidden" />
@@ -212,7 +211,7 @@ export function HeaderUserArea() {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52 p-2">
           <DropdownMenuGroup>
-            <DropdownMenuLabel className="mb-1 flex items-center gap-2 rounded-lg bg-surface-subtle px-2 py-2 font-normal">
+            <DropdownMenuLabel className="mb-1 flex items-center gap-2 rounded-lg bg-muted px-2 py-2 font-normal">
               <Avatar className="size-8">
                 <AvatarImage
                   src={getAvatarUrl(user.avatar_url, 32)}
@@ -229,22 +228,22 @@ export function HeaderUserArea() {
             </DropdownMenuLabel>
           </DropdownMenuGroup>
           <DropdownMenuGroup>
-            <DropdownMenuLinkItem render={<Link to={`/user/${user.loginname}`} />}>
+            <DropdownMenuItem render={<Link to={`/user/${user.loginname}`} />}>
               <User />
               我的主页
-            </DropdownMenuLinkItem>
-            <DropdownMenuLinkItem render={<Link to="/setting" />}>
+            </DropdownMenuItem>
+            <DropdownMenuItem render={<Link to="/setting" />}>
               <Settings />
               用户设置
-            </DropdownMenuLinkItem>
+            </DropdownMenuItem>
           </DropdownMenuGroup>
           {(user.is_admin || user.is_mod) && (
             <>
               <DropdownMenuGroup className="mt-1">
-                <DropdownMenuLinkItem render={<Link to={user.is_admin ? "/admin" : "/admin/topics"} />}>
+                <DropdownMenuItem render={<Link to={user.is_admin ? "/admin" : "/admin/topics"} />}>
                   <Shield />
                   {user.is_admin ? "管理后台" : "内容管理"}
-                </DropdownMenuLinkItem>
+                </DropdownMenuItem>
               </DropdownMenuGroup>
             </>
           )}
@@ -281,13 +280,13 @@ function MobileNavTrigger({ visibleZones = [] }: { visibleZones?: any[] }) {
           <nav className="grid grid-cols-2 gap-2 py-3">
             <Link
               to="/search"
-              className="flex min-h-12 items-center gap-3 rounded-xl bg-surface-subtle px-3 text-sm text-foreground transition-colors hover:bg-accent"
+              className="flex min-h-12 items-center gap-3 rounded-xl bg-muted px-3 text-sm text-foreground transition-colors hover:bg-accent"
             >
               <Search className="h-5 w-5 text-primary" /> 搜索
             </Link>
             <Link
               to="/topic/create"
-              className="flex min-h-12 items-center gap-3 rounded-xl bg-surface-subtle px-3 text-sm text-foreground transition-colors hover:bg-accent"
+              className="flex min-h-12 items-center gap-3 rounded-xl bg-muted px-3 text-sm text-foreground transition-colors hover:bg-accent"
             >
               <Pencil className="h-5 w-5 text-primary" /> 发布话题
             </Link>
@@ -295,26 +294,26 @@ function MobileNavTrigger({ visibleZones = [] }: { visibleZones?: any[] }) {
               <Link
                 key={z.slug}
                 to={`/zone/${z.slug}`}
-                className="flex min-h-12 items-center gap-3 rounded-xl bg-surface-subtle px-3 text-sm text-foreground transition-colors hover:bg-accent"
+                className="flex min-h-12 items-center gap-3 rounded-xl bg-muted px-3 text-sm text-foreground transition-colors hover:bg-accent"
               >
                 <Code className="h-5 w-5 text-primary" /> {z.name}
               </Link>
             ))}
             <Link
               to="/my/messages"
-              className="flex min-h-12 items-center gap-3 rounded-xl bg-surface-subtle px-3 text-sm text-foreground transition-colors hover:bg-accent"
+              className="flex min-h-12 items-center gap-3 rounded-xl bg-muted px-3 text-sm text-foreground transition-colors hover:bg-accent"
             >
               <Bell className="h-5 w-5 text-primary" /> 消息
             </Link>
             <Link
               to="/api"
-              className="flex min-h-12 items-center gap-3 rounded-xl bg-surface-subtle px-3 text-sm text-foreground transition-colors hover:bg-accent"
+              className="flex min-h-12 items-center gap-3 rounded-xl bg-muted px-3 text-sm text-foreground transition-colors hover:bg-accent"
             >
               <Code className="h-5 w-5 text-primary" /> API
             </Link>
             <Link
               to="/about"
-              className="flex min-h-12 items-center gap-3 rounded-xl bg-surface-subtle px-3 text-sm text-foreground transition-colors hover:bg-accent"
+              className="flex min-h-12 items-center gap-3 rounded-xl bg-muted px-3 text-sm text-foreground transition-colors hover:bg-accent"
             >
               <Info className="h-5 w-5 text-primary" /> 关于
             </Link>
@@ -322,20 +321,20 @@ function MobileNavTrigger({ visibleZones = [] }: { visibleZones?: any[] }) {
               <>
                 <Link
                   to={`/user/${user.loginname}`}
-                  className="flex min-h-12 items-center gap-3 rounded-xl bg-surface-subtle px-3 text-sm text-foreground transition-colors hover:bg-accent"
+                  className="flex min-h-12 items-center gap-3 rounded-xl bg-muted px-3 text-sm text-foreground transition-colors hover:bg-accent"
                 >
                   <User className="h-5 w-5 text-primary" /> 我的主页
                 </Link>
                 <Link
                   to="/setting"
-                  className="flex min-h-12 items-center gap-3 rounded-xl bg-surface-subtle px-3 text-sm text-foreground transition-colors hover:bg-accent"
+                  className="flex min-h-12 items-center gap-3 rounded-xl bg-muted px-3 text-sm text-foreground transition-colors hover:bg-accent"
                 >
                   <Settings className="h-5 w-5 text-primary" /> 用户设置
                 </Link>
                 {(user.is_admin || user.is_mod) && (
                   <Link
                     to={user.is_admin ? "/admin" : "/admin/topics"}
-                    className="col-span-2 flex min-h-12 items-center gap-3 rounded-xl bg-surface-subtle px-3 text-sm text-foreground transition-colors hover:bg-accent"
+                    className="col-span-2 flex min-h-12 items-center gap-3 rounded-xl bg-muted px-3 text-sm text-foreground transition-colors hover:bg-accent"
                   >
                     <Shield className="h-5 w-5 text-primary" /> {user.is_admin ? "管理后台" : "内容管理"}
                   </Link>
@@ -344,7 +343,7 @@ function MobileNavTrigger({ visibleZones = [] }: { visibleZones?: any[] }) {
             ) : (
               <Link
                 to="/signin"
-                className="flex min-h-12 items-center gap-3 rounded-xl bg-surface-subtle px-3 text-sm text-foreground transition-colors hover:bg-accent"
+                className="flex min-h-12 items-center gap-3 rounded-xl bg-muted px-3 text-sm text-foreground transition-colors hover:bg-accent"
               >
                 <User className="h-5 w-5 text-primary" /> 登录
               </Link>
@@ -358,37 +357,35 @@ function MobileNavTrigger({ visibleZones = [] }: { visibleZones?: any[] }) {
 
 export function Footer() {
   return (
-    <footer className="mt-16 bg-surface-subtle/40">
+    <footer className="mt-16 bg-muted/40">
       <PageContainer className="py-10">
-        <div className="overflow-hidden rounded-3xl bg-card shadow-card">
+        <div className="overflow-hidden rounded-xl bg-card shadow-lg">
           <div className="grid lg:grid-cols-[minmax(0,1.25fr)_minmax(520px,1fr)]">
-            <section className="relative bg-cnode-ink p-8 text-white sm:p-10">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(128,189,1,0.26),transparent_32%),radial-gradient(circle_at_88%_78%,rgba(128,189,1,0.14),transparent_34%)]" />
+            <section className="relative bg-brand p-8 text-brand-foreground sm:p-10">
               <div className="relative max-w-xl">
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3 py-1 text-xs text-white/70">
-                  <span className="h-2 w-2 rounded-full bg-cnode-green" />
+                <div className="inline-flex items-center gap-2 rounded-full border border-brand-foreground/10 bg-brand-foreground/5 px-3 py-1 text-xs text-brand-foreground/70">
+                  <span className="size-2 rounded-full bg-brand-accent" />
                   Node.js 中文技术社区
                 </div>
                 <h2 className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">CNode Next</h2>
-                <p className="mt-4 text-sm leading-6 text-white/70">
+                <p className="mt-4 text-sm leading-6 text-brand-foreground/70">
                   连接中文 Node.js 开发者，沉淀问题解法、项目实践、招聘机会和生态资源。
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
-                  <Button render={<Link to="/topic/create" />} variant="inverse" size="sm">
+                  <Button render={<Link to="/topic/create" />} size="sm">
                     发布话题
                   </Button>
                   <Button
                     render={<Link to="/about" />}
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
-                    className="border-white/20 bg-white/8 text-white hover:bg-white/12 hover:text-white"
                   >
                     了解社区
                   </Button>
                 </div>
               </div>
             </section>
-            <section className="grid bg-surface-subtle sm:grid-cols-3">
+            <section className="grid bg-muted sm:grid-cols-3">
               <FooterGroup
                 title="社区"
                 links={[

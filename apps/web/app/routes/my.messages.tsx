@@ -4,7 +4,7 @@ import { Link, useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { Bell, CheckCheck, Inbox } from "lucide-react";
 import { Layout } from "~/components/Layout";
-import { ContentPage } from "~/components/PageShell";
+import { DirectoryPage, PageHeader } from "~/components/PageShell";
 import { TimeAgo } from "~/components/TimeAgo";
 import { apiFetch } from "~/lib/api-client";
 import { requireUser } from "~/lib/auth";
@@ -13,9 +13,10 @@ import { useAuthStore } from "~/lib/stores/auth-store";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { EmptyState } from "~/components/EmptyState";
 import { useAsyncAction } from "~/hooks/use-async-action";
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "~/components/ui/item";
 
 export function meta() {
   return [{ title: "消息 · CNode" }];
@@ -90,28 +91,21 @@ export default function Messages({ loaderData }: Route.ComponentProps) {
 
   return (
     <Layout>
-      <ContentPage className="space-y-6">
-        <section className="rounded-3xl bg-cnode-soft p-6 shadow-sm sm:p-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-sm font-medium text-primary">MESSAGES</p>
-              <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">消息中心</h1>
-              <p className="mt-2 text-sm text-muted-foreground">查看回复、定向回复和 @ 提及通知。</p>
-            </div>
+      <DirectoryPage>
+        <PageHeader breadcrumbs={[{ label: "首页", to: "/" }, { label: "消息中心" }]} title="消息中心" description="查看回复、定向回复和 @ 提及通知。" action={
             <div className="flex items-center gap-2">
               <Badge variant={unreadMsgs.length > 0 ? "default" : "secondary"}>
                 {unreadMsgs.length} 条新消息
               </Badge>
               <Button size="sm" variant="outline" onClick={() => markAllRead()} disabled={unreadMsgs.length === 0 || markingAll}>
-                <CheckCheck className="h-4 w-4" /> {markingAll ? "处理中" : "全部已读"}
+                <CheckCheck /> {markingAll ? "处理中" : "全部已读"}
               </Button>
             </div>
-          </div>
-        </section>
+        } />
 
-        <MessageGroup title="新消息" icon={<Bell className="h-4 w-4" />} messages={unreadMsgs} onMarkRead={markOneRead} pending={markingOne} />
-        <MessageGroup title="过往消息" icon={<Inbox className="h-4 w-4" />} messages={readMsgs} onMarkRead={markOneRead} pending={markingOne} />
-      </ContentPage>
+        <MessageGroup title="新消息" icon={<Bell />} messages={unreadMsgs} onMarkRead={markOneRead} pending={markingOne} />
+        <MessageGroup title="过往消息" icon={<Inbox />} messages={readMsgs} onMarkRead={markOneRead} pending={markingOne} />
+      </DirectoryPage>
     </Layout>
   );
 }
@@ -131,20 +125,21 @@ function MessageGroup({
 }) {
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-3 p-4 pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
           {icon}
           {title}
           <span className="text-sm font-normal text-muted-foreground">({messages.length})</span>
         </CardTitle>
+        <CardAction><Badge variant="secondary">{messages.length}</Badge></CardAction>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent>
         {messages.length > 0 ? (
-          <div className="flex flex-col gap-1 p-2">
+          <ItemGroup>
             {messages.map((msg) => (
               <MessageItem key={msg.id} msg={msg} onMarkRead={onMarkRead} pending={pending} />
             ))}
-          </div>
+          </ItemGroup>
         ) : (
           <EmptyState message={title === "新消息" ? "暂无新消息" : "暂无过往消息"} />
         )}
@@ -163,40 +158,41 @@ function MessageItem({ msg, onMarkRead, pending }: { msg: any; onMarkRead: (id: 
   const topicHref = msg.topic ? `/topic/${msg.topic.id}${msg.reply?.id ? `#${msg.reply.id}` : ""}` : "#";
 
   return (
-    <article className="flex gap-3 rounded-xl p-3 transition-colors hover:bg-surface-subtle sm:gap-4 sm:p-4">
-      <Link to={`/user/${msg.author?.loginname}`} className="shrink-0">
-        <Avatar className="size-10">
+    <Item>
+      <ItemMedia>
+        <Link to={`/user/${msg.author?.loginname}`}>
+        <Avatar>
           <AvatarImage src={getAvatarUrl(msg.author?.avatar_url, 40)} alt={msg.author?.loginname || "CNode"} />
           <AvatarFallback>{getAvatarFallback(msg.author?.loginname)}</AvatarFallback>
-        </Avatar>
-      </Link>
-      <div className="min-w-0 flex-1 space-y-2">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+        </Avatar></Link>
+      </ItemMedia>
+      <ItemContent>
+        <ItemTitle>
           <Link to={`/user/${msg.author?.loginname}`} className="font-semibold hover:text-primary">
             {msg.author?.loginname || "社区成员"}
           </Link>
           <span className="text-muted-foreground">{typeText}</span>
           {!msg.has_read && <span className="h-2 w-2 rounded-full bg-primary" aria-label="未读" />}
-        </div>
+        </ItemTitle>
         {msg.topic && (
-          <Link to={topicHref} className="block truncate font-medium text-foreground hover:text-primary">
+          <Link to={topicHref} className="truncate font-medium text-foreground hover:text-primary">
             {msg.topic.title}
           </Link>
         )}
         {msg.reply?.content && (
-          <div className="line-clamp-2 rounded-lg bg-surface-subtle px-3 py-2 text-sm text-muted-foreground">
+          <ItemDescription>
             {msg.reply.content}
-          </div>
+          </ItemDescription>
         )}
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <TimeAgo date={msg.create_at} />
           {!msg.has_read && (
-            <Button size="sm" variant="link" className="h-auto p-0 text-xs" onClick={() => onMarkRead(msg.id)} disabled={pending}>
+            <Button size="sm" variant="link" onClick={() => onMarkRead(msg.id)} disabled={pending}>
               {pending ? "处理中" : "标记已读"}
             </Button>
           )}
         </div>
-      </div>
-    </article>
+      </ItemContent>
+    </Item>
   );
 }

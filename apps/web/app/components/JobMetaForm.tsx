@@ -73,10 +73,10 @@ export function JobMetaForm({ value, onChange }: JobMetaFormProps) {
 
   return (
     <Card>
-      <CardHeader className="p-4 pb-3">
-        <CardTitle className="text-base">招聘信息</CardTitle>
+      <CardHeader>
+        <CardTitle>招聘信息</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-4 px-4 pb-4">
+      <CardContent className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="company">公司 *</Label>
           <Input
@@ -109,7 +109,7 @@ export function JobMetaForm({ value, onChange }: JobMetaFormProps) {
                 </button>
               </div>
             ) : (
-              <div className="flex size-12 items-center justify-center rounded-md bg-surface-subtle text-muted-foreground">
+              <div className="flex size-12 items-center justify-center rounded-md bg-muted text-muted-foreground">
                 <ImageIcon className="h-5 w-5" />
               </div>
             )}

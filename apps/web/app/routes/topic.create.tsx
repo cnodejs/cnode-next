@@ -11,10 +11,10 @@ import { toast } from "sonner";
 import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
-import { ContentPage } from "~/components/PageShell";
+import { ComposePage, PageHeader } from "~/components/PageShell";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "~/components/ui/field";
 import { TurnstileWidget, getTurnstileToken } from "~/components/TurnstileWidget";
 import { UnsavedChangesDialog, useUnsavedChanges } from "~/hooks/use-unsaved-changes";
 
@@ -119,21 +119,18 @@ export default function TopicCreate({ loaderData }: Route.ComponentProps) {
 
   return (
     <Layout>
-      <ContentPage className="flex flex-col gap-6">
-        <section className="rounded-3xl bg-cnode-soft p-6 shadow-sm sm:p-8">
-          <p className="text-sm font-medium text-primary">COMPOSE</p>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">发布话题</h1>
-          <p className="mt-2 text-sm text-muted-foreground">选择正确分类，写清楚上下文，代码和日志请使用 Markdown 代码块。</p>
-        </section>
+      <ComposePage>
+        <PageHeader breadcrumbs={[{ label: "首页", to: "/" }, { label: "发布话题" }]} title="发布话题" description="选择正确分类，写清楚上下文，代码和日志请使用 Markdown 代码块。" />
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <Card className="min-w-0">
             <CardHeader>
               <CardTitle>话题内容</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="title">标题</Label>
+              <form onSubmit={handleSubmit}>
+                <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="title">标题</FieldLabel>
                   <Input
                     id="title"
                     name="title"
@@ -142,9 +139,9 @@ export default function TopicCreate({ loaderData }: Route.ComponentProps) {
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="例如：如何在 Node.js 中定位内存泄漏…"
                   />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="tab">分类</Label>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="tab">分类</FieldLabel>
                   <Select value={tab} onValueChange={(value) => value && setTab(value)}>
                     <SelectTrigger id="tab" aria-describedby={!canPostJob ? "tab-description" : undefined}>
                       <SelectValue>{(value) => topicTabLabels[value] ?? value}</SelectValue>
@@ -157,10 +154,10 @@ export default function TopicCreate({ loaderData }: Route.ComponentProps) {
                       </SelectGroup>
                     </SelectContent>
                   </Select>
-                  {!canPostJob && <p id="tab-description" className="text-xs text-muted-foreground">招聘发布需要猎头角色授权。</p>}
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="content">正文</Label>
+                  {!canPostJob && <FieldDescription id="tab-description">招聘发布需要猎头角色授权。</FieldDescription>}
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="content">正文</FieldLabel>
                   <MarkdownEditor
                     id="content"
                     name="content"
@@ -169,13 +166,14 @@ export default function TopicCreate({ loaderData }: Route.ComponentProps) {
                     placeholder="支持 Markdown 格式…"
                     minHeight={320}
                   />
-                </div>
+                </Field>
                 <TurnstileWidget />
                 <div className="flex justify-end">
                   <Button type="submit" disabled={saving}>
                     {saving ? "发布中…" : "发布"}
                   </Button>
                 </div>
+                </FieldGroup>
               </form>
             </CardContent>
           </Card>
@@ -183,11 +181,11 @@ export default function TopicCreate({ loaderData }: Route.ComponentProps) {
             {isJobTab ? (
               <JobMetaForm value={jobMeta} onChange={setJobMeta} />
             ) : (
-              <Card>
-                <CardHeader className="p-4 pb-3">
-                  <CardTitle className="text-base">发布建议</CardTitle>
+              <Card size="sm">
+                <CardHeader>
+                  <CardTitle>发布建议</CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-col gap-2 px-4 pb-4 text-sm text-muted-foreground">
+                <CardContent className="flex flex-col gap-2">
                   <p>问答类话题请包含环境、复现步骤、期望结果和实际错误。</p>
                   <p>分享类话题建议用标题分段，附上相关链接和代码片段。</p>
                   <p>招聘类话题请写清地点、远程方式、技术栈和联系方式。</p>
@@ -196,7 +194,7 @@ export default function TopicCreate({ loaderData }: Route.ComponentProps) {
             )}
           </aside>
         </div>
-      </ContentPage>
+      </ComposePage>
       <UnsavedChangesDialog blocker={blocker} />
     </Layout>
   );

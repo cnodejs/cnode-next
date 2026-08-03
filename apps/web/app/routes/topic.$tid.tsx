@@ -3,14 +3,14 @@ import type { PublicIdentity } from "@cnode/shared";
 import type { Route } from "../../.react-router/types/app/routes/+types/topic.$tid";
 import { Link, useRevalidator } from "react-router";
 import { toast } from "sonner";
-import { Code, Edit3, ExternalLink, Flag, MapPin, MessageSquare, MoreHorizontal, Star, ThumbsUp, Trash2 } from "lucide-react";
+import { CalendarDays, Clock3, Code, Edit3, ExternalLink, Eye, Flag, MapPin, MessageSquare, MoreHorizontal, Star, ThumbsUp, Trash2 } from "lucide-react";
 import { Layout } from "~/components/Layout";
 import { MarkdownView } from "~/components/MarkdownView";
 import { TimeAgo } from "~/components/TimeAgo";
 import { StatusBadge, TagBadge } from "~/components/TagBadge";
 import { MarkdownEditor } from "~/components/MarkdownEditor";
 import { JobMetaCard } from "~/components/JobMetaCard";
-import { ReadingGrid } from "~/components/PageShell";
+import { ReadingGrid, ReadingPage } from "~/components/PageShell";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import { NativeSelect } from "~/components/ui/native-select";
@@ -42,13 +42,14 @@ import { useAsyncAction } from "~/hooks/use-async-action";
 import { UserIdentityBadges } from "~/components/UserIdentityBadges";
 import { externalUrlLabel, githubProfileUrl, safeExternalUrl } from "~/lib/public-profile";
 import { getTopicActionPresentation } from "~/lib/topic-action-presentation";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "~/components/ui/empty";
+import { Separator } from "~/components/ui/separator";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuLinkItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
@@ -100,15 +101,14 @@ export default function TopicDetail({ loaderData }: Route.ComponentProps) {
   if (!topic) {
     return (
       <Layout>
-        <Card className="w-full text-center">
-          <CardContent className="flex flex-col gap-3 py-12">
-            <h1 className="text-xl font-semibold">话题不存在或已被删除</h1>
-            <p className="text-sm text-muted-foreground">返回首页继续浏览社区最新内容。</p>
+        <Empty>
+          <EmptyHeader><EmptyTitle>话题不存在或已被删除</EmptyTitle><EmptyDescription>返回首页继续浏览社区最新内容。</EmptyDescription></EmptyHeader>
+          <EmptyContent>
             <Button render={<Link to="/" />}>
               返回首页
             </Button>
-          </CardContent>
-        </Card>
+          </EmptyContent>
+        </Empty>
       </Layout>
     );
   }
@@ -118,6 +118,7 @@ export default function TopicDetail({ loaderData }: Route.ComponentProps) {
 
   return (
     <Layout>
+      <ReadingPage>
       <ReadingGrid
         toc={toc}
         aside={<TopicContext topic={topic} authorProfile={authorProfile} />}
@@ -131,13 +132,13 @@ export default function TopicDetail({ loaderData }: Route.ComponentProps) {
         <article className="flex flex-col gap-5">
           <TopicHeader topic={topic} />
           {toc && (
-            <details className="rounded-xl bg-surface-subtle p-4 text-sm xl:hidden">
+            <details className="rounded-lg bg-muted p-4 text-sm xl:hidden">
               <summary className="cursor-pointer font-medium">本页目录</summary>
               <div className="mt-3">{toc}</div>
             </details>
           )}
           <Card>
-            <CardContent className="p-5 sm:p-7">
+            <CardContent>
               {topic.tab === "job" && topic.job_meta && (
                 <div className="mb-4">
                   <JobMetaCard meta={topic.job_meta} />
@@ -151,6 +152,7 @@ export default function TopicDetail({ loaderData }: Route.ComponentProps) {
           </Card>
         </article>
       </ReadingGrid>
+      </ReadingPage>
     </Layout>
   );
 }
@@ -158,8 +160,8 @@ export default function TopicDetail({ loaderData }: Route.ComponentProps) {
 function TopicHeader({ topic }: { topic: any }) {
   const author = topic.author;
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="gap-4 p-5 sm:p-7">
+    <Card>
+      <CardHeader>
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
           <Link to="/" className="hover:text-primary">
             首页
@@ -170,36 +172,50 @@ function TopicHeader({ topic }: { topic: any }) {
           </Link>
         </div>
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <h1 className="min-w-0 flex-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            {topic.title}
-          </h1>
+          <h1 className="min-w-0 flex-1 text-2xl font-medium tracking-tight sm:text-3xl">{topic.title}</h1>
           <div className="flex shrink-0 flex-wrap items-center gap-2 pt-1">
             {topic.top && <StatusBadge type="top" />}
             {topic.good && <StatusBadge type="good" />}
             <TagBadge tab={topic.tab} />
           </div>
         </div>
+        <Separator className="col-span-full" />
       </CardHeader>
-      <CardContent className="px-5 pb-5 pt-0 sm:px-7 sm:pb-7">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
-          <Link to={`/user/${author?.loginname}`} className="flex items-center gap-2 text-foreground hover:text-primary">
-            <Avatar className="size-8">
-              <AvatarImage src={getAvatarUrl(author?.avatar_url, 36)} alt={author?.loginname || "CNode"} />
-              <AvatarFallback>{getAvatarFallback(author?.loginname)}</AvatarFallback>
-            </Avatar>
-            <span className="font-medium">{author?.loginname || "社区成员"}</span>
-          </Link>
-          <span>发布于</span>
-          <TimeAgo date={topic.create_at} />
-          {topic.last_reply_at && (
-            <>
-              <span>最后回复</span>
-              <TimeAgo date={topic.last_reply_at} />
-            </>
-          )}
-          <span>{topic.reply_count || 0} 回复</span>
-          <span>{topic.visit_count || 0} 浏览</span>
-          <span>{topic.collect_count || 0} 收藏</span>
+      <CardContent>
+        <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <Link to={`/user/${author?.loginname}`} className="flex items-center gap-2 text-foreground hover:text-primary">
+              <Avatar className="size-8">
+                <AvatarImage src={getAvatarUrl(author?.avatar_url, 36)} alt={author?.loginname || "CNode"} />
+                <AvatarFallback>{getAvatarFallback(author?.loginname)}</AvatarFallback>
+              </Avatar>
+              <span className="font-medium">{author?.loginname || "社区成员"}</span>
+            </Link>
+            <span className="flex items-center gap-1">
+              <CalendarDays aria-hidden="true" className="size-3.5" />
+              发布于 <TimeAgo date={topic.create_at} />
+            </span>
+            {topic.last_reply_at && (
+              <span className="flex items-center gap-1">
+                <Clock3 aria-hidden="true" className="size-3.5" />
+                最后回复 <TimeAgo date={topic.last_reply_at} />
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3 sm:justify-end">
+            <span className="flex items-center gap-1" aria-label={`${topic.reply_count || 0} 回复`} title="回复">
+              <MessageSquare aria-hidden="true" className="size-3.5" />
+              {topic.reply_count || 0}
+            </span>
+            <span className="flex items-center gap-1" aria-label={`${topic.visit_count || 0} 浏览`} title="浏览">
+              <Eye aria-hidden="true" className="size-3.5" />
+              {topic.visit_count || 0}
+            </span>
+            <span className="flex items-center gap-1" aria-label={`${topic.collect_count || 0} 收藏`} title="收藏">
+              <Star aria-hidden="true" className="size-3.5" />
+              {topic.collect_count || 0}
+            </span>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -208,7 +224,7 @@ function TopicHeader({ topic }: { topic: any }) {
 
 function TopicToc({ headings }: { headings: ReturnType<typeof extractMarkdownHeadings> }) {
   return (
-    <nav className="sticky top-24 rounded-xl bg-surface-subtle p-3 text-sm">
+    <nav className="sticky top-24 rounded-lg bg-muted p-3 text-sm">
       <div className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">目录</div>
       <div className="flex flex-col gap-1">
         {headings.map((heading) => (
@@ -232,21 +248,21 @@ function TopicContext({ topic, authorProfile }: { topic: any; authorProfile?: an
   return (
     <div className="flex flex-col gap-4">
       <TopicAuthorCard author={author} profile={authorProfile} />
-      <Card className="border-0 bg-surface-subtle shadow-none">
-        <CardHeader className="p-4 pb-3">
-          <CardTitle className="text-sm">话题信息</CardTitle>
+      <Card size="sm">
+        <CardHeader>
+          <CardTitle>话题信息</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-2 px-4 pb-4 text-sm text-muted-foreground">
+        <CardContent className="flex flex-col gap-2">
           <div className="flex justify-between"><span>分类</span><span>{getTabLabel(topic.tab)}</span></div>
           <div className="flex justify-between"><span>回复</span><span>{topic.reply_count || 0}</span></div>
           <div className="flex justify-between"><span>浏览</span><span>{topic.visit_count || 0}</span></div>
         </CardContent>
       </Card>
-      <Card className="border-0 bg-cnode-soft shadow-none">
-        <CardContent className="flex flex-col gap-3 p-4">
+      <Card size="sm">
+        <CardContent className="flex flex-col gap-3">
           <p className="text-sm font-medium text-foreground">参与讨论前</p>
           <p className="text-xs text-muted-foreground">请提供可复现信息、尊重不同经验背景，并善用 Markdown 格式化代码。</p>
-          <Button render={<Link to="/about#discussion" />} variant="outline" size="sm" className="w-full bg-background">
+          <Button render={<Link to="/about#discussion" />} variant="outline" size="sm" className="w-full">
             查看讨论规范
           </Button>
         </CardContent>
@@ -262,11 +278,11 @@ function TopicAuthorCard({ author, profile }: { author: any; profile?: any }) {
   const githubUrl = githubProfileUrl(profile?.githubUsername);
 
   return (
-    <Card className="border-0 bg-surface-subtle shadow-none">
-      <CardHeader className="p-4 pb-3">
-        <CardTitle className="text-sm">作者</CardTitle>
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle>作者</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-4 px-4 pb-4">
+      <CardContent className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
           <Avatar className="size-12 shrink-0">
             <AvatarImage src={getAvatarUrl(avatarUrl, 56)} alt={loginname} />
@@ -305,7 +321,7 @@ function TopicAuthorCard({ author, profile }: { author: any; profile?: any }) {
               ["话题", profile.topic_count || 0],
               ["回复", profile.reply_count || 0],
             ].map(([label, value]) => (
-              <div key={label} className="rounded-lg bg-surface-subtle px-1 py-2">
+              <div key={label} className="rounded-lg bg-muted px-1 py-2">
                 <dt className="text-[11px] text-muted-foreground">{label}</dt>
                 <dd className="mt-0.5 text-sm font-semibold text-foreground">{value}</dd>
               </div>
@@ -323,7 +339,7 @@ function TopicAuthorCard({ author, profile }: { author: any; profile?: any }) {
 
 export function TopicActions({ topic, currentUser }: { topic: any; currentUser: any }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const managementTriggerRef = useRef<HTMLElement | null>(null);
+  const managementTriggerRef = useRef<HTMLButtonElement | null>(null);
   const { revalidate } = useRevalidator();
   const presentation = getTopicActionPresentation(topic, currentUser);
   const canManage = presentation.showManagement;
@@ -384,7 +400,7 @@ export function TopicActions({ topic, currentUser }: { topic: any; currentUser: 
   );
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl bg-card p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex flex-wrap gap-2">
         <Button variant={topic.is_collect ? "default" : "outline"} size="sm" onClick={() => toggleCollect()} disabled={collecting}>
           <Star className="h-4 w-4" /> {collecting ? "处理中" : topic.is_collect ? "取消收藏" : "收藏话题"}
@@ -413,9 +429,9 @@ export function TopicActions({ topic, currentUser }: { topic: any; currentUser: 
                   <DropdownMenuGroup>
                     <DropdownMenuLabel>话题管理</DropdownMenuLabel>
                     {presentation.showManagementEdit && (
-                      <DropdownMenuLinkItem render={<Link to={`/topic/${topic.id}/edit`} />}>
+                      <DropdownMenuItem render={<Link to={`/topic/${topic.id}/edit`} />}>
                         <Edit3 /> 编辑话题
-                      </DropdownMenuLinkItem>
+                      </DropdownMenuItem>
                     )}
                     {presentation.showPin && (
                       <DropdownMenuItem onClick={() => runTopicAction("top")} disabled={adminPending}>
@@ -432,7 +448,7 @@ export function TopicActions({ topic, currentUser }: { topic: any; currentUser: 
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        className="text-destructive data-[highlighted]:text-destructive"
+                        variant="destructive"
                         onClick={() => setDeleteOpen(true)}
                         disabled={adminPending}
                       >
@@ -551,7 +567,7 @@ function ReplySection({
 
       {replies.length === 0 ? (
         <Card>
-          <CardContent className="py-10 text-center text-sm text-muted-foreground">暂无回复，成为第一个参与讨论的人。</CardContent>
+          <CardContent><p className="text-center text-sm text-muted-foreground">暂无回复，成为第一个参与讨论的人。</p></CardContent>
         </Card>
       ) : (
         <div className="flex flex-col gap-3">
@@ -561,12 +577,13 @@ function ReplySection({
         </div>
       )}
 
-      <section className="rounded-xl bg-card p-4 shadow-card sm:p-5">
+      <Card>
+        <CardContent>
         <h2 className="mb-4 text-base font-semibold">{targetReply ? `回复 ${targetReply.author?.loginname}` : "参与回复"}</h2>
           {currentUser ? (
             <form ref={formRef} onSubmit={handleSubmit} className="flex scroll-mt-24 flex-col gap-3">
               {targetReply && (
-                <div className="rounded-lg bg-cnode-soft p-3 text-sm">
+                <div className="rounded-lg bg-accent p-3 text-sm text-accent-foreground">
                   <div className="mb-1 flex items-center justify-between gap-3">
                     <span className="font-medium">引用 #{targetReply.id}</span>
                     <Button type="button" variant="ghost" size="sm" onClick={() => startReply()}>
@@ -585,14 +602,15 @@ function ReplySection({
               </div>
             </form>
           ) : (
-            <div className="rounded-xl bg-surface-subtle p-4 text-sm text-muted-foreground">
+            <div className="rounded-lg bg-muted p-4 text-sm text-muted-foreground">
               登录后即可参与回复。
               <Button render={<Link to="/signin" />} size="sm" className="ml-3">
                 登录
               </Button>
             </div>
           )}
-      </section>
+        </CardContent>
+      </Card>
     </section>
   );
 }
@@ -610,7 +628,7 @@ function ReplyItem({
 }) {
   const author = reply.author;
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const deleteTriggerRef = useRef<HTMLElement | null>(null);
+  const deleteTriggerRef = useRef<HTMLButtonElement | null>(null);
   const { revalidate } = useRevalidator();
 
   const { run: toggleUp, pending: upping } = useAsyncAction(
@@ -663,105 +681,108 @@ function ReplyItem({
   const upCount = Array.isArray(reply.ups) ? reply.ups.length : 0;
   const canDelete = currentUser && (currentUser.is_mod || currentUser.loginname === author?.loginname);
   return (
-    <Card id={reply.id} className="scroll-mt-24 overflow-hidden">
-      <div className="flex items-center gap-3 px-4 pt-4 sm:px-5 sm:pt-5">
-        <Avatar className="size-8">
-          <AvatarImage src={getAvatarUrl(author?.avatar_url, 40)} alt={author?.loginname || "CNode"} />
-          <AvatarFallback>{getAvatarFallback(author?.loginname)}</AvatarFallback>
-        </Avatar>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2 text-sm">
+    <Card id={reply.id} className="scroll-mt-24">
+      <CardHeader>
+        <div className="flex min-w-0 items-center gap-3">
+          <Avatar className="size-8">
+            <AvatarImage src={getAvatarUrl(author?.avatar_url, 40)} alt={author?.loginname || "CNode"} />
+            <AvatarFallback>{getAvatarFallback(author?.loginname)}</AvatarFallback>
+          </Avatar>
+          <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm">
             <Link to={`/user/${author?.loginname}`} className="font-medium hover:text-primary">
               {author?.loginname || "社区成员"}
             </Link>
             <span className="text-muted-foreground">#{floor}</span>
-            <span className="text-muted-foreground">·</span>
-            <TimeAgo date={reply.create_at} />
+            <span className="flex items-center gap-1 text-muted-foreground">
+              <Clock3 aria-hidden="true" className="size-3.5" />
+              <TimeAgo date={reply.create_at} />
+            </span>
           </div>
         </div>
-      </div>
-      <CardContent className="p-4 sm:p-5">
-        <div className="flex gap-3">
-          <div className="hidden w-8 shrink-0 sm:block" />
-          <div className="flex min-w-0 flex-1 flex-col gap-3">
-            {reply.reply_to && (
-              <a
-                href={`#${reply.reply_to.id}`}
-                className="block rounded-lg bg-surface-subtle p-3 text-sm transition-colors hover:bg-accent"
-              >
-                <span className="font-medium text-foreground">引用 {reply.reply_to.author?.loginname || "社区成员"}</span>
-                <span className="mt-1 block line-clamp-2 text-muted-foreground">{reply.reply_to.content_excerpt}</span>
-              </a>
-            )}
-            <MarkdownView content={reply.content} />
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                variant={reply.is_uped ? "default" : "ghost"}
-                size="sm"
-                className="h-8 px-2 text-xs"
-                onClick={toggleUp}
-                disabled={upping}
-              >
-                <ThumbsUp className="h-3 w-3" /> {upping ? "处理中" : upCount > 0 ? `${upCount} 赞` : "赞"}
-              </Button>
-              <Button type="button" variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={onReply}>
-                <MessageSquare className="h-3 w-3" /> 回复
-              </Button>
-              {currentUser && <ReportButton targetType="reply" targetId={reply.id} compact />}
-              {canDelete && (
-                <Button
-                  ref={deleteTriggerRef}
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 px-2 text-xs text-destructive hover:text-destructive"
-                  onClick={() => setDeleteOpen(true)}
-                  disabled={deleting}
-                >
-                  <Trash2 className="h-3 w-3" /> {deleting ? "删除中" : "删除回复"}
-                </Button>
-              )}
-              <Dialog
-                open={deleteOpen}
-                onOpenChange={(open, eventDetails) => {
-                  if (!open && deleting) {
-                    eventDetails.cancel();
-                    return;
-                  }
-                  setDeleteOpen(open);
-                }}
-              >
-                <DialogContent finalFocus={deleteTriggerRef}>
-                  <DialogHeader>
-                    <DialogTitle>确认删除回复</DialogTitle>
-                    <DialogDescription>
-                      删除后这条回复将从帖子详情回复列表隐藏，不会删除所属帖子。
-                    </DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => setDeleteOpen(false)} disabled={deleting}>
-                      取消
-                    </Button>
-                    <Button type="button" variant="destructive" onClick={deleteReply} disabled={deleting}>
-                      {deleting ? "删除中" : "确认删除回复"}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+      </CardHeader>
+      <CardContent>
+        <div className="flex min-w-0 flex-col gap-4">
+          {reply.reply_to && (
+            <a
+              href={`#${reply.reply_to.id}`}
+              className="block rounded-lg bg-muted p-3 text-sm transition-colors hover:bg-accent"
+            >
+              <span className="font-medium text-foreground">引用 {reply.reply_to.author?.loginname || "社区成员"}</span>
+              <span className="mt-1 block line-clamp-2 text-muted-foreground">{reply.reply_to.content_excerpt}</span>
+            </a>
+          )}
+          <MarkdownView content={reply.content} />
+          <div className="flex flex-wrap items-center justify-between gap-2" aria-label={`回复 #${floor} 操作`}>
+            <div className="flex items-center gap-1" aria-label="参与操作">
+            <Button
+              type="button"
+              variant={reply.is_uped ? "default" : "ghost"}
+              size="sm"
+              onClick={toggleUp}
+              disabled={upping}
+            >
+              <ThumbsUp /> {upping ? "处理中" : upCount > 0 ? `${upCount} 赞` : "赞"}
+            </Button>
+            <Button type="button" variant="ghost" size="sm" onClick={onReply}>
+              <MessageSquare /> 回复
+            </Button>
             </div>
+            {(currentUser || canDelete) && (
+              <div className="flex items-center gap-1" aria-label="治理操作">
+                {currentUser && <ReportButton targetType="reply" targetId={reply.id} />}
+                {canDelete && (
+                  <Button
+                    ref={deleteTriggerRef}
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDeleteOpen(true)}
+                    disabled={deleting}
+                  >
+                    <Trash2 /> {deleting ? "删除中" : "删除回复"}
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
+          <Dialog
+            open={deleteOpen}
+            onOpenChange={(open, eventDetails) => {
+              if (!open && deleting) {
+                eventDetails.cancel();
+                return;
+              }
+              setDeleteOpen(open);
+            }}
+          >
+            <DialogContent finalFocus={deleteTriggerRef}>
+              <DialogHeader>
+                <DialogTitle>确认删除回复</DialogTitle>
+                <DialogDescription>
+                  删除后这条回复将从帖子详情回复列表隐藏，不会删除所属帖子。
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setDeleteOpen(false)} disabled={deleting}>
+                  取消
+                </Button>
+                <Button type="button" variant="destructive" onClick={deleteReply} disabled={deleting}>
+                  {deleting ? "删除中" : "确认删除回复"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </CardContent>
     </Card>
   );
 }
 
-function ReportButton({ targetType, targetId, compact = false }: { targetType: "topic" | "reply"; targetId: string; compact?: boolean }) {
+function ReportButton({ targetType, targetId }: { targetType: "topic" | "reply"; targetId: string }) {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState("spam");
   const [description, setDescription] = useState("");
-  const triggerRef = useRef<HTMLElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   const { run: submitReport, pending: submitting } = useAsyncAction(
     async () => {
@@ -785,8 +806,8 @@ function ReportButton({ targetType, targetId, compact = false }: { targetType: "
 
   return (
     <>
-      <Button ref={triggerRef} type="button" variant="ghost" size="sm" className={compact ? "h-8 px-2 text-xs" : undefined} onClick={() => setOpen(true)}>
-        <Flag className={compact ? "h-3 w-3" : "h-4 w-4"} /> 举报
+      <Button ref={triggerRef} type="button" variant="ghost" size="sm" onClick={() => setOpen(true)}>
+        <Flag /> 举报
       </Button>
       <Dialog
         open={open}

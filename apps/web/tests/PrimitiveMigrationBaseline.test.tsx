@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
+import { Input } from "~/components/ui/input";
 import {
   Dialog,
   DialogClose,
@@ -19,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { Sheet, SheetContent, SheetTitle } from "~/components/ui/sheet";
 
 describe("primitive migration baseline", () => {
   it("composes a Button with one semantic link", () => {
@@ -97,7 +99,7 @@ describe("primitive migration baseline", () => {
               setOpen(nextOpen);
             }}
           >
-            <DialogContent finalFocus={triggerRef}>
+            <DialogContent finalFocus={triggerRef} showCloseButton={false}>
               <DialogTitle>受控确认</DialogTitle>
               <button type="button" onClick={() => setPending(false)}>
                 完成请求
@@ -138,6 +140,37 @@ describe("primitive migration baseline", () => {
 
     expect(screen.getByRole("checkbox", { name: "选择话题" })).toBeChecked();
     expect(submit.mock.results[0]?.value).toBe("topic-1");
+  });
+
+  it("exposes disabled and invalid control states", () => {
+    render(
+      <div>
+        <Input aria-label="无效字段" aria-invalid disabled />
+        <Button disabled>不可操作</Button>
+      </div>,
+    );
+
+    expect(screen.getByRole("textbox", { name: "无效字段" })).toBeDisabled();
+    expect(screen.getByRole("textbox", { name: "无效字段" })).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByRole("button", { name: "不可操作" })).toBeDisabled();
+  });
+
+  it("keeps mobile Sheet content scrollable within safe areas", () => {
+    render(
+      <Sheet defaultOpen>
+        <SheetContent>
+          <SheetTitle>移动导航</SheetTitle>
+          <div>内容</div>
+        </SheetContent>
+      </Sheet>,
+    );
+
+    expect(screen.getByRole("dialog", { name: "移动导航" })).toHaveClass(
+      "max-h-[100dvh]",
+      "overflow-y-auto",
+      "overscroll-contain",
+      "pb-[env(safe-area-inset-bottom)]",
+    );
   });
 
   it("automatically activates Tabs while navigating with arrow keys", async () => {

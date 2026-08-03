@@ -17,10 +17,12 @@ import {
   FormLabel,
   FormMessage,
   FormDescription,
-} from "~/components/ui/form";
+} from "~/components/Form";
 import { AuthShell } from "~/components/AuthShell";
 import { redirectIfAuthenticated } from "~/lib/auth";
 import { TurnstileWidget, getTurnstileToken } from "~/components/TurnstileWidget";
+import { AccountPage } from "~/components/PageShell";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "~/components/ui/empty";
 
 const signupFormSchema = signupSchema
   .extend({
@@ -82,6 +84,7 @@ export default function Signup({ loaderData }: any) {
 
   return (
     <Layout>
+      <AccountPage className="max-w-none">
       <AuthShell
         eyebrow="JOIN CNODE"
         title="创建社区账号"
@@ -91,7 +94,7 @@ export default function Signup({ loaderData }: any) {
           <div>
             {allowSignup ? (
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} aria-busy={loading} className="space-y-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} aria-busy={loading} className="flex flex-col gap-4">
                 <FormField
                   control={form.control}
                   name="loginname"
@@ -184,9 +187,7 @@ export default function Signup({ loaderData }: any) {
               </form>
             </Form>
             ) : (
-              <div className="rounded-lg bg-surface-subtle p-6 text-center text-sm text-muted-foreground">
-                当前暂不开放注册。
-              </div>
+              <Empty><EmptyHeader><EmptyTitle>暂不开放注册</EmptyTitle><EmptyDescription>当前暂不开放注册。</EmptyDescription></EmptyHeader></Empty>
             )}
             <div className="mt-4 text-sm text-muted-foreground text-center">
               <Link to="/signin" className="text-primary hover:underline">
@@ -199,6 +200,7 @@ export default function Signup({ loaderData }: any) {
               </div>
           </div>
       </AuthShell>
+      </AccountPage>
     </Layout>
   );
 }

@@ -157,7 +157,7 @@ export default function AdminUsers({ loaderData }: any) {
 
   return (
     <AdminLayout>
-      <AdminPage>
+      <AdminPage archetype="data-list">
         <AdminPageHeader title="用户管理" description="查看社区用户状态，执行内容屏蔽、禁言、密码重置和清理操作。" />
         <AdminPanel title="用户列表" description={`当前显示 ${users.length} / ${total} 个用户`} flush>
           <AdminToolbar>
@@ -166,7 +166,6 @@ export default function AdminUsers({ loaderData }: any) {
               <Button type="submit" variant="outline">搜索</Button>
             </Form>
           </AdminToolbar>
-          <div className="overflow-x-auto">
           <Table className="min-w-[720px]">
           <TableHeader>
             <TableRow>
@@ -191,7 +190,7 @@ export default function AdminUsers({ loaderData }: any) {
                   <div className="flex flex-wrap gap-1">
                     {u.is_block && <Badge variant="destructive">内容已屏蔽</Badge>}
                     {u.is_muted && <Badge variant="destructive">禁言</Badge>}
-                    {!u.is_block && !u.is_muted && <Badge variant="success">正常</Badge>}
+                    {!u.is_block && !u.is_muted && <Badge variant="secondary">正常</Badge>}
                   </div>
                 </TableCell>
                 <TableCell>
@@ -260,10 +259,7 @@ export default function AdminUsers({ loaderData }: any) {
             );})}
           </TableBody>
           </Table>
-          </div>
-          <div className="px-4 pb-4">
-            <Pagination page={page} total={total} limit={limit} basePath="/admin/users" searchParams={{ ...(q ? { q } : {}) }} />
-          </div>
+          <Pagination page={page} total={total} limit={limit} basePath="/admin/users" searchParams={{ ...(q ? { q } : {}) }} />
           <ConfirmationDialog
             open={deleteAllTarget !== null}
             onOpenChange={(open) => !open && setDeleteAllTarget(null)}

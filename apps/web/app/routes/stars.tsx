@@ -1,13 +1,13 @@
 import type { Route } from "../../.react-router/types/app/routes/+types/stars";
 import { Link } from "react-router";
 import { Layout } from "~/components/Layout";
-import { ContentPage } from "~/components/PageShell";
+import { DirectoryPage, PageHeader } from "~/components/PageShell";
 import { apiFetch } from "~/lib/api-client";
 import { getAvatarFallback, getAvatarUrl } from "~/lib/brand";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
-import { Card, CardContent } from "~/components/ui/card";
 import { EmptyState } from "~/components/EmptyState";
+import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from "~/components/ui/item";
 
 export function meta() {
   return [{ title: "社区达人 · CNode" }];
@@ -22,14 +22,10 @@ export default function Stars({ loaderData }: Route.ComponentProps) {
   const { users } = loaderData as any;
   return (
     <Layout>
-      <ContentPage className="space-y-6">
-        <section className="rounded-3xl bg-cnode-soft p-6 shadow-sm sm:p-8">
-          <p className="text-sm font-medium text-primary">STARS</p>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">社区达人</h1>
-          <p className="mt-2 text-sm text-muted-foreground">由管理员标记的 CNode 社区活跃成员。</p>
-        </section>
+      <DirectoryPage>
+        <PageHeader breadcrumbs={[{ label: "首页", to: "/" }, { label: "社区达人" }]} title="社区达人" description="由管理员标记的 CNode 社区活跃成员。" />
         <UserGrid users={users} empty="暂无达人" />
-      </ContentPage>
+      </DirectoryPage>
     </Layout>
   );
 }
@@ -42,21 +38,21 @@ export function UserGrid({ users, empty }: { users: any[]; empty: string }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {users.map((user, index) => (
-        <Link key={user.id || user.loginname} to={`/user/${user.loginname}`} className="group">
-          <Card className="h-full transition-shadow hover:shadow-floating">
-            <CardContent className="flex items-center gap-4 p-5">
-              <Avatar className="size-12">
+        <Item key={user.id || user.loginname} render={<Link to={`/user/${user.loginname}`} />} variant="outline">
+            <ItemMedia>
+              <Avatar>
                 <AvatarImage src={getAvatarUrl(user.avatar_url, 48)} alt={user.loginname} />
                 <AvatarFallback>{getAvatarFallback(user.loginname)}</AvatarFallback>
               </Avatar>
-              <div className="min-w-0 flex-1">
-                <div className="truncate font-semibold group-hover:text-primary">{user.loginname}</div>
-                <div className="mt-1 text-sm text-muted-foreground">积分 {user.score || 0}</div>
-              </div>
+            </ItemMedia>
+            <ItemContent>
+              <ItemTitle>{user.loginname}</ItemTitle>
+              <div className="text-sm text-muted-foreground">积分 {user.score || 0}</div>
+            </ItemContent>
+            <ItemActions>
               <Badge variant="secondary">#{index + 1}</Badge>
-            </CardContent>
-          </Card>
-        </Link>
+            </ItemActions>
+        </Item>
       ))}
     </div>
   );

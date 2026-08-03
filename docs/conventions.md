@@ -34,10 +34,8 @@ This repository keeps public project documentation concise, task-oriented, and s
 
 ## Web UI Source Governance
 
-`apps/web/app/components/ui/` is repository-owned shadcn/ui source, not generated output that may be replaced wholesale. The reproducible UI toolchain is shadcn CLI `4.16.1`, `@base-ui/react` `1.6.0`, and Vite `7.3.6`, as locked by `apps/web/package.json` and `pnpm-lock.yaml`.
+The mandatory component, theme, composition, responsive, page-archetype, and Markdown rules live in [`docs/design-system.md`](design-system.md). `apps/web/app/components/ui/` is repository-owned shadcn `base-nova` source on Base UI, using the pinned toolchain in `apps/web/package.json` and `pnpm-lock.yaml`.
 
-- Existing components retain the legacy shadcn `new-york` visual classes and CNode semantic tokens while their interaction layer uses Base UI. There is no `base-new-york` preset switch or long-lived Radix compatibility layer.
-- Compose React Router links and custom elements through Base UI `render`. A composed `Button` must use non-native-button mode; never create nested links/buttons or add `asChild`/Slot compatibility.
 - Review one registry component at a time from the Web workspace:
 
 ```bash
@@ -45,15 +43,10 @@ pnpm --filter @cnode/web exec shadcn add <component> --dry-run
 pnpm --filter @cnode/web exec shadcn add <component> --diff
 ```
 
-- Inspect dependencies, target files, Base UI state attributes, focus behavior, and the complete diff before merging. Reject output that reintroduces Radix, overwrites CNode tokens/classes, or modifies unrelated files.
-- Registry reviews cover `select`, `native-select`, `textarea`, `alert-dialog`, `alert`, `pagination`, `empty`, `command`, and `radio-group`. The reviewed Base Nova output for AlertDialog, Pagination, and Command was rejected because nested registry dependencies would reintroduce Radix or overwrite migrated CNode components; those structures must be merged manually.
-- `.migration/` files are temporary review artifacts. Fold durable toolchain and merge decisions into this document and remove the temporary directory before a change is archived.
-- Never run `shadcn add --all`, bulk-update `components/ui/`, or use an unpinned `pnpm dlx shadcn@latest` command.
-- Preserve the Select boundary: public topic create/edit forms use the branded Base UI Select; dense admin GET filters use NativeSelect and URL-backed values.
-- Follow the default shadcn Card composition without automatic Header/Content dividers or contrasting header backgrounds. Add a Card border separator only for a deliberate edge-to-edge content or footer treatment, not as a page-wide default.
-- Keep Card spacing to one composition layer: use the default Header/Content inset, or pair a compact `p-4 pb-3` Header with `px-4 pb-4` Content. Do not restore top padding on CardContent, nest Cards inside padded Card-like shells, or use Card primitives only to create spacing.
-- Keep brand color out of default control outlines. Inputs, selects, textareas, menus, tabs, dialogs, cards, avatars, and informational surfaces use neutral semantic tokens; reserve primary color for active, selected, focus, and primary-action states. Do not add decorative borders when background, spacing, or elevation already establishes the boundary.
-- Use a subtle shadow rather than a solid rule for the sticky shell Header boundary, and avoid stacking borders between main, Footer, copyright, Footer link groups, or content items that can be separated by spacing.
+- Inspect every registry dependency and diff. Preserve only documented alias, React Router composition, localization, and tested behavior patches.
+- Never run `shadcn add --all`, bulk-overwrite `components/ui/`, reintroduce Radix/Slot compatibility, or use an unpinned CLI.
+- CNode branding is expressed through semantic theme roles. Primitive source and routes must not use raw CNode palette utilities or redefine primitive appearance with `className`.
+- `pnpm test` runs the design-system governance gate; UI work is incomplete while it fails.
 
 These are current implementation conventions, so no `wiki/` synchronization is required.
 
@@ -103,7 +96,7 @@ These are current implementation conventions, so no `wiki/` synchronization is r
 | Naming | `apps/api` tests live under `apps/api/test/**/*.test.ts`; other packages use `*.test.ts` next to source or under `__tests__`. |
 | Running | `apps/api` runs `vitest run` with automatic test discovery. Use `pnpm test` per package, `pnpm -r test` across the workspace. |
 
-API tests must not require `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, or any real PostgreSQL test database. Tests that need database-backed branches should fake the service/query boundary and state that they verify route behavior, not PostgreSQL semantics.
+API tests must not require `POSTGRES_HOST`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, or any real PostgreSQL test database. Tests that need database-backed branches should fake the service/query boundary and state that they verify route behavior, not PostgreSQL semantics.
 
 ## OpenSpec And Design Process
 

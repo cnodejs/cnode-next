@@ -1,6 +1,7 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, MemoryRouter, RouterProvider } from "react-router";
+import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Footer, Header, Layout } from "~/components/Layout";
 import { CommandPalette } from "~/components/CommandPalette";
@@ -155,11 +156,28 @@ describe("Shell landmark 与标题", () => {
     expect(main).toHaveFocus();
   });
 
+  it("server-renders the contained admin navigation shell", () => {
+    const router = createMemoryRouter(
+      [{ id: "root", path: "*", element: <AdminLayout><h1>话题管理</h1></AdminLayout> }],
+      {
+        initialEntries: ["/admin/topics"],
+        hydrationData: { loaderData: { root: { zones: [], user: null } } },
+      },
+    );
+    const html = renderToString(<RouterProvider router={router} />);
+
+    expect(html).toContain('data-admin-shell="true"');
+    expect(html).toMatch(/<main[^>]*class="[^"]*min-w-0/);
+    expect(html).toContain('aria-label="后台导航"');
+    expect(html).toContain("打开后台导航");
+    expect(html).toContain('aria-current="page"');
+  });
+
   it("keeps one auth page h1 and uses card titles as section headings", () => {
     render(
       <MemoryRouter>
         <AuthShell eyebrow="WELCOME" title="回到社区" description="登录说明">
-          <CardHeader><CardTitle>登录</CardTitle></CardHeader>
+          <CardHeader><CardTitle><h2>登录</h2></CardTitle></CardHeader>
         </AuthShell>
       </MemoryRouter>,
     );
@@ -170,7 +188,7 @@ describe("Shell landmark 与标题", () => {
 });
 
 describe("导航当前项", () => {
-  it("keeps admin top, side, and mobile navigation current with a query string", () => {
+  it("uses the contained navigation structure and keeps one destination current with a query string", () => {
     const router = createMemoryRouter(
       [{ id: "root", path: "*", element: <AdminLayout><h1>话题管理</h1></AdminLayout> }],
       {
@@ -178,11 +196,36 @@ describe("导航当前项", () => {
         hydrationData: { loaderData: { root: { zones: [], user: null } } },
       },
     );
-    render(<RouterProvider router={router} />);
-    expect(screen.getByRole("link", { name: "内容" })).toHaveAttribute("aria-current", "page");
-    for (const link of screen.getAllByRole("link", { name: "话题管理" })) {
-      expect(link).toHaveAttribute("aria-current", "page");
-    }
+    const { container } = render(<RouterProvider router={router} />);
+    const navigation = screen.getByRole("navigation", { name: "后台导航" });
+    expect(within(navigation).getByRole("link", { name: "话题管理" })).toHaveAttribute("aria-current", "page");
+    expect(within(navigation).getAllByRole("link")).toHaveLength(3);
+    expect(within(navigation).queryByRole("link", { name: "概览" })).not.toBeInTheDocument();
+    expect(within(navigation).queryByRole("link", { name: "用户管理" })).not.toBeInTheDocument();
+    expect(container.querySelector("[data-admin-shell]")).toBeInTheDocument();
+    expect(container.querySelector('[data-slot="card"] nav[aria-label="后台导航"]')).toBeInTheDocument();
+  });
+
+  it("opens the shared navigation in the mobile Sheet", async () => {
+    const user = userEvent.setup();
+    const desktopWidth = window.innerWidth;
+    window.innerWidth = 375;
+    const router = createMemoryRouter(
+      [{ id: "root", path: "*", element: <AdminLayout><h1>话题管理</h1></AdminLayout> }],
+      {
+        initialEntries: ["/admin/topics?status=open"],
+        hydrationData: { loaderData: { root: { zones: [], user: null } } },
+      },
+    );
+    const view = render(<RouterProvider router={router} />);
+
+    await user.click(screen.getByRole("button", { name: "打开后台导航" }));
+    const dialog = await screen.findByRole("dialog", { name: "后台导航" });
+    const navigation = within(dialog).getByRole("navigation", { name: "后台导航" });
+    expect(within(navigation).getByRole("link", { name: "话题管理" })).toHaveAttribute("aria-current", "page");
+
+    view.unmount();
+    window.innerWidth = desktopWidth;
   });
 
   it("marks the selected user tab as the current page", () => {

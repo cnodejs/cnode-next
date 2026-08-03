@@ -46,6 +46,7 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
         <Label htmlFor="job-location-filter" className="text-xs">地点</Label>
         <NativeSelect
           id="job-location-filter"
+          className="w-full"
           value={location}
           onChange={(e) => updateParam("location", e.target.value)}
         >
@@ -62,6 +63,7 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
         <Label htmlFor="job-remote-filter" className="text-xs">远程</Label>
         <NativeSelect
           id="job-remote-filter"
+          className="w-full"
           value={remote}
           onChange={(e) => updateParam("remote", e.target.value)}
         >
@@ -83,7 +85,7 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
           value={salaryMin}
           onChange={(e) => updateParam("salary_min", e.target.value)}
           placeholder="如 30"
-          className="h-9 w-full"
+          className="w-full"
         />
       </div>
 
@@ -95,7 +97,7 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
           value={tags}
           onChange={(e) => updateParam("tags", e.target.value)}
           placeholder="如 Node,PostgreSQL"
-          className="h-9 w-full"
+          className="w-full"
         />
       </div>
     </div>
@@ -103,7 +105,7 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
 
   return (
     <>
-      <div className="hidden rounded-3xl bg-surface-subtle p-4 shadow-sm md:block sm:p-5">
+      <div className="hidden rounded-xl bg-muted p-4 shadow-sm md:block sm:p-5">
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 font-semibold text-foreground">

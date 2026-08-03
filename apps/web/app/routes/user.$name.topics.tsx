@@ -2,7 +2,7 @@ import type { Route } from "../../.react-router/types/app/routes/+types/user.$na
 import { Layout } from "~/components/Layout";
 import { TopicList } from "~/components/TopicList";
 import { apiFetch } from "~/lib/api-client";
-import { ContentPage } from "~/components/PageShell";
+import { FeedPage } from "~/components/PageShell";
 import { UserHero, UserTabs } from "./user.$name";
 import { Pagination } from "~/components/Pagination";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -28,15 +28,15 @@ export default function UserTopics({ loaderData }: Route.ComponentProps) {
 
   return (
     <Layout>
-      <ContentPage className="space-y-6">
+      <FeedPage>
         {user && <UserHero user={user} />}
         <UserTabs loginname={loginname} active="topics" />
-        <Card className="overflow-hidden">
-          <CardHeader className="p-4 pb-3"><CardTitle className="text-base">{loginname} 的话题</CardTitle></CardHeader>
-          <CardContent className="p-0"><TopicList topics={topics} /></CardContent>
+        <Card>
+          <CardHeader><CardTitle>{loginname} 的话题</CardTitle></CardHeader>
+          <CardContent><TopicList topics={topics} /></CardContent>
         </Card>
         <Pagination page={page} total={total} limit={limit} basePath={`/user/${loginname}/topics`} />
-      </ContentPage>
+      </FeedPage>
     </Layout>
   );
 }

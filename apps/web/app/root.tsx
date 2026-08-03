@@ -35,13 +35,13 @@ export async function loader({ request }: { request: Request }) {
     zones,
     tabs,
     publicConfig: {
-      apiBaseUrl: process.env.APP_API_BASE_URL || "https://api.cnodejs.org",
+      apiBaseUrl: process.env.CNODE_API_BASE_URL || "https://api.cnodejs.org",
       turnstileSiteKey: process.env.TURNSTILE_SITE_KEY || "",
       build: {
         service: "cnode-web",
         version: packageJson.version,
-        commit: process.env.APP_GIT_SHA || process.env.GIT_SHA || process.env.COMMIT_SHA || "unknown",
-        buildTime: process.env.APP_BUILD_TIME || process.env.BUILD_TIME || "unknown",
+        commit: process.env.CNODE_GIT_SHA || process.env.GIT_SHA || process.env.COMMIT_SHA || "unknown",
+        buildTime: process.env.CNODE_BUILD_TIME || process.env.BUILD_TIME || "unknown",
       },
     },
   };

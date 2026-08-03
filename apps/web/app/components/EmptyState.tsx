@@ -10,7 +10,7 @@ function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <Empty className="my-4 bg-cnode-soft/40">
+    <Empty className="my-4">
       <EmptyHeader>
         <EmptyTitle>{title}</EmptyTitle>
         <EmptyDescription>{message}</EmptyDescription>

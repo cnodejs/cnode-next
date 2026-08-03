@@ -22,7 +22,7 @@ import {
   FormLabel,
   FormMessage,
   FormDescription,
-} from "~/components/ui/form";
+} from "~/components/Form";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
 import {
@@ -33,7 +33,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
-import { ContentPage } from "~/components/PageShell";
+import { AccountPage, PageHeader } from "~/components/PageShell";
 import { useAsyncAction } from "~/hooks/use-async-action";
 
 const profileSchema = z.object({
@@ -71,7 +71,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
   const [params] = useSearchParams();
   const revalidator = useRevalidator();
   const [unbindOpen, setUnbindOpen] = useState(false);
-  const unbindTriggerRef = useRef<HTMLElement | null>(null);
+  const unbindTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   const profileForm = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
@@ -167,31 +167,25 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
 
   return (
     <Layout>
-      <ContentPage className="space-y-6">
-        <section className="rounded-3xl bg-cnode-soft p-6 shadow-sm sm:p-8">
-          <p className="text-sm font-medium text-primary">SETTINGS</p>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">用户设置</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            维护个人资料、通知偏好、密码和 API Token。
-          </p>
-        </section>
+      <AccountPage className="max-w-6xl">
+        <PageHeader breadcrumbs={[{ label: "首页", to: "/" }, { label: "用户设置" }]} title="用户设置" description="维护个人资料、通知偏好、密码和 API Token。" />
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-          <div className="min-w-0 space-y-6">
+          <div className="flex min-w-0 flex-col gap-6">
             <Card>
-              <CardHeader className="p-4 pb-3">
+              <CardHeader>
                 <CardTitle>账号身份</CardTitle>
               </CardHeader>
-              <CardContent className="flex flex-col gap-2 px-4 pb-4">
-                <div className="flex flex-col gap-4 rounded-xl bg-surface-subtle p-4 sm:flex-row sm:items-center">
+              <CardContent className="flex flex-col gap-2">
+                <div className="flex flex-col gap-4 rounded-xl bg-muted p-4 sm:flex-row sm:items-center">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-cnode-soft text-foreground">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-secondary-foreground">
                       <Mail aria-hidden="true" className="size-5" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-medium">邮箱</span>
-                        <Badge variant="success">已设置</Badge>
+                        <Badge variant="secondary">已设置</Badge>
                       </div>
                       <div className="mt-1 break-all text-sm text-muted-foreground">
                         {user?.email || "-"}
@@ -199,9 +193,9 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-col gap-4 rounded-xl bg-surface-subtle p-4 sm:flex-row sm:items-center">
+                <div className="flex flex-col gap-4 rounded-xl bg-muted p-4 sm:flex-row sm:items-center">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-cnode-ink text-brand-on dark:bg-cnode-green">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand text-brand-foreground">
                       <svg
                         aria-hidden="true"
                         className="size-5"
@@ -214,7 +208,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-medium">GitHub</span>
-                        <Badge variant={user?.github_bound ? "success" : "outline"}>
+                        <Badge variant={user?.github_bound ? "secondary" : "outline"}>
                           {user?.github_bound ? "已绑定" : "未绑定"}
                         </Badge>
                       </div>
@@ -245,15 +239,15 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
               </CardContent>
             </Card>
             <Card>
-              <CardHeader className="p-4 pb-3">
+              <CardHeader>
                 <CardTitle>个人资料</CardTitle>
               </CardHeader>
-              <CardContent className="px-4 pb-4">
+              <CardContent>
                 <Form {...profileForm}>
                   <form
                     onSubmit={profileForm.handleSubmit(onProfileSubmit)}
                     aria-busy={profileForm.formState.isSubmitting}
-                    className="space-y-4"
+                    className="flex flex-col gap-4"
                   >
                     <FormField
                       control={profileForm.control}
@@ -305,9 +299,9 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       control={profileForm.control}
                       name="receive_reply_mail"
                       render={({ field }) => (
-                        <FormItem className="flex items-center gap-2 space-y-0">
+                        <FormItem orientation="horizontal">
                           <FormControl render={<Checkbox checked={field.value} onCheckedChange={field.onChange} />} />
-                          <FormLabel className="!text-muted-foreground font-normal">
+                          <FormLabel className="font-normal text-muted-foreground">
                             有人回复我的话题时邮件通知
                           </FormLabel>
                         </FormItem>
@@ -317,9 +311,9 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       control={profileForm.control}
                       name="receive_at_mail"
                       render={({ field }) => (
-                        <FormItem className="flex items-center gap-2 space-y-0">
+                        <FormItem orientation="horizontal">
                           <FormControl render={<Checkbox checked={field.value} onCheckedChange={field.onChange} />} />
-                          <FormLabel className="!text-muted-foreground font-normal">
+                          <FormLabel className="font-normal text-muted-foreground">
                             有人 @我 时邮件通知
                           </FormLabel>
                         </FormItem>
@@ -335,15 +329,15 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
             </Card>
 
             <Card>
-              <CardHeader className="p-4 pb-3">
+              <CardHeader>
                 <CardTitle>修改密码</CardTitle>
               </CardHeader>
-              <CardContent className="px-4 pb-4">
+              <CardContent>
                 <Form {...passForm}>
                   <form
                     onSubmit={passForm.handleSubmit(onPassSubmit)}
                     aria-busy={passForm.formState.isSubmitting}
-                    className="space-y-4"
+                    className="flex flex-col gap-4"
                   >
                     <FormField
                       control={passForm.control}
@@ -378,12 +372,12 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
             </Card>
           </div>
 
-          <aside className="min-w-0 space-y-6 lg:sticky lg:top-24 lg:self-start">
+          <aside className="flex min-w-0 flex-col gap-6 lg:sticky lg:top-24 lg:self-start">
             <Card>
-              <CardHeader className="p-4 pb-3">
+              <CardHeader>
                 <CardTitle>API Token</CardTitle>
               </CardHeader>
-              <CardContent className="px-4 pb-4">
+              <CardContent>
                 <p className="text-sm text-muted-foreground mb-2">
                   刷新你的 accessToken,用于调用 CNode API
                 </p>
@@ -392,16 +386,18 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                 </Button>
               </CardContent>
             </Card>
-            <section className="rounded-2xl bg-surface-subtle p-4">
-                <h2 className="text-base font-semibold">通知说明</h2>
-              <div className="mt-3 space-y-2 text-sm text-muted-foreground">
+            <Card size="sm">
+              <CardHeader>
+                <CardTitle>通知说明</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-2 text-sm text-muted-foreground">
                 <p>站内消息会展示在消息中心。</p>
                 <p>邮件通知取决于这里的两个偏好开关。</p>
-              </div>
-            </section>
+              </CardContent>
+            </Card>
           </aside>
         </div>
-      </ContentPage>
+      </AccountPage>
       <Dialog
         open={unbindOpen}
         onOpenChange={(open, eventDetails) => {
@@ -420,7 +416,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
             </DialogDescription>
           </DialogHeader>
           <Form {...unbindForm}>
-            <form onSubmit={unbindForm.handleSubmit(onUnbindSubmit)} className="space-y-5">
+            <form onSubmit={unbindForm.handleSubmit(onUnbindSubmit)} className="flex flex-col gap-5">
               <FormField
                 control={unbindForm.control}
                 name="password"

@@ -87,10 +87,9 @@ export default function AdminZones({ loaderData }: { loaderData: any }) {
 
   return (
     <AdminLayout>
-      <AdminPage>
+      <AdminPage archetype="data-list">
         <AdminPageHeader title="专区管理" description="控制专区在导航栏的可见性与排序。" />
         <AdminPanel title="专区列表" description={`共 ${zones.length} 个专区`} flush>
-          <div className="overflow-x-auto">
             <Table className="min-w-[820px]">
               <TableHeader>
                 <TableRow>
@@ -112,7 +111,6 @@ export default function AdminZones({ loaderData }: { loaderData: any }) {
                         aria-label={`${zone.slug} 名称`}
                         value={zone.name}
                         onChange={(e) => updateField(zone.id, "name", e.target.value)}
-                        className="h-8"
                       />
                     </TableCell>
                     <TableCell>
@@ -120,7 +118,6 @@ export default function AdminZones({ loaderData }: { loaderData: any }) {
                         aria-label={`${zone.slug} 描述`}
                         value={zone.description || ""}
                         onChange={(e) => updateField(zone.id, "description", e.target.value)}
-                        className="h-8"
                       />
                     </TableCell>
                     <TableCell>
@@ -128,7 +125,6 @@ export default function AdminZones({ loaderData }: { loaderData: any }) {
                         aria-label={`${zone.slug} 图标`}
                         value={zone.icon || ""}
                         onChange={(e) => updateField(zone.id, "icon", e.target.value)}
-                        className="h-8"
                         placeholder="lucide icon"
                       />
                     </TableCell>
@@ -152,7 +148,7 @@ export default function AdminZones({ loaderData }: { loaderData: any }) {
                         type="number"
                         value={zone.sort_order}
                         onChange={(e) => updateField(zone.id, "sort_order", Number(e.target.value))}
-                        className="h-8 w-16"
+                        className="w-20"
                       />
                     </TableCell>
                     <TableCell className="text-right">
@@ -169,7 +165,6 @@ export default function AdminZones({ loaderData }: { loaderData: any }) {
                 ))}
               </TableBody>
             </Table>
-          </div>
         </AdminPanel>
       </AdminPage>
     </AdminLayout>

@@ -10,11 +10,11 @@ import { toast } from "sonner";
 import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { Skeleton } from "~/components/ui/skeleton";
-import { ContentPage } from "~/components/PageShell";
+import { ComposePage, PageHeader } from "~/components/PageShell";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Field, FieldGroup, FieldLabel } from "~/components/ui/field";
 import { UnsavedChangesDialog, useUnsavedChanges } from "~/hooks/use-unsaved-changes";
 
 export function meta() {
@@ -134,10 +134,10 @@ export default function TopicEdit() {
   if (loading) {
     return (
       <Layout>
-        <ContentPage className="flex flex-col gap-4">
-          <Skeleton className="h-28 w-full rounded-3xl" />
-          <Skeleton className="h-96 w-full rounded-xl" />
-        </ContentPage>
+        <ComposePage>
+          <Skeleton className="h-28 w-full" />
+          <Skeleton className="h-96 w-full" />
+        </ComposePage>
       </Layout>
     );
   }
@@ -146,25 +146,22 @@ export default function TopicEdit() {
 
   return (
     <Layout>
-      <ContentPage className="flex flex-col gap-6">
-        <section className="rounded-3xl bg-cnode-soft p-6 shadow-sm sm:p-8">
-          <p className="text-sm font-medium text-primary">EDIT</p>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">编辑话题</h1>
-          <p className="mt-2 text-sm text-muted-foreground">更新标题、分类和正文内容。</p>
-        </section>
+      <ComposePage>
+        <PageHeader breadcrumbs={[{ label: "首页", to: "/" }, { label: "编辑话题" }]} title="编辑话题" description="更新标题、分类和正文内容。" />
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <Card className="min-w-0">
             <CardHeader>
               <CardTitle>话题内容</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="title">标题</Label>
+              <form onSubmit={handleSubmit}>
+                <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="title">标题</FieldLabel>
                   <Input id="title" name="title" autoComplete="off" value={title} onChange={(e) => setTitle(e.target.value)} />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="tab">分类</Label>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="tab">分类</FieldLabel>
                   <Select value={tab} onValueChange={(value) => value && setTab(value)}>
                     <SelectTrigger id="tab">
                       <SelectValue>{(value) => topicTabLabels[value] ?? value}</SelectValue>
@@ -177,16 +174,17 @@ export default function TopicEdit() {
                       </SelectGroup>
                     </SelectContent>
                   </Select>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="content">正文</Label>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="content">正文</FieldLabel>
                   <MarkdownEditor id="content" name="content" value={content} onChange={setContent} minHeight={280} />
-                </div>
+                </Field>
                 <div className="flex justify-end">
                   <Button type="submit" disabled={saving}>
                     {saving ? "保存中…" : "保存"}
                   </Button>
                 </div>
+                </FieldGroup>
               </form>
             </CardContent>
           </Card>
@@ -194,11 +192,11 @@ export default function TopicEdit() {
             {isJobTab ? (
               <JobMetaForm value={jobMeta} onChange={setJobMeta} />
             ) : (
-              <Card>
-                <CardHeader className="p-4 pb-3">
-                  <CardTitle className="text-base">发布建议</CardTitle>
+              <Card size="sm">
+                <CardHeader>
+                  <CardTitle>发布建议</CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-col gap-2 px-4 pb-4 text-sm text-muted-foreground">
+                <CardContent className="flex flex-col gap-2">
                   <p>问答类话题请包含环境、复现步骤、期望结果和实际错误。</p>
                   <p>分享类话题建议用标题分段，附上相关链接和代码片段。</p>
                   <p>招聘类话题请写清地点、远程方式、技术栈和联系方式。</p>
@@ -207,7 +205,7 @@ export default function TopicEdit() {
             )}
           </aside>
         </div>
-      </ContentPage>
+      </ComposePage>
       <UnsavedChangesDialog blocker={blocker} />
     </Layout>
   );

@@ -80,10 +80,9 @@ export function CommandPalette({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        showClose={false}
+        showCloseButton={false}
         finalFocus={finalFocusRef}
-        viewportClassName="items-start pt-24"
-        className="gap-3 overflow-hidden bg-popover p-0 shadow-floating sm:max-w-2xl"
+        className="top-24 max-h-[calc(100dvh-7rem)] -translate-y-0 gap-3 overflow-hidden p-0 sm:max-w-2xl"
       >
         <DialogHeader className="sr-only">
           <DialogTitle>搜索和快速操作</DialogTitle>
@@ -112,7 +111,7 @@ export function CommandPalette({
               ))}
             </CommandGroup>
           </CommandList>
-          <div className="bg-surface-subtle p-2 text-xs text-muted-foreground">
+          <div className="bg-muted p-2 text-xs text-muted-foreground">
             {query.trim() ? `按 Enter 搜索“${query.trim()}”` : "使用方向键选择，Enter 打开，Escape 关闭"}
           </div>
         </Command>
