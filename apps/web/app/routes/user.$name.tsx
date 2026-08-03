@@ -21,6 +21,7 @@ import { UserIdentityBadges } from "~/components/UserIdentityBadges";
 import { EmptyState } from "~/components/EmptyState";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "~/components/ui/empty";
 import { externalUrlLabel, githubProfileUrl, safeExternalUrl } from "~/lib/public-profile";
+import { seoMeta } from "~/lib/seo";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,7 +50,13 @@ export async function loader({ params, context, request }: Route.LoaderArgs) {
 
 export function meta({ data }: Route.MetaArgs) {
   if (!data?.user) return [{ title: "用户不存在 · CNode" }];
-  return [{ title: `${data.user.loginname} · CNode` }];
+  const name = data.user.loginname;
+  return seoMeta({
+    title: `${name} · CNode`,
+    description: data.user.signature || `${name} 在 CNode 的个人主页、话题与回复。`,
+    path: `/user/${encodeURIComponent(name)}`,
+    type: "profile",
+  });
 }
 
 export default function UserProfile({ loaderData }: Route.ComponentProps) {

@@ -1,0 +1,22 @@
+{
+  "name": "CNode",
+  "short_name": "CNode",
+  "description": "Node.js 专业中文社区",
+  "start_url": "/",
+  "scope": "/",
+  "display": "browser",
+  "background_color": "#fbfdf7",
+  "theme_color": "#80bd01",
+  "icons": [
+    {
+      "src": "/cnode/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/cnode/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

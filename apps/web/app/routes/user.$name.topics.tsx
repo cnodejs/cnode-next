@@ -6,10 +6,16 @@ import { FeedPage } from "~/components/PageShell";
 import { UserHero, UserTabs } from "./user.$name";
 import { Pagination } from "~/components/Pagination";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { seoMeta } from "~/lib/seo";
 
 export function meta({ data }: Route.MetaArgs) {
   if (!data?.loginname) return [{ title: "用户话题 · CNode" }];
-  return [{ title: `${data.loginname} 的话题 · CNode` }];
+  return seoMeta({
+    title: `${data.loginname} 的话题 · CNode`,
+    description: `查看 ${data.loginname} 在 CNode 发布的话题。`,
+    path: `/user/${encodeURIComponent(data.loginname)}/topics`,
+    type: "profile",
+  });
 }
 
 export async function loader({ params, request }: Route.LoaderArgs) {

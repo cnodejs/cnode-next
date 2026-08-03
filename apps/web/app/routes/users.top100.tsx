@@ -3,9 +3,14 @@ import { Layout } from "~/components/Layout";
 import { DirectoryPage, PageHeader } from "~/components/PageShell";
 import { apiFetch } from "~/lib/api-client";
 import { UserGrid } from "./stars";
+import { seoMeta } from "~/lib/seo";
 
 export function meta() {
-  return [{ title: "积分榜 · CNode" }];
+  return seoMeta({
+    title: "积分榜 · CNode",
+    description: "查看 CNode 社区积分排名前 100 的活跃用户。",
+    path: "/users/top100",
+  });
 }
 
 export async function loader() {

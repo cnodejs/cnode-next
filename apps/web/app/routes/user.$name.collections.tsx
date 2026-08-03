@@ -6,10 +6,16 @@ import { FeedPage } from "~/components/PageShell";
 import { UserHero, UserTabs } from "./user.$name";
 import { Pagination } from "~/components/Pagination";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { seoMeta } from "~/lib/seo";
 
 export function meta({ data }: Route.MetaArgs) {
   if (!data?.loginname) return [{ title: "用户收藏 · CNode" }];
-  return [{ title: `${data.loginname} 的收藏 · CNode` }];
+  return seoMeta({
+    title: `${data.loginname} 的收藏 · CNode`,
+    description: `查看 ${data.loginname} 在 CNode 收藏的话题。`,
+    path: `/user/${encodeURIComponent(data.loginname)}/collections`,
+    type: "profile",
+  });
 }
 
 export async function loader({ params, request }: Route.LoaderArgs) {

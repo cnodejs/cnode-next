@@ -10,6 +10,17 @@ import { Card, CardContent, CardHeader } from "~/components/ui/card";
 import { FeedGrid, FeedPage, PageHeader } from "~/components/PageShell";
 import { Button } from "~/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { seoMeta } from "~/lib/seo";
+import { getAvatarUrl } from "~/lib/brand";
+
+function normalizeTopicAvatars(topics: any[]) {
+  return topics.map((topic) => ({
+    ...topic,
+    author: topic.author
+      ? { ...topic.author, avatar_url: getAvatarUrl(topic.author.avatar_url, 48) }
+      : topic.author,
+  }));
+}
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -22,7 +33,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const kv = (context as any)?.cloudflare?.env?.KV;
   const cached = await kvGet<{ data: any[]; total: number }>(kv, cacheKey);
   if (cached) {
-    return { topics: cached.data, page, tab, limit, total: cached.total, kv };
+    return { topics: normalizeTopicAvatars(cached.data), page, tab, limit, total: cached.total, kv };
   }
 
   const res = await apiFetch<{ success: boolean; data: any[]; total?: number }>(
@@ -30,7 +41,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     { headers: { cookie } },
   );
 
-  const topics = res.success ? res.data : [];
+  const topics = normalizeTopicAvatars(res.success ? res.data : []);
   const total = res.success ? res.total ?? topics.length : 0;
   await kvSet(kv, cacheKey, { data: topics, total }, 60);
 
@@ -38,10 +49,11 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return [
-    { title: "CNode · Node.js 专业中文社区" },
-    { name: "description", content: "CNode Next — Node.js 专业中文社区" },
-  ];
+  return seoMeta({
+    title: "CNode · Node.js 专业中文社区",
+    description: "浏览最新 Node.js 技术讨论、问答、实践分享与招聘信息。",
+    path: "/",
+  });
 }
 
 export default function Index({ loaderData }: Route.ComponentProps) {

@@ -50,6 +50,14 @@ pnpm --filter @cnode/web exec shadcn add <component> --diff
 
 These are current implementation conventions, so no `wiki/` synchronization is required.
 
+## Web Identity Assets
+
+- Keep navigation, admin, and authentication wordmarks at `/cnodejs.svg` and `/cnodejs_light.svg`; favicon and metadata work must not replace the in-product `CNodeLogo` presentation.
+- Keep favicon, manifest, Apple touch, and social preview sources under `apps/web/public/cnode/`. Derive square raster icons from the square `icon.svg` viewport without stretching the underlying logo geometry.
+- Preserve `/favicon.ico`, `/favicon.png`, `/apple-touch-icon.png`, and `/manifest.json` as root-path browser fallbacks. The manifest describes browser identity only and does not imply Service Worker or offline support.
+- Generate Open Graph, Twitter Card, and canonical values through `apps/web/app/lib/seo.ts`; use HTTPS absolute URLs for social images.
+- Normalize legacy Gravatar `http://` avatar URLs to HTTPS at API formatting and Web rendering boundaries. Do not upgrade unrelated third-party HTTP image hosts without confirming HTTPS support.
+
 ## Git Workflow
 
 | Item | Rule |

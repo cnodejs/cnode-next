@@ -8,9 +8,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
 import { EmptyState } from "~/components/EmptyState";
 import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from "~/components/ui/item";
+import { seoMeta } from "~/lib/seo";
 
 export function meta() {
-  return [{ title: "社区达人 · CNode" }];
+  return seoMeta({
+    title: "社区达人 · CNode",
+    description: "认识 CNode 社区的活跃成员与长期贡献者。",
+    path: "/stars",
+  });
 }
 
 export async function loader() {

@@ -4,6 +4,9 @@ export const CNODE_LOGO_DARK = "/cnodejs.svg";
 export function getAvatarUrl(value?: string | null, size = 48) {
   if (!value) return "";
   if (value.startsWith("//")) return `https:${value}`;
+  if (/^http:\/\/(?:www\.)?gravatar\.com\//i.test(value)) {
+    return value.replace(/^http:\/\//i, "https://");
+  }
   if (value.startsWith("http://") || value.startsWith("https://")) return value;
   if (value.startsWith("/")) return value;
   return `https://gravatar.com/avatar/${encodeURIComponent(value)}?size=${size}`;

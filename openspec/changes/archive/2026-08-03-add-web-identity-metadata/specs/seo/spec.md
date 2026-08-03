@@ -1,8 +1,5 @@
-# seo Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after archive.
-## Requirements
 ### Requirement: Open Graph 标签
 
 系统 MUST 在页面 head 中输出 Open Graph 和 Twitter Card 标签，使社交分享时显示预览卡片；所有公开可分享页面 MUST 提供站点名、页面标题、描述、绝对 URL 和图片，并在页面没有专属图片时使用 CNode 默认分享图。
@@ -36,16 +33,6 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 - **THEN** 页面 head 输出 `twitter:card=summary_large_image`
 - **AND** 输出与当前页面 OG 内容一致的 `twitter:title`、`twitter:description` 和 `twitter:image`。
 
-### Requirement: JSON-LD 结构化数据
-
-系统 MUST 在话题详情页输出 JSON-LD 结构化数据,帮助搜索引擎理解内容。
-
-#### Scenario: 话题详情页 JSON-LD
-
-- **WHEN** 访问话题详情页
-- **THEN** 页面输出 DiscussionForumPosting 类型的 JSON-LD
-- **AND** 包含 headline, author, datePublished, interactionStatistic (回复数)
-
 ### Requirement: Canonical URL
 
 系统 MUST 输出 canonical URL，避免分页、分类 query 或重复路径被搜索引擎判定为重复内容；canonical MUST 使用站点绝对 URL。
@@ -65,6 +52,8 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 - **WHEN** 访问 `/user/:name`、`/user/:name/topics`、`/user/:name/replies` 或 `/user/:name/collections`
 - **THEN** canonical 指向对应用户页面的绝对 URL
 - **AND** canonical 不包含分页或筛选 query。
+
+## ADDED Requirements
 
 ### Requirement: 公开页面 HTTPS 子资源
 
@@ -103,4 +92,3 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 - **WHEN** 客户端读取 manifest icons
 - **THEN** icons SHALL 引用 `/cnode/icon-192.png` 和 `/cnode/icon-512.png`
 - **AND** 图标资源 SHALL 使用 CNode 自有品牌标识。
-

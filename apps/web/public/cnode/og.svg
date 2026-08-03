@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#071207"/>
+  <circle cx="1060" cy="-20" r="350" fill="#80bd01" opacity=".13"/>
+  <circle cx="1110" cy="610" r="250" fill="#80bd01" opacity=".08"/>
+  <image x="88" y="72" width="260" height="226" xlink:href="logo-light.svg"/>
+  <text x="96" y="410" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="92" font-weight="700">CNode</text>
+  <text x="96" y="492" fill="#d7e6d0" font-family="Arial, Helvetica, sans-serif" font-size="42">Node.js 专业中文社区</text>
+  <rect x="96" y="540" width="136" height="8" rx="4" fill="#80bd01"/>
+</svg>

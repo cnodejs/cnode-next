@@ -44,6 +44,7 @@ import { externalUrlLabel, githubProfileUrl, safeExternalUrl } from "~/lib/publi
 import { getTopicActionPresentation } from "~/lib/topic-action-presentation";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "~/components/ui/empty";
 import { Separator } from "~/components/ui/separator";
+import { discussionForumPostingJsonLd, firstMarkdownImage, markdownExcerpt, seoMeta } from "~/lib/seo";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -89,11 +90,14 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
 
 export function meta({ data }: Route.MetaArgs) {
   if (!data?.topic) return [{ title: "话题不存在" }];
-  return [
-    { title: `${data.topic.title} · CNode` },
-    { property: "og:title", content: data.topic.title },
-    { property: "og:description", content: data.topic.content?.slice(0, 100) },
-  ];
+  return seoMeta({
+    title: `${data.topic.title} · CNode`,
+    ogTitle: data.topic.title,
+    description: markdownExcerpt(data.topic.content),
+    path: `/topic/${data.topic.id}`,
+    type: "article",
+    image: firstMarkdownImage(data.topic.content),
+  });
 }
 
 export default function TopicDetail({ loaderData }: Route.ComponentProps) {
@@ -115,9 +119,14 @@ export default function TopicDetail({ loaderData }: Route.ComponentProps) {
 
   const headings = extractMarkdownHeadings(topic.content || "").slice(0, 12);
   const toc = headings.length >= 2 ? <TopicToc headings={headings} /> : null;
+  const jsonLd = discussionForumPostingJsonLd(topic);
 
   return (
     <Layout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
       <ReadingPage>
       <ReadingGrid
         toc={toc}

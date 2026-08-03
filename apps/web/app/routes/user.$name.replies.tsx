@@ -9,10 +9,16 @@ import { Pagination } from "~/components/Pagination";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { EmptyState } from "~/components/EmptyState";
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "~/components/ui/item";
+import { seoMeta } from "~/lib/seo";
 
 export function meta({ data }: Route.MetaArgs) {
   if (!data?.loginname) return [{ title: "用户回复 · CNode" }];
-  return [{ title: `${data.loginname} 的回复 · CNode` }];
+  return seoMeta({
+    title: `${data.loginname} 的回复 · CNode`,
+    description: `查看 ${data.loginname} 在 CNode 参与回复的话题。`,
+    path: `/user/${encodeURIComponent(data.loginname)}/replies`,
+    type: "profile",
+  });
 }
 
 export async function loader({ params, request }: Route.LoaderArgs) {

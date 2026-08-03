@@ -4,12 +4,14 @@ import { JobCardGrid, type JobCardData } from "~/components/JobCardGrid";
 import { Pagination } from "~/components/Pagination";
 import { apiFetch } from "~/lib/api-client";
 import { DirectoryPage, PageHeader } from "~/components/PageShell";
+import { seoMeta } from "~/lib/seo";
 
 export function meta() {
-  return [
-    { title: "招聘专区 · CNode" },
-    { name: "description", content: "CNode 招聘专区 — Node.js 招聘信息" },
-  ];
+  return seoMeta({
+    title: "招聘专区 · CNode",
+    description: "发现聚焦 Node.js 与现代 Web 技术栈的工作机会。",
+    path: "/zone/jobs",
+  });
 }
 
 export async function loader({ request }: { request: Request }) {
