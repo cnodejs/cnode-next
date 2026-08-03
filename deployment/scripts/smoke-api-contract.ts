@@ -1,4 +1,4 @@
-const apiBase = process.env.APP_API_BASE_URL || "http://localhost:3001";
+const apiBase = process.env.CNODE_API_BASE_URL || "http://localhost:3001";
 
 function required(name: string, value: unknown) {
   if (value === undefined || value === null) {

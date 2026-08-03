@@ -1,6 +1,6 @@
 import type { PublicIdentity } from "@cnode/shared";
 
-export function parseAdminLoginNames(value = process.env.APP_ADMINS): string[] {
+export function parseAdminLoginNames(value = process.env.CNODE_ADMINS): string[] {
   return (value || "")
     .split(",")
     .map((name) => name.trim())

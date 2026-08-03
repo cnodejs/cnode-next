@@ -15,7 +15,7 @@ interface RateLimitOptions {
 function makePerDayLimiter(options: RateLimitOptions) {
   return createMiddleware(async (c, next) => {
     const identity = await options.identityFn(c);
-    if (!identity && process.env.APP_ENV === "development") {
+    if (!identity && process.env.CNODE_ENV === "development") {
       await next();
       return;
     }
@@ -82,7 +82,7 @@ export function perIpPerDay(name: string, limitCount: number, showJson = true) {
     name,
     identityFn: (c) => {
       const realIP = c.req.header("x-real-ip") || c.req.header("cf-connecting-ip");
-      if (!realIP && process.env.APP_ENV !== "development") {
+      if (!realIP && process.env.CNODE_ENV !== "development") {
         throw new Error("should provide x-real-ip header");
       }
       return realIP || "dev";

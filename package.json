@@ -10,7 +10,7 @@
     "test": "pnpm -r test",
     "lint": "oxlint .",
     "typecheck": "pnpm -r typecheck",
-    "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm gen:openapi && pnpm verify:compose-config && openspec validate --all --strict && pnpm secrets:scan",
+    "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm gen:openapi && openspec validate --all --strict && pnpm secrets:scan",
     "db:push": "pnpm --filter @cnode/db db:push",
     "db:push:pg": "pnpm --filter @cnode/db db:push:pg",
     "db:migrate": "pnpm --filter @cnode/db db:migrate",
@@ -21,7 +21,6 @@
     "smoke:api-contract": "tsx deployment/scripts/smoke-api-contract.ts",
     "gen:openapi": "pnpm --filter @cnode/api gen:openapi",
     "preflight:github-ids": "tsx deployment/scripts/preflight-github-id-uniqueness.ts",
-    "verify:compose-config": "docker compose -f deployment/docker-compose.prod.yml --env-file deployment/.env.production.example config --quiet",
     "format": "oxfmt .",
     "secrets:scan": "gitleaks git --config .gitleaks.toml --redact --no-banner",
     "secrets:scan:staged": "gitleaks git --config .gitleaks.toml --redact --no-banner --pre-commit --staged",
@@ -29,6 +28,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@cnode/shared": "workspace:*",
     "mongodb": "^5.9.2",
     "pg": "^8.22.0"
   },

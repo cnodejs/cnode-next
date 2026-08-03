@@ -1,5 +1,4 @@
-// Mock Redis for local development — in-memory implementation
-// Swap with real ioredis in production via REDIS_HOST env
+// In-memory Redis boundary selected explicitly by the test environment.
 
 interface CacheEntry {
   value: string;

@@ -54,7 +54,7 @@ export function canPostJobFromRoles(isAdmin: boolean, roles: string[]) {
 }
 
 function isAdminUser(user: any) {
-  return (process.env.APP_ADMINS || "").split(",").filter(Boolean).includes(user.loginname);
+  return (process.env.CNODE_ADMINS || "").split(",").filter(Boolean).includes(user.loginname);
 }
 
 export function shouldIncludeInternalTabsInTopicList(tab: string | undefined, isAdmin: boolean) {

@@ -1,5 +1,5 @@
 export async function verifyTurnstile(token: string | undefined, remoteIp?: string) {
-  if (process.env.APP_ENV === "development") return true;
+  if (process.env.CNODE_ENV === "development") return true;
 
   const secret = process.env.TURNSTILE_SECRET_KEY;
   if (!secret) {

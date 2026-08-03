@@ -221,7 +221,7 @@ function safeHttpUrl(value: string) {
 
 function absoluteWebUrl(path: string, webBaseUrl?: string) {
   const baseUrl = safeHttpUrl(
-    webBaseUrl || process.env.APP_WEB_BASE_URL || DEFAULT_WEB_BASE_URL,
+    webBaseUrl || process.env.CNODE_WEB_BASE_URL || DEFAULT_WEB_BASE_URL,
   ).replace(/\/+$/, "");
   return safeHttpUrl(`${baseUrl}${path.startsWith("/") ? path : `/${path}`}`);
 }

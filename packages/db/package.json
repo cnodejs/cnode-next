@@ -20,6 +20,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@cnode/shared": "workspace:*",
     "bcryptjs": "^2.4.3",
     "drizzle-orm": "^0.39.0",
     "pg": "^8.13.0",

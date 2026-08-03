@@ -15,7 +15,7 @@ function getTransporter(): Transporter | null {
   const host = process.env.SMTP_HOST;
   if (!host) {
     const message = "[mail] SMTP_HOST not set";
-    if (process.env.APP_ENV === "development") {
+    if (process.env.CNODE_ENV === "development") {
       console.log(`${message}, skipping email in development`);
       return null;
     }

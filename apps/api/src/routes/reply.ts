@@ -319,7 +319,7 @@ reply.openapi(upsReplyRoute, async (c) => {
     return c.json({ success: false as const, error_msg: "评论不存在" }, 404);
   }
 
-  if (replyData.authorId === user.id && process.env.APP_ENV !== "development") {
+  if (replyData.authorId === user.id && process.env.CNODE_ENV !== "development") {
     return c.json({ success: false as const, error_msg: "不能帮自己点赞" }, 403);
   }
 
