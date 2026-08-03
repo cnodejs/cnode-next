@@ -2,7 +2,18 @@
 
 ### Requirement: shadcn/ui 原子组件层
 
-Web UI SHALL 继续使用仓库内源码所有权的 shadcn/ui 原子组件层，并 SHALL 以 Base UI 作为交互 primitive 基础，提供 `button`、`input`、`label`、`card`、`badge`、`avatar`、`dropdown-menu`、`dialog`、`sheet`、`tabs`、`table`、`tooltip`、`skeleton`、`sonner`、`form`、`select`、`native-select`、`textarea`、`alert-dialog`、`alert`、`pagination`、`empty`、`command` 和 `radio-group`。这些组件 MUST 共享语义颜色、尺寸、焦点和禁用状态；迁移完成后 Web 源码和直接依赖 MUST NOT 保留 Radix primitive 或 Slot 兼容层。
+Web UI SHALL 继续使用 `apps/web/app/components/ui/` 内源码复制进仓库（非 npm 依赖）的 shadcn/ui 原子组件层，并 SHALL 以 Base UI 作为交互 primitive 基础，提供 `button`、`input`、`label`、`card`、`badge`、`avatar`、`dropdown-menu`、`dialog`、`sheet`、`tabs`、`table`、`tooltip`、`skeleton`、`sonner`、`form`、`select`、`native-select`、`textarea`、`alert-dialog`、`alert`、`pagination`、`empty`、`command` 和 `radio-group`。每个组件 MUST 用 `cn()` 工具合并 class 并引用语义 token（如 `bg-background`）；这些组件 MUST 共享语义颜色、尺寸、焦点和禁用状态。迁移完成后 Web 源码和直接依赖 MUST NOT 保留 Radix primitive 或 Slot 兼容层。
+
+#### Scenario: 新建页面使用原子组件
+
+- **WHEN** 开发者在 `routes/` 下新建页面
+- **THEN** 页面内的按钮、输入框、卡片等 MUST 从 `~/components/ui/` 导入，不得手写 `<button className="bg-blue-600 ...">` 等裸 Tailwind 字符串。
+
+#### Scenario: 组件源码进仓库
+
+- **WHEN** 查看 `apps/web/app/components/ui/`
+- **THEN** 原有 `button.tsx`、`input.tsx` 等 15 个组件文件以及本 Requirement 新增的组件文件 MUST 存在
+- **AND** 每个文件 MUST 是完整的组件源码，而非 re-export。
 
 #### Scenario: 页面使用一致的语义组件
 

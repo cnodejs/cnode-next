@@ -76,7 +76,7 @@
 
 ### Requirement: 认证操作链接正确构造
 
-账号激活和密码重置邮件 MUST 基于去除尾部斜杠后的 `APP_WEB_BASE_URL` 构建目标地址，并对 retrieve key 进行 URL 编码；未配置时 SHALL 延续本地开发地址 `http://localhost:5173`。
+账号激活和密码重置邮件 MUST 基于去除尾部斜杠后的 `CNODE_WEB_BASE_URL` 构建目标地址，并对 retrieve key 进行 URL 编码；未配置时 SHALL 延续本地开发地址 `http://localhost:5173`。
 
 #### Scenario: 构建账号激活链接
 

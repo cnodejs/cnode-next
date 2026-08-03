@@ -51,12 +51,12 @@ Web 镜像 MUST 不依赖构建时 API base URL。SSR 侧和浏览器侧 API 请
 
 #### Scenario: SSR 使用内部 API 地址
 - **WHEN** React Router loader 在 Web 容器服务端执行 API 请求
-- **THEN** 系统 MUST 优先使用 `APP_API_INTERNAL_BASE_URL`
+- **THEN** 系统 MUST 优先使用 `CNODE_API_INTERNAL_BASE_URL`
 - **AND** 在生产 compose 中该值 MUST 指向 `http://api:3001`
 
 #### Scenario: 浏览器使用公开 API 地址
 - **WHEN** 浏览器侧交互调用 `apiFetch` 或上传客户端请求 API
-- **THEN** 系统 MUST 使用从服务器运行时 `.env` 注入到页面的 `APP_API_BASE_URL`
+- **THEN** 系统 MUST 使用从服务器运行时 `.env` 注入到页面的 `CNODE_API_BASE_URL`
 - **AND** 浏览器侧 MUST NOT 依赖 `VITE_APP_API_BASE_URL` 或其他构建时变量决定 API base URL
 
 #### Scenario: 同一 Web 镜像可复用到不同运行环境

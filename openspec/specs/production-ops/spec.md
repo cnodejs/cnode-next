@@ -46,8 +46,8 @@
 #### Scenario: runtime API configuration audit
 
 - **WHEN** 运维验证 Web 容器生产配置
-- **THEN** SSR API 请求 MUST 使用 `.env` 或 compose environment 提供的 `APP_API_INTERNAL_BASE_URL`
-- **AND** 浏览器侧 API 请求 MUST 使用 `.env` 提供的 `APP_API_BASE_URL`
+- **THEN** SSR API 请求 MUST 使用 `.env` 或 compose environment 提供的 `CNODE_API_INTERNAL_BASE_URL`
+- **AND** 浏览器侧 API 请求 MUST 使用 `.env` 提供的 `CNODE_API_BASE_URL`
 - **AND** Web 镜像 MUST NOT 因 API 域名变化而重新构建
 
 ### Requirement: 发布准入必须全绿
@@ -78,7 +78,7 @@
 - **AND** 用户资料和 retrieve key 状态 MUST 保持可重试或明确可恢复
 
 #### Scenario: development 允许跳过邮件
-- **WHEN** `APP_ENV=development` 且未配置 SMTP
+- **WHEN** `CNODE_ENV=development` 且未配置 SMTP
 - **THEN** 系统 MAY 跳过真实发送
 - **AND** 必须在日志中明确标记邮件被跳过
 

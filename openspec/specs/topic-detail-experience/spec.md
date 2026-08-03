@@ -169,7 +169,7 @@ Topic 详情 SHALL 为 loading、not-found、deleted、locked、no-reply 和 una
 
 ### Requirement: Topic action surface 分层
 
-话题详情正文后的 action surface SHALL 将主互动、页内导航和更多/管理动作分层展示，避免收藏、查看回复、编辑、举报和管理操作以同级按钮零散平铺。
+话题详情正文后的 action surface SHALL 将主互动、页内导航和更多/管理动作分层展示，避免收藏、查看回复、编辑、举报和管理操作以同级按钮零散平铺。收藏/取消收藏、查看回复和举报 MUST 保持普通动作语义；作者编辑自己的话题 MUST 直接可见；admin 编辑他人话题 MUST 位于单一“管理”菜单；有既有权限的 mod 或 admin 执行置顶、高亮和删除时，这些动作 MUST 收纳在同一“管理”菜单中。该分层 MUST NOT 改变任何角色原有的动作权限。
 
 #### Scenario: 主互动和页内导航分离
 
@@ -184,11 +184,54 @@ Topic 详情 SHALL 为 loading、not-found、deleted、locked、no-reply 和 una
 - **THEN** 编辑话题、举报、置顶、高亮和删除等动作 SHALL 归入更多/管理区域或等价分组
 - **AND** destructive 动作必须保持明确危险语义和确认流程。
 
+#### Scenario: 普通互动和页内导航保持可见
+
+- **WHEN** 话题详情正文渲染完成
+- **THEN** 收藏/取消收藏 MUST 作为普通互动操作展示
+- **AND** “查看回复” MUST 作为页内导航操作展示
+- **AND** 两者 MUST NOT 与置顶、高亮或删除平铺为同级管理按钮。
+
+#### Scenario: 登录用户举报话题
+
+- **WHEN** 有举报权限的普通登录用户查看他人话题
+- **THEN** 页面 MUST 提供举报这一普通用户动作
+- **AND** 举报 MUST NOT 被表达为管理权限或放入仅管理人员可见的“管理”菜单
+- **AND** 用户 MUST NOT 因可举报而看到置顶、高亮、删除或编辑他人话题入口。
+
+#### Scenario: 作者直接编辑自己的话题
+
+- **WHEN** 作者查看自己发布且可编辑的话题
+- **THEN** “编辑话题” MUST 作为直接可见操作展示
+- **AND** 作者不得仅因拥有编辑权限而看到置顶、高亮或删除等管理动作。
+
+#### Scenario: 管理员编辑他人话题
+
+- **WHEN** admin 查看他人发布且可编辑的话题
+- **THEN** “编辑话题” MUST 位于单一“管理”菜单内
+- **AND** 页面 MUST NOT 在菜单外重复平铺管理员编辑入口。
+
+#### Scenario: 版主或管理员打开管理菜单
+
+- **WHEN** mod 或 admin 查看其按既有权限可管理的话题并打开“管理”菜单
+- **THEN** 其有权限执行的置顶或取消置顶、高亮或取消高亮、删除动作 MUST 位于同一菜单
+- **AND** 无权限的动作 MUST 不可执行或不展示
+- **AND** 菜单组织方式 MUST NOT 扩大 mod、admin、作者或普通用户的既有权限矩阵。
+
+#### Scenario: 删除话题需要确认
+
+- **WHEN** 有权限的用户从“管理”菜单触发删除话题
+- **THEN** 页面 MUST 展示说明目标话题和删除影响的确认对话框
+- **AND** 只有最终确认操作 MUST 使用 destructive 语义
+- **AND** 用户取消时 MUST 不改变话题状态并将焦点返回管理入口。
+
 #### Scenario: 移动端 action surface 可用
 
 - **WHEN** 话题详情页在移动端渲染
 - **THEN** 主互动和查看回复仍可直接触达
-- **AND** 低频或管理动作可以折叠，但不得消失或变成不可发现的死控件。
+- **THEN** 收藏/取消收藏、查看回复和作者直接编辑 MUST 保持可触达
+- **AND** 低频或管理动作可以折叠，但不得消失或变成不可发现的死控件
+- **AND** 举报和“管理”菜单 MAY 按普通动作与管理动作层级折叠，但不得消失或变成不可发现的死控件
+- **AND** 菜单内容 MUST 可滚动且不得被底部 safe area 遮挡。
 
 ### Requirement: 参与讨论提示指向合并后的规范
 
@@ -199,3 +242,27 @@ Topic 详情 SHALL 为 loading、not-found、deleted、locked、no-reply 和 una
 - **WHEN** 用户点击话题详情页“查看讨论规范”
 - **THEN** 应用导航到 `/about#discussion`
 - **AND** 页面定位到讨论与内容规范区块。
+
+### Requirement: 话题动作异步反馈
+
+话题收藏、举报、编辑跳转和管理 mutation SHALL 提供与动作一致的 pending、success 和 error 状态；管理操作完成后 MUST 保留用户在当前话题及回复位置的阅读上下文，除非删除成功后该话题不再可访问。
+
+#### Scenario: 收藏状态更新
+
+- **WHEN** 用户触发收藏或取消收藏且请求进行中
+- **THEN** 对应控件 MUST 防止重复触发并表达进行中状态
+- **AND** 成功后 MUST 更新收藏状态并播报结果
+- **AND** 失败时 MUST 保留操作前状态并播报错误。
+
+#### Scenario: 管理操作失败
+
+- **WHEN** 置顶、高亮或删除请求失败
+- **THEN** 页面 MUST 保留操作前的话题状态、滚动位置和可用动作
+- **AND** 用户 MUST 收到可见且可由辅助技术感知的错误反馈。
+
+#### Scenario: 删除成功
+
+- **WHEN** 用户确认删除且请求成功
+- **THEN** 页面 MUST 播报删除成功
+- **AND** 页面 MUST 导航到既有删除后目的地或展示既有 deleted 状态
+- **AND** 不得短暂恢复为可交互的未删除状态。

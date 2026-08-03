@@ -25,7 +25,7 @@ Define the API test infrastructure expectations for automatic Vitest discovery, 
 `apps/api` 测试 SHALL 不连接真实 PostgreSQL，包括本地测试库、Docker 测试库或远程测试库。测试也 MUST NOT 引入 SQLite、PGlite、内存 SQL 数据库或 Drizzle 方言 fallback。
 
 #### Scenario: 测试运行不要求数据库环境变量
-- **WHEN** 开发者未配置 `DB_HOST`、`DB_USER`、`DB_PASSWORD` 或 `DB_NAME` 时运行 API 测试
+- **WHEN** 开发者未配置 `POSTGRES_HOST`、`POSTGRES_USER`、`POSTGRES_PASSWORD` 或 `POSTGRES_DB` 时运行 API 测试
 - **THEN** 测试 MUST 能运行不依赖数据库的用例
 - **AND** 测试基础设施 MUST NOT 为通过测试而提供 SQLite 或其他数据库 fallback
 
