@@ -102,6 +102,22 @@ describe("公开导航收束", () => {
     expect(await screen.findByRole("status")).toHaveTextContent("没有匹配的快捷命令");
   });
 
+  it.each([375, 1280])("allocates a non-overlapping search row and touch-safe close control at %ipx", (width) => {
+    window.innerWidth = width;
+    window.dispatchEvent(new Event("resize"));
+    const { container } = renderWithRoot(<CommandPalette open onOpenChange={() => {}} />);
+
+    const row = container.ownerDocument.querySelector('[data-slot="command-search-row"]')!;
+    const input = screen.getByRole("combobox", { name: "搜索命令" });
+    const close = screen.getByRole("button", { name: "关闭搜索面板" });
+    expect(row).toHaveClass("flex", "min-w-0");
+    expect(input.closest("form")).toHaveClass("min-w-0", "flex-1");
+    expect(close).toHaveClass("size-11", "shrink-0", "sm:size-8");
+    expect(close).not.toHaveClass("absolute");
+    expect(row.children).toContain(input.closest("form"));
+    expect(row.children).toContain(close);
+  });
+
   it("returns focus to the header trigger after Escape", async () => {
     const user = userEvent.setup();
     renderWithRoot(<Header />);
@@ -110,6 +126,19 @@ describe("公开导航收束", () => {
     expect(await screen.findByRole("combobox", { name: "搜索命令" })).toHaveFocus();
     await user.keyboard("{Escape}");
     await waitFor(() => expect(trigger).toHaveFocus());
+  });
+
+  it("returns focus to the header trigger after using the explicit close control", async () => {
+    const user = userEvent.setup();
+    renderWithRoot(<Header />);
+    const trigger = screen.getByRole("button", { name: "搜索话题和用户" });
+    await user.click(trigger);
+    const close = await screen.findByRole("button", { name: "关闭搜索面板" });
+
+    await user.click(close);
+
+    await waitFor(() => expect(trigger).toHaveFocus());
+    expect(screen.queryByRole("combobox", { name: "搜索命令" })).not.toBeInTheDocument();
   });
 
   it("renders the final non-duplicated Footer groups", () => {

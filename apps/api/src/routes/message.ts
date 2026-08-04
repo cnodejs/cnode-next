@@ -10,14 +10,14 @@ import {
 } from "../lib/message";
 import { renderMarkdown } from "../lib/markdown";
 import type { AuthVars } from "../middleware/auth";
-import { markAllBodySchema, markOneBodySchema, msgIdParamSchema, messageDTOSchema, errorResponseSchema } from "@cnode/shared";
+import { errorResponseSchema, markAllBodySchema, markOneBodySchema, mdrenderQuerySchema, messageDTOSchema, msgIdParamSchema } from "@cnode/shared";
 
 const message = new OpenAPIHono<{ Variables: AuthVars }>();
 
 // GET /messages
 const listMessagesRoute = createRoute({
   method: "get", path: "/messages", tags: ["messages"], summary: "获取消息列表",
-  request: { query: z.object({ mdrender: z.coerce.boolean().default(true), accesstoken: z.string().optional() }) },
+  request: { query: mdrenderQuerySchema.extend({ accesstoken: z.string().optional() }) },
   responses: { 200: { description: "消息列表", content: { "application/json": { schema: z.object({ success: z.literal(true), data: z.object({ has_read_messages: z.array(messageDTOSchema), hasnot_read_messages: z.array(messageDTOSchema) }) }) } } }, 401: { description: "未登录", content: { "application/json": { schema: errorResponseSchema } } } },
 });
 message.openapi(listMessagesRoute, async (c) => {

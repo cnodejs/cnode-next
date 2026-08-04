@@ -118,7 +118,7 @@ export default function TopicDetail({ loaderData }: Route.ComponentProps) {
   }
 
   const headings = extractMarkdownHeadings(topic.content || "").slice(0, 12);
-  const toc = headings.length >= 2 ? <TopicToc headings={headings} /> : null;
+  const toc = headings.length >= 4 ? <TopicToc headings={headings} /> : null;
   const jsonLd = discussionForumPostingJsonLd(topic);
 
   return (
@@ -129,7 +129,6 @@ export default function TopicDetail({ loaderData }: Route.ComponentProps) {
       />
       <ReadingPage>
       <ReadingGrid
-        toc={toc}
         aside={<TopicContext topic={topic} authorProfile={authorProfile} />}
         afterAside={(
           <div className="flex flex-col gap-5">
@@ -140,16 +139,11 @@ export default function TopicDetail({ loaderData }: Route.ComponentProps) {
       >
         <article className="flex flex-col gap-5">
           <TopicHeader topic={topic} />
-          {toc && (
-            <details className="rounded-lg bg-muted p-4 text-sm xl:hidden">
-              <summary className="cursor-pointer font-medium">本页目录</summary>
-              <div className="mt-3">{toc}</div>
-            </details>
-          )}
           <Card>
-            <CardContent>
+            <CardContent className="flex flex-col gap-4">
+              {toc}
               {topic.tab === "job" && topic.job_meta && (
-                <div className="mb-4">
+                <div>
                   <JobMetaCard meta={topic.job_meta} />
                 </div>
               )}
@@ -231,15 +225,16 @@ function TopicHeader({ topic }: { topic: any }) {
   );
 }
 
-function TopicToc({ headings }: { headings: ReturnType<typeof extractMarkdownHeadings> }) {
+export function TopicToc({ headings }: { headings: ReturnType<typeof extractMarkdownHeadings> }) {
   return (
-    <nav className="sticky top-24 rounded-lg bg-muted p-3 text-sm">
-      <div className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">目录</div>
-      <div className="flex flex-col gap-1">
+    <details className="rounded-lg bg-muted p-4 text-sm">
+      <summary className="cursor-pointer font-medium">目录 · {headings.length} 个章节</summary>
+      <nav aria-label="本页目录" className="mt-3 flex flex-col gap-1">
         {headings.map((heading) => (
           <a
             key={heading.id}
             href={`#${heading.id}`}
+            onClick={(event) => event.currentTarget.closest("details")?.removeAttribute("open")}
             className={`block rounded-lg px-2 py-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground ${
               heading.depth === 3 ? "ml-3 text-xs" : ""
             }`}
@@ -247,8 +242,8 @@ function TopicToc({ headings }: { headings: ReturnType<typeof extractMarkdownHea
             {heading.text}
           </a>
         ))}
-      </div>
-    </nav>
+      </nav>
+    </details>
   );
 }
 

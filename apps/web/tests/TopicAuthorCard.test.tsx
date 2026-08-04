@@ -1,7 +1,8 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
-import { TopicAuthorCard } from "~/routes/topic.$tid";
+import { TopicAuthorCard, TopicToc } from "~/routes/topic.$tid";
 import { ReadingGrid } from "~/components/PageShell";
 
 const author = { loginname: "alice", avatar_url: "" };
@@ -67,5 +68,39 @@ describe("话题详情作者卡", () => {
     const replies = screen.getByTestId("reply-flow");
     expect(body.compareDocumentPosition(context) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(context.compareDocumentPosition(replies) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it.each([1279, 1280, 1440])("keeps the %dpx reading layout to main content and one right rail", (width) => {
+    window.innerWidth = width;
+    const { container } = render(
+      <ReadingGrid aside={<div>上下文</div>} afterAside={<div>回复</div>}>
+        <div>正文</div>
+      </ReadingGrid>,
+    );
+    const grid = container.firstElementChild;
+
+    expect(grid).toHaveClass("xl:grid-cols-[minmax(0,1fr)_18rem]");
+    expect(grid?.className).not.toContain("12rem");
+    expect(grid?.querySelectorAll("aside")).toHaveLength(1);
+    expect(screen.getByText("正文").parentElement).toHaveClass("xl:col-start-1");
+  });
+
+  it("renders the topic TOC as a default-collapsed disclosure and closes it after navigation", async () => {
+    const user = userEvent.setup();
+    const headings = [
+      { id: "intro", depth: 2 as const, text: "介绍" },
+      { id: "setup", depth: 2 as const, text: "安装" },
+      { id: "usage", depth: 3 as const, text: "使用" },
+      { id: "finish", depth: 2 as const, text: "完成" },
+    ];
+    render(<TopicToc headings={headings} />);
+
+    const disclosure = screen.getByText("目录 · 4 个章节").closest("details");
+    expect(disclosure).not.toHaveAttribute("open");
+    await user.click(screen.getByText("目录 · 4 个章节"));
+    expect(disclosure).toHaveAttribute("open");
+    expect(screen.getByRole("link", { name: "使用" })).toHaveAttribute("href", "#usage");
+    await user.click(screen.getByRole("link", { name: "使用" }));
+    expect(disclosure).not.toHaveAttribute("open");
   });
 });

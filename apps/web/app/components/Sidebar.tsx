@@ -34,7 +34,7 @@ export function Sidebar() {
   }, []);
 
   return (
-    <aside className="flex flex-col gap-4">
+    <aside className="flex flex-col gap-5 md:gap-6">
       <Card size="sm">
         <CardHeader>
           <CardTitle>社区合作</CardTitle>

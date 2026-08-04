@@ -1,7 +1,6 @@
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import { replyQueries, topicQueries, userQueries } from "../lib/db";
-import { decrementScoreAndReplyCount, incrementScoreAndReplyCount } from "../lib/score";
 import { sendMessageToMentionUsers } from "../lib/at";
 import { sendReplyMessage, sendReply2Message } from "../lib/message";
 import { checkContent } from "../lib/moderation";
@@ -22,7 +21,6 @@ const reply = new OpenAPIHono<{
   Variables: AuthVars;
 }>();
 
-const CREATE_REPLY_SCORE = 5;
 const CREATE_REPLY_PER_DAY = 1000;
 
 async function requestUser(c: any, accesstoken?: string) {
@@ -92,10 +90,14 @@ reply.openapi(createReplyRoute, async (c) => {
   }
 
   const replyId = reply_id ? Number(reply_id) : undefined;
-  const newReply = await replyQueries.newAndSave(content, topicId, user.id, replyId);
-
-  await topicQueries.updateLastReply(topicId, newReply.id);
-  await incrementScoreAndReplyCount(user.id, CREATE_REPLY_SCORE, 1);
+  const createResult = await replyQueries.createWithAggregates(content, topicId, user.id, replyId);
+  if (createResult.status === "not_found") {
+    return c.json({ success: false as const, error_msg: "话题不存在" }, 404);
+  }
+  if (createResult.status === "locked") {
+    return c.json({ success: false as const, error_msg: "话题已锁定" }, 403);
+  }
+  const newReply = createResult.reply;
 
   if (topicData.authorId !== user.id) {
     await sendReplyMessage(topicData.authorId, user.id, topicId, newReply.id);
@@ -265,20 +267,16 @@ reply.openapi(deleteReplyRoute, async (c) => {
   }
 
   const replyId = Number(reply_id);
-  const replyData = await replyQueries.getById(replyId);
-  if (!replyData) {
+  const result = await replyQueries.deleteWithAggregates(replyId, user.id, !!c.get("isAdmin"));
+  if (result.status === "not_found") {
     return c.json({ success: false as const, error_msg: "评论不存在" }, 404);
   }
-  if (replyData.deleted) {
+  if (result.status === "already_deleted") {
     return c.json({ success: false as const, error_msg: "评论已删除" }, 422);
   }
-  if (replyData.authorId !== user.id && !c.get("isAdmin")) {
+  if (result.status === "forbidden") {
     return c.json({ success: false as const, error_msg: "无权限删除" }, 403);
   }
-
-  await replyQueries.softDelete(replyId);
-  await decrementScoreAndReplyCount(replyData.authorId, CREATE_REPLY_SCORE, 1);
-  await topicQueries.decrementReplyCount(replyData.topicId);
 
   return c.json({ success: true as const, status: "success" }, 200);
 });

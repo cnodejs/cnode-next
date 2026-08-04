@@ -15,9 +15,11 @@ import {
   zones,
   userRoles,
 } from "@cnode/db";
-import { eq, and, desc, inArray, sql, count, isNull } from "drizzle-orm";
+import { eq, and, asc, desc, inArray, sql, count, isNull } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { boolEq, boolValue } from "./db-compat";
+import { deleteReplyWithStore, type ReplyDeletionStore } from "./reply-deletion";
+import { createReplyWithStore, type ReplyCreationStore } from "./reply-creation";
 
 let dbInstance: DB | null = null;
 const INTERNAL_TABS = ["dev", "test"];
@@ -287,14 +289,7 @@ export const topicQueries = {
 
   async getByQuery(where: any, opt?: any) {
     const db = getDb();
-    let q = db.select().from(topics).$dynamic();
-    const conditions = topicConditions(where);
-    if (conditions.length > 0) {
-      q = q.where(conditions.length === 1 ? conditions[0] : and(...conditions)) as any;
-    }
-    const limit = opt?.limit || 20;
-    const offset = opt?.offset || 0;
-    return q.orderBy(desc(topics.top), desc(topics.lastReplyAt)).limit(limit).offset(offset);
+    return buildTopicsByQuery(db, where, opt);
   },
 
   async countByQuery(where: any) {
@@ -316,18 +311,6 @@ export const topicQueries = {
       .values({ title, content, tab, authorId, createAt: now, updateAt: now })
       .returning();
     return topic;
-  },
-
-  async updateLastReply(topicId: number, replyId: number) {
-    const db = getDb();
-    await db
-      .update(topics)
-      .set({
-        lastReplyId: replyId,
-        lastReplyAt: new Date(),
-        replyCount: sql`${topics.replyCount} + 1`,
-      })
-      .where(eq(topics.id, topicId));
   },
 
   async incrementVisitCount(id: number) {
@@ -385,6 +368,20 @@ export const topicQueries = {
   },
 };
 
+export function buildTopicsByQuery(db: DB, where: any, opt?: any) {
+  let q = db.select().from(topics).$dynamic();
+  const conditions = topicConditions(where);
+  if (conditions.length > 0) {
+    q = q.where(conditions.length === 1 ? conditions[0] : and(...conditions)) as any;
+  }
+  const limit = opt?.limit || 20;
+  const offset = opt?.offset || 0;
+  return q
+    .orderBy(desc(topics.top), sql`coalesce(${topics.lastReplyAt}, ${topics.createAt}) desc nulls last`, desc(topics.id))
+    .limit(limit)
+    .offset(offset);
+}
+
 export const replyQueries = {
   async getById(id: number) {
     const db = getDb();
@@ -394,10 +391,7 @@ export const replyQueries = {
 
   async getByTopicId(topicId: number) {
     const db = getDb();
-    return db
-      .select()
-      .from(replies)
-      .where(and(eq(replies.topicId, topicId), boolEq(replies.deleted, false)));
+    return buildRepliesByTopicQuery(db, topicId);
   },
 
   async getByAuthorId(authorId: number, opt?: any) {
@@ -411,14 +405,62 @@ export const replyQueries = {
       .limit(limit);
   },
 
-  async newAndSave(content: string, topicId: number, authorId: number, replyId?: number) {
+  async createWithAggregates(content: string, topicId: number, authorId: number, replyId?: number) {
     const db = getDb();
-    const now = new Date();
-    const [reply] = await db
-      .insert(replies)
-      .values({ content, topicId, authorId, replyId, createAt: now, updateAt: now })
-      .returning();
-    return reply;
+    const store: ReplyCreationStore = {
+      transaction: (callback) => db.transaction(async (tx: DB) => callback({
+        async lockTopic(id) {
+          const rows = await tx
+            .select({ locked: topics.lock })
+            .from(topics)
+            .where(eq(topics.id, id))
+            .limit(1)
+            .for("update");
+          return rows[0] ? (rows[0].locked ? "locked" : "open") : null;
+        },
+        async insertReply(input) {
+          const now = new Date();
+          const [reply] = await tx
+            .insert(replies)
+            .values({ ...input, createAt: now, updateAt: now })
+            .returning();
+          return reply;
+        },
+        async incrementAuthor(id) {
+          await tx
+            .update(users)
+            .set({
+              score: sql`coalesce(${users.score}, 0) + 5`,
+              replyCount: sql`coalesce(${users.replyCount}, 0) + 1`,
+            })
+            .where(eq(users.id, id));
+        },
+        async readTopicAggregate(id) {
+          const [countRows, latestRows] = await Promise.all([
+            tx
+              .select({ value: count() })
+              .from(replies)
+              .where(and(eq(replies.topicId, id), boolEq(replies.deleted, false))),
+            tx
+              .select({ id: replies.id, createAt: replies.createAt })
+              .from(replies)
+              .where(and(eq(replies.topicId, id), boolEq(replies.deleted, false)))
+              .orderBy(sql`${replies.createAt} desc nulls last`, desc(replies.id))
+              .limit(1),
+          ]);
+          const latest = latestRows[0];
+          return {
+            replyCount: Number(countRows[0]?.value || 0),
+            lastReplyId: latest?.id ?? null,
+            lastReplyAt: latest?.createAt ?? null,
+          };
+        },
+        async writeTopicAggregate(id, aggregate) {
+          await tx.update(topics).set(aggregate).where(eq(topics.id, id));
+        },
+      })),
+    };
+    return createReplyWithStore(store, { content, topicId, authorId, replyId });
   },
 
   async updateContent(id: number, content: string) {
@@ -435,6 +477,68 @@ export const replyQueries = {
       .update(replies)
       .set({ deleted: boolValue(true) } as any)
       .where(eq(replies.id, id));
+  },
+
+  async deleteWithAggregates(replyId: number, actorId: number, isAdmin: boolean) {
+    const db = getDb();
+    const store: ReplyDeletionStore = {
+      transaction: (callback) => db.transaction(async (tx: DB) => callback({
+        async lockReply(id) {
+          const rows = await tx.select().from(replies).where(eq(replies.id, id)).limit(1).for("update");
+          return rows[0] || null;
+        },
+        async lockTopic(topicId) {
+          const rows = await tx
+            .select({ id: topics.id })
+            .from(topics)
+            .where(eq(topics.id, topicId))
+            .limit(1)
+            .for("update");
+          return rows.length > 0;
+        },
+        async markDeleted(id) {
+          const rows = await tx
+            .update(replies)
+            .set({ deleted: boolValue(true) } as any)
+            .where(and(eq(replies.id, id), boolEq(replies.deleted, false)))
+            .returning({ id: replies.id });
+          return rows.length > 0;
+        },
+        async decrementAuthor(authorId) {
+          await tx
+            .update(users)
+            .set({
+              score: sql`greatest(coalesce(${users.score}, 0) - 5, 0)`,
+              replyCount: sql`greatest(coalesce(${users.replyCount}, 0) - 1, 0)`,
+            })
+            .where(eq(users.id, authorId));
+        },
+        async readTopicAggregate(topicId) {
+          const [countRows, latestRows] = await Promise.all([
+            tx
+              .select({ value: count() })
+              .from(replies)
+              .where(and(eq(replies.topicId, topicId), boolEq(replies.deleted, false))),
+            tx
+              .select({ id: replies.id, createAt: replies.createAt })
+              .from(replies)
+              .where(and(eq(replies.topicId, topicId), boolEq(replies.deleted, false)))
+              .orderBy(sql`${replies.createAt} desc nulls last`, desc(replies.id))
+              .limit(1),
+          ]);
+          const latest = latestRows[0];
+          return {
+            replyCount: Number(countRows[0]?.value || 0),
+            lastReplyId: latest?.id ?? null,
+            lastReplyAt: latest?.createAt ?? null,
+          };
+        },
+        async writeTopicAggregate(topicId, aggregate) {
+          await tx.update(topics).set(aggregate).where(eq(topics.id, topicId));
+        },
+      })),
+    };
+    return deleteReplyWithStore(store, replyId, actorId, isAdmin);
   },
 
   async getUpsByReplyIds(replyIds: number[]) {
@@ -462,6 +566,14 @@ export const replyQueries = {
     return "up" as const;
   },
 };
+
+export function buildRepliesByTopicQuery(db: DB, topicId: number) {
+  return db
+    .select()
+    .from(replies)
+    .where(and(eq(replies.topicId, topicId), boolEq(replies.deleted, false)))
+    .orderBy(asc(replies.createAt), asc(replies.id));
+}
 
 export { getDb };
 

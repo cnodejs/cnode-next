@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { Bell, CheckCheck, Inbox } from "lucide-react";
+import { messageContentSummary } from "@cnode/shared";
 import { Layout } from "~/components/Layout";
 import { DirectoryPage, PageHeader } from "~/components/PageShell";
 import { TimeAgo } from "~/components/TimeAgo";
@@ -28,7 +29,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const res = await apiFetch<{
     success: boolean;
     data: { has_read_messages: any[]; hasnot_read_messages: any[] };
-  }>("/api/v1/messages", { headers: { cookie } });
+  }>("/api/v1/messages?mdrender=false", { headers: { cookie } });
   const unread = res.success ? res.data.hasnot_read_messages || [] : [];
   return {
     readMsgs: res.success ? res.data.has_read_messages || [] : [],
@@ -156,6 +157,7 @@ function MessageItem({ msg, onMarkRead, pending }: { msg: any; onMarkRead: (id: 
         ? "在话题中回复了你"
         : "在话题中 @ 了你";
   const topicHref = msg.topic ? `/topic/${msg.topic.id}${msg.reply?.id ? `#${msg.reply.id}` : ""}` : "#";
+  const summary = messageContentSummary(msg.reply?.content);
 
   return (
     <Item>
@@ -179,9 +181,9 @@ function MessageItem({ msg, onMarkRead, pending }: { msg: any; onMarkRead: (id: 
             {msg.topic.title}
           </Link>
         )}
-        {msg.reply?.content && (
+        {summary && (
           <ItemDescription>
-            {msg.reply.content}
+            {summary}
           </ItemDescription>
         )}
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">

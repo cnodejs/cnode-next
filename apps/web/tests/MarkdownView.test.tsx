@@ -1,4 +1,5 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { renderToString } from "react-dom/server";
 import { MarkdownView } from "~/components/MarkdownView";
@@ -60,6 +61,76 @@ describe("MarkdownView", () => {
 
     expect(container.querySelector("script")).not.toBeInTheDocument();
     expect(screen.getByText("unsafe")).not.toHaveAttribute("href", expect.stringContaining("javascript:"));
+  });
+
+  it("renders a lazy image without leaking the Markdown AST node", () => {
+    render(<MarkdownView content="![diagram](https://example.com/diagram.png)" />);
+
+    const image = screen.getByRole("img", { name: "diagram" });
+    expect(image).toHaveAttribute("src", "https://example.com/diagram.png");
+    expect(image).toHaveAttribute("loading", "lazy");
+    expect(image).not.toHaveAttribute("node");
+  });
+
+  it("shows a compact fallback with a safe original link after failure", () => {
+    render(<MarkdownView content="![architecture](https://example.com/missing.png)" />);
+    fireEvent.error(screen.getByRole("img", { name: "architecture" }));
+
+    expect(screen.getByRole("group", { name: "architecture加载失败" })).toHaveTextContent("图片暂时无法加载：architecture");
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "打开原图" })).toHaveAttribute("href", "https://example.com/missing.png");
+    expect(screen.getByRole("link", { name: "打开原图" })).toHaveAttribute("target", "_blank");
+    expect(screen.getByRole("link", { name: "打开原图" })).toHaveAttribute("rel", "noopener noreferrer");
+  });
+
+  it("retries only after a manual action and can recover", async () => {
+    const user = userEvent.setup();
+    render(<MarkdownView content="![diagram](https://example.com/missing.png)" />);
+    const firstImage = screen.getByRole("img", { name: "diagram" });
+    fireEvent.error(firstImage);
+
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "重新加载" }));
+    const retriedImage = screen.getByRole("img", { name: "diagram" });
+    expect(retriedImage).not.toBe(firstImage);
+    Object.defineProperties(retriedImage, {
+      naturalWidth: { value: 100 },
+      naturalHeight: { value: 100 },
+    });
+    fireEvent.load(retriedImage);
+    expect(screen.queryByText(/图片暂时无法加载/)).not.toBeInTheDocument();
+  });
+
+  it("resets failure state when the image source changes", () => {
+    const { rerender } = render(
+      <MarkdownView content="![diagram](https://example.com/old.png)" />,
+    );
+    fireEvent.error(screen.getByRole("img", { name: "diagram" }));
+
+    rerender(<MarkdownView content="![diagram](https://example.com/new.png)" />);
+
+    expect(screen.queryByText(/图片暂时无法加载/)).not.toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "diagram" })).toHaveAttribute(
+      "src",
+      "https://example.com/new.png",
+    );
+  });
+
+  it("uses the fallback when an image loads without valid dimensions", () => {
+    render(<MarkdownView content="![empty](https://example.com/empty.png)" />);
+    fireEvent.load(screen.getByRole("img", { name: "empty" }));
+
+    expect(screen.getByRole("group", { name: "empty加载失败" })).toBeInTheDocument();
+  });
+
+  it("uses a useful fallback for missing alt and keeps unsafe image URLs sanitized", () => {
+    const { container } = render(<MarkdownView content={'![](https://example.com/image.png)\n\n<img src="javascript:alert(1)" alt="unsafe">'} />);
+    const image = screen.getByRole("img", { name: "文章图片" });
+    fireEvent.error(image);
+
+    expect(screen.getByText("图片暂时无法加载：文章图片")).toBeInTheDocument();
+    expect(container.querySelector('img[src^="javascript:"]')).not.toBeInTheDocument();
+    expect(container.querySelector('a[href^="javascript:"]')).not.toBeInTheDocument();
   });
 
   it("keeps duplicate heading ids deterministic across SSR renders", () => {

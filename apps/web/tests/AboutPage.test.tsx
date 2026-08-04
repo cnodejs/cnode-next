@@ -43,16 +43,22 @@ describe("About 合并内容页", () => {
     expect(faq.querySelectorAll("dl")).toHaveLength(2);
   });
 
-  it("keeps all section navigation available at a mobile viewport", () => {
-    window.innerWidth = 375;
+  it.each([375, 768, 1280, 1440])("keeps section structure, spacing and overflow safeguards at %ipx", (width) => {
+    window.innerWidth = width;
     window.dispatchEvent(new Event("resize"));
-    renderAbout();
+    const { container } = renderAbout();
 
     const navigation = screen.getByRole("navigation", { name: "关于页面导航" });
+    const sections = container.querySelector('[data-slot="about-sections"]')!;
+    expect(navigation).toHaveClass("overflow-x-auto");
+    expect(sections).toHaveClass("min-w-0", "gap-12", "md:gap-16");
+    expect(sections.querySelectorAll(":scope > section")).toHaveLength(6);
+    expect(container.querySelector('[data-slot="card"]')).not.toBeInTheDocument();
     expect(within(navigation).getByRole("link", { name: "社区介绍" })).toHaveAttribute("href", "#community");
     expect(within(navigation).getByRole("link", { name: "讨论规范" })).toHaveAttribute("href", "#discussion");
     expect(within(navigation).getByRole("link", { name: "社区合作" })).toHaveAttribute("href", "#cooperation");
     expect(within(navigation).getByRole("link", { name: "社区客户端" })).toHaveAttribute("href", "#client");
     expect(within(navigation).getByRole("link", { name: "常见问题" })).toHaveAttribute("href", "#faq");
+    expect(container.querySelectorAll(".gap-4").length).toBeGreaterThanOrEqual(3);
   });
 });

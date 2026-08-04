@@ -3229,7 +3229,6 @@
           {
             "schema": {
               "type": "boolean",
-              "nullable": true,
               "default": true
             },
             "required": false,

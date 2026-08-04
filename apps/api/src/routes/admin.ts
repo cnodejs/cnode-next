@@ -43,7 +43,6 @@ import {
   triggerScanDrain,
 } from "../lib/moderation-scan";
 import { boolEq, boolValue } from "../lib/db-compat";
-import { decrementScoreAndReplyCount } from "../lib/score";
 import { isValidIpRule } from "../middleware/ip-ban";
 import { applyProgressivePenalty } from "../lib/penalty";
 import { userSummary } from "../lib/format";
@@ -312,10 +311,8 @@ async function hideReportTarget(targetType: string, targetId: number) {
   if (targetType === "reply") {
     const reply = await replyQueries.getById(targetId);
     if (!reply || reply.deleted) return null;
-    await replyQueries.softDelete(reply.id);
-    await decrementScoreAndReplyCount(reply.authorId, 5, 1);
-    await topicQueries.decrementReplyCount(reply.topicId);
-    return reply.authorId;
+    const result = await replyQueries.deleteWithAggregates(reply.id, reply.authorId, true);
+    return result.status === "deleted" ? result.reply.authorId : null;
   }
   return null;
 }
@@ -505,11 +502,9 @@ admin.post("/admin/reply/:rid/delete", modRequired(), async (c) => {
   if (!reply) return c.json({ success: false, error_msg: "回复不存在" }, 404);
   if (reply.deleted) return c.json({ success: false, error_msg: "回复已删除" }, 422);
   const topic = await topicQueries.getById(reply.topicId);
-  const db = getDb();
-  await db.update(replies).set({ deleted: boolValue(true) } as any).where(eq(replies.id, rid));
-  await decrementScoreAndReplyCount(reply.authorId, 5, 1);
-  await topicQueries.decrementReplyCount(reply.topicId);
   const user = c.get("user")!;
+  const result = await replyQueries.deleteWithAggregates(rid, user.id, true);
+  if (result.status !== "deleted") return c.json({ success: false, error_msg: "回复已删除" }, 422);
   await auditQueries.log(user.id, user.loginname, "delete_reply", { type: "reply", id: String(rid), name: topic?.title || String(reply.topicId) }, "success");
   return c.json({ success: true, message: "回复已删除" });
 });
@@ -878,7 +873,7 @@ async function applyModerationHitAction(hit: any, action: "confirm" | "falseposi
     if (hit.targetType === "topic") await db.update(topics).set({ deleted: boolValue(true), status: "deleted" } as any).where(eq(topics.id, hit.targetId));
     else if (hit.targetType === "reply") {
       const reply = await replyQueries.getById(hit.targetId);
-      if (reply && !reply.deleted) { await replyQueries.softDelete(reply.id); await decrementScoreAndReplyCount(reply.authorId, 5, 1); await topicQueries.decrementReplyCount(reply.topicId); }
+      if (reply && !reply.deleted) await replyQueries.deleteWithAggregates(reply.id, reply.authorId, true);
     }
     if (hit.authorId) await applyProgressivePenalty(hit.authorId, user.id, user.loginname, `moderation_hit:${hit.id}`);
   }
@@ -924,7 +919,7 @@ admin.post("/admin/moderation/:id/:action", modRequired(), async (c) => {
     if (hit.targetType === "topic") await getDb().update(topics).set({ deleted: boolValue(true), status: "deleted" } as any).where(eq(topics.id, hit.targetId));
     else if (hit.targetType === "reply") {
       const reply = await replyQueries.getById(hit.targetId);
-      if (reply && !reply.deleted) { await replyQueries.softDelete(reply.id); await decrementScoreAndReplyCount(reply.authorId, 5, 1); await topicQueries.decrementReplyCount(reply.topicId); }
+      if (reply && !reply.deleted) await replyQueries.deleteWithAggregates(reply.id, reply.authorId, true);
     }
     if (hit.authorId) await applyProgressivePenalty(hit.authorId, user.id, user.loginname, `moderation_hit:${hit.id}`);
   }

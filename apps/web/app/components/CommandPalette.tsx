@@ -8,7 +8,8 @@ import {
   Pencil,
   X,
 } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Button } from "./ui/button";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
 import {
   Command,
   CommandEmpty,
@@ -89,15 +90,24 @@ export function CommandPalette({
           <DialogDescription>搜索话题、用户，或跳转到常用页面。</DialogDescription>
         </DialogHeader>
         <Command label="搜索命令">
-          <form onSubmit={submit}>
-            <CommandInput
-              value={query}
-              onValueChange={setQuery}
-              placeholder="搜索话题、用户，或输入关键词..."
-              aria-label="搜索命令"
-              autoFocus
-            />
-          </form>
+          <div data-slot="command-search-row" className="flex min-w-0 items-center gap-1 p-1 pb-0">
+            <form onSubmit={submit} className="min-w-0 flex-1">
+              <CommandInput
+                value={query}
+                onValueChange={setQuery}
+                placeholder="搜索话题、用户，或输入关键词..."
+                aria-label="搜索命令"
+                autoFocus
+                className="min-w-0"
+              />
+            </form>
+            <DialogClose
+              render={<Button type="button" variant="ghost" size="icon-sm" className="size-11 shrink-0 sm:size-8" />}
+              aria-label="关闭搜索面板"
+            >
+              <X />
+            </DialogClose>
+          </div>
           <CommandList>
             <CommandEmpty>
               <span role="status">没有匹配的快捷命令，可按 Enter 搜索“{query}”</span>
@@ -115,14 +125,6 @@ export function CommandPalette({
             {query.trim() ? `按 Enter 搜索“${query.trim()}”` : "使用方向键选择，Enter 打开，Escape 关闭"}
           </div>
         </Command>
-        <button
-          type="button"
-          onClick={() => onOpenChange(false)}
-          className="absolute right-3 top-3 inline-flex h-11 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="关闭搜索面板"
-        >
-          <X className="h-4 w-4" />
-        </button>
       </DialogContent>
     </Dialog>
   );

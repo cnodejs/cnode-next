@@ -1,3 +1,4 @@
+import { useState, type ComponentPropsWithoutRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -59,12 +60,60 @@ export function MarkdownView({ content, className }: MarkdownViewProps) {
               <table {...props}>{children}</table>
             </div>
           ),
-          img: ({ alt, ...props }) => <img alt={alt || ""} loading="lazy" decoding="async" {...props} />,
+          img: ({ node: _node, ...props }) => <MarkdownImage key={props.src} {...props} />,
         }}
       >
         {content || ""}
       </ReactMarkdown>
     </div>
+  );
+}
+
+function MarkdownImage({ alt, src, ...props }: ComponentPropsWithoutRef<"img">) {
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const description = alt?.trim() || "文章图片";
+
+  if (failed) {
+    return (
+      <span
+        role="group"
+        aria-label={`${description}加载失败`}
+        className="my-2 inline-flex max-w-full flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border bg-muted px-3 py-2 text-sm text-muted-foreground"
+      >
+        <span className="min-w-0 break-words">图片暂时无法加载：{description}</span>
+        <button
+          type="button"
+          className="font-medium text-foreground underline-offset-4 hover:underline"
+          onClick={() => {
+            setAttempt((value) => value + 1);
+            setFailed(false);
+          }}
+        >
+          重新加载
+        </button>
+        {src && (
+          <a href={src} target="_blank" rel="noopener noreferrer" className="font-medium text-foreground underline-offset-4 hover:underline">
+            打开原图
+          </a>
+        )}
+      </span>
+    );
+  }
+
+  return (
+    <img
+      key={attempt}
+      {...props}
+      src={src}
+      alt={description}
+      loading="lazy"
+      decoding="async"
+      onError={() => setFailed(true)}
+      onLoad={(event) => {
+        if (!event.currentTarget.naturalWidth || !event.currentTarget.naturalHeight) setFailed(true);
+      }}
+    />
   );
 }
 

@@ -2,9 +2,7 @@ import { Link } from "react-router";
 import { Layout } from "~/components/Layout";
 import { DirectoryPage, PageHeader } from "~/components/PageShell";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "~/components/ui/item";
-import { Separator } from "~/components/ui/separator";
 
 const communityValues = [
   ["真实问题", "鼓励提供上下文、代码、错误信息和已经尝试过的方案。"],
@@ -87,15 +85,10 @@ export default function About() {
             ))}
           </nav>
 
-          <Card className="min-w-0">
-            <CardHeader>
-              <CardTitle>社区手册</CardTitle>
-              <CardDescription>了解社区定位、参与方式和内容规范。</CardDescription>
-            </CardHeader>
-            <CardContent className="flex min-w-0 flex-col gap-8">
+          <div data-slot="about-sections" className="flex min-w-0 flex-col gap-12 md:gap-16">
               <section id="community" className="scroll-mt-24">
                 <SectionIntro eyebrow="COMMUNITY" title="关于 CNode" description="CNode 面向中文 Node.js 与现代 Web 开发者，希望让真实问题、可复用经验和生态实践被长期检索与讨论。" />
-                <ItemGroup className="mt-4 grid gap-3 md:grid-cols-3">
+                <ItemGroup className="mt-4 grid gap-4 md:grid-cols-3">
                   {communityValues.map(([title, body]) => (
                     <Item key={title} variant="muted" className="items-start">
                       <ItemContent>
@@ -107,11 +100,9 @@ export default function About() {
                 </ItemGroup>
               </section>
 
-              <Separator />
-
               <section id="guide" className="scroll-mt-24">
                 <SectionIntro eyebrow="GET INVOLVED" title="参与指南" description="从浏览讨论到发布内容，选择清晰的上下文比追求形式更重要。" />
-                <ItemGroup className="mt-4 grid gap-3 sm:grid-cols-2">
+                <ItemGroup className="mt-4 grid gap-4 sm:grid-cols-2">
                   {guideSections.map(([title, body]) => (
                     <Item key={title} variant="outline" className="items-start">
                       <ItemContent>
@@ -122,8 +113,6 @@ export default function About() {
                   ))}
                 </ItemGroup>
               </section>
-
-              <Separator />
 
               <section id="discussion" className="scroll-mt-24">
                 <SectionIntro eyebrow="DISCUSSION" title="讨论与内容规范" description="高质量讨论从可复现的信息、可阅读的格式和对彼此时间的尊重开始。" />
@@ -138,11 +127,9 @@ export default function About() {
                 </ol>
               </section>
 
-              <Separator />
-
               <section id="cooperation" className="scroll-mt-24">
                 <SectionIntro eyebrow="COMMUNITY PARTNERS" title="社区合作" description="首页保留一个社区合作展示位，用于介绍与 CNode 读者相关的开源项目、开发者工具和技术活动。合作内容需要明确来源并与 Node.js 开发者相关。" />
-                <ItemGroup className="mt-4 grid gap-3 md:grid-cols-3">
+                <ItemGroup className="mt-4 grid gap-4 md:grid-cols-3">
                   {cooperationSections.map(([title, body]) => (
                     <Item key={title} variant="muted" className="items-start">
                       <ItemContent>
@@ -157,8 +144,6 @@ export default function About() {
                 </Button>
               </section>
 
-              <Separator />
-
               <section id="client" className="scroll-mt-24">
                 <SectionIntro eyebrow="COMMUNITY CLIENT" title="社区客户端" description="CNode 曾有由社区开发者维护的 React Native 客户端。它不是本站官方发行的软件，安装或使用前请先查看原项目的维护状态、平台支持和安全说明。" />
                 <Button
@@ -169,8 +154,6 @@ export default function About() {
                   查看客户端项目
                 </Button>
               </section>
-
-              <Separator />
 
               <section id="faq" className="scroll-mt-24">
                 <SectionIntro eyebrow="FAQ" title="常见问题" description="账号、消息、话题和回复的常见使用说明。" />
@@ -190,8 +173,7 @@ export default function About() {
                   ))}
                 </div>
               </section>
-            </CardContent>
-          </Card>
+          </div>
         </div>
       </DirectoryPage>
     </Layout>

@@ -143,13 +143,11 @@ export function FeedGrid({
 }
 
 export function ReadingGrid({
-  toc,
   children,
   aside,
   afterAside,
   className,
 }: {
-  toc?: React.ReactNode;
   children: React.ReactNode;
   aside?: React.ReactNode;
   afterAside?: React.ReactNode;
@@ -158,19 +156,17 @@ export function ReadingGrid({
   return (
     <div
       className={cn(
-        "grid gap-6 xl:grid-cols-[12rem_minmax(0,1fr)_18rem]",
-        !toc && "xl:grid-cols-[minmax(0,1fr)_18rem]",
+        "grid gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]",
         className,
       )}
     >
-      {toc && <aside className="hidden xl:block">{toc}</aside>}
-      <div className={cn("min-w-0", toc ? "xl:col-start-2" : "xl:col-start-1")}>{children}</div>
+      <div className="min-w-0 xl:col-start-1">{children}</div>
       {aside && (
-        <aside className={cn("min-w-0 xl:row-span-2 xl:row-start-1", toc ? "xl:col-start-3" : "xl:col-start-2")}>
+        <aside className="min-w-0 xl:col-start-2 xl:row-span-2 xl:row-start-1">
           {aside}
         </aside>
       )}
-      {afterAside && <div className={cn("min-w-0", toc ? "xl:col-start-2" : "xl:col-start-1")}>{afterAside}</div>}
+      {afterAside && <div className="min-w-0 xl:col-start-1">{afterAside}</div>}
     </div>
   );
 }
