@@ -98,8 +98,8 @@ export default function Messages({ loaderData }: Route.ComponentProps) {
               <Badge variant={unreadMsgs.length > 0 ? "default" : "secondary"}>
                 {unreadMsgs.length} 条新消息
               </Badge>
-              <Button size="sm" variant="outline" onClick={() => markAllRead()} disabled={unreadMsgs.length === 0 || markingAll}>
-                <CheckCheck /> {markingAll ? "处理中" : "全部已读"}
+              <Button size="sm" variant="secondary" onClick={() => markAllRead()} disabled={unreadMsgs.length === 0 || markingAll}>
+                <CheckCheck data-icon="inline-start" /> {markingAll ? "处理中" : "全部已读"}
               </Button>
             </div>
         } />

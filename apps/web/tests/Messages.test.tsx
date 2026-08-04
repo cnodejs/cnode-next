@@ -76,6 +76,15 @@ describe("messages page", () => {
     expect(screen.queryByText(/<p>|<\/p>/)).not.toBeInTheDocument();
   });
 
+  it("keeps the mark-all action readable against the brand header", () => {
+    renderMessages([], [makeMessage("unread", "新消息")]);
+
+    expect(screen.getByRole("button", { name: "全部已读" })).toHaveClass(
+      "bg-secondary",
+      "text-secondary-foreground",
+    );
+  });
+
   it("omits empty summaries and limits long content", () => {
     renderMessages(
       [makeMessage("empty", "   ", true)],
