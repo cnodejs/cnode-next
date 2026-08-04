@@ -10,7 +10,7 @@ cnode-next 当前同时使用泛化的 `APP_*`、`DB_*` 和不一致的 `REDIS_D
 - Production Compose 通过 `env_file` 直接注入统一配置，不维护重复 environment 映射。
 - 统一 PostgreSQL 和 Redis 配置的解析、必填校验、类型转换和默认值，禁止各消费者自行解释同一变量。
 - 同步受版本控制的 env 模板、Compose、脚本、测试、OpenSpec 和文档，使硬切换后的仓库不存在旧运行时变量引用。
-- 明确保护开发者真实配置：不得读取、打印、修改、覆盖、删除或自动迁移 `.env`、`.env.local`、`.env.remote.local`。
+- 明确保护开发者真实配置：不得读取、打印、修改、覆盖、删除或自动迁移任何真实 dotenv 文件。
 
 ## Capabilities
 
@@ -21,14 +21,14 @@ cnode-next 当前同时使用泛化的 `APP_*`、`DB_*` 和不一致的 `REDIS_D
 ### Modified Capabilities
 
 - `postgres-first-dev-runtime`: 将 PostgreSQL 和 Redis 的开发、CLI 与运行时配置要求改为新的 `CNODE_*` 契约，并禁止旧变量 fallback。
-- `local-remote-migration-rehearsal`: 将显式远程 profile 和隧道端点文档改为新的 PostgreSQL 变量，同时加强真实 dotenv 文件保护。
+- `explicit-migration-rehearsal-profile`: 将显式 migration profile 文档改为新的 PostgreSQL 变量，同时加强真实 dotenv 文件保护。
 
 ## Impact
 
 ### Change Scope
 
-- In scope：`packages/db`、`apps/api`、根目录迁移脚本、部署 preflight、Drizzle 配置、`deployment/docker-compose.prod.yml`、受版本控制的 env 示例、相关测试、`docs/` 和活跃 OpenSpec specs。
-- Out of scope：修改任何真实 `.env*` 文件、自动更新远程服务器配置、执行部署、轮换凭据、运行数据库迁移、修改 PostgreSQL 数据或数据卷、改变 legacy `nodeclub/` 或 `egg-cnode/`。
+- In scope：`packages/db`、`apps/api`、根目录迁移脚本、部署 preflight、Drizzle 配置、`deployment/docker-compose.yml`、受版本控制的 env 示例、相关测试、`docs/` 和活跃 OpenSpec specs。
+- Out of scope：修改任何真实 `.env*` 文件或外部配置、执行部署、轮换凭据、运行数据库迁移、修改 PostgreSQL 数据或数据卷、改变 legacy `nodeclub/` 或 `egg-cnode/`。
 - Affected systems：本地开发启动、API、moderation worker、Drizzle CLI、schema migration、seed、MongoDB 到 PostgreSQL 迁移验证、生产 Compose 配置。
 - High-risk categories：生产环境变量硬切换、数据库凭据映射、CLI 配置一致性、意外连接错误和 secret 泄漏。
 
@@ -41,6 +41,6 @@ cnode-next 当前同时使用泛化的 `APP_*`、`DB_*` 和不一致的 `REDIS_D
 
 ### Documentation Impact
 
-- 更新 `docs/development.md`、迁移 runbook 和相关运维文档中的 PostgreSQL、Redis、隧道与显式 profile 示例。
+- 更新 `docs/development.md`、迁移文档和相关运维文档中的 PostgreSQL、Redis 与显式 profile 示例。
 - 更新 `.env.example` 与 `deployment/.env.production.example`，仅保留占位值。
 - 不修改 `wiki/`；若后续发现仓库外 wiki 存在旧变量说明，作为部署治理的人工跟进项处理。

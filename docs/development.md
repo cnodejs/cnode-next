@@ -60,7 +60,7 @@ docker run --name cnode-redis \
   -d redis:7-bookworm redis-server --appendonly yes
 ```
 
-If you use an SSH tunnel to a private database for migration rehearsal, keep that configuration in an explicit ignored profile such as `.env.remote.local`, point `POSTGRES_HOST` and `POSTGRES_PORT` at the local tunnel listener, and run commands with `CNODE_ENV_FILE=.env.remote.local`. Do not expose databases publicly. Existing real dotenv profiles remain human-managed and must not be printed or changed by repository automation.
+Non-default database configuration must use an explicit ignored dotenv profile selected with `CNODE_ENV_FILE`. Repository automation must not read, print, or modify real dotenv profiles.
 
 ## Start
 
@@ -113,13 +113,13 @@ Runtime commands keep their default command shape and load root `.env` from thei
 | `pnpm --filter @cnode/api worker:moderation` | Keeps worker command; API worker imports the runtime loader. |
 | `pnpm db:push:pg`, `pnpm db:generate` | Keep `drizzle-kit` commands; Drizzle config loads root `.env`. |
 | `pnpm db:migrate`, `pnpm db:seed` | Keep `tsx src/*` commands; DB scripts load root `.env`. |
-| `pnpm migrate:mongo-to-pg`, `pnpm migrate:reconcile` | Keep root `tsx scripts/*` commands; scripts load root `.env`; use `CNODE_ENV_FILE=.env.remote.local` for remote rehearsal. |
+| `pnpm migrate:mongo-to-pg`, `pnpm migrate:reconcile` | Keep root `tsx scripts/*` commands; scripts load root `.env`; non-default profiles require explicit `CNODE_ENV_FILE`. |
 | `pnpm lint`, `pnpm format`, `pnpm secrets:scan` | Do not load local dotenv files. |
 
-Example remote rehearsal profile:
+Example explicit rehearsal profile:
 
 ```bash
-CNODE_ENV_FILE=.env.remote.local pnpm migrate:reconcile
+CNODE_ENV_FILE=.env.rehearsal pnpm migrate:reconcile
 ```
 
 API contracts are defined in `apps/api/src/routes/*.ts` as zod-openapi declarations. Run `pnpm gen:openapi` to regenerate `api/openapi.json`. `pnpm verify` includes this step automatically.

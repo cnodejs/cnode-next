@@ -14,7 +14,7 @@ The wiki is the business knowledge base for CNode. It stores sourced background 
 
 ## Boundary
 
-- `docs/` explains current development, architecture, API, database, migration, moderation, and security tasks.
+- `docs/` explains current development, architecture, API, database, moderation, and security tasks.
 - `deployment/` contains the production runbook and deployment assets.
 - `wiki/` preserves business knowledge, migration background, legacy behavior, and sourced context.
 - AI-generated wiki updates must mark missing sources or uncertain statements as `To confirm`.

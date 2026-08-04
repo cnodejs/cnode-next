@@ -56,15 +56,15 @@ README 顶部使用简短项目说明：CNode Next 是基于 React Router、Hono
 
 ### Decision 5: Base URL 单独说明，endpoint 使用相对 path
 
-API 文档单独声明 `https://api.cnodejs.org` 作为 base URL；接口标题和表格使用 `/api/v1/...` 相对 path；curl 示例可以使用完整 URL。
+API 文档通过 `CNODE_API_BASE_URL` 表达 base URL；接口标题和表格使用 `/api/v1/...` 相对 path。
 
 拒绝方案：在每个 endpoint 标题中写完整域名，或把 `localhost:3001` 当作 API reference 主体内容。本地开发地址属于 development 文档。
 
 ### Decision 6: 根目录最小化，部署资产进入 `deploy/`
 
-仓库根目录只保留开源项目入口和工具自动发现所必需的文件。生产 compose、部署 SQL、部署模板、启动脚本、dotenv 示例和部署辅助文件应移动到 `deploy/` 或等价目录，例如 `deploy/docker-compose.prod.yml`。所有文档、命令和 CI 引用必须同步新路径。
+仓库根目录只保留开源项目入口和工具自动发现所必需的文件。生产 compose、部署 SQL、部署模板、启动脚本、dotenv 示例和部署辅助文件应移动到 `deploy/` 或等价目录，例如 `deployment/docker-compose.yml`。所有文档、命令和 CI 引用必须同步新路径。
 
-拒绝方案：继续把 `docker-compose.prod.yml` 放在根目录。该文件是生产部署实现细节，不是外部读者进入项目时必须看到的入口，会让根目录变成运维材料堆叠。
+拒绝方案：继续把 `deployment/docker-compose.yml` 放在根目录。该文件是生产部署实现细节，不是外部读者进入项目时必须看到的入口，会让根目录变成运维材料堆叠。
 
 ### Decision 7: `wiki/` 作为同级知识库承接迁移和业务知识沉淀
 
@@ -92,7 +92,7 @@ CI 和 `pnpm verify` 应保留通用质量门禁：lint、typecheck、test、bui
 
 `.github/workflows` 应按职责拆分，而不是用一个 workflow 同时承担 PR verify、main 分支镜像发布和潜在生产部署。推荐结构：`ci.yml` 在 pull_request 和 push 分支上运行通用质量门禁；`build-images.yml` 或 `release.yml` 在 main、tag 或手动触发时构建并推送 GHCR 镜像；`deploy.yml` 仅在确有需要时提供受保护环境的手动部署入口。
 
-生产部署 workflow 不应保存或使用生产 SSH 私钥直接连服务器，除非项目明确决定引入 GitHub Environments、审批、最小权限 secret 和审计策略。当前更符合项目边界的做法是：CI 构建镜像，部署 runbook 在服务器上拉取 SHA tag 或 digest 并执行 `deploy/` 中的 compose。
+生产部署 workflow 不应保存部署凭据或直接执行部署，除非项目明确决定引入 GitHub Environments、审批、最小权限 secret 和审计策略。当前边界是 CI 构建镜像，部署 runbook 使用 SHA tag 或 digest 和 `deployment/` 中的 Compose。
 
 拒绝方案：继续使用 `build-container-images.yml` 同时处理 PR verify 和镜像发布。这个名字与职责不匹配，权限也更难最小化，后续一旦加入部署步骤会变成 CI/release/deploy 混合体。
 
@@ -102,8 +102,8 @@ CI 和 `pnpm verify` 应保留通用质量门禁：lint、typecheck、test、bui
 - [README 过短导致上下文不足] -> 使用 Documentation 表格指向 architecture、development、deployment、API、database 和 migration。
 - [API reference 与 OAS 漂移] -> 保留 `pnpm verify:openapi-contract`，并让 API reference 标明 OAS 为机器可读契约。
 - [docs/conventions.md 变成新长文档] -> 限制为规则、表格和模板，不写长篇背景。
-- [移动 compose 文件影响生产部署命令] -> 任务中必须同步 `deploy/README.md`、README、远程部署说明和任何脚本中的 compose 路径；部署前运行 `docker compose -f deploy/docker-compose.prod.yml config --quiet`。
-- [部署资产移动导致 dotenv 或脚本引用漂移] -> `deploy/README.md` 或等价规范必须列出 compose、SQL、脚本、dotenv 模板的职责和引用关系；dotenv 模板按分组维护。
+- [移动 compose 文件影响生产部署命令] -> 任务中必须同步 `deployment/README.md`、README、远程部署说明和任何脚本中的 compose 路径；部署前运行 `docker compose -f deployment/docker-compose.yml config --quiet`。
+- [部署资产移动导致 dotenv 或脚本引用漂移] -> `deployment/README.md` 或等价规范必须列出 compose、SQL、脚本、dotenv 模板的职责和引用关系；dotenv 模板按分组维护。
 - [移除专项 verify 脚本后质量下降] -> 保留编译、测试、OpenSpec、secret scan、OpenAPI 契约和 compose config 这类通用门禁；文档结构靠规范和人工 review，不靠脆弱正则。
 - [workflow 拆分后触发关系混乱] -> `ci.yml` 不需要 packages write 权限；镜像 workflow 显式依赖或重复最小验证；部署 workflow 如存在只允许 manual/environment protected 触发。
 - [`wiki/` 与 `docs/` 边界不清] -> 在 `docs/conventions.md` 中定义：`docs/` 和 `wiki/` 是同级文档域；任务导向文档进 `docs/`，历史/业务/迁移知识进 `wiki/`。
@@ -123,7 +123,7 @@ CI 和 `pnpm verify` 应保留通用质量门禁：lint、typecheck、test、bui
 
 ## Open Questions
 
-- 一次性生产部署记录已从长期 `docs/` 中移除；可复制的审计模板放在 `deploy/production-audit-template.md`。
+- 一次性生产部署记录和重复审计模板不作为长期文档维护。
 - API reference 是否只覆盖核心公开接口，后台/内部接口只链接 OAS，还是也用同一模板完整列出？
 - `deploy/` 是否只放生产 compose，还是同时放 `.env.example`、SQL、audit template 和 deployment helper scripts？
 - `wiki/` 是否纳入 OpenSpec/release 验证的链接检查，还是作为维护者知识库只做人工复核？

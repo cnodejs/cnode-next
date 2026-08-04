@@ -41,6 +41,6 @@
 
 ## 6. 部署检查
 
-- [x] 6.1 部署 API/Web/Worker 到 `/root/workspace/cnode-next`，确保 worker 使用最新 API 镜像。
+- [x] 6.1 部署 API/Web/Worker，确保 worker 使用同一版本的 API 镜像。
 - [x] 6.2 生产检查首页 feed、最新回复、无人回复不展示 dev/test 或 block 作者话题。
 - [x] 6.3 生产检查 admin 用户页可以看到 block、mute、删除用户发言入口但不执行 destructive 操作，除非明确指定测试用户。

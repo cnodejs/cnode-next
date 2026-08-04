@@ -52,7 +52,7 @@
 - API routes: `apps/api/src/routes/auth.ts`、`apps/api/src/routes/admin.ts`。
 - Mail helpers: `apps/api/src/lib/mail.ts`。
 - UI primitives/layout: `apps/web/app/components/AdminLayout.tsx`、`AdminPage.tsx`、`ui/table.tsx`，必要时新增局部 class 约定。
-- Env: 生产必须配置 `APP_WEB_BASE_URL=https://next.cnodejs.org`，`APP_API_BASE_URL=https://api.cnodejs.org`。
+- Env: 生产必须显式配置 `APP_WEB_BASE_URL` 和 `APP_API_BASE_URL`。
 - Env: Turnstile 必须配置 site key 和 secret key，secret 只存在服务端环境。
 - Operational paths: `apps/api/src/middleware/rate-limit.ts`、`apps/api/src/middleware/ip-ban.ts`、举报创建/列表 API、发帖/回复/注册业务路径、后台系统设置页面。
 - Search and moderation metrics: `/api/v1/search`、`/search`、敏感词命中统计、管理概览统计。

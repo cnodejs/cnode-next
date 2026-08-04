@@ -8,7 +8,7 @@ Database schema initialization for PostgreSQL MUST be executed from within the d
 
 #### Scenario: Create tables in pre-cutover environment
 - **WHEN** operators initialize schema for migration rehearsal or cutover day
-- **THEN** they MUST run schema commands via compose-managed containers instead of host-local direct DB access
+- **THEN** they MUST run schema commands via compose-managed containers instead of direct database access
 
 #### Scenario: Environment consistency
 - **WHEN** schema commands are executed

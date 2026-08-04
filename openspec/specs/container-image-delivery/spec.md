@@ -1,11 +1,11 @@
 # container-image-delivery Specification
 
 ## Purpose
-定义生产容器镜像的 GitHub Actions 构建、验证门禁、GHCR 发布、不可变镜像标识、服务器拉取运行和 Web 运行时 API 配置要求。
+定义生产容器镜像的 GitHub Actions 构建、验证门禁、GHCR 发布、不可变镜像标识、部署启动和 Web 运行时 API 配置要求。
 ## Requirements
 ### Requirement: GitHub Actions 构建并推送生产容器镜像
 
-系统 MUST 使用 GitHub Actions 在 GitHub runner 上构建 cnode-next 生产容器镜像，并推送到 GitHub Container Registry。workflow MUST 在 release verification gate 通过后才构建和推送镜像，且不得连接生产服务器执行部署。
+系统 MUST 使用 GitHub Actions 在 GitHub runner 上构建 cnode-next 生产容器镜像，并推送到 GitHub Container Registry。workflow MUST 在 release verification gate 通过后才构建和推送镜像，且不得执行部署。
 
 #### Scenario: API 镜像发布到 GHCR SHA tag
 - **WHEN** GitHub Actions 在主分支运行容器镜像发布 workflow
@@ -19,35 +19,35 @@
 - **AND** workflow MUST 推送 `ghcr.io/cnodejs/cnode-web:sha-<commit>` 或记录等价 image digest
 - **AND** workflow MUST NOT 在 release verification gate 失败时推送镜像
 
-#### Scenario: Workflow 不部署远程服务器
+#### Scenario: Workflow 不执行部署
 - **WHEN** GitHub Actions 完成镜像推送
-- **THEN** workflow MUST NOT SSH 登录生产服务器
-- **AND** workflow MUST NOT 执行远程 `docker compose pull` 或 `docker compose up`
+- **THEN** workflow MUST NOT 管理部署凭据
+- **AND** workflow MUST NOT 执行 `docker compose pull` 或 `docker compose up`
 
-### Requirement: 生产服务器只拉取并运行镜像
+### Requirement: 部署过程只拉取并运行镜像
 
-生产 docker-compose 编排 MUST 只引用已发布镜像，服务器部署流程 MUST 通过 `pull` 和 `up --no-build` 启动服务，避免在同机运行的 nodeclub、PostgreSQL、Redis 旁边执行镜像构建。
+生产 docker-compose 编排 MUST 只引用已发布镜像，部署流程 MUST 通过 `pull` 和 `up --no-build` 启动服务，不得在部署过程中构建应用镜像。
 
 #### Scenario: Compose 不包含本地构建定义
-- **WHEN** 运维查看 `deploy/docker-compose.prod.yml`
+- **WHEN** 运维查看 `deployment/docker-compose.yml`
 - **THEN** `api`、`web`、`worker`、`migrate-schema`、`migrate-data`、`reconcile` 服务 MUST NOT 包含 `build:` 配置
 - **AND** 这些服务 MUST 使用 `image:` 引用 GHCR 镜像
 
 #### Scenario: 手动部署拉取指定镜像
-- **WHEN** 运维在生产服务器部署新版本
+- **WHEN** 运维部署新版本
 - **THEN** 运维 MUST 设置 `CNODE_API_IMAGE` 和 `CNODE_WEB_IMAGE` 指向 SHA tag 或 digest
-- **AND** 运维 MUST 执行 `docker compose -f deploy/docker-compose.prod.yml pull api web worker`
-- **AND** 运维 MUST 执行 `docker compose -f deploy/docker-compose.prod.yml up -d --no-build api web worker`
-- **AND** 该流程 MUST NOT 在服务器上执行 Docker build
+- **AND** 运维 MUST 执行 `docker compose -f deployment/docker-compose.yml pull api web worker`
+- **AND** 运维 MUST 执行 `docker compose -f deployment/docker-compose.yml up -d --no-build --no-deps api worker` 和等价 Web 命令
+- **AND** 该流程 MUST NOT 执行 Docker build
 
 #### Scenario: Migration 任务使用 API 镜像
 - **WHEN** 运维执行 `migrate-schema`、`migrate-data` 或 `reconcile`
 - **THEN** 这些一次性任务 MUST 使用 `CNODE_API_IMAGE` 指向的 API 镜像
-- **AND** 这些任务 MUST NOT 在服务器上通过 compose build migration target
+- **AND** 这些任务 MUST NOT 通过 compose build migration target
 
 ### Requirement: Web 镜像使用运行时 API 配置
 
-Web 镜像 MUST 不依赖构建时 API base URL。SSR 侧和浏览器侧 API 请求都 MUST 根据服务器运行时环境变量决定 API 地址。
+Web 镜像 MUST 不依赖构建时 API base URL。SSR 侧和浏览器侧 API 请求都 MUST 根据运行时环境变量决定 API 地址。
 
 #### Scenario: SSR 使用内部 API 地址
 - **WHEN** React Router loader 在 Web 容器服务端执行 API 请求
@@ -56,10 +56,10 @@ Web 镜像 MUST 不依赖构建时 API base URL。SSR 侧和浏览器侧 API 请
 
 #### Scenario: 浏览器使用公开 API 地址
 - **WHEN** 浏览器侧交互调用 `apiFetch` 或上传客户端请求 API
-- **THEN** 系统 MUST 使用从服务器运行时 `.env` 注入到页面的 `CNODE_API_BASE_URL`
+- **THEN** 系统 MUST 使用运行时 `.env` 注入到页面的 `CNODE_API_BASE_URL`
 - **AND** 浏览器侧 MUST NOT 依赖 `VITE_APP_API_BASE_URL` 或其他构建时变量决定 API base URL
 
 #### Scenario: 同一 Web 镜像可复用到不同运行环境
-- **WHEN** 同一个 Web 镜像在不同服务器环境启动
+- **WHEN** 同一个 Web 镜像在不同运行环境启动
 - **THEN** 浏览器侧 API base MUST 随该环境的 `.env` 变化
 - **AND** 不得要求为不同 API 域名重新构建 Web 镜像

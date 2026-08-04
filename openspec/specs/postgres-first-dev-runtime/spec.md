@@ -21,18 +21,13 @@ The project MUST document PostgreSQL as the only supported database for current 
 - **AND** it MUST NOT branch on `DB_DIALECT` or import `better-sqlite3`
 
 ### Requirement: Developers SHALL provide PostgreSQL and Redis connection settings
-Developers MUST be able to run cnode-next against PostgreSQL/Redis by providing connection settings through the unified root `.env` contract, regardless of whether the service endpoint comes from local containers or a secure tunnel. 应用配置 MUST 使用 `CNODE_*`，PostgreSQL 与 Redis MUST 分别使用 `POSTGRES_*` 与 `REDIS_*`，且不得接受旧变量 fallback。
+Developers MUST be able to run cnode-next against PostgreSQL/Redis by providing connection settings through the unified root `.env` contract. 应用配置 MUST 使用 `CNODE_*`，PostgreSQL 与 Redis MUST 分别使用 `POSTGRES_*` 与 `REDIS_*`，且不得接受旧变量 fallback。
 
 #### Scenario: Developer configures database/cache endpoints
 - **WHEN** a developer needs to run the project locally
 - **THEN** documentation MUST instruct them to provide PostgreSQL host, port, database, user and password via `POSTGRES_HOST`、`POSTGRES_PORT`、`POSTGRES_DB`、`POSTGRES_USER`、`POSTGRES_PASSWORD`
 - **AND** documentation MUST instruct them to provide Redis host, port, database index and optional password via `REDIS_HOST`、`REDIS_PORT`、`REDIS_DB`、`REDIS_PASSWORD`
 - **AND** `.env.local` or app-local dotenv files such as `apps/web/.env` or `apps/web/.env.local` MUST NOT be required for normal local startup
-
-#### Scenario: Endpoint comes from a tunnel
-- **WHEN** a developer validates migrated data through a remote rehearsal database
-- **THEN** documentation MUST treat the tunnel as a local endpoint and MUST NOT require exposing database ports publicly
-- **AND** the remote or rehearsal endpoint MUST be selected through an explicit env profile rather than the default `pnpm dev` environment
 
 #### Scenario: Workspace dev commands load environment consistently
 - **WHEN** a developer starts Web and API together with `pnpm dev`
@@ -51,7 +46,7 @@ Developers MUST be able to run cnode-next against PostgreSQL/Redis by providing 
 - **AND** it MUST NOT require local secrets to succeed
 
 ### Requirement: Local secrets SHALL remain untracked
-Local database credentials, tunnel-specific values, auth secrets, OAuth secrets, SMTP secrets, OSS secrets, and other private runtime values MUST be stored outside tracked files and MUST NOT be printed, copied into scripts, or overwritten by automated migration steps.
+Local database credentials, auth secrets, OAuth secrets, SMTP secrets, OSS secrets, and other private runtime values MUST be stored outside tracked files and MUST NOT be printed, copied into scripts, or overwritten by automated migration steps.
 
 #### Scenario: Local override file is used
 - **WHEN** a developer stores local PostgreSQL connection values

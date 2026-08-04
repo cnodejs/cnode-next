@@ -78,4 +78,4 @@ flowchart LR
 ## Open Questions
 
 - 单张图片大小上限使用 2MB、5MB 还是沿用 legacy 配置，需要实现时确认现有配置约定。
-- OSS URL 是否需要 CDN 域名、独立上传域名或直接使用 bucket 公网域名，需要结合现有部署配置确认。
+- OSS URL 的公开读取方式需要通过运行时配置决定。

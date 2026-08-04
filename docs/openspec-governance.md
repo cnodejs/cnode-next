@@ -62,7 +62,7 @@ Every proposal must state how `docs/` and `wiki/` are affected. The answer can b
 | --- | --- |
 | Runtime architecture, request flow, worker boundary | `docs/architecture.md` |
 | Local development or verification commands | `docs/development.md`, `docs/conventions.md` |
-| PostgreSQL schema, migration, index, data repair | `docs/database.md`, `docs/migration-runbook.md` |
+| PostgreSQL schema, migration, index, data repair | `docs/database.md`, `wiki/migration-background.md` |
 | Security, auth, roles, audit, secret handling | `docs/security.md` |
 | Content moderation operation | `docs/content-moderation.md`, `wiki/community-rules.md` |
 | Business rule or legacy behavior | `wiki/business-rules.md`, `wiki/legacy-behavior.md` |

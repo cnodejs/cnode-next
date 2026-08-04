@@ -62,4 +62,4 @@ flowchart LR
   D[side effect audit] --> E
 ```
 
-每个矩阵项必须能在本地连接 rehearsal PostgreSQL/Redis，或在远程 rehearsal 环境中以只读或可恢复写入方式验证。
+每个矩阵项必须能在隔离的 rehearsal PostgreSQL/Redis 中以只读或可恢复写入方式验证。

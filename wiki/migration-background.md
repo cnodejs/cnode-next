@@ -1,18 +1,18 @@
 # Migration Background
 
-Mongo-to-PostgreSQL 迁移的详细字段映射、跳过逻辑和报告机制。当前迁移命令和 cutover 流程见 [docs/migration-runbook.md](../docs/migration-runbook.md)。
+Mongo-to-PostgreSQL 迁移的历史字段映射、跳过逻辑和报告机制。当前数据库开发与 reviewed migration 规则见 [docs/database.md](../docs/database.md)。
 
 ## Sources
 
 - `scripts/migrate-mongo-to-pg.ts` — 迁移主脚本。
 - `scripts/reconcile-migration.ts` — 对账脚本。
 - `packages/db/src/schema/` — PostgreSQL target schema。
-- `deployment/docker-compose.prod.yml` — `migrate-schema`、`migrate-data`、`reconcile` profiles。
+- `deployment/docker-compose.yml` — `migrate-schema`、`migrate-data`、`reconcile` profiles。
 - `../nodeclub/models/` — legacy Mongo schema 定义。
 
 ## Scope
 
-记录迁移工具的字段映射、ID 策略、跳过逻辑和报告结构。不包含迁移操作步骤（见 runbook）。
+记录迁移工具的字段映射、ID 策略、跳过逻辑和报告结构，不作为日常部署操作入口。
 
 ## Migration Order
 
@@ -204,13 +204,6 @@ Report 写入 `MIGRATION_REPORT_PATH`（默认 `/app/migration-report.json`）�
 - 因为 `content_is_html` 不迁移，legacy 中存储预渲染 HTML 的话题/回复在迁移后会被当作 Markdown 重新渲染，可能与原始展示不一致。
 - 因为 `resetTarget` 清空所有表，rehearsal 和 production 迁移不能在同一数据库上交叉进行。
 - 因为 skip 逻辑只记录不阻断，迁移可能静默丢失数据；reconciliation 是最终防线。
-
-## To Confirm
-
-- `content_is_html=true` 的话题/回复在生产数据中的占比，是否需要特殊处理。
-- `retrieve_time` 字段在 legacy 中是 `Number`（timestamp），迁移时直接 passthrough，PostgreSQL 中存储为 `bigint`，读取时是否需要转换。
-- `archived` 字段在 legacy 中不存在，迁移时全部为 false，是否需要从其他字段推断。
-- 重复 loginname 在生产中的实际数量。
 
 ## Review Status
 

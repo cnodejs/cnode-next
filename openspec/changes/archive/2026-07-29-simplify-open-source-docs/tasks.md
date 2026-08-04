@@ -26,8 +26,8 @@
 - [x] 4.2 移动生产 compose、部署 SQL、启动脚本、dotenv 示例和部署相关模板到 `deploy/` 中的清晰子路径。
 - [x] 4.3 为 `deploy/` 增加 README 或等价规范，说明 docker-compose 文件、SQL 文件、启动脚本、dotenv 模板和 secret handling 边界。
 - [x] 4.4 将 dotenv 示例按配置域分组，例如应用 URL、数据库、Redis、认证、对象存储、Turnstile、邮件、观测/日志和运维开关。
-- [x] 4.5 更新 README、docs、脚本和运维命令中对 `docker-compose.prod.yml`、dotenv 示例、SQL 和启动脚本的引用。
-- [x] 4.6 运行 `docker compose -f deploy/docker-compose.prod.yml config --quiet` 或等价命令，确认新路径可用。
+- [x] 4.5 更新 README、docs、脚本和运维命令中对 `deployment/docker-compose.yml`、dotenv 示例、SQL 和启动脚本的引用。
+- [x] 4.6 运行 `docker compose -f deployment/docker-compose.yml config --quiet` 或等价命令，确认新路径可用。
 - [x] 4.7 确认根目录只保留开源入口、工具配置、源码目录、docs、wiki、deploy 和 OpenSpec 目录等必要文件。
 
 ## 5. CI 与 scripts 收敛
@@ -65,7 +65,7 @@
 
 ## 9. 残留清理与 CI 优化
 
-- [x] 9.1 `git rm docker-compose.prod.yml`，确认根目录 compose 已彻底从 index 移除。
+- [x] 9.1 删除根目录旧生产 Compose，确认根目录不再存放生产编排。
 - [x] 9.2 `build-images.yml` 移除重复的 `verify` job，CI 质量门禁由 `ci.yml` 承担，镜像 workflow 只负责 build/push。
 - [x] 9.3 wiki 占位页（`legacy-behavior.md`、`migration-background.md`）补充来源、事实、推断、待确认，引用当前源码与 compose profile。
 - [x] 9.4 运行 `pnpm verify` 与 `openspec validate --all --strict` 最终验证。

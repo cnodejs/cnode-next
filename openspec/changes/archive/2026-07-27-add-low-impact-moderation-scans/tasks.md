@@ -15,7 +15,7 @@
 - [x] 2.4 实现命中写入和去重，确保同一目标同一敏感词不会反复生成待处理记录
 - [x] 2.5 新增 worker 入口脚本，按任务状态循环处理批次，并支持 `MODERATION_SCAN_BATCH_SIZE`、`MODERATION_SCAN_THROTTLE_MS`、`MODERATION_SCAN_MAX_BATCHES_PER_RUN`
 - [x] 2.6 为 worker 增加单实例锁，避免多 worker 重复执行同一任务
-- [x] 2.7 在 `docker-compose.prod.yml` 增加可独立启动的 worker service，不影响 api/web 服务
+- [x] 2.7 在 `deployment/docker-compose.yml` 增加可独立启动的 worker service，不影响 api/web 服务
 
 ## 3. 管理 API
 

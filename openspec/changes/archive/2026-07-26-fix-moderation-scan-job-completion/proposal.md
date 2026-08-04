@@ -1,6 +1,6 @@
 ## Why
 
-远程服务器上的巡检扫描任务在 worker 重启后从 `pending` 进入 `running`，但达到 `maxBatchesPerRun` 后仍停留在 `running`，后续 tick 只领取 `pending` 任务，导致该任务不会继续执行也不会完成。这个问题会让管理员手动创建的内容巡检队列看似在执行，实际永久悬挂，无法替代 legacy `nodeclub` 中管理员触发后可完成的内容治理流程。
+巡检扫描任务在 worker 重启后从 `pending` 进入 `running`，但达到 `maxBatchesPerRun` 后仍停留在 `running`，后续 tick 只领取 `pending` 任务，导致该任务不会继续执行也不会完成。这个问题会让管理员手动创建的内容巡检队列看似在执行，实际永久悬挂，无法替代 legacy `nodeclub` 中管理员触发后可完成的内容治理流程。
 
 ## What Changes
 

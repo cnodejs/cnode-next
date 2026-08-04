@@ -1,6 +1,6 @@
 ## Context
 
-cnode-next 当前已经能在 `next.cnodejs.org` 和 `api.cnodejs.org` 运行，并已经完成 GitHub 账号绑定、品牌邮件和多项迁移验证。但上线链路仍停留在“人工 smoke + 手工部署 + `latest` 镜像”的状态：`.github/workflows/build-container-images.yml` 只构建并推送 GHCR `latest`，`docker-compose.prod.yml` 默认使用 `latest`，生产 API `/health` 返回 404，compose healthcheck 依赖业务接口 `/api/v1/auth/config`，SQLite 仍存在于 `packages/db/src/client.ts`、`packages/db/src/schema/*`、`packages/db/package.json` 和验证脚本中。
+cnode-next 已完成 GitHub 账号绑定、品牌邮件和多项迁移验证，但上线链路仍停留在“人工 smoke + 手工部署 + `latest` 镜像”的状态：镜像 workflow 只推送 `latest`，Compose 默认使用 `latest`，API 缺少稳定 `/health`，SQLite 仍存在于数据库包和验证脚本中。
 
 用户已明确“项目不允许 SQLite”，因此本设计不再保留 PostgreSQL-first 的兼容表述，而是把 PostgreSQL-only 作为运行时、开发、测试、CI 和发布验收的唯一数据库策略。
 
@@ -33,7 +33,7 @@ flowchart LR
 
 - 不在本变更中改变 legacy `../nodeclub/` 运行方式或执行旧站下线。
 - 不新增 Kubernetes、Terraform、ArgoCD 或新的部署平台。
-- 不把生产部署做成无人工确认的自动 SSH 发布；生产操作仍需显式执行或批准。
+- 不把生产部署做成无人工确认的自动发布；生产操作仍需显式执行或批准。
 - 不重写 CNode API v1、Web URL parity 或 GitHub OAuth 业务状态机。
 - 不保留 SQLite 作为测试 fallback、开发 fallback 或验证 fallback。
 
@@ -59,7 +59,7 @@ GitHub Actions 拆成或组织为两个阶段：`verify` job 先完成质量门�
 
 ### Decision 4: 镜像发布使用 SHA tag 或 digest
 
-API/Web 镜像至少推送 `sha-${GITHUB_SHA}`，可以同时保留 `latest` 作为人类便利标签，但生产部署和 `docker-compose.prod.yml` 必须使用显式 `CNODE_API_IMAGE` 与 `CNODE_WEB_IMAGE`，指向 SHA tag 或 digest。
+API/Web 镜像至少推送 `sha-${GITHUB_SHA}`，可以同时保留 `latest` 作为人类便利标签，但生产部署和 `deployment/docker-compose.yml` 必须使用显式 `CNODE_API_IMAGE` 与 `CNODE_WEB_IMAGE`，指向 SHA tag 或 digest。
 
 被拒绝的方案：只使用 `latest`。`latest` 覆盖后无法从生产状态精确反查 commit，也无法保证回滚目标不被覆盖。
 
@@ -71,9 +71,9 @@ API 新增专用 `GET /health`。该端点默认执行浅健康检查，返回�
 
 ### Decision 6: 部署先标准化 runbook，再考虑自动化
 
-本变更先提供可审计 runbook 或脚本：确认镜像、执行 migration、启动服务、检查 `/health`、运行 smoke、记录 commit/digest/时间/操作者。自动 SSH 部署可作为后续能力，但不作为本次 D 级准入的前提。
+本变更先提供可审计 runbook 或脚本：确认镜像、执行 migration、启动服务、检查 `/health`、运行 smoke、记录 commit/digest/时间/操作者。自动部署可作为后续能力，但不作为本次 D 级准入的前提。
 
-被拒绝的方案：立即让 GitHub Actions 连接生产服务器。当前生产 `.env` 含真实 secrets，且 migration 与旧站同机运行，自动远程操作需要更细的权限和回滚设计。
+被拒绝的方案：立即让 GitHub Actions 执行部署。自动操作需要更细的权限、secret 和回滚设计。
 
 ### Decision 7: 文档图优先，文字只做补充
 

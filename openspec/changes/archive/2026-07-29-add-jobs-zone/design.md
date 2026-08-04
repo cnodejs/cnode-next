@@ -200,10 +200,10 @@ flowchart TD
 - `zones`：jobs `visible=false`（内测能力，暂不开放，需管理员主动开启）
 
 **数据库发布边界**：
-- 远程 rehearsal/production 的 schema 变更 SHALL 通过 Drizzle migration 文件执行，不使用 `drizzle-kit push` 直接改当前连接库。
+- 非临时数据库的 schema 变更 SHALL 通过 Drizzle migration 文件执行，不使用 `drizzle-kit push` 直接改当前连接库。
 - `tabs` 与 `zones` 的生产必需默认行 SHALL 作为 migration/bootstrap 数据幂等初始化，不能依赖 `pnpm db:seed`。
 - `pnpm db:seed` 只允许用于空库初始化或本地开发测试数据，MUST NOT 删除 `users` / `topics` / `replies` / `messages` / `topic_collects` 等业务表。
-- 对远程数据库执行 migration 前，必须确认目标 DB、记录核心表 row counts，并具备可恢复备份。
+- 对非临时数据库执行 migration 前，必须确认目标 DB、记录核心表 row counts，并具备可恢复备份。
 
 **指引合并形态**：v1 采用"单页 + 锚点"，`/help` 渲染合并后的内容，原有 `/getstart` `/about` `/faq` 路由保留（避免外链 404），但导航栏不再直接暴露。`/api` 因含 SwaggerUI 组件体量大，v1 保留独立路由 `/api`，在 `/help` 页面提供链接而非内嵌。
 

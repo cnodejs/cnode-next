@@ -20,19 +20,19 @@
 
 ## 4. Feature-complete：部署与模板
 
-- [x] 4.1 更新 `deployment/docker-compose.prod.yml`，通过 `env_file` 直接注入应用、PostgreSQL 与 Redis 配置，删除重复 environment 映射。
-- [x] 4.2 更新 `.env.example` 和 `deployment/.env.production.example` 为新命名契约，只使用非敏感占位值；不得读取或参考 `.env`、`.env.local`、`.env.remote.local` 的内容。
-- [x] 4.3 静态核对 production example 与 Compose `env_file` 契约，并通过 typed parser 测试确认缺少必填基础设施变量时快速失败；实际 Compose 验证留给远程部署流程。
+- [x] 4.1 更新 `deployment/docker-compose.yml`，通过 `env_file` 直接注入应用、PostgreSQL 与 Redis 配置，删除重复 environment 映射。
+- [x] 4.2 更新 `.env.example` 和 `deployment/.env.production.example` 为新命名契约，只使用非敏感占位值；不得读取或参考真实 dotenv 内容。
+- [x] 4.3 静态核对 production example 与 Compose `env_file` 契约，并通过 typed parser 测试确认缺少必填基础设施变量时快速失败；Compose 验证留给部署 preflight。
 
 ## 5. Feature-complete：文档与规范同步
 
 - [x] 5.1 更新 `docs/development.md` 的应用、PostgreSQL、Redis 和启动示例，分别使用 `CNODE_*`、`POSTGRES_*` 与 `REDIS_*` 契约。
-- [x] 5.2 更新 migration runbook、隧道和 rehearsal 文档，使用 `POSTGRES_HOST`、`POSTGRES_PORT` 与显式 `CNODE_ENV_FILE`，并保留不得公开数据库端口的要求。
-- [x] 5.3 检查 `docs/`、活跃 OpenSpec 和 tracked 示例中的命名一致性；archive 历史记录保持不变，仓库外 wiki 更新记录为后续人工事项。
+- [x] 5.2 更新 migration 和 rehearsal 文档，使用 `POSTGRES_HOST`、`POSTGRES_PORT` 与显式 `CNODE_ENV_FILE`。
+- [x] 5.3 检查 `docs/`、活跃 OpenSpec 和 tracked 示例中的命名一致性；archive 仅保留通用决策，仓库外资料不在本次范围内。
 
 ## 6. 验证与发布准备
 
 - [x] 6.1 在排除 `openspec/changes/archive/` 和显式拒绝旧契约的单元测试后扫描 shipped source、tracked templates、docs 与活跃 specs，确认不存在 `APP_*`、`DB_*`、运行时 `DATABASE_URL` 或自创基础设施变量，也不存在 alias 或 fallback。
-- [x] 6.2 运行 lint、typecheck、test、build、OpenSpec strict validate 和 secret scan；不得在本地运行 Docker Compose，且验证过程不得 source、读取、打印或修改真实 `.env`、`.env.local`、`.env.remote.local`。
+- [x] 6.2 运行 lint、typecheck、test、build、OpenSpec strict validate 和 secret scan；不得在本地运行 Docker Compose，且验证过程不得 source、读取、打印或修改真实 dotenv。
 - [x] 6.3 审核 git diff，确认没有 PostgreSQL schema、migration、seed 数据语义、数据库内容或数据卷变更，并确认 design Mermaid、spec delta 和 tasks 与一次性硬切换决策一致。
-- [x] 6.4 编写人工部署检查清单，要求 `CNODE_*`、`POSTGRES_*`、`REDIS_*` 配置与新镜像/Compose 在同一维护窗口原子切换，回滚时整套恢复旧版本；不得在实施阶段连接或写入远程数据库。
+- [x] 6.4 编写人工部署检查清单，要求 `CNODE_*`、`POSTGRES_*`、`REDIS_*` 配置与新镜像/Compose 在同一维护窗口原子切换，回滚时整套恢复旧版本；不得在实施阶段写入非临时数据库。

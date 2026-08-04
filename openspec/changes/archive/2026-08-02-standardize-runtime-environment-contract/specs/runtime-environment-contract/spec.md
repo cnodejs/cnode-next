@@ -83,7 +83,7 @@ Production Compose MUST use `env_file` to inject the unified runtime configurati
 - **AND** 进程 MUST NOT 静默连接默认、旧或其他环境的资源
 
 ### Requirement: Real dotenv files SHALL remain human-managed and untouched
-自动实施与验证 MUST NOT 读取、打印、修改、覆盖、删除或自动迁移开发者真实 `.env`、`.env.local`、`.env.remote.local`。
+自动实施与验证 MUST NOT 读取、打印、修改、覆盖、删除或自动迁移开发者真实 dotenv 文件。
 
 #### Scenario: Tracked templates are migrated
 - **WHEN** 实施者更新 `.env.example` 或 `deployment/.env.production.example`
@@ -91,6 +91,6 @@ Production Compose MUST use `env_file` to inject the unified runtime configurati
 - **AND** 不得根据真实 dotenv 内容生成模板
 
 #### Scenario: Real dotenv files exist in the workspace
-- **WHEN** 实施或验证发现 `.env`、`.env.local` 或 `.env.remote.local`
+- **WHEN** 实施或验证发现真实 dotenv 文件
 - **THEN** 必须保持文件及其内容不变
 - **AND** 真实配置迁移 MUST 留给后续明确授权的人工流程

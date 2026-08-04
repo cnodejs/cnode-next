@@ -3,7 +3,7 @@
 - [x] 1.1 在 `packages/db/src/schema/job_meta.ts` 新增 `job_meta` 表（topic_id PK/FK ON DELETE CASCADE + company/position/location/remote/salary_min/salary_max/experience/tech_tags[]/contact/company_logo + timestamps），在 `schema/index.ts` 导出
 - [x] 1.2 在 `packages/db/src/schema/tabs.ts` 新增 `tabs` 表（id PK + key UNIQUE + label + visible default true + sort_order + timestamps），在 `schema/index.ts` 导出
 - [x] 1.3 在 `packages/db/src/schema/zones.ts` 新增 `zones` 表（id PK + slug UNIQUE + name + description + icon + visible default false + sort_order + timestamps），在 `schema/index.ts` 导出
-- [x] 1.4 使用 Drizzle migration 文件新增三张表并 review SQL；本地临时库可用 `pnpm db:push:pg` 快速验证，但远程 rehearsal/production SHALL NOT 使用 push 作为发布路径
+- [x] 1.4 使用 Drizzle migration 文件新增三张表并 review SQL；本地临时库可用 `pnpm db:push:pg` 快速验证，但非临时数据库 SHALL NOT 使用 push 作为发布路径
 - [x] 1.5 在 migration/bootstrap 中幂等初始化 `tabs`（share/ask/job/good 全部 visible=true, sort 1-4）和 `zones`（jobs visible=false）；不得依赖 `pnpm db:seed` 初始化生产必需配置
 - [x] 1.5a 修改 `packages/db/src/seed.ts` 为非破坏性空库初始化脚本：不得 delete/truncate 业务表，已有用户数据时跳过 demo 用户/topic/reply，仅幂等补齐配置与敏感词
 - [x] 1.6 在 `packages/shared/src/schemas/topic.ts` 扩展 `createTopicBodySchema` / `updateTopicBodySchema`，新增可选 `job_meta` 对象字段，用 `superRefine` 实现 `tab='job'` 时必填、`tab≠'job'` 时禁用的条件校验
@@ -57,7 +57,7 @@
 
 ## 7. 验证与收尾
 
-- [x] 7.0 远程数据库变更预检：确认 `current_database()` / `current_user` / host/port，记录 users/topics/replies/messages/topic_collects row counts，并确认已有可恢复备份
+- [x] 7.0 非临时数据库变更预检：确认目标数据库身份，记录核心表 row counts，并确认已有可恢复备份
 - [x] 7.1 运行 `pnpm lint` 修复 lint 问题
 - [x] 7.2 运行 `pnpm typecheck` 确保全栈类型通过
 - [x] 7.3 运行 `pnpm test` 确保现有测试不回归；为 job_meta schema 校验逻辑（tab=job 必填、tab≠job 禁用）补单元测试

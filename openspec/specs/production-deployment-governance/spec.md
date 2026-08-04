@@ -42,26 +42,26 @@ Define production deployment runbook, deploy asset organization, audit, CI gates
 - **THEN** 记录 MUST 包含失败的新 image、恢复的旧 image、回滚原因和回滚后 health/smoke 结果
 
 ### Requirement: 生产部署资产必须集中管理
-生产部署 runbook、部署编排、部署模板、部署 SQL、启动脚本、dotenv 示例和部署辅助文件 SHALL 收敛到专门的 `deploy/` 部署域，避免仓库根目录或 `docs/` 堆放生产实现细节。
+生产部署 runbook、部署编排、部署模板、部署 SQL、启动脚本、dotenv 示例和部署辅助文件 SHALL 收敛到专门的 `deployment/` 部署域，避免仓库根目录或 `docs/` 堆放生产实现细节。
 
 #### Scenario: 生产 compose 文件位置
 - **WHEN** 仓库提供生产 Docker Compose 编排
-- **THEN** 该文件 MUST 位于 `deploy/` 或等价部署目录
-- **AND** 根目录 MUST NOT 直接放置 `docker-compose.prod.yml` 这类生产编排文件
+- **THEN** 该文件 MUST 位于 `deployment/` 或等价部署目录
+- **AND** 根目录 MUST NOT 直接放置生产 `docker-compose.yml` 编排文件
 
-#### Scenario: deploy 与 docs/wiki 同级
+#### Scenario: deployment 与 docs/wiki 同级
 - **WHEN** 仓库包含生产部署 runbook 或部署资产
-- **THEN** `deploy/` MUST 作为与 `docs/`、`wiki/` 同级的顶层目录存在
-- **AND** `deploy/` MUST 包含 README 或等价规范说明生产部署步骤和部署资产职责边界
+- **THEN** `deployment/` MUST 作为与 `docs/`、`wiki/` 同级的顶层目录存在
+- **AND** `deployment/` MUST 包含 README 或等价规范说明生产部署步骤和部署资产职责边界
 
 #### Scenario: 部署资产分类
 - **WHEN** 部署资产包含 compose、SQL、启动脚本或配置模板
-- **THEN** 这些文件 MUST 在 `deploy/` 内按用途清晰命名或分目录组织
-- **AND** `deploy/` 规范 MUST 说明 docker-compose 文件、SQL 文件、启动脚本和 dotenv 模板各自用途
+- **THEN** 这些文件 MUST 在 `deployment/` 内按用途清晰命名或分目录组织
+- **AND** `deployment/` 规范 MUST 说明 docker-compose 文件、SQL 文件、启动脚本和 dotenv 模板各自用途
 
 #### Scenario: 部署命令引用新路径
 - **WHEN** 文档、脚本或运维 runbook 引用生产 compose 文件
-- **THEN** 它们 MUST 使用新的部署目录路径，例如 `deploy/docker-compose.prod.yml`
+- **THEN** 它们 MUST 使用部署目录路径，例如 `deployment/docker-compose.yml`
 - **AND** 旧路径 MUST 不再作为推荐命令出现
 
 #### Scenario: dotenv 示例按配置域分组
@@ -71,14 +71,9 @@ Define production deployment runbook, deploy asset organization, audit, CI gates
 - **AND** 模板 MUST 使用占位值，不得包含真实 secret、token、私有连接串或生产用户数据
 
 #### Scenario: 启动脚本和 SQL 可追溯
-- **WHEN** `deploy/` 包含启动脚本或 SQL 文件
+- **WHEN** `deployment/` 包含启动脚本或 SQL 文件
 - **THEN** 文件名或相邻说明 MUST 表达执行时机和用途
 - **AND** 文档 MUST 说明这些资产是否可重复执行、是否会修改数据、以及执行前需要的环境变量
-
-#### Scenario: 生产服务器同步部署文件
-- **WHEN** 运维将部署文件同步到生产服务器
-- **THEN** runbook MUST 明确同步的是部署目录中的文件
-- **AND** 同步过程 MUST 不打印、不提交、不覆盖真实 `.env` secret 值
 
 ### Requirement: CI 必须避免一次性文件文本验收脚本
 CI 和 `pnpm verify` SHALL 使用长期可维护的通用质量门禁，避免依赖大量针对具体文件内容、具体文档句子或一次性上线验收目标的专项 verify 脚本。
@@ -120,6 +115,6 @@ GitHub Actions workflow SHALL 按 CI、镜像构建发布和生产部署入口�
 - **AND** 部署 workflow MUST NOT 在日志中打印 `.env`、tokens、私钥、数据库 URL 或用户数据
 
 #### Scenario: 当前无自动部署
-- **WHEN** 项目选择由人工在服务器执行部署 runbook
+- **WHEN** 项目选择人工执行部署 runbook
 - **THEN** GitHub Actions MUST 只构建并发布镜像
-- **AND** 生产服务器部署命令 MUST 保留在 `deploy/README.md` 或等价部署域说明中
+- **AND** 部署命令 MUST 保留在 `deployment/README.md` 或等价部署域说明中

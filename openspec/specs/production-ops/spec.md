@@ -6,7 +6,7 @@
 ## Requirements
 ### Requirement: nodeclub 线上替代验收矩阵
 
-系统 SHALL 在切换线上流量前通过 nodeclub online replacement 验收矩阵，证明公开 URL、API 契约、业务副作用、生产周边行为和容器运行方式均可替代旧站。由于 legacy `../nodeclub/`、MongoDB、Redis 和 cnode-next 服务同机运行，生产验收 MUST 确认 cnode-next 部署不会在服务器上执行镜像构建，并且生产运行的 API、Web 和 worker 必须来自已通过 release verification gate 的不可变镜像发布物。
+系统 SHALL 在切换线上流量前通过 nodeclub online replacement 验收矩阵，证明公开 URL、API 契约、业务副作用、生产周边行为和容器运行方式均可替代旧站。生产验收 MUST 确认部署过程不会执行镜像构建，并且 API、Web 和 worker 必须来自已通过 release verification gate 的不可变镜像发布物。
 
 #### Scenario: URL parity smoke
 
@@ -39,7 +39,7 @@
 
 - **WHEN** 运维执行生产部署验收
 - **THEN** `api`、`web` 和 `worker` MUST 运行来自 `ghcr.io/cnodejs/*` 的 SHA tag 或 digest 镜像
-- **AND** `deploy/docker-compose.prod.yml` MUST NOT 为生产服务定义 `build:`
+- **AND** `deployment/docker-compose.yml` MUST NOT 为生产服务定义 `build:`
 - **AND** 部署命令 MUST 使用 `docker compose pull` 和 `docker compose up -d --no-build`
 - **AND** 部署记录 MUST 能从运行镜像反查 Git commit
 

@@ -44,7 +44,7 @@ Root `.env` is the single default local environment source. Do not commit real `
 | Local development and verification | [docs/development.md](docs/development.md) |
 | Production deployment | [deployment/README.md](deployment/README.md) |
 | PostgreSQL schema and migration rules | [docs/database.md](docs/database.md) |
-| Mongo-to-PostgreSQL migration | [docs/migration-runbook.md](docs/migration-runbook.md) |
+| Mongo-to-PostgreSQL migration background | [wiki/migration-background.md](wiki/migration-background.md) |
 | API reference | [api/openapi.json](api/openapi.json) (auto-generated, view at `/api` page) |
 | Content moderation | [docs/content-moderation.md](docs/content-moderation.md) |
 | Historical context and legacy behavior notes | [wiki/README.md](wiki/README.md) |

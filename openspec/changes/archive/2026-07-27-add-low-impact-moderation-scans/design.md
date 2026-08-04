@@ -2,7 +2,7 @@
 
 cnode-next 当前已有敏感词库和提交时检查：`apps/api/src/lib/moderation.ts` 读取 `sensitive_words`，话题和回复创建/编辑路径调用 `checkContent()`。但历史内容不会被重新检查，后台 `/admin/moderation` 只读取 `topics.status = "muted"`，无法覆盖 `replies`，也不记录命中的敏感词和处理状态。
 
-legacy nodeclub 没有完整自动巡检实现，线上运营更依赖人工判断。本变更不是复刻一个已有后台任务，而是在新 PostgreSQL-first 架构里补齐“新增敏感词后检查历史内容”的运营闭环，同时避免扫描任务影响 `api.cnodejs.org` 和 `next.cnodejs.org` 的线上请求。
+legacy nodeclub 没有完整自动巡检实现，线上运营更依赖人工判断。本变更不是复刻一个已有后台任务，而是在新 PostgreSQL-first 架构里补齐“新增敏感词后检查历史内容”的运营闭环，同时避免扫描任务影响在线请求。
 
 ```mermaid
 flowchart TD

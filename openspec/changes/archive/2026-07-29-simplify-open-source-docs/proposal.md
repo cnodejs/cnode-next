@@ -43,6 +43,6 @@
 ## Impact
 
 - 文档：`README.md`、`CONTRIBUTING.md`、`docs/*.md`、`docs/api-reference.md`、`docs/api/openapi.yaml` 和 `wiki/` 中的说明性内容。
-- 仓库组织：`docker-compose.prod.yml` 等部署编排文件、部署 SQL、启动脚本、dotenv 模板的位置，以及引用这些文件的部署文档、脚本和 GitHub Actions workflow。
+- 仓库组织：`deployment/docker-compose.yml` 等部署编排文件、部署 SQL、启动脚本、dotenv 模板的位置，以及引用这些文件的部署文档、脚本和 GitHub Actions workflow。
 - OpenSpec：更新文档信息架构和公共 API 文档规范。
 - 不影响运行时服务、容器镜像、数据库、认证、API 行为或生产部署。

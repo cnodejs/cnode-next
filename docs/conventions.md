@@ -123,7 +123,7 @@ API tests must not require `POSTGRES_HOST`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
 | Current development, runtime, architecture, API, database, migration, moderation, or security behavior | Update the relevant `docs/` page or explain why stable docs are not affected. |
 | Business rules, legacy behavior, migration background, community rules, or sourced historical context | Update the relevant `wiki/` page and follow [wiki/writing-guidelines.md](../wiki/writing-guidelines.md). |
 | API contract behavior | Update route zod-openapi declarations and regenerate `api/openapi.json` with `pnpm gen:openapi`. |
-| PostgreSQL schema, migration, index, constraint, backfill, cleanup, repair, retention, or field semantics | Include OpenSpec `Database Change Audit`; update `docs/database.md`, `docs/migration-runbook.md`, or `wiki/migration-background.md` when durable knowledge changes. |
+| PostgreSQL schema, migration, index, constraint, backfill, cleanup, repair, retention, or field semantics | Include OpenSpec `Database Change Audit`; update `docs/database.md` or `wiki/migration-background.md` when durable knowledge changes. |
 
 ## API Documentation Rules
 

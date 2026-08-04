@@ -2,7 +2,7 @@
 
 本 change 汇总了生产页面调查中确认的八类问题。数据侧，`replyQueries.getByTopicId()` 没有 `orderBy`，PostgreSQL 返回顺序不能作为楼层依据；回复删除只软删除并递减计数，没有维护 `topics.lastReplyId/lastReplyAt`，已经出现 `reply_count=0`、`replies=[]` 但仍显示最后回复时间的记录。消息 API 默认 `mdrender=true`，而 `/my/messages` 的两个分组共用 `MessageItem` 并把 `reply.content` 当文本节点输出。
 
-展示侧，topic reading grid 在 `xl` 从单列直接变为 `12rem + 正文 + 18rem`，生产页实测正文从 1120px 降至约 592px；失效外链图片保留浏览器破图；About 的六个模块被包进单一大 Card；首页 sidebar Card 仅间隔 16px；CommandPalette 的自定义关闭按钮绝对定位在 32px 高搜索输入之上，实际重叠约 36px。
+展示侧，topic reading grid 在 `xl` 从单列直接变为固定双侧栏与正文，可能过度压缩正文；失效外链图片保留浏览器破图；About 的六个模块被包进单一大 Card；首页 sidebar Card 间距不足；CommandPalette 的自定义关闭按钮与搜索输入重叠。
 
 legacy `../nodeclub/` 和 `egg-cnode/` 只作为线性回复、消息 API 与删除语义参考，不修改、不构建，也不引入 MongoDB 兼容路径。运行数据库保持 PostgreSQL only。
 

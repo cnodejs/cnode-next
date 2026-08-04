@@ -14,7 +14,7 @@
 - [x] 2.4 删除 `pnpm-workspace.yaml` 中 `better-sqlite3` built dependency 配置并更新 `pnpm-lock.yaml`。
 - [x] 2.5 移除或改写 `apps/api/src/lib/db-compat.ts`、`apps/api/src/lib/moderation-scan.ts` 中的 `DB_DIALECT` 兼容逻辑。
 - [x] 2.6 将 `scripts/verify-moderation-scan-runtime.ts` 改为 PostgreSQL 验证或纯逻辑验证，禁止 `better-sqlite3`。
-- [x] 2.7 更新 `docs/database.md`、`docs/development.md`、`docs/architecture.md`、`docs/migration-runbook.md`，明确项目不允许 SQLite。
+- [x] 2.7 更新数据库、开发和架构文档，明确项目不允许 SQLite。
 - [x] 2.8 运行搜索验证，确认活跃代码和当前文档不再包含 `better-sqlite3`、`sqlite-core`、`DB_DIALECT` 或 SQLite 准入路径。
 
 ## 3. 发布验证门禁
@@ -31,16 +31,16 @@
 - [x] 4.2 让 PR 和 main 分支都运行 verify job。
 - [x] 4.3 让镜像构建 job 依赖 verify job 成功后才执行。
 - [x] 4.4 确认 verify 失败时 workflow 不登录 GHCR、不构建镜像、不推送镜像。
-- [x] 4.5 确认 workflow 不包含 SSH、生产服务器地址或远程 `docker compose` 部署命令。
+- [x] 4.5 确认 workflow 不包含部署凭据或 `docker compose` 部署命令。
 
 ## 5. 不可变镜像发布
 
 - [x] 5.1 修改 API 镜像发布，推送 `ghcr.io/cnodejs/cnode-api:sha-<commit>` 或记录 digest。
 - [x] 5.2 修改 Web 镜像发布，推送 `ghcr.io/cnodejs/cnode-web:sha-<commit>` 或记录 digest。
 - [x] 5.3 为 API/Web 镜像注入 `GIT_SHA`、`BUILD_TIME` 或等价构建 metadata。
-- [x] 5.4 修改 `docker-compose.prod.yml`，生产服务使用显式 `CNODE_API_IMAGE` 和 `CNODE_WEB_IMAGE`，不得依赖唯一 `latest`。
+- [x] 5.4 修改 `deployment/docker-compose.yml`，生产服务使用显式 `CNODE_API_IMAGE` 和 `CNODE_WEB_IMAGE`，不得依赖唯一 `latest`。
 - [x] 5.5 更新 `docs/deployment.md`，说明如何选择 SHA tag 或 digest、如何记录旧镜像、如何回滚。
-- [x] 5.6 运行 `docker compose -f docker-compose.prod.yml config`，确认生产应用服务不包含 `build:` 且镜像来自显式变量。
+- [x] 5.6 运行 `docker compose -f deployment/docker-compose.yml config`，确认生产应用服务不包含 `build:` 且镜像来自显式变量。
 
 ## 6. 生产健康与版本可观测
 

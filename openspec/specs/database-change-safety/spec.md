@@ -3,15 +3,15 @@
 ## Purpose
 TBD - created by archiving change add-jobs-zone. Update Purpose after archive.
 ## Requirements
-### Requirement: 远程数据库只通过 Drizzle migration 发布
+### Requirement: 非临时数据库只通过 Drizzle migration 发布
 
-远程 rehearsal/production 数据库的 schema 变更 SHALL 通过已生成、已 review 的 Drizzle migration 文件执行。`drizzle-kit push` SHALL 仅用于本地临时开发库快速验证，不得作为远程发布路径。
+非临时数据库的 schema 变更 SHALL 通过已生成、已 review 的 Drizzle migration 文件执行。`drizzle-kit push` SHALL 仅用于一次性本地开发库快速验证，不得作为发布路径。
 
-#### Scenario: 远程发布 schema 变更
+#### Scenario: 发布 schema 变更
 
-- **WHEN** 需要在远程 rehearsal 或 production 应用 `job_meta` / `tabs` / `zones` schema 变更
+- **WHEN** 需要在非临时数据库应用 `job_meta` / `tabs` / `zones` schema 变更
 - **THEN** 执行 Drizzle migration 文件
-- **AND** 不执行 `pnpm db:push:pg` 直接修改远程库 schema
+- **AND** 不执行 `pnpm db:push:pg` 直接修改该数据库 schema
 
 #### Scenario: 本地快速验证 schema
 
@@ -48,14 +48,14 @@ TBD - created by archiving change add-jobs-zone. Update Purpose after archive.
 - **THEN** seed 可以创建本地开发所需 demo 用户、demo topic、demo reply
 - **AND** seed 仍不得执行 `DELETE`、`TRUNCATE` 或 drop table 操作
 
-### Requirement: 远程数据库变更前必须预检和备份
+### Requirement: 非临时数据库变更前必须预检和备份
 
-对远程 rehearsal/production 执行 migration/bootstrap 前，操作者 SHALL 确认目标数据库身份并确保存在可恢复备份。
+对非临时数据库执行 migration/bootstrap 前，操作者 SHALL 确认目标数据库身份并确保存在可恢复备份。
 
-#### Scenario: 执行远程 migration/bootstrap 前
+#### Scenario: 执行 migration/bootstrap 前
 
-- **WHEN** 准备连接远程 PostgreSQL 执行数据库变更
-- **THEN** 先记录 `current_database()`、`current_user`、server host/port
+- **WHEN** 准备对非临时 PostgreSQL 执行数据库变更
+- **THEN** 先确认目标数据库身份
 - **AND** 记录核心表 row counts：`users`、`topics`、`replies`、`messages`、`topic_collects`
 - **AND** 确认可恢复备份存在
 - **AND** 不在未确认目标库和备份的情况下执行 migration/bootstrap/seed

@@ -43,13 +43,13 @@
 
 密码找回链接使用 `APP_WEB_BASE_URL/reset_pass?key=...`，账号激活链接使用 `APP_WEB_BASE_URL/active_account?key=...`。Web 页面再调用 API 完成状态变更。
 
-被拒绝方案：继续使用 API 域名直接处理用户点击。这个方案让用户落在 `api.cnodejs.org`，无法获得一致页面反馈，也会让 `/reset_pass` 这类 Web route 链接失效。
+被拒绝方案：继续使用 API base URL 直接处理用户点击。这个方案无法提供一致页面反馈，也会让 `/reset_pass` 这类 Web route 链接失效。
 
 ```mermaid
 sequenceDiagram
   participant User
-  participant Web as next.cnodejs.org
-  participant API as api.cnodejs.org
+  participant Web
+  participant API
   participant DB as PostgreSQL
   User->>Web: 打开 /reset_pass?key=...
   Web->>API: POST /api/v1/auth/local/reset_pass

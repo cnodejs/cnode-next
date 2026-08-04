@@ -2,7 +2,7 @@
 
 `moderation_scan_jobs` 是 cnode-next 内容巡检的持久化任务队列。管理员新增敏感词或手动创建巡检任务后，HTTP 请求只写入 `pending` job，由 `apps/api/src/worker/moderation-scan.ts` 的常驻 worker 领取并批量扫描话题和回复。
 
-当前远程服务器实测发现：worker 启动后将 job 从 `pending` 改为 `running`，扫描到 `maxBatchesPerRun * batchSize` 后停止本轮处理，但 job 仍保持 `running`。后续 tick 只通过 `claimNextScanJob()` 查询 `pending` job，因此不会继续处理这个 `running` job，任务永久悬挂。
+复现发现：worker 启动后将 job 从 `pending` 改为 `running`，扫描到 `maxBatchesPerRun * batchSize` 后停止本轮处理，但 job 仍保持 `running`。后续 tick 只通过 `claimNextScanJob()` 查询 `pending` job，因此不会继续处理这个 `running` job，任务永久悬挂。
 
 现有状态流如下：
 

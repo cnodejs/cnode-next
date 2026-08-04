@@ -72,4 +72,4 @@
 - [x] 9.5 运行或新增搜索 DTO/搜索范围、敏感词命中次数和管理概览真实指标验证。
 - [x] 9.6 运行或新增 Turnstile 成功/失败、举报自动隐藏、渐进封禁到期恢复验证。
 - [x] 9.7 运行相关 OpenSpec validation，确保 `auth`、`user-management`、`admin-dashboard`、`layout-templates`、`web-ui-forms`、`anti-spam`、`rate-limiting`、`content-moderation`、`api-contract`、`production-ops` specs 有效。
-- [x] 9.8 对生产域名和 Turnstile 配置进行 smoke check：`APP_WEB_BASE_URL=https://next.cnodejs.org`，`APP_API_BASE_URL=https://api.cnodejs.org`，Turnstile secret 不公开。
+- [x] 9.8 对运行时 URL 和 Turnstile 配置进行 smoke check，Turnstile secret 不公开。

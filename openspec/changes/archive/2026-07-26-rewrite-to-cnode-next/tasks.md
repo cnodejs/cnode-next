@@ -66,7 +66,7 @@
 - [x] POST /api/v1/topic_collect/de_collect (取消收藏, collect_count -1)
 - [x] GET /api/v1/topic_collect/:loginname (用户收藏列表)
 - [x] POST /api/v1/user/refresh_token (刷新 accessToken)
-- [x] POST /api/v1/upload/presign (返回 OSS signed PUT URL + static.cnodejs.org 公开 URL)
+- [x] POST /api/v1/upload/presign (返回 OSS signed PUT URL + runtime static base URL)
 - [x] 验证: 所有 API 端点的响应格式与 nodeclub api_router_v1.js 对齐
 
 ## Phase 4: 后端 Web 路由 (apps/api)
@@ -170,18 +170,17 @@
 ## Phase 8: 部署
 
 - [x] apps/api: Dockerfile (多阶段构建, 精简镜像)
-- [x] docker-compose.prod.yml (api + postgres + redis + migrate/reconcile 任务编排)
+- [x] deployment/docker-compose.yml (api + postgres + redis + migrate/reconcile 任务编排)
 - [x] GitHub Actions: 构建 API 镜像并推送到 ghcr.io 暂不纳入当前阶段，未来单独实现
-- [x] 服务器 rehearsal: docker compose up -d postgres redis 并完成建表/迁移/对账
+- [x] 隔离 rehearsal: 使用 Compose 完成建表、迁移和对账
 - [x] apps/web: 保留 wrangler.jsonc + @cloudflare/vite-plugin 配置；Cloudflare Workers 部署暂不纳入当前阶段
-- [x] 配置 .cnodejs.org 跨子域 cookie 环境变量契约 (AUTH_COOKIE_DOMAIN / AUTH_COOKIE_NAME / AUTH_SESSION_SECRET)
+- [x] 配置跨子域 cookie 环境变量契约 (AUTH_COOKIE_DOMAIN / AUTH_COOKIE_NAME / AUTH_SESSION_SECRET)
 - [x] 配置阿里云 OSS bucket + presigned URL 环境变量契约 (真实账号值放 .env)
 - [x] 配置 OSS 镜像回源到七牛的文档化切换要求 (真实控制台操作切换时执行)
 - [x] 配置 SMTP 环境变量契约 (SMTP_HOST/PORT/USER/PASS/FROM, 真实值放 .env)
 - [x] 配置 GitHub OAuth callback URL 环境变量契约 (AUTH_GITHUB_CALLBACK_URL, 真实 GitHub App 切换时执行)
 - [x] 运行数据迁移脚本
-- [x] 验证本地/预发布新站读取迁移数据与老 cnodejs.org 核心列表一致；正式 next.cnodejs.org 并行验证切换时执行
-- [x] 文档化 DNS/反向代理切换步骤；正式切换当前不执行
+- [x] 验证隔离环境读取迁移数据与 legacy 核心列表一致
 
 ## Phase 9: 收尾
 

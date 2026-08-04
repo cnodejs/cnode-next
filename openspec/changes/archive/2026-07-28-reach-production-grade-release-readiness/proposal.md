@@ -21,7 +21,7 @@
 
 - 不改变 legacy `../nodeclub/` 的运行方式，也不在本变更中执行老站下线。
 - 不新增 GitHub OAuth 真实账号 E2E；本变更只要求 release gate 能覆盖已有自动化和可实现的 smoke。
-- 不引入 Kubernetes、Terraform、ArgoCD 或新的部署平台；继续基于现有 `docker-compose.prod.yml` 和 GHCR。
+- 不引入 Kubernetes、Terraform、ArgoCD 或新的部署平台；继续基于现有 `deployment/docker-compose.yml` 和 GHCR。
 - 不重写业务路由、UI 或 CNode API v1 契约；只在必要时补充健康、版本和验证入口。
 
 ## Capabilities
@@ -47,6 +47,6 @@
 
 - 代码：`packages/db/`、`apps/api/src/lib/*`、健康/版本路由、验证脚本、lint 相关代码。
 - CI/CD：`.github/workflows/*`、GHCR image tags、release gate job、构建参数。
-- 运维：`docker-compose.prod.yml`、`docs/deployment.md`、`docs/migration-runbook.md`、生产 `.env` 中的 `CNODE_API_IMAGE` / `CNODE_WEB_IMAGE`。
+- 运维：`deployment/docker-compose.yml`、`deployment/README.md`、数据库文档、`CNODE_API_IMAGE` / `CNODE_WEB_IMAGE` 占位配置。
 - 文档与规范：`README.md`、`AGENTS.md`、`CONTRIBUTING.md`、`LICENSE`、`openspec/specs/*`、`docs/*.md`、API reference 文档。
 - 依赖：移除 `better-sqlite3`、`@types/better-sqlite3` 和 SQLite-only tooling。

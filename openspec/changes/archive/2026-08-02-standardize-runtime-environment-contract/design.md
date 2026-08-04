@@ -2,7 +2,7 @@
 
 cnode-next 的运行时连接配置由 API、moderation worker、`packages/db`、Drizzle Kit、数据迁移脚本和部署 preflight 共同消费。当前 PostgreSQL 使用泛化的 `DB_*`，应用配置使用泛化的 `APP_*`，多个消费者还分别实现必填校验、默认值和连接字符串拼装；生产 Compose 则重复枚举同一组环境变量。
 
-本 change 是跨应用、包、脚本、文档和生产部署的破坏性配置契约变更。用户已决定一次性替换，不接受旧变量 alias、fallback 或兼容窗口。开发者真实 `.env`、`.env.local`、`.env.remote.local` 以及远程服务器配置均属于人工管理边界，实施过程不得读取或修改它们。
+本 change 是跨应用、包、脚本、文档和生产部署的破坏性配置契约变更。用户已决定一次性替换，不接受旧变量 alias、fallback 或兼容窗口。所有真实 dotenv 和外部配置均属于人工管理边界，实施过程不得读取或修改它们。
 
 ```mermaid
 flowchart LR
@@ -24,12 +24,12 @@ flowchart LR
 - 为 PostgreSQL 与 Redis 建立唯一、可校验的项目运行时契约。
 - 让所有消费者复用同一套字段语义、默认值和错误规则。
 - 将官方镜像变量限制在 Compose adapter，并完成无兼容层的硬切换。
-- 保护未跟踪 dotenv、远程 secret、数据库数据和数据卷。
+- 保护未跟踪 dotenv、外部 secret、数据库数据和数据卷。
 
 **Non-Goals:**
 
 - 不修改 PostgreSQL schema、数据、角色密码或数据卷。
-- 不自动迁移任何真实 dotenv 或远程部署配置。
+- 不自动迁移任何真实 dotenv 或外部部署配置。
 - 不引入 `DATABASE_URL`、SQLite、dialect fallback 或多数据库支持。
 - 不在本 change 中全面重命名 SMTP、OSS、Auth 等其他能力变量。
 - 不改变 legacy `nodeclub/` 或 `egg-cnode/`，也不改变论坛业务行为。
@@ -86,7 +86,7 @@ API、Web、worker 和运维 service 通过同一 `env_file` 接收运行时配�
 
 ### 6. 真实 dotenv 是不可触碰的人工边界
 
-自动实施仅修改 tracked templates。`.env`、`.env.local`、`.env.remote.local` 不得被读取、打印、编辑、覆盖、删除或自动转换。实现验证不得通过 source 真实 dotenv 后输出环境；需要验证配置时使用占位 fixture 或显式临时环境。
+自动实施仅修改 tracked templates。真实 dotenv 文件不得被读取、打印、编辑、覆盖、删除或自动转换。实现验证不得通过 source 真实 dotenv 后输出环境；需要验证配置时使用占位 fixture 或显式临时环境。
 
 ## Risks / Trade-offs
 
@@ -110,8 +110,8 @@ API、Web、worker 和运维 service 通过同一 `env_file` 接收运行时配�
 
 ## Database Change Audit
 
-本 change 不修改 PostgreSQL schema、Drizzle migration、seed 数据、索引、约束、字段语义、数据内容、角色密码或数据卷。`db:seed`、schema migration 和数据迁移脚本仅更换读取连接配置的方式；实施验证不得对远程数据库执行写操作。
+本 change 不修改 PostgreSQL schema、Drizzle migration、seed 数据、索引、约束、字段语义、数据内容、角色密码或数据卷。`db:seed`、schema migration 和数据迁移脚本仅更换读取连接配置的方式；实施验证不得对非临时数据库执行写操作。
 
 ## Open Questions
 
-无。真实 dotenv 更新、远程部署切换和已暴露凭据轮换由后续人工运维流程处理，不阻塞本 change 的仓库治理。
+无。真实 dotenv 更新、部署切换和已暴露凭据轮换由后续人工运维流程处理，不阻塞本 change 的仓库治理。

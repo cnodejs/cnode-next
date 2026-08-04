@@ -1,3 +1,5 @@
+# Repository baseline for production Compose configuration.
+# Keep environment-specific services, secrets, and paths outside this file.
 services:
   api:
     image: ${CNODE_API_IMAGE:?CNODE_API_IMAGE is required}
@@ -50,7 +52,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: ["pnpm", "db:push:pg"]
+    command: ["pnpm", "db:migrate"]
     profiles:
       - migrate
     networks:
