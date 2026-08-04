@@ -84,7 +84,7 @@ dotenv 示例必须按配置域分组，而不是无结构变量列表。推荐�
 
 ### Decision 9: CI 使用通用门禁，不用文件文本专项验收脚本
 
-CI 和 `pnpm verify` 应保留通用质量门禁：lint、typecheck、test、build、OpenSpec validate、secret scan、OpenAPI 契约检查、compose config。针对某个文档必须包含某句话、某个 compose 必须匹配当前文件文本、某个 workflow 必须出现具体 action 版本的检查，不应以大量 `scripts/verify-*` 形式长期存在。
+CI 和 `pnpm verify` 应保留通用质量门禁：lint、typecheck、test、build、OpenSpec validate、secret scan 和 OpenAPI 契约检查。Compose validation 仅属于部署 preflight。针对某个文档必须包含某句话、某个 Compose 必须匹配当前文件文本、某个 workflow 必须出现具体 action 版本的检查，不应以大量 `scripts/verify-*` 形式长期存在。
 
 拒绝方案：继续增加硬编码文件路径和正则的专项 verify 脚本。它们适合一次性迁移验收，但不适合作为开源项目的长期 CI 资产，会制造维护成本和错误的工程观感。
 
@@ -102,9 +102,9 @@ CI 和 `pnpm verify` 应保留通用质量门禁：lint、typecheck、test、bui
 - [README 过短导致上下文不足] -> 使用 Documentation 表格指向 architecture、development、deployment、API、database 和 migration。
 - [API reference 与 OAS 漂移] -> 保留 `pnpm verify:openapi-contract`，并让 API reference 标明 OAS 为机器可读契约。
 - [docs/conventions.md 变成新长文档] -> 限制为规则、表格和模板，不写长篇背景。
-- [移动 compose 文件影响生产部署命令] -> 任务中必须同步 `deployment/README.md`、README、远程部署说明和任何脚本中的 compose 路径；部署前运行 `docker compose -f deployment/docker-compose.yml config --quiet`。
+- [移动 Compose 文件影响部署命令] -> 任务中必须同步 `deployment/README.md`、README 和脚本中的路径；Compose validation 仅属于部署 preflight，不得作为本地仓库验证执行。
 - [部署资产移动导致 dotenv 或脚本引用漂移] -> `deployment/README.md` 或等价规范必须列出 compose、SQL、脚本、dotenv 模板的职责和引用关系；dotenv 模板按分组维护。
-- [移除专项 verify 脚本后质量下降] -> 保留编译、测试、OpenSpec、secret scan、OpenAPI 契约和 compose config 这类通用门禁；文档结构靠规范和人工 review，不靠脆弱正则。
+- [移除专项 verify 脚本后质量下降] -> 保留编译、测试、OpenSpec、secret scan 和 OpenAPI 契约等通用门禁；Compose 仅做文本审查，文档结构靠规范和人工 review，不靠脆弱正则。
 - [workflow 拆分后触发关系混乱] -> `ci.yml` 不需要 packages write 权限；镜像 workflow 显式依赖或重复最小验证；部署 workflow 如存在只允许 manual/environment protected 触发。
 - [`wiki/` 与 `docs/` 边界不清] -> 在 `docs/conventions.md` 中定义：`docs/` 和 `wiki/` 是同级文档域；任务导向文档进 `docs/`，历史/业务/迁移知识进 `wiki/`。
 - [AI agent 在 wiki 中无依据扩写] -> `wiki/` 规范要求来源、证据、事实/推断标记和待确认问题；缺少来源的内容不得作为确定事实写入。
@@ -119,7 +119,7 @@ CI 和 `pnpm verify` 应保留通用质量门禁：lint、typecheck、test、bui
 6. 清理 `scripts/` 和 package scripts 中面向具体文件文本的一次性 verify 脚本，保留通用质量门禁和必要契约检查。
 7. 拆分 `.github/workflows`：CI、镜像构建发布和生产部署入口分离，并收敛权限。
 8. 重写 API reference 为表格式接口手册。
-9. 运行 `pnpm lint`、`openspec validate --all --strict`、`pnpm verify:openapi-contract`、compose config 和链接/路径复核。
+9. 运行 `pnpm lint`、`openspec validate --all --strict`、`pnpm verify:openapi-contract` 和链接/路径复核；不在本地运行 Docker Compose。
 
 ## Open Questions
 

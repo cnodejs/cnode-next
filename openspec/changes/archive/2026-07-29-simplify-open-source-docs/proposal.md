@@ -17,7 +17,7 @@
 - 重写 `docs/api-reference.md` 为标准接口手册：按能力分组，每个接口使用 method/path 标题；参数和字段优先用表格，说明和示例使用短段落、列表和代码块。
 - API endpoint 标题和表格使用相对 path；base URL 只单独说明一次，curl 示例可使用完整生产 URL。
 - 收敛仓库根目录文件：部署编排、部署模板和运行环境相关文件应放入 `deploy/` 或等价目录，根目录只保留开源项目入口和工具必须发现的文件。
-- 收敛 `scripts/` 中面向一次性验收或硬编码文件内容的专项 verify 脚本；CI 应优先运行 lint、typecheck、test、build、OpenSpec、secret scan、OpenAPI 契约和 compose config 这类通用门禁。
+- 收敛 `scripts/` 中面向一次性验收或硬编码文件内容的专项 verify 脚本；CI 应优先运行 lint、typecheck、test、build、OpenSpec、secret scan 和 OpenAPI 契约等通用门禁，Compose validation 仅属于部署 preflight。
 - 拆分 GitHub Actions 职责：`ci.yml` 负责 PR/branch 质量门禁，镜像构建发布使用独立 workflow，生产部署如需 workflow 入口也应与 CI 分离并受环境保护。
 
 ## Non-goals

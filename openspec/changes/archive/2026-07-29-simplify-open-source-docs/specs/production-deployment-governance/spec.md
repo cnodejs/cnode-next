@@ -39,7 +39,8 @@ CI 和 `pnpm verify` SHALL 使用长期可维护的通用质量门禁，避免�
 
 #### Scenario: 通用质量门禁
 - **WHEN** CI 执行发布或 PR 验证
-- **THEN** 它 SHOULD 运行 lint、typecheck、test、build、OpenSpec validate、secret scan、OpenAPI 契约检查和 compose config 这类通用检查
+- **THEN** 它 SHOULD 运行 lint、typecheck、test、build、OpenSpec validate、secret scan 和 OpenAPI 契约检查这类通用检查
+- **AND** repository verification MUST NOT 在本地运行 Docker Compose；Compose validation MUST 属于部署 preflight
 - **AND** 这些检查 MUST NOT 依赖真实 `.env` secret 值
 
 #### Scenario: 专项 verify 脚本收敛

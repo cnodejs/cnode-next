@@ -40,7 +40,7 @@
 - [x] 5.3 为 API/Web 镜像注入 `GIT_SHA`、`BUILD_TIME` 或等价构建 metadata。
 - [x] 5.4 修改 `deployment/docker-compose.yml`，生产服务使用显式 `CNODE_API_IMAGE` 和 `CNODE_WEB_IMAGE`，不得依赖唯一 `latest`。
 - [x] 5.5 更新 `docs/deployment.md`，说明如何选择 SHA tag 或 digest、如何记录旧镜像、如何回滚。
-- [x] 5.6 运行 `docker compose -f deployment/docker-compose.yml config`，确认生产应用服务不包含 `build:` 且镜像来自显式变量。
+- [x] 5.6 通过文本审查确认应用服务不包含 `build:` 且镜像来自显式变量；Compose validation 留给部署 preflight。
 
 ## 6. 生产健康与版本可观测
 

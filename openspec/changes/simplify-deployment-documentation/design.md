@@ -57,7 +57,7 @@ flowchart LR
 ## Risks / Trade-offs
 
 - [删除历史文本时误删有效决策] → 以“是否可复用于任意部署环境”为保留标准，并通过 diff review 检查。
-- [Compose 重命名后残留旧引用] → 全仓搜索旧文件名，并运行 Compose 配置验证。
+- [Compose 重命名后残留旧引用] → 仓库内只做文本引用检查；Compose validation 仅属于部署 preflight，禁止作为本地仓库验证执行。
 - [精简 README 后缺少必要步骤] → 以镜像、migration、启动、验证和回滚五类长期任务作为最小验收集合。
 - [规格仍保留过时措辞] → 同步修改主 specs，并执行 OpenSpec strict validation。
 

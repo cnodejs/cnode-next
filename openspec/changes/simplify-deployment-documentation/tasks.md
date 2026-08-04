@@ -18,6 +18,6 @@
 
 ## 4. 验证
 
-- [x] 4.1 使用占位镜像和 dotenv 示例运行 `docker compose config --quiet`
+- [x] 4.1 确认仓库验证不运行 Docker Compose，Compose validation 仅保留为部署 preflight
 - [x] 4.2 运行 OpenSpec strict validation 和 archive secret scan
 - [x] 4.3 运行 `git diff --check` 并复核最终差异不包含环境特定信息

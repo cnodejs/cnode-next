@@ -6,6 +6,8 @@
 
 Use immutable image SHA tags or digests and an ignored dotenv file based on `.env.production.example`.
 
+The Compose commands in this document belong to deployment preflight and operations. Repository and local verification MUST NOT run Docker Compose.
+
 ```bash
 export CNODE_ENV_FILE=.env
 export CNODE_API_IMAGE=ghcr.io/cnodejs/cnode-api:sha-<commit>

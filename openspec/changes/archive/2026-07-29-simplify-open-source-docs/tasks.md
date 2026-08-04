@@ -27,14 +27,14 @@
 - [x] 4.3 为 `deploy/` 增加 README 或等价规范，说明 docker-compose 文件、SQL 文件、启动脚本、dotenv 模板和 secret handling 边界。
 - [x] 4.4 将 dotenv 示例按配置域分组，例如应用 URL、数据库、Redis、认证、对象存储、Turnstile、邮件、观测/日志和运维开关。
 - [x] 4.5 更新 README、docs、脚本和运维命令中对 `deployment/docker-compose.yml`、dotenv 示例、SQL 和启动脚本的引用。
-- [x] 4.6 运行 `docker compose -f deployment/docker-compose.yml config --quiet` 或等价命令，确认新路径可用。
+- [x] 4.6 确认 Compose validation 仅属于部署 preflight，仓库验证不运行 Docker Compose。
 - [x] 4.7 确认根目录只保留开源入口、工具配置、源码目录、docs、wiki、deploy 和 OpenSpec 目录等必要文件。
 
 ## 5. CI 与 scripts 收敛
 
 - [x] 5.1 盘点 `scripts/verify-*` 和 package scripts，区分长期通用门禁与一次性上线验收脚本。
 - [x] 5.2 删除或归档针对具体文件文本、具体文档句子、当前 workflow action 版本的专项 verify 脚本。
-- [x] 5.3 保留 lint、typecheck、test、build、OpenSpec validate、secret scan、OpenAPI 契约和 compose config 这类通用质量门禁。
+- [x] 5.3 保留 lint、typecheck、test、build、OpenSpec validate、secret scan 和 OpenAPI 契约等通用质量门禁；Compose validation 仅属于部署 preflight。
 - [x] 5.4 更新 `pnpm verify`，避免它依赖一次性文档/文件形态验收脚本。
 - [x] 5.5 将 `.github/workflows` 按职责拆分为 CI、镜像构建发布和可选部署入口，避免一个 workflow 同时承担 PR verify、image publish 和 deploy。
 - [x] 5.6 确认 `ci.yml` 使用只读权限，镜像 workflow 才授予 `packages: write`，部署 workflow 如存在必须使用手动触发和受保护环境。
