@@ -61,7 +61,7 @@ export function getRegistryStats() {
 export function getDownloads(pkg: string, range = 7) {
   const end = new Date();
   const start = new Date();
-  start.setDate(end.getDate() - (range - 1));
+  start.setDate(end.getDate() - (Math.max(1, range) - 1));
   const fmt = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
       d.getDate(),
@@ -72,7 +72,8 @@ export function getDownloads(pkg: string, range = 7) {
 }
 
 export function getDir(pkg: string, spec: string, path: string) {
-  const dirPath = path && path !== "/" ? `${encodeFilePath(ensureLeadingSlash(path))}/` : "";
+  const dirPath =
+    path && path !== "/" ? `${encodeFilePath(ensureLeadingSlash(path))}/` : "/";
   return registryJson<RegistryFilesResponse>(
     `/${pkgPath(pkg)}/${encodeURIComponent(spec)}/files${dirPath}?meta`,
   );
