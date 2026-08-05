@@ -12,11 +12,9 @@ export function repoUrl(repository: RegistryManifest["repository"]) {
   if (!repository) return undefined;
   const url = typeof repository === "string" ? repository : repository.url;
   if (!url) return undefined;
-  if (/^git(\+ssh)?:\/\//.test(url)) {
-    return url.replace(/^git(\+ssh)?:\/\//, "https://").replace(/\.git$/, "");
-  }
-  if (/^git\+https?:\/\//.test(url)) {
-    return url.replace(/^git\+https?:\/\//, "https://").replace(/\.git$/, "");
+  if (/^git(\+ssh|\+https?)?:\/\//.test(url)) {
+    const rest = url.replace(/^git(\+ssh|\+https?)?:\/\//, "").replace(/^[^@]+@/, "");
+    return `https://${rest}`.replace(/\.git$/, "");
   }
   if (/^git@github\.com:(.+)$/.test(url)) {
     return `https://github.com/${url.replace(/^git@github\.com:/, "").replace(/\.git$/, "")}`;

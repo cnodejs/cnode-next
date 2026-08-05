@@ -95,7 +95,7 @@ describe("repoUrl", () => {
   it("规范化常见仓库地址", () => {
     expect(repoUrl("git+https://github.com/foo/bar.git")).toBe("https://github.com/foo/bar");
     expect(repoUrl("git+ssh://git@github.com/foo/bar.git")).toBe(
-      "https://git@github.com/foo/bar",
+      "https://github.com/foo/bar",
     );
     expect(repoUrl("git://github.com/foo/bar.git")).toBe("https://github.com/foo/bar");
     expect(repoUrl({ url: "https://github.com/foo/bar" })).toBe(

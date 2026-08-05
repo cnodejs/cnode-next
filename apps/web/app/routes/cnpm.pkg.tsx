@@ -98,7 +98,22 @@ function CnpmPkgInner({ rest }: { rest?: string }) {
     );
   }
 
-  if (!manifest?.name) return null;
+  if (!manifest?.name) {
+    return (
+      <Layout>
+        <PageContainer className="py-6">
+          <Alert variant="destructive">
+            <AlertDescription className="flex items-center justify-between gap-3">
+              未能读取到 {name} 的包信息
+              <Button type="button" variant="outline" size="sm" onClick={retry}>
+                重试
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </PageContainer>
+      </Layout>
+    );
+  }
 
   const requestedVersion = params.get("version") || "";
   const fallbackVersion = sortVersions(manifest.versions)[0]?.version;
