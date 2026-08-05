@@ -8,6 +8,20 @@ export interface ParsedPkgRoute {
   tab: PkgTab;
 }
 
+export function repoUrl(repository: RegistryManifest["repository"]) {
+  if (!repository) return undefined;
+  const url = typeof repository === "string" ? repository : repository.url;
+  if (!url) return undefined;
+  if (/^git(\+ssh)?:\/\//.test(url)) {
+    return url.replace(/^git(\+ssh)?:\/\//, "https://").replace(/\.git$/, "");
+  }
+  if (/^git@github\.com:(.+)$/.test(url)) {
+    return `https://github.com/${url.replace(/^git@github\.com:/, "").replace(/\.git$/, "")}`;
+  }
+  if (url.startsWith("http")) return url.replace(/\.git$/, "");
+  return undefined;
+}
+
 export function parsePkgPath(rest: string | undefined): ParsedPkgRoute {
   if (!rest) {
     return { tab: "home" };

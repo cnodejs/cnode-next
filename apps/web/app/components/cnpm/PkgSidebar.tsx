@@ -2,22 +2,8 @@ import { Download, ExternalLink, GitFork, Globe, Package as PackageIcon } from "
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { DownloadCard } from "./DownloadCard";
 import { MaintainersCard } from "./MaintainersCard";
-import { formatBytes } from "~/lib/registry/parse";
+import { formatBytes, repoUrl } from "~/lib/registry/parse";
 import type { RegistryManifest } from "~/lib/registry/types";
-
-function repoUrl(repository: RegistryManifest["repository"]) {
-  if (!repository) return undefined;
-  const url = typeof repository === "string" ? repository : repository.url;
-  if (!url) return undefined;
-  if (/^git(\+ssh)?:\/\//.test(url)) {
-    return url.replace(/^git(\+ssh)?:\/\//, "https://").replace(/\.git$/, "");
-  }
-  if (/^git@github\.com:(.+)$/.test(url)) {
-    return `https://github.com/${url.replace(/^git@github\.com:/, "").replace(/\.git$/, "")}`;
-  }
-  if (url.startsWith("http")) return url.replace(/\.git$/, "");
-  return undefined;
-}
 
 export function PkgSidebar({ manifest, version }: { manifest: RegistryManifest; version: string }) {
   const repo = repoUrl(manifest.repository);

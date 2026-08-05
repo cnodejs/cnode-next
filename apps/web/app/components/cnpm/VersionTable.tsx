@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { Badge } from "~/components/ui/badge";
-import { sortVersions, getVersionTags } from "~/lib/registry/parse";
+import { formatBytes, getVersionTags, sortVersions } from "~/lib/registry/parse";
 import type { RegistryManifest } from "~/lib/registry/types";
 
 function formatDate(value: number | string | undefined) {
@@ -60,23 +60,11 @@ export function VersionTable({ manifest, version }: { manifest: RegistryManifest
               {formatDate(item.publish_time ?? item._cnpmcore_publish_time)}
             </TableCell>
             <TableCell className="text-muted-foreground">
-              {item.dist?.size !== undefined
-                ? formatSize(item.dist.size)
-                : item.dist?.unpackedSize !== undefined
-                  ? formatSize(item.dist.unpackedSize)
-                  : "-"}
+              {formatBytes(item.dist?.size ?? item.dist?.unpackedSize)}
             </TableCell>
           </TableRow>
         ))}
       </TableBody>
     </Table>
   );
-}
-
-function formatSize(bytes: number) {
-  if (bytes === 0) return "0 B";
-  const units = ["B", "KB", "MB", "GB"];
-  const index = Math.floor(Math.log(bytes) / Math.log(1024));
-  const value = bytes / Math.pow(1024, Math.min(index, units.length - 1));
-  return `${value.toFixed(value >= 10 || index === 0 ? 0 : 1)} ${units[Math.min(index, units.length - 1)]}`;
 }

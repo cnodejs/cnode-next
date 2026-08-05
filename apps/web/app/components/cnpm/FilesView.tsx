@@ -34,7 +34,12 @@ export function FilesView({ pkgName, spec }: { pkgName: string; spec: string }) 
         const res = await getDir(pkgName, spec, path);
         setDirChildren((prev) => ({ ...prev, [path]: res.files || [] }));
       } catch (err) {
-        setDirChildren((prev) => ({ ...prev, [path]: [] }));
+        setDirChildren((prev) => {
+          const next = { ...prev };
+          delete next[path];
+          return next;
+        });
+        setExpanded((prev) => ({ ...prev, [path]: false }));
         setDirError(err instanceof Error ? err.message : "目录加载失败");
       } finally {
         setDirLoading((prev) => ({ ...prev, [path]: false }));
@@ -119,8 +124,11 @@ export function FilesView({ pkgName, spec }: { pkgName: string; spec: string }) 
         )}
       </div>
       {dirError && (
-        <p className="sr-only" role="status">
-          {dirError}
+        <p
+          role="status"
+          className="mt-2 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1 text-xs text-destructive"
+        >
+          目录加载失败：{dirError}，请重新展开重试
         </p>
       )}
     </div>
@@ -251,7 +259,10 @@ function FileViewer({ pkgName, spec, path }: { pkgName: string; spec: string; pa
   );
 }
 
+const HIGHLIGHT_MAX_BYTES = 256 * 1024;
+
 function highlighted(code: string) {
+  if (code.length > HIGHLIGHT_MAX_BYTES) return escapeHtml(code);
   try {
     return hljs.highlightAuto(code).value;
   } catch {
