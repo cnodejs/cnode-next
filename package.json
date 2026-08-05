@@ -25,8 +25,8 @@
     "format": "vp fmt .",
     "secrets:scan": "gitleaks git --config .gitleaks.toml --redact --no-banner",
     "secrets:scan:staged": "gitleaks git --config .gitleaks.toml --redact --no-banner --pre-commit --staged",
-    "hooks:install": "husky",
-    "prepare": "husky"
+    "hooks:install": "vp config",
+    "prepare": "vp config"
   },
   "dependencies": {
     "@cnode/shared": "workspace:*",
@@ -37,7 +37,6 @@
     "@fission-ai/openspec": "1.6.0",
     "@types/pg": "^8.20.0",
     "concurrently": "^9.1.0",
-    "husky": "^9.1.7",
     "tsx": "^4.23.1",
     "typescript": "^5.7.0",
     "vite": "catalog:",

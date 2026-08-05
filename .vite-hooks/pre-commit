@@ -18,3 +18,4 @@ fi
 
 echo "[gitleaks] scanning staged changes..."
 pnpm secrets:scan:staged
+vp staged
