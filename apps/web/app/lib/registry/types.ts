@@ -28,7 +28,7 @@ export interface RegistryManifest {
   keywords?: string[];
   readme?: string;
   homepage?: string;
-  repository?: { type?: string; url?: string };
+  repository?: string | { type?: string; url?: string };
   maintainers?: Array<{ name: string; email?: string }>;
   "dist-tags": Record<string, string>;
   versions: Record<string, RegistryVersion>;

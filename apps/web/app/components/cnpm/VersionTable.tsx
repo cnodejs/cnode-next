@@ -12,8 +12,9 @@ import { sortVersions, useVersionTags } from "~/lib/registry/parse";
 import type { RegistryManifest } from "~/lib/registry/types";
 
 function formatDate(value: number | string | undefined) {
-  if (!value) return "-";
-  const date = new Date(Number(value) || String(value));
+  if (value === undefined || value === null || value === "") return "-";
+  const numeric = typeof value === "string" && /^\d+$/.test(value) ? Number(value) : value;
+  const date = new Date(numeric);
   if (Number.isNaN(date.getTime())) return "-";
   return date.toISOString().slice(0, 10);
 }

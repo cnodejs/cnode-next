@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search as SearchIcon } from "lucide-react";
 import {
   InputGroup,
@@ -23,6 +23,10 @@ export function NpmSearchForm({
   const navigate = useNavigate();
   const [value, setValue] = useState(initialValue);
   const large = size === "lg";
+
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
 
   return (
     <form
