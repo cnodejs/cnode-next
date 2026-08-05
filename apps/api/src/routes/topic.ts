@@ -25,7 +25,6 @@ import {
   createTopicBodySchema,
   updateTopicBodySchema,
   errorResponseSchema,
-  type TopicDTO,
 } from "@cnode/shared";
 import { z } from "zod";
 
@@ -138,17 +137,17 @@ topic.openapi(listTopicsRoute, async (c) => {
       return {
         id: String(t.id),
         author_id: String(t.authorId),
-        tab: t.tab,
+        tab: t.tab ?? "",
         content: renderMarkdown(t.content, mdrender),
-        title: t.title,
-        last_reply_at: t.lastReplyAt,
+        title: t.title ?? "",
+        last_reply_at: t.lastReplyAt ? t.lastReplyAt.toISOString() : null,
         good: !!t.good,
         top: !!t.top,
-        reply_count: t.replyCount,
-        visit_count: t.visitCount,
-        create_at: t.createAt,
+        reply_count: t.replyCount ?? 0,
+        visit_count: t.visitCount ?? 0,
+        create_at: t.createAt?.toISOString() ?? "",
         author: userSummary(author),
-      } as TopicDTO;
+      };
     }),
   );
 
@@ -336,11 +335,11 @@ const createTopicRoute = createRoute({
 });
 
 topic.openapi(createTopicRoute, async (c) => {
-  let user = c.get("user");
-  if (!user) {
+  const sessionUser = c.get("user");
+  if (!sessionUser) {
     return c.json({ success: false as const, error_msg: "未登录" }, 401);
   }
-  user = await ensureMuteNotExpired(user);
+  const user: NonNullable<AuthVars["user"]> = await ensureMuteNotExpired(sessionUser);
   if (user.isMuted || user.isBlock) {
     return c.json({ success: false as const, error_msg: "您已被禁言" }, 403);
   }

@@ -70,11 +70,11 @@ const createReplyRoute = createRoute({
 });
 
 reply.openapi(createReplyRoute, async (c) => {
-  let user = c.get("user");
-  if (!user) {
+  const sessionUser = c.get("user");
+  if (!sessionUser) {
     return c.json({ success: false as const, error_msg: "未登录" }, 401);
   }
-  user = await ensureMuteNotExpired(user);
+  const user: NonNullable<AuthVars["user"]> = await ensureMuteNotExpired(sessionUser);
   if (user.isMuted || user.isBlock) {
     return c.json({ success: false as const, error_msg: "您已被禁言" }, 403);
   }
@@ -200,9 +200,9 @@ reply.openapi(getReplyRoute, async (c) => {
       data: {
         id: String(replyData.id),
         topic_id: String(replyData.topicId),
-        content: replyData.content,
-        create_at: replyData.createAt,
-        update_at: replyData.updateAt,
+        content: replyData.content ?? "",
+        create_at: replyData.createAt?.toISOString() ?? "",
+        update_at: replyData.updateAt ? replyData.updateAt.toISOString() : null,
       },
     },
     200,

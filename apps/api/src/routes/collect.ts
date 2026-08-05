@@ -83,7 +83,7 @@ collect.openapi(listCollectRoute, async (c) => {
           visit_count: t.visitCount,
           create_at: t.createAt,
           author: author
-            ? { loginname: author.loginname, avatar_url: author.avatar }
+            ? { loginname: author.loginname, avatar_url: author.avatar ?? "" }
             : { loginname: "", avatar_url: "" },
         };
       }),

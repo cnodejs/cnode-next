@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vite-plus/test";
 import { drizzle } from "drizzle-orm/node-postgres";
-import * as schema from "@cnode/db";
+import { schema } from "@cnode/db";
 import { buildRepliesByTopicQuery, buildTopicsByQuery } from "../src/lib/db";
 import {
   deleteReplyWithStore,

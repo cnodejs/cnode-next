@@ -201,7 +201,7 @@ auth.openapi(loginRoute, async (c) => {
   let user = await userQueries.getByLoginName(name.toLowerCase());
   if (!user) user = await userQueries.getByEmail(name);
   if (!user) return c.json({ success: false as const, error_msg: "用户名或密码错误" }, 403);
-  const equal = await bcryptjs.compare(pass, user.pass);
+  const equal = user.pass ? await bcryptjs.compare(pass, user.pass) : false;
   if (!equal) return c.json({ success: false as const, error_msg: "用户名或密码错误" }, 403);
   if (!user.active) return c.json({ success: false as const, error_msg: "账号未激活" }, 403);
   setSessionCookie(c, user.id);
@@ -572,7 +572,7 @@ auth.openapi(githubCreateRoute, async (c) => {
   if (!profile)
     return c.json({ success: false as const, error_msg: "GitHub 登录状态已过期，请重新授权" }, 401);
   const body = c.req.valid("json");
-  let user: Awaited<ReturnType<typeof userQueries.getById>> = null;
+  let user: Awaited<ReturnType<typeof userQueries.getById>> | null = null;
   if (body.isnew) {
     const loginname = profile.login.toLowerCase();
     if (await userQueries.getByLoginName(loginname))
@@ -910,7 +910,7 @@ auth.openapi(changePassRoute, async (c) => {
   const user = c.get("user");
   if (!user) return c.json({ success: false as const, error_msg: "未登录" }, 401);
   const { oldPass, newPass } = c.req.valid("json");
-  if (!(await bcryptjs.compare(oldPass, user.pass)))
+  if (!user.pass || !(await bcryptjs.compare(oldPass, user.pass)))
     return c.json({ success: false as const, error_msg: "原密码错误" }, 403);
   if (newPass.length < 8 || !/[a-zA-Z]/.test(newPass) || !/[0-9]/.test(newPass))
     return c.json(
