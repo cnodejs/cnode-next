@@ -31,7 +31,7 @@ async function registryJson<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 function pkgPath(pkg: string) {
-  return pkg;
+  return encodeURIComponent(pkg);
 }
 
 function ensureLeadingSlash(path: string) {
