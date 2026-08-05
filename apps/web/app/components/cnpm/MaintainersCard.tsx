@@ -26,7 +26,13 @@ function MaintainerRow({ maintainer }: { maintainer: Maintainer }) {
   return (
     <div className="flex items-center gap-2.5">
       <Avatar className="size-8">
-        <AvatarImage src={gravatarUrl(hash)} alt={maintainer.name} />
+        <AvatarImage
+          src={gravatarUrl(hash)}
+          alt={maintainer.name}
+          width={32}
+          height={32}
+          loading="lazy"
+        />
         <AvatarFallback>{initials(maintainer.name)}</AvatarFallback>
       </Avatar>
       <div className="min-w-0">

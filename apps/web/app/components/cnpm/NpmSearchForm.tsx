@@ -49,7 +49,7 @@ export function NpmSearchForm({
           value={value}
           autoFocus={autoFocus}
           onChange={(event) => setValue(event.target.value)}
-          placeholder="搜索 npm 包，如 react、@babel/core..."
+          placeholder="搜索 npm 包，如 react、@babel/core…"
           aria-label="搜索 npm 包"
           className={cn("h-full", large && "text-base")}
         />
