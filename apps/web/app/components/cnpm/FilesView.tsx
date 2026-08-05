@@ -101,7 +101,7 @@ export function FilesView({ pkgName, spec }: { pkgName: string; spec: string }) 
   }
 
   return (
-    <div className="flex flex-col gap-4 md:flex-row">
+    <div className="flex flex-col gap-4 md:flex-row md:flex-wrap">
       <div className="max-h-[70vh] w-full overflow-auto rounded-lg border bg-muted/30 p-2 md:max-w-sm">
         <FileNode
           entries={root.files}
@@ -126,7 +126,7 @@ export function FilesView({ pkgName, spec }: { pkgName: string; spec: string }) 
       {dirError && (
         <p
           role="status"
-          className="mt-2 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1 text-xs text-destructive"
+          className="w-full basis-full rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1 text-xs text-destructive"
         >
           目录加载失败：{dirError}，请重新展开重试
         </p>

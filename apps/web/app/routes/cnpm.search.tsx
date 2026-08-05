@@ -34,11 +34,9 @@ export default function CnpmSearch() {
   const from = (page - 1) * PAGE_SIZE;
 
   const { data, error, loading, retry } = useRegistryQuery(
-    () =>
-      q
-        ? searchPackages(q, from, PAGE_SIZE)
-        : Promise.resolve({ objects: [], total: 0 } as unknown as Awaited<ReturnType<typeof searchPackages>>),
+    () => searchPackages(q, from, PAGE_SIZE),
     [q, from],
+    Boolean(q),
   );
 
   return (

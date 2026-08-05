@@ -91,7 +91,11 @@ export async function getFileContent(pkg: string, spec: string, path: string) {
   return res.text();
 }
 
-export function useRegistryQuery<T>(fetcher: () => Promise<T>, deps: unknown[]) {
+export function useRegistryQuery<T>(
+  fetcher: () => Promise<T>,
+  deps: unknown[],
+  enabled = true,
+) {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<RegistryError | null>(null);
   const [loading, setLoading] = useState(true);
@@ -100,6 +104,12 @@ export function useRegistryQuery<T>(fetcher: () => Promise<T>, deps: unknown[]) 
   fetcherRef.current = fetcher;
 
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      setError(null);
+      setData(null);
+      return;
+    }
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -125,7 +135,7 @@ export function useRegistryQuery<T>(fetcher: () => Promise<T>, deps: unknown[]) 
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...deps, attempt]);
+  }, [...deps, attempt, enabled]);
 
   return { data, error, loading, retry: () => setAttempt((value) => value + 1) };
 }
