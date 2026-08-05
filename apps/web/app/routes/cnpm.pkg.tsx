@@ -15,7 +15,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "~/components/u
 import { Alert, AlertDescription } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
 import { getManifest, RegistryError, useRegistryQuery } from "~/lib/registry/client";
-import { parsePkgPath } from "~/lib/registry/parse";
+import { parsePkgPath, sortVersions } from "~/lib/registry/parse";
 import { useRecentVisited } from "~/lib/registry/use-recent";
 import { seoMeta } from "~/lib/seo";
 
@@ -101,10 +101,11 @@ function CnpmPkgInner({ rest }: { rest?: string }) {
   if (!manifest?.name) return null;
 
   const requestedVersion = params.get("version") || "";
+  const fallbackVersion = sortVersions(manifest.versions)[0]?.version;
   const version =
     requestedVersion && manifest.versions[requestedVersion]
       ? requestedVersion
-      : manifest["dist-tags"]?.latest || Object.keys(manifest.versions || {})[0];
+      : manifest["dist-tags"]?.latest || fallbackVersion;
 
   const handleVersionChange = (next: string) => {
     const nextParams = new URLSearchParams(params);

@@ -15,6 +15,9 @@ export function repoUrl(repository: RegistryManifest["repository"]) {
   if (/^git(\+ssh)?:\/\//.test(url)) {
     return url.replace(/^git(\+ssh)?:\/\//, "https://").replace(/\.git$/, "");
   }
+  if (/^git\+https?:\/\//.test(url)) {
+    return url.replace(/^git\+https?:\/\//, "https://").replace(/\.git$/, "");
+  }
   if (/^git@github\.com:(.+)$/.test(url)) {
     return `https://github.com/${url.replace(/^git@github\.com:/, "").replace(/\.git$/, "")}`;
   }

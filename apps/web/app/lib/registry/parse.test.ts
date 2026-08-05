@@ -4,6 +4,7 @@ import {
   formatCompactNumber,
   normalizeVersionSpec,
   parsePkgPath,
+  repoUrl,
   sortVersions,
 } from "./parse";
 import type { RegistryVersion } from "./types";
@@ -87,5 +88,24 @@ describe("formatCompactNumber", () => {
     expect(formatCompactNumber(1500)).toBe("1.5k");
     expect(formatCompactNumber(2_500_000)).toBe("2.5m");
     expect(formatCompactNumber(undefined)).toBe("-");
+  });
+});
+
+describe("repoUrl", () => {
+  it("规范化常见仓库地址", () => {
+    expect(repoUrl("git+https://github.com/foo/bar.git")).toBe("https://github.com/foo/bar");
+    expect(repoUrl("git+ssh://git@github.com/foo/bar.git")).toBe(
+      "https://git@github.com/foo/bar",
+    );
+    expect(repoUrl("git://github.com/foo/bar.git")).toBe("https://github.com/foo/bar");
+    expect(repoUrl({ url: "https://github.com/foo/bar" })).toBe(
+      "https://github.com/foo/bar",
+    );
+  });
+
+  it("无法识别的地址返回 undefined", () => {
+    expect(repoUrl(undefined)).toBeUndefined();
+    expect(repoUrl("")).toBeUndefined();
+    expect(repoUrl("svn://example.com/foo")).toBeUndefined();
   });
 });
