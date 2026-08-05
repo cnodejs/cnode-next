@@ -8,6 +8,7 @@
     "build": "react-router build",
     "start": "react-router-serve build/server/index.js",
     "deploy": "wrangler deploy",
+    "postinstall": "react-router typegen",
     "test": "vp test run",
     "typecheck": "react-router typegen && tsc --noEmit"
   },
