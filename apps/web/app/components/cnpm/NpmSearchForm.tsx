@@ -43,7 +43,9 @@ export function NpmSearchForm({
           <SearchIcon className={large ? "size-5" : "size-4"} />
         </InputGroupAddon>
         <InputGroupInput
-          type="text"
+          type="search"
+          name="q"
+          autoComplete="off"
           value={value}
           autoFocus={autoFocus}
           onChange={(event) => setValue(event.target.value)}

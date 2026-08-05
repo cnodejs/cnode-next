@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { REGISTRY } from "~/lib/registry/client";
@@ -71,7 +71,7 @@ describe("cnpm landing", () => {
     renderRoute(<CnpmLanding />, "/cnpm");
 
     expect(screen.getByRole("search")).toBeInTheDocument();
-    expect(screen.getByRole("textbox", { name: "搜索 npm 包" })).toBeInTheDocument();
+    expect(screen.getByRole("searchbox", { name: "搜索 npm 包" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "react" })).toHaveAttribute("href", "/cnpm/pkg/react");
     expect(await screen.findByText("包数量")).toBeInTheDocument();
     expect(screen.getByText("6m")).toBeInTheDocument();
@@ -86,8 +86,9 @@ describe("cnpm landing", () => {
     );
 
     renderRoute(<CnpmLanding />, "/cnpm");
-    await new Promise((resolve) => setTimeout(resolve, 20));
-    expect(screen.queryByText("包数量")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText("包数量")).not.toBeInTheDocument();
+    });
   });
 });
 

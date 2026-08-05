@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { Badge } from "~/components/ui/badge";
-import { sortVersions, useVersionTags } from "~/lib/registry/parse";
+import { sortVersions, getVersionTags } from "~/lib/registry/parse";
 import type { RegistryManifest } from "~/lib/registry/types";
 
 function formatDate(value: number | string | undefined) {
@@ -16,12 +16,15 @@ function formatDate(value: number | string | undefined) {
   const numeric = typeof value === "string" && /^\d+$/.test(value) ? Number(value) : value;
   const date = new Date(numeric);
   if (Number.isNaN(date.getTime())) return "-";
-  return date.toISOString().slice(0, 10);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export function VersionTable({ manifest, version }: { manifest: RegistryManifest; version: string }) {
   const versions = sortVersions(manifest.versions);
-  const tags = useVersionTags(manifest);
+  const tags = getVersionTags(manifest);
 
   return (
     <Table>

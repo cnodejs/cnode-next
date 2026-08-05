@@ -31,9 +31,6 @@ function MaintainerRow({ maintainer }: { maintainer: Maintainer }) {
       </Avatar>
       <div className="min-w-0">
         <div className="truncate text-sm font-medium text-foreground">{maintainer.name}</div>
-        {maintainer.email && (
-          <div className="truncate text-xs text-muted-foreground">{maintainer.email}</div>
-        )}
       </div>
     </div>
   );

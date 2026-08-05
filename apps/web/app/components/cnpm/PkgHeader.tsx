@@ -9,7 +9,7 @@ import {
 } from "~/components/ui/select";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
-import { sortVersions, useVersionTags, type PkgTab } from "~/lib/registry/parse";
+import { sortVersions, getVersionTags, type PkgTab } from "~/lib/registry/parse";
 import type { RegistryManifest } from "~/lib/registry/types";
 import { PkgTabs } from "./PkgTabs";
 
@@ -39,7 +39,7 @@ export function PkgHeader({
   onVersionChange: (version: string) => void;
 }) {
   const versions = sortVersions(manifest.versions);
-  const tags = useVersionTags(manifest);
+  const tags = getVersionTags(manifest);
   const [copied, setCopied] = useState(false);
   const installCommand = `npm install ${manifest.name}@${version}`;
   const repo = repoUrl(manifest.repository);

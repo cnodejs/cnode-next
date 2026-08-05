@@ -43,7 +43,7 @@ export function normalizeVersionSpec(spec: string | undefined) {
   return spec;
 }
 
-export function useVersionTags(manifest: RegistryManifest): Record<string, string[]> {
+export function getVersionTags(manifest: RegistryManifest): Record<string, string[]> {
   const tagsMap = manifest["dist-tags"] || {};
   const result: Record<string, string[]> = {};
   for (const [tag, version] of Object.entries(tagsMap)) {
