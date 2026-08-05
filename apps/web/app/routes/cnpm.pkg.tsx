@@ -44,8 +44,9 @@ function CnpmPkgInner({ rest }: { rest?: string }) {
   const { addRecent } = useRecentVisited();
 
   const { data: manifest, error, loading, retry } = useRegistryQuery(
-    () => (name ? getManifest(name) : Promise.reject(new RegistryError("Missing package name", 404))),
+    () => getManifest(name!),
     [name],
+    Boolean(name),
   );
 
   useEffect(() => {

@@ -98,7 +98,7 @@ export function useRegistryQuery<T>(
 ) {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<RegistryError | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!enabled ? false : true);
   const [attempt, setAttempt] = useState(0);
   const fetcherRef = useRef(fetcher);
   fetcherRef.current = fetcher;

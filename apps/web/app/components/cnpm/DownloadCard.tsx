@@ -9,6 +9,8 @@ import {
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import { Skeleton } from "~/components/ui/skeleton";
 import { Empty, EmptyDescription, EmptyTitle } from "~/components/ui/empty";
+import { Alert, AlertDescription } from "~/components/ui/alert";
+import { Button } from "~/components/ui/button";
 
 const chartConfig = {
   downloads: {
@@ -24,7 +26,7 @@ export function DownloadCard({
   pkgName: string;
   range?: number;
 }) {
-  const { data, loading } = useRegistryQuery(
+  const { data, error, loading, retry } = useRegistryQuery(
     () => getDownloads(pkgName, range),
     [pkgName, range],
   );
@@ -38,6 +40,26 @@ export function DownloadCard({
         <CardContent className="flex flex-col gap-3">
           <Skeleton className="h-6 w-24" />
           <Skeleton className="h-24 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>下载量</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert variant="destructive">
+            <AlertDescription className="flex items-center justify-between gap-3">
+              下载数据加载失败
+              <Button type="button" variant="outline" size="sm" onClick={retry}>
+                重试
+              </Button>
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
     );
