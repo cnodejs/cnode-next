@@ -11,7 +11,7 @@ function workspace() {
   return root;
 }
 
-test("loads root .env without overriding existing environment", () => {
+void test("loads root .env without overriding existing environment", () => {
   const root = workspace();
   writeFileSync(join(root, ".env"), "POSTGRES_HOST=127.0.0.1\nPOSTGRES_PORT=5432\n");
   const env: Record<string, string | undefined> = { POSTGRES_HOST: "from-shell" };
@@ -22,7 +22,7 @@ test("loads root .env without overriding existing environment", () => {
   assert.equal(env.POSTGRES_PORT, "5432");
 });
 
-test("explicit CNODE_ENV_FILE overrides values loaded from root .env", () => {
+void test("explicit CNODE_ENV_FILE overrides values loaded from root .env", () => {
   const root = workspace();
   writeFileSync(join(root, ".env"), "POSTGRES_HOST=127.0.0.1\nPOSTGRES_PORT=5432\n");
   writeFileSync(join(root, ".env.remote.local"), "POSTGRES_HOST=127.0.0.1\nPOSTGRES_PORT=15432\n");
@@ -34,7 +34,7 @@ test("explicit CNODE_ENV_FILE overrides values loaded from root .env", () => {
   assert.equal(env.POSTGRES_PORT, "15432");
 });
 
-test("explicit CNODE_ENV_FILE does not override shell environment", () => {
+void test("explicit CNODE_ENV_FILE does not override shell environment", () => {
   const root = workspace();
   writeFileSync(join(root, ".env"), "POSTGRES_HOST=127.0.0.1\nPOSTGRES_PORT=5432\n");
   writeFileSync(join(root, ".env.remote.local"), "POSTGRES_HOST=remote\nPOSTGRES_PORT=15432\n");
@@ -49,7 +49,7 @@ test("explicit CNODE_ENV_FILE does not override shell environment", () => {
   assert.equal(env.POSTGRES_PORT, "15432");
 });
 
-test("does not load .env.local by default", () => {
+void test("does not load .env.local by default", () => {
   const root = workspace();
   writeFileSync(join(root, ".env"), "POSTGRES_HOST=from-env\n");
   writeFileSync(join(root, ".env.local"), "POSTGRES_HOST=from-local\nPOSTGRES_PORT=15432\n");
@@ -61,7 +61,7 @@ test("does not load .env.local by default", () => {
   assert.equal(env.POSTGRES_PORT, undefined);
 });
 
-test("throws when explicit CNODE_ENV_FILE is missing", () => {
+void test("throws when explicit CNODE_ENV_FILE is missing", () => {
   const root = workspace();
   writeFileSync(join(root, ".env"), "POSTGRES_HOST=127.0.0.1\n");
 
@@ -71,7 +71,7 @@ test("throws when explicit CNODE_ENV_FILE is missing", () => {
   );
 });
 
-test("finds workspace root from nested package directory", () => {
+void test("finds workspace root from nested package directory", () => {
   const root = workspace();
   const nested = join(root, "apps", "web");
   mkdirSync(nested, { recursive: true });

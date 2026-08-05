@@ -73,7 +73,8 @@ export default function TopicCreate({ loaderData }: Route.ComponentProps) {
     (jobMeta.experience ?? "") !== "" ||
     (jobMeta.tech_tags?.length ?? 0) > 0 ||
     jobMeta.contact !== "";
-  const { blocker, allowNavigation } = useUnsavedChanges(isDirty);
+  const unsavedChanges = useUnsavedChanges(isDirty);
+  const { blocker } = unsavedChanges;
 
   const { run: submitTopic, pending: saving } = useAsyncAction(
     async () => {
@@ -109,8 +110,8 @@ export default function TopicCreate({ loaderData }: Route.ComponentProps) {
       onSuccess: (res) => {
         if (res.success) {
           toast.success("发布成功");
-          allowNavigation();
-          navigate(`/topic/${res.topic_id}`);
+          unsavedChanges.allowNavigation();
+          void navigate(`/topic/${res.topic_id}`);
         } else {
           toast.error(res.error_msg || "发布失败");
         }

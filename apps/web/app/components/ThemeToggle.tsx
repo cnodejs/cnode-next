@@ -9,7 +9,7 @@ export function ThemeToggle() {
   const applyToDocument = useThemeStore((s) => s.applyToDocument);
 
   useEffect(() => {
-    Promise.resolve(useThemeStore.persist.rehydrate()).then(() => {
+    void Promise.resolve(useThemeStore.persist.rehydrate()).then(() => {
       useThemeStore.getState().applyToDocument();
     });
   }, [applyToDocument]);

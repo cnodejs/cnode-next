@@ -61,7 +61,7 @@ export default function TopicEdit() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    apiFetch<{ success: boolean; data: any }>(`/api/v1/topic/${tid}?mdrender=false`)
+    void apiFetch<{ success: boolean; data: any }>(`/api/v1/topic/${tid}?mdrender=false`)
       .then((res) => {
         if (res.success) {
           const nextTitle = res.data.title || "";
@@ -100,7 +100,8 @@ export default function TopicEdit() {
 
   const isDirty =
     !loading && initialRef.current !== JSON.stringify({ title, tab, content, jobMeta });
-  const { blocker, allowNavigation } = useUnsavedChanges(isDirty);
+  const unsavedChanges = useUnsavedChanges(isDirty);
+  const { blocker } = unsavedChanges;
 
   const { run: submitTopic, pending: saving } = useAsyncAction(
     async () => {
@@ -128,8 +129,8 @@ export default function TopicEdit() {
       onSuccess: (res) => {
         if (res.success) {
           toast.success("已保存");
-          allowNavigation();
-          navigate(`/topic/${tid}`);
+          unsavedChanges.allowNavigation();
+          void navigate(`/topic/${tid}`);
         } else {
           toast.error(res.error_msg || "保存失败");
         }

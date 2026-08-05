@@ -158,8 +158,8 @@ export default function AdminTopics({ loaderData }: any) {
                   removedCount: res.ids.length,
                 })
               : null;
-          if (fallback) navigate(fallback, { replace: true });
-          else revalidate();
+          if (fallback) void navigate(fallback, { replace: true });
+          else void revalidate();
         } else {
           toast.error(res.error_msg || "操作失败");
         }
@@ -186,8 +186,8 @@ export default function AdminTopics({ loaderData }: any) {
             currentItemCount: topics.length,
             removedCount: res.deleted || permanentDeleteIds.length,
           });
-          if (fallback) navigate(fallback, { replace: true });
-          else revalidate();
+          if (fallback) void navigate(fallback, { replace: true });
+          else void revalidate();
         } else {
           toast.error(res.error_msg || "永久删除失败");
         }

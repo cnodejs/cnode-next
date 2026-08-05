@@ -72,12 +72,12 @@ export function CommandPalette({
     const value = query.trim();
     if (!value) return;
     onOpenChange(false);
-    navigate(`/search?q=${encodeURIComponent(value)}`);
+    void navigate(`/search?q=${encodeURIComponent(value)}`);
   }
 
   function go(to: string) {
     onOpenChange(false);
-    navigate(to);
+    void navigate(to);
   }
 
   return (

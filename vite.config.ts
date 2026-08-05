@@ -23,9 +23,10 @@ export default defineConfig({
       "vite-plus/prefer-vite-plus-imports": "error",
     },
     ignorePatterns: ["node_modules", "dist", "build", ".vite", "pnpm-lock.yaml", "*.db"],
-    // Type-aware linting (options.typeAware/typeCheck) currently reports ~70
-    // pre-existing findings (mostly no-floating-promises) and requires rootDir
-    // restructuring in package tsconfigs; enable it after those are addressed.
+    options: {
+      typeAware: true,
+      typeCheck: true,
+    },
     jsPlugins: [
       {
         name: "vite-plus",

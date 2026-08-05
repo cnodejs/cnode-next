@@ -31,7 +31,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     if (get().hydrated) return;
     set({ user, hydrated: true });
     if (user) {
-      get().fetchUnread();
+      void get().fetchUnread();
     }
   },
   fetchUnread: async () => {

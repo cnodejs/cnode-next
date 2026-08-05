@@ -112,7 +112,7 @@ export default function AdminMod({ loaderData }: any) {
         if (res.success) {
           toast.success("操作成功");
           setDeleteTarget(null);
-          revalidate();
+          void revalidate();
         } else {
           toast.error(res.error_msg || "操作失败");
         }
@@ -135,7 +135,7 @@ export default function AdminMod({ loaderData }: any) {
           toast.success(`已处理 ${res.handled || selected.length} 条`);
           setSelected([]);
           setDeleteTarget(null);
-          revalidate();
+          void revalidate();
         } else {
           toast.error(res.error_msg || "批量操作失败");
         }
@@ -158,7 +158,7 @@ export default function AdminMod({ loaderData }: any) {
           toast.success(`已确认删除 ${res.handled || 0} 条命中内容`);
           setConfirmJobId(null);
           setSelected([]);
-          revalidate();
+          void revalidate();
         } else {
           toast.error(res.error_msg || "任务批量确认删除失败");
         }
@@ -181,7 +181,7 @@ export default function AdminMod({ loaderData }: any) {
       onSuccess: (res) => {
         if (res.success) {
           toast.success("扫描任务已创建");
-          revalidate();
+          void revalidate();
         } else {
           toast.error(res.error_msg || "创建任务失败");
         }
@@ -208,7 +208,7 @@ export default function AdminMod({ loaderData }: any) {
                 : "任务已更新",
           );
           if (result.action === "cancel") setCancelJobId(null);
-          revalidate();
+          void revalidate();
         } else {
           toast.error(result.error_msg || "更新任务失败");
         }

@@ -107,7 +107,7 @@ export default function AdminUsers({ loaderData }: any) {
         if (res.success) {
           toast.success("用户治理状态已更新");
           setGovernanceTarget(null);
-          revalidate();
+          void revalidate();
         } else toast.error(res.error_msg || "操作失败");
       },
     },
@@ -131,7 +131,7 @@ export default function AdminUsers({ loaderData }: any) {
         if (res.success) {
           toast.success("用户角色已更新");
           setRoleTarget(null);
-          revalidate();
+          void revalidate();
         } else toast.error(res.error_msg || "角色操作失败");
       },
     },
@@ -148,7 +148,7 @@ export default function AdminUsers({ loaderData }: any) {
         if (res.success) {
           toast.success("已删除该用户所有发言");
           setDeleteAllTarget(null);
-          revalidate();
+          void revalidate();
         } else {
           toast.error(res.error_msg || "删除失败");
         }

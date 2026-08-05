@@ -38,13 +38,13 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/lodash": "^4.17.24",
-    "@types/node": "^22.0.0",
+    "@types/node": "^24.0.0",
     "@types/nodemailer": "^8.0.0",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.3",
     "@types/uuid": "^10.0.0",
     "tsx": "^4.19.0",
-    "typescript": "^5.7.0",
+    "typescript": "^7.0.0",
     "vite": "catalog:",
     "vite-plus": "catalog:"
   }

@@ -57,7 +57,7 @@ export default function Signin() {
       onSuccess: (res) => {
         if (res.success) {
           toast.success("登录成功");
-          navigate("/");
+          void navigate("/");
         } else {
           toast.error(res.error_msg || "登录失败");
         }

@@ -171,7 +171,7 @@ function UserHero({ user, currentUser }: { user: any; currentUser?: any }) {
         if (res.success) {
           toast.success(res.message || "操作成功");
           setActionTarget(null);
-          revalidate();
+          void revalidate();
         } else {
           toast.error(res.error_msg || "操作失败");
         }

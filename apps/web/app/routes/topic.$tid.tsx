@@ -56,6 +56,7 @@ import { useAsyncAction } from "~/hooks/use-async-action";
 import { UserIdentityBadges } from "~/components/UserIdentityBadges";
 import { externalUrlLabel, githubProfileUrl, safeExternalUrl } from "~/lib/public-profile";
 import { getTopicActionPresentation } from "~/lib/topic-action-presentation";
+import type { TopicReplyDTO } from "~/lib/api-types";
 import {
   Empty,
   EmptyContent,
@@ -472,7 +473,7 @@ export function TopicActions({ topic, currentUser }: { topic: any; currentUser: 
         if (res.skipped) return;
         if (res.success) {
           toast.success(topic.is_collect ? "已取消收藏" : "已收藏话题");
-          revalidate();
+          void revalidate();
         } else {
           toast.error(res.error_msg || (topic.is_collect ? "取消收藏失败" : "收藏失败"));
         }
@@ -516,7 +517,7 @@ export function TopicActions({ topic, currentUser }: { topic: any; currentUser: 
         if (res.success) {
           toast.success(res.message || `${res.actionLabel}成功`);
           setDeleteOpen(false);
-          revalidate();
+          void revalidate();
         } else {
           toast.error(res.error_msg || `${res.actionLabel}失败`);
         }
@@ -659,7 +660,7 @@ function ReplySection({
   topicId: string;
   currentUser: any;
 }) {
-  const [targetReply, setTargetReply] = useState<any | null>(null);
+  const [targetReply, setTargetReply] = useState<TopicReplyDTO | null>(null);
   const [content, setContent] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
   const { revalidate } = useRevalidator();
@@ -700,7 +701,7 @@ function ReplySection({
           toast.success("回复成功");
           setContent("");
           setTargetReply(null);
-          revalidate();
+          void revalidate();
         } else {
           toast.error(res.error_msg || "回复失败");
         }
@@ -835,7 +836,7 @@ function ReplyItem({
         if (res.skipped) return;
         if (res.success) {
           toast.success(res.action === "down" ? "已取消点赞" : "已点赞");
-          revalidate();
+          void revalidate();
         } else {
           toast.error(res.error_msg || "点赞失败");
         }
@@ -860,7 +861,7 @@ function ReplyItem({
         if (res.success) {
           toast.success("回复已删除");
           setDeleteOpen(false);
-          revalidate();
+          void revalidate();
         } else {
           toast.error(res.error_msg || "删除失败");
         }

@@ -32,7 +32,8 @@ export default function ReplyEdit({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
   const { revalidate } = useRevalidator();
   const [content, setContent] = useState(reply?.content || "");
-  const { blocker, allowNavigation } = useUnsavedChanges(content !== (reply?.content || ""));
+  const unsavedChanges = useUnsavedChanges(content !== (reply?.content || ""));
+  const { blocker } = unsavedChanges;
 
   const { run: submitReply, pending: saving } = useAsyncAction(
     async () => {
@@ -45,9 +46,9 @@ export default function ReplyEdit({ loaderData }: Route.ComponentProps) {
       onSuccess: (res) => {
         if (res.success) {
           toast.success("已保存");
-          allowNavigation();
-          revalidate();
-          navigate(-1);
+          unsavedChanges.allowNavigation();
+          void revalidate();
+          void navigate(-1);
         } else {
           toast.error(res.error_msg || "保存失败");
         }

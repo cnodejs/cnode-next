@@ -48,7 +48,7 @@ export default function GithubNew({ loaderData }: Route.ComponentProps) {
       onSuccess: (res) => {
         if (res.success) {
           toast.success("GitHub 登录成功");
-          navigate("/");
+          void navigate("/");
         } else {
           toast.error(res.error_msg || "GitHub 登录失败");
         }
