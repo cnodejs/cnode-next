@@ -34,6 +34,10 @@ function pkgPath(pkg: string) {
   return pkg;
 }
 
+function ensureLeadingSlash(path: string) {
+  return path.startsWith("/") ? path : `/${path}`;
+}
+
 export function getManifest(pkg: string) {
   return registryJson<RegistryManifest>(`/${pkgPath(pkg)}`);
 }
@@ -65,7 +69,7 @@ export function getDownloads(pkg: string, range = 7) {
 }
 
 export function getDir(pkg: string, spec: string, path: string) {
-  const dirPath = path && path !== "/" ? `${path}/` : "";
+  const dirPath = path && path !== "/" ? `${ensureLeadingSlash(path)}/` : "";
   return registryJson<RegistryFilesResponse>(
     `/${pkgPath(pkg)}/${encodeURIComponent(spec)}/files${dirPath}?meta`,
   );
@@ -73,7 +77,7 @@ export function getDir(pkg: string, spec: string, path: string) {
 
 export async function getFileContent(pkg: string, spec: string, path: string) {
   const res = await fetch(
-    `${REGISTRY}/${pkgPath(pkg)}/${encodeURIComponent(spec)}/files${path}`,
+    `${REGISTRY}/${pkgPath(pkg)}/${encodeURIComponent(spec)}/files${ensureLeadingSlash(path)}`,
   );
   if (res.status === 404) {
     throw new RegistryError(`Not Found: ${path}`, 404);

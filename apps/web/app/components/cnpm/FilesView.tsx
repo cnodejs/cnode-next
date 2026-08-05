@@ -163,7 +163,9 @@ function FileNode({
               <button
                 type="button"
                 onClick={() => onToggleDir(entry.path)}
+                aria-expanded={isExpanded}
                 className="flex w-full items-center gap-1 rounded-md px-2 py-1 text-left text-sm text-foreground transition-colors hover:bg-accent"
+                style={{ paddingLeft: depth * 12 + 8 }}
               >
                 {isLoading ? (
                   <span className="size-3.5" />
@@ -202,6 +204,7 @@ function FileNode({
                   ? "bg-accent text-accent-foreground"
                   : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
               )}
+              style={{ paddingLeft: depth * 12 + 8 }}
             >
               <FileIcon className="size-3.5 shrink-0 text-muted-foreground" />
               <span className="truncate">{basename(entry.path)}</span>

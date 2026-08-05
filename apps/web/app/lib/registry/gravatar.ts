@@ -1,14 +1,9 @@
-export async function gravatarHash(email: string | undefined) {
-  if (!email || typeof crypto === "undefined" || !crypto.subtle) return null;
-  try {
-    const data = new TextEncoder().encode(email.trim().toLowerCase());
-    const digest = await crypto.subtle.digest("MD5", data);
-    return Array.from(new Uint8Array(digest))
-      .map((byte) => byte.toString(16).padStart(2, "0"))
-      .join("");
-  } catch {
-    return null;
-  }
+import { md5 } from "@noble/hashes/legacy.js";
+import { bytesToHex } from "@noble/hashes/utils.js";
+
+export function gravatarHash(email: string | undefined) {
+  if (!email) return null;
+  return bytesToHex(md5(new TextEncoder().encode(email.trim().toLowerCase())));
 }
 
 export function gravatarUrl(hash: string | null, size = 64) {

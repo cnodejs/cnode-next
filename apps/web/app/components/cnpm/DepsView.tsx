@@ -59,7 +59,7 @@ export function DepsView({ manifest, version }: { manifest: RegistryManifest; ve
                   <TableRow key={pkg}>
                     <TableCell>
                       <Link
-                        to={`/cnpm/pkg/${pkg}?version=${encodeURIComponent(spec)}`}
+                        to={`/cnpm/pkg/${pkg}`}
                         className="text-foreground hover:text-primary"
                       >
                         {pkg}

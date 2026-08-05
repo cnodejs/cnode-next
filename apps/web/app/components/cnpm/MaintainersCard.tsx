@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import type { RegistryManifest } from "~/lib/registry/types";
@@ -22,17 +21,7 @@ export function MaintainersCard({ maintainers }: { maintainers: Maintainer[] }) 
 }
 
 function MaintainerRow({ maintainer }: { maintainer: Maintainer }) {
-  const [hash, setHash] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    gravatarHash(maintainer.email).then((value) => {
-      if (!cancelled) setHash(value);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [maintainer.email]);
+  const hash = gravatarHash(maintainer.email);
 
   return (
     <div className="flex items-center gap-2.5">

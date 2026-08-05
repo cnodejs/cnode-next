@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 import { Layout } from "~/components/Layout";
 import { PageContainer, ReadingGrid } from "~/components/PageShell";
 import { PkgHeader } from "~/components/cnpm/PkgHeader";
@@ -34,7 +34,6 @@ export default function CnpmPkg() {
 }
 
 function CnpmPkgInner({ rest }: { rest?: string }) {
-  const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const { name, tab } = parsePkgPath(rest);
   const { addRecent } = useRecentVisited();
@@ -104,7 +103,6 @@ function CnpmPkgInner({ rest }: { rest?: string }) {
   const handleVersionChange = (next: string) => {
     const nextParams = new URLSearchParams(params);
     nextParams.set("version", next);
-    navigate(`${location.pathname}?${nextParams.toString()}`, { replace: true });
     setParams(nextParams, { replace: true });
   };
 
