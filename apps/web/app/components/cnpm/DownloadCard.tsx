@@ -73,7 +73,10 @@ export function DownloadCard({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-32 [&_.recharts-text]:fill-muted-foreground">
+        <ChartContainer
+          config={chartConfig}
+          className="h-32 aspect-auto [&_.recharts-text]:fill-muted-foreground"
+        >
           <AreaChart data={points} margin={{ left: 0, right: 0, top: 4, bottom: 0 }}>
             <defs>
               <linearGradient id="cnpm-download-fill" x1="0" y1="0" x2="0" y2="1">

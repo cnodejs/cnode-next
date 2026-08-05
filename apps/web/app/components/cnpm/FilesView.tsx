@@ -259,10 +259,10 @@ function FileViewer({ pkgName, spec, path }: { pkgName: string; spec: string; pa
   );
 }
 
-const HIGHLIGHT_MAX_BYTES = 256 * 1024;
+const HIGHLIGHT_MAX_LENGTH = 256 * 1024;
 
 function highlighted(code: string) {
-  if (code.length > HIGHLIGHT_MAX_BYTES) return escapeHtml(code);
+  if (code.length > HIGHLIGHT_MAX_LENGTH) return escapeHtml(code);
   try {
     return hljs.highlightAuto(code).value;
   } catch {
