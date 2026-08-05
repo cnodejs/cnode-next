@@ -4,8 +4,20 @@ import { PageHeader } from "./PageShell";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Link } from "react-router";
 
-export function AdminPage({ children, className, archetype = "data-list" }: { children: React.ReactNode; className?: string; archetype?: "dashboard" | "data-list" | "workflow" }) {
-  return <div data-page-archetype={archetype} className={cn("flex flex-col gap-4", className)}>{children}</div>;
+export function AdminPage({
+  children,
+  className,
+  archetype = "data-list",
+}: {
+  children: React.ReactNode;
+  className?: string;
+  archetype?: "dashboard" | "data-list" | "workflow";
+}) {
+  return (
+    <div data-page-archetype={archetype} className={cn("flex flex-col gap-4", className)}>
+      {children}
+    </div>
+  );
 }
 
 export function AdminPageHeader({
@@ -19,7 +31,11 @@ export function AdminPageHeader({
 }) {
   return (
     <PageHeader
-      breadcrumbs={title === "管理概览" ? [{ label: "管理后台" }] : [{ label: "管理后台", to: "/admin" }, { label: title }]}
+      breadcrumbs={
+        title === "管理概览"
+          ? [{ label: "管理后台" }]
+          : [{ label: "管理后台", to: "/admin" }, { label: title }]
+      }
       title={title}
       description={description}
       action={action}
@@ -60,15 +76,34 @@ export function AdminPanel({
   );
 }
 
-export function AdminToolbar({ children, className }: { children: React.ReactNode; className?: string }) {
+export function AdminToolbar({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div className={cn("flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between", className)}>
+    <div
+      className={cn(
+        "flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between",
+        className,
+      )}
+    >
       {children}
     </div>
   );
 }
 
-export function AdminMetricCard({ label, value, href }: { label: string; value: React.ReactNode; href?: string }) {
+export function AdminMetricCard({
+  label,
+  value,
+  href,
+}: {
+  label: string;
+  value: React.ReactNode;
+  href?: string;
+}) {
   const card = (
     <Card size="sm">
       <CardHeader>

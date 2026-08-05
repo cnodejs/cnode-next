@@ -1,5 +1,5 @@
 import { matchRoutes } from "react-router";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import routes from "../app/routes";
 
 describe("Web route surface", () => {
@@ -15,6 +15,8 @@ describe("Web route surface", () => {
     expect(matchRoutes(routes as any, "/user/alice")?.at(-1)?.params.name).toBe("alice");
     expect(matchRoutes(routes as any, "/user/alice/topics")?.at(-1)?.params.name).toBe("alice");
     expect(matchRoutes(routes as any, "/user/alice/replies")?.at(-1)?.params.name).toBe("alice");
-    expect(matchRoutes(routes as any, "/user/alice/collections")?.at(-1)?.params.name).toBe("alice");
+    expect(matchRoutes(routes as any, "/user/alice/collections")?.at(-1)?.params.name).toBe(
+      "alice",
+    );
   });
 });

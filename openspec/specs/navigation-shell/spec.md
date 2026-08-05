@@ -3,7 +3,9 @@
 ## Purpose
 
 定义主站和后台导航 shell 的 header cluster 模型、logo 行为、搜索入口、发布 CTA、后台上下文和移动端优先级要求。
+
 ## Requirements
+
 ### Requirement: 主站 Header cluster 模型
 
 主站 Header SHALL 将官方 logo 与搜索/命令入口放在左侧 cluster，将专区入口、`API` 一级入口、`关于` 一级入口、主 CTA、消息/通知和 profile 放在右侧 cluster。

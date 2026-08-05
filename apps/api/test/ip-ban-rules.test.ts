@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { isValidIpRule, matchesIpRule } from "../src/middleware/ip-ban";
 
 test("isValidIpRule accepts single IPv4", () => {

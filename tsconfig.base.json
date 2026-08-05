@@ -13,12 +13,11 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "baseUrl": ".",
     "paths": {
-      "@cnode/db": ["packages/db/src/index.ts"],
-      "@cnode/db/*": ["packages/db/src/*"],
-      "@cnode/shared": ["packages/shared/src/index.ts"],
-      "@cnode/shared/*": ["packages/shared/src/*"]
+      "@cnode/db": ["./packages/db/src/index.ts"],
+      "@cnode/db/*": ["./packages/db/src/*"],
+      "@cnode/shared": ["./packages/shared/src/index.ts"],
+      "@cnode/shared/*": ["./packages/shared/src/*"]
     }
   },
   "exclude": ["node_modules", "dist", "build"]

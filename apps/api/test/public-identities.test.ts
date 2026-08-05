@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { publicIdentitiesSchema } from "@cnode/shared";
 import { PgDialect } from "drizzle-orm/pg-core";
 import { activeUserRoleCondition } from "../src/lib/db";
@@ -10,11 +10,13 @@ test("public identities remain independent from inherited permissions", () => {
     isAdmin: true,
     isMod: true,
   });
-  expect(resolveUserAccess("alice", ["recruiter"], ["alice"]).identities).toEqual(["admin", "recruiter"]);
-  expect(resolveUserAccess("alice", ["moderator", "recruiter", "moderator"], []).identities).toEqual([
-    "moderator",
+  expect(resolveUserAccess("alice", ["recruiter"], ["alice"]).identities).toEqual([
+    "admin",
     "recruiter",
   ]);
+  expect(
+    resolveUserAccess("alice", ["moderator", "recruiter", "moderator"], []).identities,
+  ).toEqual(["moderator", "recruiter"]);
   expect(resolveUserAccess("alice", ["recruiter", "moderator"], ["alice"]).identities).toEqual([
     "admin",
     "moderator",

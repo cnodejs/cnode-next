@@ -36,9 +36,7 @@ const createReplyRoute = createRoute({
   tags: ["replies"],
   summary: "创建回复",
   description: "创建线性回复，可传 reply_id 回复另一条回复。需要登录。",
-  middleware: [
-    perUserPerDaySetting("create_reply", "rate_reply", CREATE_REPLY_PER_DAY, true),
-  ],
+  middleware: [perUserPerDaySetting("create_reply", "rate_reply", CREATE_REPLY_PER_DAY, true)],
   request: {
     params: z.object({ topic_id: z.string() }),
     body: { content: { "application/json": { schema: createReplyBodySchema } } },
@@ -46,12 +44,28 @@ const createReplyRoute = createRoute({
   responses: {
     200: {
       description: "创建成功",
-      content: { "application/json": { schema: z.object({ success: z.literal(true), reply_id: z.string() }) } },
+      content: {
+        "application/json": {
+          schema: z.object({ success: z.literal(true), reply_id: z.string() }),
+        },
+      },
     },
-    401: { description: "未登录", content: { "application/json": { schema: errorResponseSchema } } },
-    403: { description: "禁言或人机验证失败", content: { "application/json": { schema: errorResponseSchema } } },
-    404: { description: "话题不存在", content: { "application/json": { schema: errorResponseSchema } } },
-    422: { description: "包含敏感词", content: { "application/json": { schema: errorResponseSchema } } },
+    401: {
+      description: "未登录",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+    403: {
+      description: "禁言或人机验证失败",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+    404: {
+      description: "话题不存在",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+    422: {
+      description: "包含敏感词",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
   },
 });
 
@@ -76,7 +90,10 @@ reply.openapi(createReplyRoute, async (c) => {
   const contentCheck = await checkContent(content);
   if (contentCheck.hit) {
     return c.json(
-      { success: false as const, error_msg: `回复内容包含敏感词: ${contentCheck.words.join(", ")}` },
+      {
+        success: false as const,
+        error_msg: `回复内容包含敏感词: ${contentCheck.words.join(", ")}`,
+      },
       422,
     );
   }
@@ -136,11 +153,24 @@ const getReplyRoute = createRoute({
   responses: {
     200: {
       description: "回复详情",
-      content: { "application/json": { schema: z.object({ success: z.literal(true), data: replyDTOSchema }) } },
+      content: {
+        "application/json": {
+          schema: z.object({ success: z.literal(true), data: replyDTOSchema }),
+        },
+      },
     },
-    401: { description: "未登录", content: { "application/json": { schema: errorResponseSchema } } },
-    403: { description: "无权限", content: { "application/json": { schema: errorResponseSchema } } },
-    404: { description: "回复或话题不存在", content: { "application/json": { schema: errorResponseSchema } } },
+    401: {
+      description: "未登录",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+    403: {
+      description: "无权限",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+    404: {
+      description: "回复或话题不存在",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
   },
 });
 
@@ -164,16 +194,19 @@ reply.openapi(getReplyRoute, async (c) => {
     return c.json({ success: false as const, error_msg: "无权限编辑" }, 403);
   }
 
-  return c.json({
-    success: true as const,
-    data: {
-      id: String(replyData.id),
-      topic_id: String(replyData.topicId),
-      content: replyData.content,
-      create_at: replyData.createAt,
-      update_at: replyData.updateAt,
+  return c.json(
+    {
+      success: true as const,
+      data: {
+        id: String(replyData.id),
+        topic_id: String(replyData.topicId),
+        content: replyData.content,
+        create_at: replyData.createAt,
+        update_at: replyData.updateAt,
+      },
     },
-  }, 200);
+    200,
+  );
 });
 
 const editReplyRoute = createRoute({
@@ -189,12 +222,28 @@ const editReplyRoute = createRoute({
   responses: {
     200: {
       description: "编辑成功",
-      content: { "application/json": { schema: z.object({ success: z.literal(true), reply_id: z.string() }) } },
+      content: {
+        "application/json": {
+          schema: z.object({ success: z.literal(true), reply_id: z.string() }),
+        },
+      },
     },
-    401: { description: "未登录", content: { "application/json": { schema: errorResponseSchema } } },
-    403: { description: "无权限或话题锁定", content: { "application/json": { schema: errorResponseSchema } } },
-    404: { description: "回复或话题不存在", content: { "application/json": { schema: errorResponseSchema } } },
-    422: { description: "包含敏感词", content: { "application/json": { schema: errorResponseSchema } } },
+    401: {
+      description: "未登录",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+    403: {
+      description: "无权限或话题锁定",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+    404: {
+      description: "回复或话题不存在",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+    422: {
+      description: "包含敏感词",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
   },
 });
 
@@ -225,7 +274,10 @@ reply.openapi(editReplyRoute, async (c) => {
   const contentCheck = await checkContent(body.content);
   if (contentCheck.hit) {
     return c.json(
-      { success: false as const, error_msg: `回复内容包含敏感词: ${contentCheck.words.join(", ")}` },
+      {
+        success: false as const,
+        error_msg: `回复内容包含敏感词: ${contentCheck.words.join(", ")}`,
+      },
       422,
     );
   }
@@ -249,12 +301,26 @@ const deleteReplyRoute = createRoute({
   responses: {
     200: {
       description: "删除成功",
-      content: { "application/json": { schema: z.object({ success: z.literal(true), status: z.string() }) } },
+      content: {
+        "application/json": { schema: z.object({ success: z.literal(true), status: z.string() }) },
+      },
     },
-    401: { description: "未登录", content: { "application/json": { schema: errorResponseSchema } } },
-    403: { description: "无权限", content: { "application/json": { schema: errorResponseSchema } } },
-    404: { description: "回复不存在", content: { "application/json": { schema: errorResponseSchema } } },
-    422: { description: "回复已删除", content: { "application/json": { schema: errorResponseSchema } } },
+    401: {
+      description: "未登录",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+    403: {
+      description: "无权限",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+    404: {
+      description: "回复不存在",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+    422: {
+      description: "回复已删除",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
   },
 });
 
@@ -294,11 +360,24 @@ const upsReplyRoute = createRoute({
   responses: {
     200: {
       description: "操作成功",
-      content: { "application/json": { schema: z.object({ success: z.literal(true), action: z.enum(["up", "down"]) }) } },
+      content: {
+        "application/json": {
+          schema: z.object({ success: z.literal(true), action: z.enum(["up", "down"]) }),
+        },
+      },
     },
-    401: { description: "未登录", content: { "application/json": { schema: errorResponseSchema } } },
-    403: { description: "不能给自己点赞", content: { "application/json": { schema: errorResponseSchema } } },
-    404: { description: "回复不存在", content: { "application/json": { schema: errorResponseSchema } } },
+    401: {
+      description: "未登录",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+    403: {
+      description: "不能给自己点赞",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+    404: {
+      description: "回复不存在",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
   },
 });
 

@@ -56,11 +56,11 @@ flowchart TD
 
 主题分三层，但 route 只能消费 semantic roles：
 
-| 层 | 内容 | 消费边界 |
-| --- | --- | --- |
-| Brand source | CNode green/ink 的 light/dark 色值 | 仅 theme 定义内部使用 |
-| Standard roles | core、sidebar、chart tokens | primitive、blocks、routes |
-| Exceptional brand roles | Logo/marketing 无法由标准角色表达的少量 token | 指定品牌 block |
+| 层                      | 内容                                          | 消费边界                  |
+| ----------------------- | --------------------------------------------- | ------------------------- |
+| Brand source            | CNode green/ink 的 light/dark 色值            | 仅 theme 定义内部使用     |
+| Standard roles          | core、sidebar、chart tokens                   | primitive、blocks、routes |
+| Exceptional brand roles | Logo/marketing 无法由标准角色表达的少量 token | 指定品牌 block            |
 
 `primary` 表达主操作与选中重点，`accent` 表达 hover/selected surface，`secondary` 表达次级状态，`muted` 表达弱层级，`foreground` 表达正文，`sidebar-*` 表达后台导航，`chart-*` 表达真实数据系列。删除 `@theme` 暴露的 `--color-cnode-*` 和通用 `surface-*` utilities；迁移时按用途分类，不进行字符串一对一替换。
 
@@ -68,15 +68,15 @@ Base Nova primitive 不增加 CNode class。主题校准覆盖 light/dark 文本
 
 用户提供的 Base theme 片段作为 token inventory 和明暗关系参考，而不是最终色值表。它确认本 change 必须完整提供 core、`chart-1` 至 `chart-5`、`radius` 和 `sidebar-*` roles，并可参考 dark theme 使用 alpha border/input 的层次策略。最终取值遵循以下映射：
 
-| Token group | 参考方式 | CNode 处理 |
-| --- | --- | --- |
-| background/card/popover | 保留 Base 的层级和 foreground 配对 | 可做极轻品牌色温调整，但不降低正文对比度 |
-| secondary/muted/border/input | 保留中性弱层级与 dark alpha 边界策略 | 不直接染成高饱和绿色 |
-| primary/accent/ring | 保留交互角色 | 映射到 CNode green family 并校验 foreground/focus 对比度 |
-| destructive | 保留标准危险语义 | 使用 Base 可访问 red，不品牌化 |
-| chart-1..5 | 保留标准 token 和系列用途 | 建立可区分的 CNode 协调色，不复制单色灰阶 |
-| sidebar-* | 保留独立 navigation roles | 移除示例中的无关蓝色，映射 CNode navigation theme |
-| radius | 采用锁定 Base Nova preset 默认值 | 不因旧页面或单独示例的 `0.45rem` 另建覆盖 |
+| Token group                  | 参考方式                             | CNode 处理                                               |
+| ---------------------------- | ------------------------------------ | -------------------------------------------------------- |
+| background/card/popover      | 保留 Base 的层级和 foreground 配对   | 可做极轻品牌色温调整，但不降低正文对比度                 |
+| secondary/muted/border/input | 保留中性弱层级与 dark alpha 边界策略 | 不直接染成高饱和绿色                                     |
+| primary/accent/ring          | 保留交互角色                         | 映射到 CNode green family 并校验 foreground/focus 对比度 |
+| destructive                  | 保留标准危险语义                     | 使用 Base 可访问 red，不品牌化                           |
+| chart-1..5                   | 保留标准 token 和系列用途            | 建立可区分的 CNode 协调色，不复制单色灰阶                |
+| sidebar-*                    | 保留独立 navigation roles            | 移除示例中的无关蓝色，映射 CNode navigation theme        |
+| radius                       | 采用锁定 Base Nova preset 默认值     | 不因旧页面或单独示例的 `0.45rem` 另建覆盖                |
 
 theme 值统一使用 OKLCH，便于在保持 lightness/contrast 的同时调整 CNode 色相和 chroma。最终值必须通过对比度和四 viewport 视觉矩阵确认后锁定，不能由 route 通过 Tailwind class补偿。
 
@@ -117,16 +117,16 @@ Card 使用当前标准 anatomy：Header 包含 Title、Description、Action，C
 
 ### 4. 页面按八个原型迁移
 
-| 原型 | 代表页面 | 标准结构 |
-| --- | --- | --- |
-| feed | `/`、search、collections | PageHeader/filters + feed + optional sidebar |
-| reading | topic detail | optional TOC + readable content + context rail + replies |
-| compose | create/edit topic/reply | PageHeader + FieldGroup + editor + action footer |
-| account | signin/signup/setting | account shell + FieldGroup + helper navigation |
-| directory | users/jobs/resources | PageHeader + filters + responsive Item/Card grid |
-| dashboard | `/admin` | simple page header + grouped summaries + real charts/lists |
-| data-list | admin users/topics/tabs/zones/keywords/bans | filters + toolbar + Table/Item + pagination |
-| workflow | moderation/reports/audit | queue summary + filters + actionable records |
+| 原型      | 代表页面                                    | 标准结构                                                   |
+| --------- | ------------------------------------------- | ---------------------------------------------------------- |
+| feed      | `/`、search、collections                    | PageHeader/filters + feed + optional sidebar               |
+| reading   | topic detail                                | optional TOC + readable content + context rail + replies   |
+| compose   | create/edit topic/reply                     | PageHeader + FieldGroup + editor + action footer           |
+| account   | signin/signup/setting                       | account shell + FieldGroup + helper navigation             |
+| directory | users/jobs/resources                        | PageHeader + filters + responsive Item/Card grid           |
+| dashboard | `/admin`                                    | simple page header + grouped summaries + real charts/lists |
+| data-list | admin users/topics/tabs/zones/keywords/bans | filters + toolbar + Table/Item + pagination                |
+| workflow  | moderation/reports/audit                    | queue summary + filters + actionable records               |
 
 后台保留已建立的全宽 Header 与容器内 desktop navigation Card，移动端使用 Base Nova Sheet；两者共享同一 navigation model。该结构避免全高 inset Sidebar 改变既有后台信息骨架。Desktop navigation Card 与右侧完整 PageHeader 使用同一顶部基线，不在左栏增加一层仅用于模拟 breadcrumb 高度的标签。Admin page header 使用 breadcrumb 加紧凑品牌 surface，与公共 Hero 共享颜色和 anatomy，但不使用营销尺度。Topic reading header 留在内容 Card 内，以保持 padding 的 Separator 分隔标题和 metadata。Chart 只用于已有真实时间序列；否则保持摘要和列表，不用装饰数据。
 

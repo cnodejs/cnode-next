@@ -28,7 +28,11 @@ export default function Stars({ loaderData }: Route.ComponentProps) {
   return (
     <Layout>
       <DirectoryPage>
-        <PageHeader breadcrumbs={[{ label: "首页", to: "/" }, { label: "社区达人" }]} title="社区达人" description="由管理员标记的 CNode 社区活跃成员。" />
+        <PageHeader
+          breadcrumbs={[{ label: "首页", to: "/" }, { label: "社区达人" }]}
+          title="社区达人"
+          description="由管理员标记的 CNode 社区活跃成员。"
+        />
         <UserGrid users={users} empty="暂无达人" />
       </DirectoryPage>
     </Layout>
@@ -43,20 +47,24 @@ export function UserGrid({ users, empty }: { users: any[]; empty: string }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {users.map((user, index) => (
-        <Item key={user.id || user.loginname} render={<Link to={`/user/${user.loginname}`} />} variant="outline">
-            <ItemMedia>
-              <Avatar>
-                <AvatarImage src={getAvatarUrl(user.avatar_url, 48)} alt={user.loginname} />
-                <AvatarFallback>{getAvatarFallback(user.loginname)}</AvatarFallback>
-              </Avatar>
-            </ItemMedia>
-            <ItemContent>
-              <ItemTitle>{user.loginname}</ItemTitle>
-              <div className="text-sm text-muted-foreground">积分 {user.score || 0}</div>
-            </ItemContent>
-            <ItemActions>
-              <Badge variant="secondary">#{index + 1}</Badge>
-            </ItemActions>
+        <Item
+          key={user.id || user.loginname}
+          render={<Link to={`/user/${user.loginname}`} />}
+          variant="outline"
+        >
+          <ItemMedia>
+            <Avatar>
+              <AvatarImage src={getAvatarUrl(user.avatar_url, 48)} alt={user.loginname} />
+              <AvatarFallback>{getAvatarFallback(user.loginname)}</AvatarFallback>
+            </Avatar>
+          </ItemMedia>
+          <ItemContent>
+            <ItemTitle>{user.loginname}</ItemTitle>
+            <div className="text-sm text-muted-foreground">积分 {user.score || 0}</div>
+          </ItemContent>
+          <ItemActions>
+            <Badge variant="secondary">#{index + 1}</Badge>
+          </ItemActions>
         </Item>
       ))}
     </div>

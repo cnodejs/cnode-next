@@ -30,7 +30,9 @@ export async function loader({ request }: { request: Request }) {
     "SameSite=Lax",
     "Max-Age=600",
     domain ? `Domain=${domain}` : "",
-  ].filter(Boolean).join("; ");
+  ]
+    .filter(Boolean)
+    .join("; ");
 
   return redirect(redirectUrl, { headers: { "Set-Cookie": cookie } });
 }

@@ -40,7 +40,9 @@ export function Sidebar() {
           <CardTitle>社区合作</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
-          <p className="text-sm text-muted-foreground">面向开源项目、开发者工具与 Node.js 技术活动的社区展示位。</p>
+          <p className="text-sm text-muted-foreground">
+            面向开源项目、开发者工具与 Node.js 技术活动的社区展示位。
+          </p>
           <Button
             render={<Link to="/about#cooperation" />}
             variant="secondary"
@@ -56,7 +58,11 @@ export function Sidebar() {
       {data ? <LatestReplies replies={data.latest_replies} /> : <SidebarSkeleton />}
       {data ? <Leaderboard users={data.top_users} /> : <SidebarSkeleton />}
       {data ? <NoReplyTopics topics={data.no_reply_topics} /> : <SidebarSkeleton />}
-      {data ? <CommunityLinks partners={data.partners} resources={data.resources} /> : <SidebarSkeleton />}
+      {data ? (
+        <CommunityLinks partners={data.partners} resources={data.resources} />
+      ) : (
+        <SidebarSkeleton />
+      )}
     </aside>
   );
 }
@@ -84,9 +90,16 @@ function LatestReplies({ replies }: { replies: SidebarData["latest_replies"] }) 
         {replies.map((reply) => {
           const author = reply.author;
           return (
-            <Link key={reply.id} to={`/topic/${reply.topic_id}#${reply.id}`} className="group flex gap-3">
+            <Link
+              key={reply.id}
+              to={`/topic/${reply.topic_id}#${reply.id}`}
+              className="group flex gap-3"
+            >
               <Avatar className="mt-0.5 size-8">
-                <AvatarImage src={getAvatarUrl(author?.avatar_url, 32)} alt={author?.loginname || "CNode"} />
+                <AvatarImage
+                  src={getAvatarUrl(author?.avatar_url, 32)}
+                  alt={author?.loginname || "CNode"}
+                />
                 <AvatarFallback>{getAvatarFallback(author?.loginname)}</AvatarFallback>
               </Avatar>
               <span className="min-w-0 flex-1 text-xs">
@@ -94,7 +107,8 @@ function LatestReplies({ replies }: { replies: SidebarData["latest_replies"] }) 
                   {reply.topic_title}
                 </span>
                 <span className="mt-0.5 block truncate text-muted-foreground">
-                  {author?.loginname || "社区成员"} · {reply.create_at ? <TimeAgo date={reply.create_at} /> : null}
+                  {author?.loginname || "社区成员"} ·{" "}
+                  {reply.create_at ? <TimeAgo date={reply.create_at} /> : null}
                 </span>
               </span>
             </Link>
@@ -117,7 +131,10 @@ function NoReplyTopics({ topics }: { topics: SidebarData["no_reply_topics"] }) {
         <ul className="flex flex-col gap-2 text-xs">
           {topics.map((t) => (
             <li key={t.id}>
-              <Link to={`/topic/${t.id}`} className="block truncate font-medium text-foreground hover:text-primary">
+              <Link
+                to={`/topic/${t.id}`}
+                className="block truncate font-medium text-foreground hover:text-primary"
+              >
                 {t.title}
               </Link>
               <div className="mt-0.5 flex items-center gap-2 text-muted-foreground">
@@ -143,13 +160,19 @@ function Leaderboard({ users }: { users: SidebarData["top_users"] }) {
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         {users.map((user, index) => (
-          <Link key={user.id} to={`/user/${user.loginname}`} className="flex items-center gap-3 text-sm">
+          <Link
+            key={user.id}
+            to={`/user/${user.loginname}`}
+            className="flex items-center gap-3 text-sm"
+          >
             <span className="w-5 text-xs font-semibold text-muted-foreground">#{index + 1}</span>
             <Avatar className="size-8">
               <AvatarImage src={getAvatarUrl(user.avatar_url, 32)} alt={user.loginname} />
               <AvatarFallback>{getAvatarFallback(user.loginname)}</AvatarFallback>
             </Avatar>
-            <span className="min-w-0 flex-1 truncate font-medium hover:text-primary">{user.loginname}</span>
+            <span className="min-w-0 flex-1 truncate font-medium hover:text-primary">
+              {user.loginname}
+            </span>
             <span className="text-xs text-muted-foreground">{user.score}</span>
           </Link>
         ))}
@@ -183,7 +206,9 @@ function CommunityLinks({
               <span className="flex items-center justify-between font-medium text-foreground">
                 {l.name} <ArrowUpRight className="h-3 w-3" />
               </span>
-              {l.description && <span className="mt-1 block text-muted-foreground">{l.description}</span>}
+              {l.description && (
+                <span className="mt-1 block text-muted-foreground">{l.description}</span>
+              )}
             </a>
           ))}
         </div>

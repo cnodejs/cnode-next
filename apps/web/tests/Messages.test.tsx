@@ -1,7 +1,7 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import Messages, { loader } from "~/routes/my.messages";
 
 const mocks = vi.hoisted(() => ({
@@ -13,7 +13,9 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("~/lib/api-client", () => ({ apiFetch: mocks.apiFetch }));
 vi.mock("~/lib/auth", () => ({ requireUser: mocks.requireUser }));
-vi.mock("~/components/Layout", () => ({ Layout: ({ children }: { children: React.ReactNode }) => children }));
+vi.mock("~/components/Layout", () => ({
+  Layout: ({ children }: { children: React.ReactNode }) => children,
+}));
 vi.mock("~/lib/stores/auth-store", () => ({
   useAuthStore: (selector: (state: Record<string, unknown>) => unknown) =>
     selector({ fetchUnread: mocks.fetchUnread, setUnreadCount: mocks.setUnreadCount }),
@@ -58,7 +60,9 @@ describe("messages page", () => {
       data: { has_read_messages: [], hasnot_read_messages: [] },
     });
 
-    await loader({ request: new Request("http://localhost/my/messages", { headers: { cookie: "session=1" } }) } as never);
+    await loader({
+      request: new Request("http://localhost/my/messages", { headers: { cookie: "session=1" } }),
+    } as never);
 
     expect(mocks.apiFetch).toHaveBeenCalledWith("/api/v1/messages?mdrender=false", {
       headers: { cookie: "session=1" },
@@ -86,10 +90,7 @@ describe("messages page", () => {
   });
 
   it("omits empty summaries and limits long content", () => {
-    renderMessages(
-      [makeMessage("empty", "   ", true)],
-      [makeMessage("long", "字".repeat(170))],
-    );
+    renderMessages([makeMessage("empty", "   ", true)], [makeMessage("long", "字".repeat(170))]);
 
     expect(document.querySelectorAll('[data-slot="item-description"]')).toHaveLength(1);
     expect(messageGroup("新消息").getByText(`${"字".repeat(160)}…`)).toBeInTheDocument();
@@ -102,7 +103,9 @@ describe("messages page", () => {
     expect(messageGroup("新消息").getByText("不错哦")).toBeInTheDocument();
     await userEvent.click(messageGroup("新消息").getByRole("button", { name: "标记已读" }));
 
-    await waitFor(() => expect(messageGroup("新消息").queryByText("不错哦")).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(messageGroup("新消息").queryByText("不错哦")).not.toBeInTheDocument(),
+    );
     expect(messageGroup("过往消息").getByText("不错哦")).toBeInTheDocument();
     expect(screen.queryByText(/<p>|<\/p>/)).not.toBeInTheDocument();
   });

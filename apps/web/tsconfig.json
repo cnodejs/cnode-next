@@ -9,8 +9,7 @@
       "~/*": ["./app/*"],
       "~/db": ["../../packages/db/src/index.ts"],
       "~/shared": ["../../packages/shared/src/index.ts"]
-    },
-    "baseUrl": "."
+    }
   },
   "include": ["**/*.ts", "**/*.tsx", "**/.react-router/types/**/*"],
   "exclude": ["node_modules", "dist", "build"]

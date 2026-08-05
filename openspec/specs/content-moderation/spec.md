@@ -1,8 +1,11 @@
 # content-moderation Specification
 
 ## Purpose
+
 TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: 关键字过滤
 
 系统 MUST 在发帖和回复提交时对标题和内容进行关键字过滤,阻止包含敏感词的内容发布。
@@ -47,6 +50,7 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 系统 MUST 定期巡检已发布的内容，按低负载批处理方式检查话题和回复中的敏感词命中，并将命中内容记录到巡检队列供管理员复核。
 
 #### Scenario: 巡检任务执行
+
 - **WHEN** 定时任务触发
 - **THEN** 系统 MUST 扫描新增或更新的已发布话题和回复
 - **AND** 检测标题、话题内容和回复内容是否包含敏感词
@@ -54,18 +58,21 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 - **AND** 记录巡检任务日志，包括时间、扫描条目数、命中条目数和处理结果
 
 #### Scenario: 新增敏感词触发历史扫描
+
 - **WHEN** 管理员新增敏感词
 - **THEN** 系统 MUST 创建针对新增敏感词的历史扫描任务
 - **AND** 历史扫描任务 MUST 覆盖未删除的话题和回复
 - **AND** 新增敏感词请求 MUST 不等待历史扫描完成
 
 #### Scenario: 历史命中不默认隐藏
+
 - **WHEN** 历史扫描发现命中敏感词的话题或回复
 - **THEN** 系统 MUST 将命中记录标记为待复核
 - **AND** 系统 MUST NOT 默认删除或隐藏历史命中内容
 - **AND** 管理员确认违规后才执行删除或隐藏动作
 
 #### Scenario: 管理员可处理巡检命中
+
 - **WHEN** 管理员浏览巡检结果
 - **THEN** 系统 MUST 展示命中对象、命中敏感词、上下文预览、作者和扫描时间
 - **AND** 管理员 MUST 能够确认删除、标记误报或忽略命中
@@ -75,14 +82,17 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 系统 MUST 为每个敏感词扫描命中保存可复核记录，覆盖话题和回复两类内容。
 
 #### Scenario: 记录话题命中
+
 - **WHEN** 扫描发现话题标题或内容命中敏感词
 - **THEN** 系统 MUST 保存命中记录，包含 `target_type=topic`、话题 ID、作者 ID、命中词、命中字段和上下文预览
 
 #### Scenario: 记录回复命中
+
 - **WHEN** 扫描发现回复内容命中敏感词
 - **THEN** 系统 MUST 保存命中记录，包含 `target_type=reply`、回复 ID、所属话题 ID、作者 ID、命中词和上下文预览
 
 #### Scenario: 避免重复命中记录
+
 - **WHEN** 同一任务或后续任务再次扫描到同一对象命中同一敏感词
 - **THEN** 系统 MUST 避免创建重复的待处理命中记录
 - **AND** 已处理为误报的命中 MUST NOT 被同一敏感词反复加入待处理队列
@@ -102,29 +112,35 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 巡检命中队列依赖扫描任务生成，系统 SHALL 提供管理员可操作的任务执行控制，避免任务因轮询间隔或误创建而长期堆积。
 
 #### Scenario: 管理员立即推进巡检队列
+
 - **WHEN** 管理员发现巡检任务处于 pending 或 paused
 - **THEN** 管理员 MUST 能触发立即执行
 - **AND** 系统 MUST 尽快开始或恢复扫描
 
 #### Scenario: 管理员取消误创建任务
+
 - **WHEN** 管理员发现巡检任务范围或触发原因错误
 - **THEN** 管理员 MUST 能取消未完成任务
 - **AND** 取消任务 MUST 不再继续产生命中记录
 
 ### Requirement: 敏感词命中次数必须真实
+
 敏感词管理页 SHALL 只展示有真实更新来源的命中次数；若展示 `hit_count`，实时过滤和历史巡检都必须更新该指标。
 
 #### Scenario: 实时过滤更新命中次数
+
 - **WHEN** 用户发帖、编辑话题、回复或编辑回复时命中敏感词并被拒绝
 - **THEN** 系统 MUST 增加对应敏感词的命中次数
 - **AND** `/admin/keywords` 展示的命中次数 MUST 反映该变化
 
 #### Scenario: 历史巡检更新命中次数
+
 - **WHEN** 巡检任务扫描历史话题或回复并发现敏感词命中
 - **THEN** 系统 MUST 增加对应敏感词的命中次数或记录等价可展示统计
 - **AND** 后台展示的命中次数 MUST 不长期保持默认值
 
 #### Scenario: 无统计实现时不展示假指标
+
 - **WHEN** 系统没有实现敏感词命中次数统计
 - **THEN** `/admin/keywords` MUST 隐藏命中次数列或明确标记为未接入
 - **AND** 不得展示永远为 0 或空值的运营指标
@@ -134,11 +150,13 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 系统 SHALL 使用巡检命中记录上的任务关联，将后台巡检结果按巡检任务过滤和展示。
 
 #### Scenario: 查询指定任务的巡检命中
+
 - **WHEN** 管理员请求查看任务 `#11` 的巡检命中
 - **THEN** 系统 MUST 返回 `scan_job_id=11` 的命中记录
 - **AND** 系统 MUST 支持继续按待处理、已确认、误报或忽略状态筛选该任务下的命中
 
 #### Scenario: 重复命中不重复入队
+
 - **WHEN** 后续巡检任务再次扫描到同一对象、同一字段和同一组敏感词
 - **THEN** 系统 MUST 继续避免创建重复待处理命中记录
 - **AND** 该限制 MUST 不阻止管理员处理首次创建的待处理命中
@@ -148,22 +166,26 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 系统 SHALL 允许管理员对某个巡检任务下的待处理命中执行批量确认删除，确认删除的目标是命中的原始话题或回复。
 
 #### Scenario: 批量确认删除话题和回复命中
+
 - **WHEN** 管理员确认删除某巡检任务下的待处理命中
 - **THEN** 系统 MUST 对话题命中执行现有话题删除动作
 - **AND** 系统 MUST 对回复命中执行现有回复删除动作
 - **AND** 系统 MUST 将对应巡检命中标记为已确认处理
 
 #### Scenario: 批量确认删除只处理待处理命中
+
 - **WHEN** 巡检任务下同时存在 pending、confirmed、false_positive 或 ignored 命中
 - **THEN** 任务级批量确认删除 MUST 只处理 pending 命中
 - **AND** 已处理命中 MUST 不重复删除内容或重复处罚作者
 
 #### Scenario: 批量确认删除写入审计日志
+
 - **WHEN** 管理员完成任务级批量确认删除
 - **THEN** 系统 MUST 写入审计日志
 - **AND** 审计详情 MUST 包含任务 ID、操作类型和实际处理数量
 
 #### Scenario: 非管理员不可执行任务级批量确认删除
+
 - **WHEN** 非 admin 用户调用任务级批量确认删除接口
 - **THEN** 系统 MUST 返回权限错误
 - **AND** 话题、回复和巡检命中状态 MUST 保持不变

@@ -1,10 +1,14 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { UserHero } from "~/routes/user.$name";
 
-const { apiFetch, toastError, toastSuccess } = vi.hoisted(() => ({ apiFetch: vi.fn(), toastError: vi.fn(), toastSuccess: vi.fn() }));
+const { apiFetch, toastError, toastSuccess } = vi.hoisted(() => ({
+  apiFetch: vi.fn(),
+  toastError: vi.fn(),
+  toastSuccess: vi.fn(),
+}));
 
 vi.mock("~/lib/api-client", async () => {
   const actual = await vi.importActual<typeof import("~/lib/api-client")>("~/lib/api-client");
@@ -54,15 +58,28 @@ describe("用户公开资料 Hero", () => {
     expect(screen.queryByText("版主")).not.toBeInTheDocument();
     expect(screen.getByText("Hangzhou")).toBeInTheDocument();
     expect(screen.getByText("Node.js developer")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /alice\.example\.com/ })).toHaveAttribute("href", "https://alice.example.com/");
-    expect(screen.getByRole("link", { name: /@alice-gh/ })).toHaveAttribute("href", "https://github.com/alice-gh");
+    expect(screen.getByRole("link", { name: /alice\.example\.com/ })).toHaveAttribute(
+      "href",
+      "https://alice.example.com/",
+    );
+    expect(screen.getByRole("link", { name: /@alice-gh/ })).toHaveAttribute(
+      "href",
+      "https://github.com/alice-gh",
+    );
     expect(screen.getByText("话题").parentElement).toHaveTextContent("8");
     expect(screen.getByText("回复").parentElement).toHaveTextContent("42");
     expect(screen.getByText("收藏").parentElement).toHaveTextContent("5");
   });
 
   it("hides empty and unsafe public profile fields", () => {
-    renderHero({ ...baseUser, identities: [], location: null, url: "javascript:alert(1)", githubUsername: "", signature: null });
+    renderHero({
+      ...baseUser,
+      identities: [],
+      location: null,
+      url: "javascript:alert(1)",
+      githubUsername: "",
+      signature: null,
+    });
 
     expect(screen.queryByLabelText("用户身份")).not.toBeInTheDocument();
     expect(screen.queryByText("Hangzhou")).not.toBeInTheDocument();
@@ -89,7 +106,10 @@ describe("用户公开资料 Hero", () => {
 
   it("keeps block and mute actions independent", async () => {
     const operator = userEvent.setup();
-    renderHero({ ...baseUser, is_block: true, is_muted: false }, { loginname: "admin", is_admin: true });
+    renderHero(
+      { ...baseUser, is_block: true, is_muted: false },
+      { loginname: "admin", is_admin: true },
+    );
 
     expect(screen.getByText("内容已屏蔽")).toBeInTheDocument();
     expect(screen.queryByText("已禁言")).not.toBeInTheDocument();

@@ -1,6 +1,11 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { userRoleSchema } from "@cnode/shared";
-import { canRunJobBulkModerationAction, canRunPermanentTopicDelete, canRunTopicAction, normalizePermanentTopicDeleteIds } from "../src/lib/admin-governance";
+import {
+  canRunJobBulkModerationAction,
+  canRunPermanentTopicDelete,
+  canRunTopicAction,
+  normalizePermanentTopicDeleteIds,
+} from "../src/lib/admin-governance";
 import { canPostJobFromRoles } from "../src/routes/topic";
 
 test("job posting requires admin or recruiter", () => {
@@ -41,5 +46,8 @@ test("permanent topic delete ids are normalized and capped", () => {
   expect(normalizePermanentTopicDeleteIds({ id: "12" })).toEqual([12]);
   expect(normalizePermanentTopicDeleteIds({ topic_id: 13 })).toEqual([13]);
   expect(normalizePermanentTopicDeleteIds({ ids: ["1", 0, -1, "bad", 2] })).toEqual([1, 2]);
-  expect(normalizePermanentTopicDeleteIds({ ids: Array.from({ length: 30 }, (_, index) => index + 1) }).length).toBe(20);
+  expect(
+    normalizePermanentTopicDeleteIds({ ids: Array.from({ length: 30 }, (_, index) => index + 1) })
+      .length,
+  ).toBe(20);
 });

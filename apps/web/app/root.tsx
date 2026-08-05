@@ -18,14 +18,18 @@ export async function loader({ request }: { request: Request }) {
 
   let zones: any[] | null = await kvGet(kv, zonesCacheKey);
   if (!zones) {
-    const res = await apiFetch<{ success: boolean; data: any[] }>("/api/v1/zones", { headers: { cookie } });
+    const res = await apiFetch<{ success: boolean; data: any[] }>("/api/v1/zones", {
+      headers: { cookie },
+    });
     zones = res.success ? res.data : [];
     await kvSet(kv, zonesCacheKey, zones, 300);
   }
 
   let tabs: any[] | null = await kvGet(kv, tabsCacheKey);
   if (!tabs) {
-    const res = await apiFetch<{ success: boolean; data: any[] }>("/api/v1/tabs", { headers: { cookie } });
+    const res = await apiFetch<{ success: boolean; data: any[] }>("/api/v1/tabs", {
+      headers: { cookie },
+    });
     tabs = res.success ? res.data : [];
     await kvSet(kv, tabsCacheKey, tabs, 300);
   }
@@ -40,7 +44,8 @@ export async function loader({ request }: { request: Request }) {
       build: {
         service: "cnode-web",
         version: packageJson.version,
-        commit: process.env.CNODE_GIT_SHA || process.env.GIT_SHA || process.env.COMMIT_SHA || "unknown",
+        commit:
+          process.env.CNODE_GIT_SHA || process.env.GIT_SHA || process.env.COMMIT_SHA || "unknown",
         buildTime: process.env.CNODE_BUILD_TIME || process.env.BUILD_TIME || "unknown",
       },
     },
@@ -49,7 +54,13 @@ export async function loader({ request }: { request: Request }) {
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const data = useRouteLoaderData("root") as
-    | { publicConfig?: { apiBaseUrl?: string; turnstileSiteKey?: string; build?: Record<string, string> } }
+    | {
+        publicConfig?: {
+          apiBaseUrl?: string;
+          turnstileSiteKey?: string;
+          build?: Record<string, string>;
+        };
+      }
     | undefined;
   const publicConfig = data?.publicConfig || { apiBaseUrl: "https://api.cnodejs.org" };
 

@@ -6,14 +6,14 @@ CNode（cnodejs.org）是 Node.js 中文专业社区，起源于 nodeclub。本�
 
 ## Features
 
-| Area | Capabilities |
-| ---- | ------------- |
-| Web | React Router v7 SSR, Vite, Tailwind CSS v4, shadcn/ui |
-| API | Hono on Node.js, cookie auth, GitHub OAuth, legacy `accesstoken` compatibility |
-| Data | PostgreSQL-only Drizzle schema and Mongo-to-PostgreSQL migration tools |
-| Moderation | Keyword rules, scan jobs, audit-oriented admin workflows |
-| Delivery | Docker Compose production runbook and GHCR image workflow documentation |
-| Safety | Secret handling guidance, Gitleaks scan command, security reporting entry |
+| Area       | Capabilities                                                                   |
+| ---------- | ------------------------------------------------------------------------------ |
+| Web        | React Router v7 SSR, Vite, Tailwind CSS v4, shadcn/ui                          |
+| API        | Hono on Node.js, cookie auth, GitHub OAuth, legacy `accesstoken` compatibility |
+| Data       | PostgreSQL-only Drizzle schema and Mongo-to-PostgreSQL migration tools         |
+| Moderation | Keyword rules, scan jobs, audit-oriented admin workflows                       |
+| Delivery   | Docker Compose production runbook and GHCR image workflow documentation        |
+| Safety     | Secret handling guidance, Gitleaks scan command, security reporting entry      |
 
 Shared TypeScript and Zod contracts span Web and API. pnpm workspace manages the monorepo.
 
@@ -28,27 +28,27 @@ pnpm dev
 
 Local endpoints:
 
-| Service | URL |
-| ------- | --- |
-| Web | `http://localhost:5173` |
-| API | `http://localhost:3001` |
+| Service | URL                     |
+| ------- | ----------------------- |
+| Web     | `http://localhost:5173` |
+| API     | `http://localhost:3001` |
 
 Root `.env` is the single default local environment source. Do not commit real `.env` files or secrets. See [docs/conventions.md](docs/conventions.md) for documentation, development, and secret handling conventions.
 
 ## Documentation
 
-| Need | Start here |
-| ---- | ---------- |
-| Documentation and contribution conventions | [docs/conventions.md](docs/conventions.md) |
-| Architecture and runtime boundaries | [docs/architecture.md](docs/architecture.md) |
-| Local development and verification | [docs/development.md](docs/development.md) |
-| Production deployment | [deployment/README.md](deployment/README.md) |
-| PostgreSQL schema and migration rules | [docs/database.md](docs/database.md) |
-| Mongo-to-PostgreSQL migration background | [wiki/migration-background.md](wiki/migration-background.md) |
-| API reference | [api/openapi.json](api/openapi.json) (auto-generated, view at `/api` page) |
-| Content moderation | [docs/content-moderation.md](docs/content-moderation.md) |
-| Historical context and legacy behavior notes | [wiki/README.md](wiki/README.md) |
-| Security practices | [docs/security.md](docs/security.md), [SECURITY.md](SECURITY.md) |
+| Need                                         | Start here                                                                 |
+| -------------------------------------------- | -------------------------------------------------------------------------- |
+| Documentation and contribution conventions   | [docs/conventions.md](docs/conventions.md)                                 |
+| Architecture and runtime boundaries          | [docs/architecture.md](docs/architecture.md)                               |
+| Local development and verification           | [docs/development.md](docs/development.md)                                 |
+| Production deployment                        | [deployment/README.md](deployment/README.md)                               |
+| PostgreSQL schema and migration rules        | [docs/database.md](docs/database.md)                                       |
+| Mongo-to-PostgreSQL migration background     | [wiki/migration-background.md](wiki/migration-background.md)               |
+| API reference                                | [api/openapi.json](api/openapi.json) (auto-generated, view at `/api` page) |
+| Content moderation                           | [docs/content-moderation.md](docs/content-moderation.md)                   |
+| Historical context and legacy behavior notes | [wiki/README.md](wiki/README.md)                                           |
+| Security practices                           | [docs/security.md](docs/security.md), [SECURITY.md](SECURITY.md)           |
 
 ## Contributing
 

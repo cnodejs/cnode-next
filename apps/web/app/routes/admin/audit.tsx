@@ -2,7 +2,13 @@ import { requireAdmin } from "~/lib/auth";
 import { AdminLayout } from "~/components/AdminLayout";
 import { apiFetch } from "~/lib/api-client";
 import { TimeAgo } from "~/components/TimeAgo";
-import { AdminMetricCard, AdminPage, AdminPageHeader, AdminPanel, AdminToolbar } from "~/components/AdminPage";
+import {
+  AdminMetricCard,
+  AdminPage,
+  AdminPageHeader,
+  AdminPanel,
+  AdminToolbar,
+} from "~/components/AdminPage";
 import { Pagination } from "~/components/Pagination";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -10,7 +16,14 @@ import { Input } from "~/components/ui/input";
 import { NativeSelect } from "~/components/ui/native-select";
 import { Form, Link } from "react-router";
 import { EmptyState } from "~/components/EmptyState";
-import { Item, ItemContent, ItemDescription, ItemGroup, ItemHeader, ItemTitle } from "~/components/ui/item";
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemHeader,
+  ItemTitle,
+} from "~/components/ui/item";
 import { Separator } from "~/components/ui/separator";
 
 type AuditLog = {
@@ -47,7 +60,12 @@ const categoryLabels: Record<string, string> = {
   system: "系统设置",
 };
 
-const riskLabels = { low: "低风险", medium: "中风险", high: "高风险", critical: "极高风险" } as const;
+const riskLabels = {
+  low: "低风险",
+  medium: "中风险",
+  high: "高风险",
+  critical: "极高风险",
+} as const;
 
 export function meta() {
   return [{ title: "审计中心 · CNode Admin" }];
@@ -62,18 +80,33 @@ function riskVariant(risk: AuditLog["risk"]) {
 
 function targetHref(log: AuditLog) {
   if (log.target_type === "user" && log.target_name) return `/user/${log.target_name}`;
-  if ((log.target_type === "topic" || log.target_type === "topics") && log.target_id) return `/topic/${log.target_id.split(",")[0]}`;
+  if ((log.target_type === "topic" || log.target_type === "topics") && log.target_id)
+    return `/topic/${log.target_id.split(",")[0]}`;
   if (log.target_type === "report") return "/admin/reports";
-  if (log.target_type === "scan_job" || log.target_type === "moderation_hit") return "/admin/moderation";
+  if (log.target_type === "scan_job" || log.target_type === "moderation_hit")
+    return "/admin/moderation";
   return null;
 }
 
 function DetailBlock({ detail }: { detail: string | null }) {
-  if (!detail) return <div className="min-w-0 bg-muted p-3 text-xs text-muted-foreground">该审计事件没有附加详情。</div>;
+  if (!detail)
+    return (
+      <div className="min-w-0 bg-muted p-3 text-xs text-muted-foreground">
+        该审计事件没有附加详情。
+      </div>
+    );
   try {
-    return <pre className="max-w-full overflow-auto bg-muted p-3 text-xs">{JSON.stringify(JSON.parse(detail), null, 2)}</pre>;
+    return (
+      <pre className="max-w-full overflow-auto bg-muted p-3 text-xs">
+        {JSON.stringify(JSON.parse(detail), null, 2)}
+      </pre>
+    );
   } catch {
-    return <pre className="max-w-full overflow-auto bg-muted p-3 text-xs whitespace-pre-wrap break-all">{detail}</pre>;
+    return (
+      <pre className="max-w-full overflow-auto bg-muted p-3 text-xs whitespace-pre-wrap break-all">
+        {detail}
+      </pre>
+    );
   }
 }
 
@@ -90,7 +123,10 @@ export default function AdminAudit({ loaderData }: any) {
   return (
     <AdminLayout>
       <AdminPage archetype="workflow">
-        <AdminPageHeader title="审计中心" description="追踪后台关键操作、权限变更、内容治理和系统设置变更。" />
+        <AdminPageHeader
+          title="审计中心"
+          description="追踪后台关键操作、权限变更、内容治理和系统设置变更。"
+        />
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           <AdminMetricCard label="高风险操作" value={summary.high_risk} />
@@ -100,22 +136,54 @@ export default function AdminAudit({ loaderData }: any) {
           <AdminMetricCard label="失败/异常" value={summary.failures} />
         </div>
 
-        <AdminPanel title="审计事件" description={`当前显示 ${logs.length} / ${total} 条记录`} contentClassName="flex flex-col gap-4">
+        <AdminPanel
+          title="审计事件"
+          description={`当前显示 ${logs.length} / ${total} 条记录`}
+          contentClassName="flex flex-col gap-4"
+        >
           <AdminToolbar>
             <Form method="get" className="grid w-full gap-2 md:grid-cols-4 xl:grid-cols-7">
-              <Input type="date" name="date_from" defaultValue={filters.date_from || ""} aria-label="开始日期" />
-              <Input type="date" name="date_to" defaultValue={filters.date_to || ""} aria-label="结束日期" />
-              <NativeSelect name="category" defaultValue={filters.category || ""} aria-label="审计类型">
+              <Input
+                type="date"
+                name="date_from"
+                defaultValue={filters.date_from || ""}
+                aria-label="开始日期"
+              />
+              <Input
+                type="date"
+                name="date_to"
+                defaultValue={filters.date_to || ""}
+                aria-label="结束日期"
+              />
+              <NativeSelect
+                name="category"
+                defaultValue={filters.category || ""}
+                aria-label="审计类型"
+              >
                 <option value="">全部类型</option>
-                {Object.entries(categoryLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                {Object.entries(categoryLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
               </NativeSelect>
               <NativeSelect name="risk" defaultValue={filters.risk || ""} aria-label="风险等级">
                 <option value="">全部风险</option>
-                {Object.entries(riskLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                {Object.entries(riskLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
               </NativeSelect>
               <Input name="operator" defaultValue={filters.operator || ""} placeholder="操作人" />
-              <Input name="q" defaultValue={filters.q || ""} placeholder="搜索 action/目标/detail" />
-              <Button type="submit" variant="outline">筛选</Button>
+              <Input
+                name="q"
+                defaultValue={filters.q || ""}
+                placeholder="搜索 action/目标/detail"
+              />
+              <Button type="submit" variant="outline">
+                筛选
+              </Button>
             </Form>
           </AdminToolbar>
 
@@ -126,7 +194,11 @@ export default function AdminAudit({ loaderData }: any) {
               <EmptyState
                 title="没有匹配的审计记录"
                 message="当前日期、类型、风险或关键词筛选没有结果。"
-                action={<Button render={<Link to="/admin/audit" />} variant="outline">清除筛选</Button>}
+                action={
+                  <Button render={<Link to="/admin/audit" />} variant="outline">
+                    清除筛选
+                  </Button>
+                }
               />
             )}
             {logs.map((log) => {
@@ -137,42 +209,81 @@ export default function AdminAudit({ loaderData }: any) {
                     <ItemHeader>
                       <ItemTitle className="w-full flex-wrap whitespace-normal">
                         <Badge variant={riskVariant(log.risk)}>{riskLabels[log.risk]}</Badge>
-                        <Badge variant="secondary">{categoryLabels[log.category] || log.category}</Badge>
+                        <Badge variant="secondary">
+                          {categoryLabels[log.category] || log.category}
+                        </Badge>
                         <span className="font-semibold text-foreground">{log.label}</span>
                       </ItemTitle>
                     </ItemHeader>
                     <ItemDescription>
-                        {log.operator_name || "system"} · <TimeAgo date={log.create_at} /> · {log.result || "unknown"}
+                      {log.operator_name || "system"} · <TimeAgo date={log.create_at} /> ·{" "}
+                      {log.result || "unknown"}
                     </ItemDescription>
                     <div className="min-w-0 break-all text-sm">
-                        目标：{href ? <Link to={href} className="text-primary hover:underline">{log.target_name || log.target_id}</Link> : <span>{log.target_name || log.target_id || "无"}</span>}
-                        {log.target_type && <span className="ml-2 text-xs text-muted-foreground">{log.target_type}</span>}
+                      目标：
+                      {href ? (
+                        <Link to={href} className="text-primary hover:underline">
+                          {log.target_name || log.target_id}
+                        </Link>
+                      ) : (
+                        <span>{log.target_name || log.target_id || "无"}</span>
+                      )}
+                      {log.target_type && (
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          {log.target_type}
+                        </span>
+                      )}
                     </div>
 
-                  <details className="border-t pt-3 text-sm">
-                    <summary className="cursor-pointer font-medium text-foreground">查看审计字段</summary>
-                    <div className="mt-3 grid gap-3 lg:grid-cols-[16rem_minmax(0,1fr)]">
-                      <dl className="flex min-w-0 flex-col gap-1 break-all text-xs text-muted-foreground">
-                        <div className="mb-2 font-semibold text-foreground">基础字段</div>
-                        <div><dt className="inline font-semibold">id: </dt><dd className="inline">{log.id}</dd></div>
-                        <div><dt className="inline font-semibold">action: </dt><dd className="inline">{log.action}</dd></div>
-                        <div><dt className="inline font-semibold">operator_id: </dt><dd className="inline">{log.operator_id ?? ""}</dd></div>
-                        <div><dt className="inline font-semibold">target_type: </dt><dd className="inline">{log.target_type || ""}</dd></div>
-                        <div><dt className="inline font-semibold">target_id: </dt><dd className="inline">{log.target_id || ""}</dd></div>
-                      </dl>
-                      <div className="flex min-w-0 flex-col gap-2">
-                        <div className="text-xs font-semibold text-foreground">附加详情 detail</div>
-                        <DetailBlock detail={log.detail} />
+                    <details className="border-t pt-3 text-sm">
+                      <summary className="cursor-pointer font-medium text-foreground">
+                        查看审计字段
+                      </summary>
+                      <div className="mt-3 grid gap-3 lg:grid-cols-[16rem_minmax(0,1fr)]">
+                        <dl className="flex min-w-0 flex-col gap-1 break-all text-xs text-muted-foreground">
+                          <div className="mb-2 font-semibold text-foreground">基础字段</div>
+                          <div>
+                            <dt className="inline font-semibold">id: </dt>
+                            <dd className="inline">{log.id}</dd>
+                          </div>
+                          <div>
+                            <dt className="inline font-semibold">action: </dt>
+                            <dd className="inline">{log.action}</dd>
+                          </div>
+                          <div>
+                            <dt className="inline font-semibold">operator_id: </dt>
+                            <dd className="inline">{log.operator_id ?? ""}</dd>
+                          </div>
+                          <div>
+                            <dt className="inline font-semibold">target_type: </dt>
+                            <dd className="inline">{log.target_type || ""}</dd>
+                          </div>
+                          <div>
+                            <dt className="inline font-semibold">target_id: </dt>
+                            <dd className="inline">{log.target_id || ""}</dd>
+                          </div>
+                        </dl>
+                        <div className="flex min-w-0 flex-col gap-2">
+                          <div className="text-xs font-semibold text-foreground">
+                            附加详情 detail
+                          </div>
+                          <DetailBlock detail={log.detail} />
+                        </div>
                       </div>
-                    </div>
-                  </details>
+                    </details>
                   </ItemContent>
                 </Item>
               );
             })}
           </ItemGroup>
 
-          <Pagination page={page} total={total} limit={limit} basePath="/admin/audit" searchParams={filters} />
+          <Pagination
+            page={page}
+            total={total}
+            limit={limit}
+            basePath="/admin/audit"
+            searchParams={filters}
+          />
         </AdminPanel>
       </AdminPage>
     </AdminLayout>
@@ -187,23 +298,40 @@ export async function loader({ request }: any) {
   const cookie = request.headers.get("cookie") || "";
   const params = new URLSearchParams({ page: String(page), limit: String(limit) });
   const filters: Record<string, string> = {};
-  for (const key of ["date_from", "date_to", "operator", "category", "risk", "target_type", "result", "q"]) {
+  for (const key of [
+    "date_from",
+    "date_to",
+    "operator",
+    "category",
+    "risk",
+    "target_type",
+    "result",
+    "q",
+  ]) {
     const value = url.searchParams.get(key)?.trim();
     if (value) {
       params.set(key, value);
       filters[key] = value;
     }
   }
-  const res = await apiFetch<{ success: boolean; data: AuditLog[]; total?: number; summary?: AuditSummary }>(
-    `/api/v1/admin/audit?${params.toString()}`,
-    { headers: { cookie } },
-  );
+  const res = await apiFetch<{
+    success: boolean;
+    data: AuditLog[];
+    total?: number;
+    summary?: AuditSummary;
+  }>(`/api/v1/admin/audit?${params.toString()}`, { headers: { cookie } });
   return {
     logs: res.success ? res.data || [] : [],
     total: res.total ?? 0,
     page,
     limit,
     filters,
-    summary: res.summary || { high_risk: 0, content_deletions: 0, role_changes: 0, account_security: 0, failures: 0 },
+    summary: res.summary || {
+      high_risk: 0,
+      content_deletions: 0,
+      role_changes: 0,
+      account_security: 0,
+      failures: 0,
+    },
   };
 }

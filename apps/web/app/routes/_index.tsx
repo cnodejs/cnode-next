@@ -33,7 +33,14 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const kv = (context as any)?.cloudflare?.env?.KV;
   const cached = await kvGet<{ data: any[]; total: number }>(kv, cacheKey);
   if (cached) {
-    return { topics: normalizeTopicAvatars(cached.data), page, tab, limit, total: cached.total, kv };
+    return {
+      topics: normalizeTopicAvatars(cached.data),
+      page,
+      tab,
+      limit,
+      total: cached.total,
+      kv,
+    };
   }
 
   const res = await apiFetch<{ success: boolean; data: any[]; total?: number }>(
@@ -42,7 +49,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   );
 
   const topics = normalizeTopicAvatars(res.success ? res.data : []);
-  const total = res.success ? res.total ?? topics.length : 0;
+  const total = res.success ? (res.total ?? topics.length) : 0;
   await kvSet(kv, cacheKey, { data: topics, total }, 60);
 
   return { topics, page, tab, limit, total, kv };
@@ -65,7 +72,10 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   const visibleTabs = allTabs
     .filter((t: any) => t.visible && ((t.scope || "public") === "public" || isAdmin))
     .sort((a: any, b: any) => a.sort_order - b.sort_order);
-  const tabs = [{ key: "all", label: "全部" }, ...visibleTabs.map((t: any) => ({ key: t.key, label: t.label }))];
+  const tabs = [
+    { key: "all", label: "全部" },
+    ...visibleTabs.map((t: any) => ({ key: t.key, label: t.label })),
+  ];
 
   return (
     <Layout>
@@ -75,54 +85,61 @@ export default function Index({ loaderData }: Route.ComponentProps) {
           eyebrow="COMMUNITY"
           title="Node.js 专业中文社区"
           description="浏览最新讨论、技术问答与实践分享。"
-          action={(
+          action={
             <div className="flex flex-wrap gap-2">
               <Button render={<Link to="/topic/create" />}>发布话题</Button>
-              <Button render={<Link to="/about" />} variant="secondary">了解社区</Button>
+              <Button render={<Link to="/about" />} variant="secondary">
+                了解社区
+              </Button>
             </div>
-          )}
+          }
         />
         <FeedGrid className="items-start">
-        <div className="min-w-0">
-          <Tabs
-            value={tab}
-            onValueChange={(value) => {
-              const params = new URLSearchParams();
-              if (value !== "all") params.set("tab", value);
-              navigate(params.size ? `/?${params.toString()}` : "/");
-            }}
-          >
-          <Card>
-            <CardHeader>
-              <TabsList aria-label="话题分类" className="w-full max-w-full justify-start overflow-x-auto">
-                {tabs.map((t) => {
-                  return (
-                    <TabsTrigger key={t.key} value={t.key} className="flex-none">{t.label}</TabsTrigger>
-                  );
-                })}
-              </TabsList>
-            </CardHeader>
-            <CardContent>
-              <TabsContent value={tab}>
-                <TopicList topics={topics} />
-              </TabsContent>
-            </CardContent>
-          </Card>
-          </Tabs>
+          <div className="min-w-0">
+            <Tabs
+              value={tab}
+              onValueChange={(value) => {
+                const params = new URLSearchParams();
+                if (value !== "all") params.set("tab", value);
+                navigate(params.size ? `/?${params.toString()}` : "/");
+              }}
+            >
+              <Card>
+                <CardHeader>
+                  <TabsList
+                    aria-label="话题分类"
+                    className="w-full max-w-full justify-start overflow-x-auto"
+                  >
+                    {tabs.map((t) => {
+                      return (
+                        <TabsTrigger key={t.key} value={t.key} className="flex-none">
+                          {t.label}
+                        </TabsTrigger>
+                      );
+                    })}
+                  </TabsList>
+                </CardHeader>
+                <CardContent>
+                  <TabsContent value={tab}>
+                    <TopicList topics={topics} />
+                  </TabsContent>
+                </CardContent>
+              </Card>
+            </Tabs>
 
-          <Pagination
-            page={page}
-            total={total}
-            limit={limit}
-            basePath="/"
-            searchParams={{ ...(tab !== "all" ? { tab } : {}) }}
-            variant="simple"
-          />
-        </div>
+            <Pagination
+              page={page}
+              total={total}
+              limit={limit}
+              basePath="/"
+              searchParams={{ ...(tab !== "all" ? { tab } : {}) }}
+              variant="simple"
+            />
+          </div>
 
-        <div className="min-w-0 lg:sticky lg:top-24">
-          <Sidebar />
-        </div>
+          <div className="min-w-0 lg:sticky lg:top-24">
+            <Sidebar />
+          </div>
         </FeedGrid>
       </FeedPage>
     </Layout>

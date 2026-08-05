@@ -1,6 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { adminUserBulkGovernanceBodySchema, adminUsersQuerySchema } from "@cnode/shared";
-import { bulkUserGovernanceFeedback, USER_GOVERNANCE_STATUS_LABELS, userGovernanceActionLabel } from "~/routes/admin/bans";
+import {
+  bulkUserGovernanceFeedback,
+  USER_GOVERNANCE_STATUS_LABELS,
+  userGovernanceActionLabel,
+} from "~/routes/admin/bans";
 import { USER_MANAGEMENT_GROUP_LABELS, userBlockActionLabel } from "~/routes/admin/users";
 
 describe("admin users action model", () => {
@@ -25,10 +29,18 @@ describe("admin users action model", () => {
   });
 
   it("validates bulk user governance input", () => {
-    expect(adminUserBulkGovernanceBodySchema.safeParse({ action: "unmute", ids: [1, "2"] }).success).toBe(true);
-    expect(adminUserBulkGovernanceBodySchema.safeParse({ action: "unblock", ids: [1] }).success).toBe(true);
-    expect(adminUserBulkGovernanceBodySchema.safeParse({ action: "mute", ids: [1] }).success).toBe(false);
-    expect(adminUserBulkGovernanceBodySchema.safeParse({ action: "unmute", ids: [] }).success).toBe(false);
+    expect(
+      adminUserBulkGovernanceBodySchema.safeParse({ action: "unmute", ids: [1, "2"] }).success,
+    ).toBe(true);
+    expect(
+      adminUserBulkGovernanceBodySchema.safeParse({ action: "unblock", ids: [1] }).success,
+    ).toBe(true);
+    expect(adminUserBulkGovernanceBodySchema.safeParse({ action: "mute", ids: [1] }).success).toBe(
+      false,
+    );
+    expect(adminUserBulkGovernanceBodySchema.safeParse({ action: "unmute", ids: [] }).success).toBe(
+      false,
+    );
   });
 
   it("separates mute and block labels in ban management", () => {
@@ -41,10 +53,12 @@ describe("admin users action model", () => {
   });
 
   it("identifies partial-success retry scope", () => {
-    expect(bulkUserGovernanceFeedback("解除禁言", {
-      processed: 2,
-      skipped_ids: [7, 9],
-    })).toEqual({
+    expect(
+      bulkUserGovernanceFeedback("解除禁言", {
+        processed: 2,
+        skipped_ids: [7, 9],
+      }),
+    ).toEqual({
       message: "解除禁言结果：成功 2 个，跳过 2 个，失败 0 个",
       description: "可重试目标：7、9",
     });

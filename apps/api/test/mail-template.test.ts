@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import {
   buildActiveMail,
   buildAtNotifyMail,
@@ -6,7 +6,12 @@ import {
   buildResetPassMail,
 } from "../src/lib/mail-template";
 
-function assertBrandedMail(mail: { html: string; text: string }, actionLabel: string, url: string, logoUrl = "http://localhost:5173/cnodejs_light.svg") {
+function assertBrandedMail(
+  mail: { html: string; text: string },
+  actionLabel: string,
+  url: string,
+  logoUrl = "http://localhost:5173/cnodejs_light.svg",
+) {
   expect(mail.html).toMatch(/<!doctype html/i);
   expect(mail.html).toContain(logoUrl);
   expect(mail.html).toContain("#80bd01");
@@ -24,7 +29,12 @@ test("builds branded activation and password reset emails", async () => {
   const activation = await buildActiveMail("a/b c&d", "https://next.cnodejs.org///");
   const activationUrl = "https://next.cnodejs.org/active_account?key=a%2Fb%20c%26d";
   expect(activation.subject).toBe("CNode 账号激活");
-  assertBrandedMail(activation, "激活账号", activationUrl, "https://next.cnodejs.org/cnodejs_light.svg");
+  assertBrandedMail(
+    activation,
+    "激活账号",
+    activationUrl,
+    "https://next.cnodejs.org/cnodejs_light.svg",
+  );
 
   const reset = await buildResetPassMail("reset-key", "http://localhost:5173/");
   const resetUrl = "http://localhost:5173/reset_pass?key=reset-key";
@@ -52,7 +62,9 @@ test("lets React escape untrusted titles, content, and attributes", async () => 
   const content = '<img src=x onerror="alert(1)">\n<style>body{display:none}</style>';
   const mail = await buildReplyNotifyMail(title, content, "https://cnodejs.org/topic/1?a=1&b=2");
 
-  expect(mail.html).toContain("&lt;script&gt;alert(&quot;title&quot;)&lt;/script&gt; &amp; discussion");
+  expect(mail.html).toContain(
+    "&lt;script&gt;alert(&quot;title&quot;)&lt;/script&gt; &amp; discussion",
+  );
   expect(mail.html).toContain("&lt;img src=x onerror=&quot;alert(1)&quot;&gt;");
   expect(mail.html.includes("<script>alert")).toBe(false);
   expect(mail.html.includes("<img src=x")).toBe(false);
@@ -63,8 +75,12 @@ test("lets React escape untrusted titles, content, and attributes", async () => 
 });
 
 test("rejects malformed and non-HTTP action URLs", async () => {
-  await expect(buildReplyNotifyMail("topic", "reply", "javascript:alert(1)")).rejects.toThrow(/must use HTTP\(S\)/);
-  await expect(buildAtNotifyMail("topic", "reply", "/topic/1")).rejects.toThrow(/must be an absolute HTTP\(S\) URL/);
+  await expect(buildReplyNotifyMail("topic", "reply", "javascript:alert(1)")).rejects.toThrow(
+    /must use HTTP\(S\)/,
+  );
+  await expect(buildAtNotifyMail("topic", "reply", "/topic/1")).rejects.toThrow(
+    /must be an absolute HTTP\(S\) URL/,
+  );
   await expect(buildActiveMail("key", "file:///tmp/site")).rejects.toThrow(/must use HTTP\(S\)/);
 });
 

@@ -1,8 +1,11 @@
 # database-change-safety Specification
 
 ## Purpose
+
 TBD - created by archiving change add-jobs-zone. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: 非临时数据库只通过 Drizzle migration 发布
 
 非临时数据库的 schema 变更 SHALL 通过已生成、已 review 的 Drizzle migration 文件执行。`drizzle-kit push` SHALL 仅用于一次性本地开发库快速验证，不得作为发布路径。

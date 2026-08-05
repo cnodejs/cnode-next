@@ -3,10 +3,12 @@ packages:
   - "packages/*"
 overrides:
   "shadcn>zod": "3.25.76"
+  vite: "catalog:"
+  vitest: "catalog:"
 allowBuilds:
-  '@fission-ai/openspec': true
-  '@scarf/scarf': false
-  '@tree-sitter-grammars/tree-sitter-yaml': false
+  "@fission-ai/openspec": true
+  "@scarf/scarf": false
+  "@tree-sitter-grammars/tree-sitter-yaml": false
   core-js-pure: false
   esbuild: true
   msw: true
@@ -15,4 +17,15 @@ allowBuilds:
   tree-sitter-json: false
   workerd: true
 minimumReleaseAgeExclude:
-  - '@hookform/resolvers@5.7.1'
+  - "@hookform/resolvers@5.7.1"
+catalog:
+  vite: npm:@voidzero-dev/vite-plus-core@0.2.7
+  vitest: 4.1.10
+  vite-plus: 0.2.7
+peerDependencyRules:
+  allowAny:
+    - vite
+    - vitest
+  allowedVersions:
+    vite: "*"
+    vitest: "*"

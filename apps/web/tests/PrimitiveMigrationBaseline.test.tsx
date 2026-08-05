@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderToString } from "react-dom/server";
 import { useRef, useState } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vite-plus/test";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Input } from "~/components/ui/input";
@@ -24,11 +24,7 @@ import { Sheet, SheetContent, SheetTitle } from "~/components/ui/sheet";
 
 describe("primitive migration baseline", () => {
   it("composes a Button with one semantic link", () => {
-    render(
-      <Button render={<a href="/about" />}>
-        关于
-      </Button>,
-    );
+    render(<Button render={<a href="/about" />}>关于</Button>);
 
     const link = screen.getByRole("link", { name: "关于" });
     expect(link).toHaveAttribute("href", "/about");
@@ -151,7 +147,10 @@ describe("primitive migration baseline", () => {
     );
 
     expect(screen.getByRole("textbox", { name: "无效字段" })).toBeDisabled();
-    expect(screen.getByRole("textbox", { name: "无效字段" })).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByRole("textbox", { name: "无效字段" })).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
     expect(screen.getByRole("button", { name: "不可操作" })).toBeDisabled();
   });
 
@@ -197,9 +196,7 @@ describe("primitive migration baseline", () => {
   it("renders deterministic primitive structure during SSR", () => {
     const html = renderToString(
       <div>
-        <Button render={<a href="/about" />}>
-          关于
-        </Button>
+        <Button render={<a href="/about" />}>关于</Button>
         <Checkbox name="selected" aria-label="选择话题" />
       </div>,
     );

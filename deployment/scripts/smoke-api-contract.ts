@@ -38,7 +38,17 @@ async function verifyTopics() {
   if (!Array.isArray(json.data)) throw new Error("topics.data must be an array");
   const topic = json.data[0];
   required("topics.data[0]", topic);
-  for (const key of ["id", "author_id", "title", "content", "last_reply_at", "reply_count", "visit_count", "create_at", "author"]) {
+  for (const key of [
+    "id",
+    "author_id",
+    "title",
+    "content",
+    "last_reply_at",
+    "reply_count",
+    "visit_count",
+    "create_at",
+    "author",
+  ]) {
     required(`topics.data[0].${key}`, topic[key]);
   }
   required("topics.data[0].author.loginname", topic.author.loginname);
@@ -50,7 +60,11 @@ async function verifyMarkdownRender(topicId: string) {
   const rendered = await getJson(`/api/v1/topic/${topicId}?mdrender=true`);
   required("markdown.raw.success", raw.success);
   required("markdown.rendered.success", rendered.success);
-  if (raw.data?.content && raw.data.content === rendered.data?.content && /[#*_`[]/.test(raw.data.content)) {
+  if (
+    raw.data?.content &&
+    raw.data.content === rendered.data?.content &&
+    /[#*_`[]/.test(raw.data.content)
+  ) {
     throw new Error("mdrender=true should return rendered HTML for markdown content");
   }
 }
@@ -65,7 +79,8 @@ async function verifyTopic(id: string) {
   if (!Array.isArray(json.data.replies)) throw new Error("topic.data.replies must be an array");
   for (const reply of json.data.replies) {
     if (!Array.isArray(reply.ups)) throw new Error("topic.data.replies[].ups must be an array");
-    if (typeof reply.is_uped !== "boolean") throw new Error("topic.data.replies[].is_uped must be boolean");
+    if (typeof reply.is_uped !== "boolean")
+      throw new Error("topic.data.replies[].is_uped must be boolean");
   }
   return json.data;
 }
@@ -74,11 +89,20 @@ async function verifyUser(loginname: string) {
   const json = await getJson(`/api/v1/user/${encodeURIComponent(loginname)}`);
   required("user.success", json.success);
   required("user.data", json.data);
-  for (const key of ["loginname", "avatar_url", "create_at", "score", "recent_topics", "recent_replies"]) {
+  for (const key of [
+    "loginname",
+    "avatar_url",
+    "create_at",
+    "score",
+    "recent_topics",
+    "recent_replies",
+  ]) {
     required(`user.data.${key}`, json.data[key]);
   }
-  if (!Array.isArray(json.data.recent_topics)) throw new Error("user.data.recent_topics must be an array");
-  if (!Array.isArray(json.data.recent_replies)) throw new Error("user.data.recent_replies must be an array");
+  if (!Array.isArray(json.data.recent_topics))
+    throw new Error("user.data.recent_topics must be an array");
+  if (!Array.isArray(json.data.recent_replies))
+    throw new Error("user.data.recent_replies must be an array");
 }
 
 async function verifyUserLists(loginname: string) {
@@ -127,7 +151,9 @@ async function verifyWritePaths(topic: any) {
 
   const topicId = process.env.API_TEST_TOPIC_ID || String(topic.id);
   const tokenUser = await verifyAccessToken(token);
-  const topicJson = await getJson(`/api/v1/topic/${topicId}?accesstoken=${encodeURIComponent(token)}&mdrender=false`);
+  const topicJson = await getJson(
+    `/api/v1/topic/${topicId}?accesstoken=${encodeURIComponent(token)}&mdrender=false`,
+  );
   required("write.topic.success", topicJson.success);
   const topicData = topicJson.data;
   const userBefore = await getJson(`/api/v1/user/${encodeURIComponent(tokenUser.loginname)}`);
@@ -147,17 +173,32 @@ async function verifyWritePaths(topic: any) {
   const createProbe = await fetch(`${apiBase}/api/v1/topics`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ accesstoken: "invalid-token", title: "invalid token probe", tab: "share", content: "probe" }),
+    body: JSON.stringify({
+      accesstoken: "invalid-token",
+      title: "invalid token probe",
+      tab: "share",
+      content: "probe",
+    }),
   });
   if (!createProbe.headers.get("X-RateLimit-Limit")) {
     console.log("skip rate-limit header assertion: limiter may be in development identity bypass");
   }
 
-  const collectPath = topicData.is_collect ? "/api/v1/topic_collect/de_collect" : "/api/v1/topic_collect/collect";
-  const restoreCollectPath = topicData.is_collect ? "/api/v1/topic_collect/collect" : "/api/v1/topic_collect/de_collect";
-  const collect = await postJson(collectPath, { accesstoken: token, topic_id: String(topicData.id) });
+  const collectPath = topicData.is_collect
+    ? "/api/v1/topic_collect/de_collect"
+    : "/api/v1/topic_collect/collect";
+  const restoreCollectPath = topicData.is_collect
+    ? "/api/v1/topic_collect/collect"
+    : "/api/v1/topic_collect/de_collect";
+  const collect = await postJson(collectPath, {
+    accesstoken: token,
+    topic_id: String(topicData.id),
+  });
   required("write.topic_collect.toggle.success", collect.success);
-  const restoreCollect = await postJson(restoreCollectPath, { accesstoken: token, topic_id: String(topicData.id) });
+  const restoreCollect = await postJson(restoreCollectPath, {
+    accesstoken: token,
+    topic_id: String(topicData.id),
+  });
   required("write.topic_collect.restore.success", restoreCollect.success);
 
   const newReply = await postJson(`/api/v1/topic/${topicId}/replies`, {
@@ -165,7 +206,9 @@ async function verifyWritePaths(topic: any) {
     content: `api contract smoke reply ${Date.now()}`,
   });
   required("write.reply.create.success", newReply.success);
-  const afterCreateTopic = await getJson(`/api/v1/topic/${topicId}?accesstoken=${encodeURIComponent(token)}&mdrender=false`);
+  const afterCreateTopic = await getJson(
+    `/api/v1/topic/${topicId}?accesstoken=${encodeURIComponent(token)}&mdrender=false`,
+  );
   if (Number(afterCreateTopic.data.reply_count || 0) !== replyCountBefore + 1) {
     throw new Error("creating reply should increment topic.reply_count");
   }
@@ -176,9 +219,13 @@ async function verifyWritePaths(topic: any) {
   if (Number(afterCreateUser.data.reply_count || 0) !== userReplyCountBefore + 1) {
     throw new Error("creating reply should increment user reply_count");
   }
-  const deleteReply = await postJson(`/api/v1/reply/${newReply.reply_id}/delete`, { accesstoken: token });
+  const deleteReply = await postJson(`/api/v1/reply/${newReply.reply_id}/delete`, {
+    accesstoken: token,
+  });
   required("write.reply.delete.success", deleteReply.success);
-  const afterDeleteTopic = await getJson(`/api/v1/topic/${topicId}?accesstoken=${encodeURIComponent(token)}&mdrender=false`);
+  const afterDeleteTopic = await getJson(
+    `/api/v1/topic/${topicId}?accesstoken=${encodeURIComponent(token)}&mdrender=false`,
+  );
   if (Number(afterDeleteTopic.data.reply_count || 0) !== replyCountBefore) {
     throw new Error("deleting smoke reply should restore topic.reply_count");
   }
@@ -196,20 +243,22 @@ async function verifyWritePaths(topic: any) {
     return;
   }
 
-  const replyResponse = await fetch(`${apiBase}/api/v1/reply/${replyId}?accesstoken=${encodeURIComponent(token)}`);
+  const replyResponse = await fetch(
+    `${apiBase}/api/v1/reply/${replyId}?accesstoken=${encodeURIComponent(token)}`,
+  );
   if (replyResponse.ok) {
     const replyJson = await replyResponse.json();
     const editReply = await postJson(`/api/v1/reply/${replyId}/edit`, {
       accesstoken: token,
       content: replyJson.data.content,
     });
-      required("write.reply.edit.success", editReply.success);
-      const deleteProbe = await fetch(`${apiBase}/api/v1/reply/${replyId}/delete`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accesstoken: "invalid-token" }),
-      });
-      if (deleteProbe.ok) throw new Error("reply delete should reject invalid token");
+    required("write.reply.edit.success", editReply.success);
+    const deleteProbe = await fetch(`${apiBase}/api/v1/reply/${replyId}/delete`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accesstoken: "invalid-token" }),
+    });
+    if (deleteProbe.ok) throw new Error("reply delete should reject invalid token");
   } else {
     console.log("skip reply edit smoke: token user cannot edit selected reply");
   }

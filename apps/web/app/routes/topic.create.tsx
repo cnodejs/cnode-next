@@ -11,7 +11,14 @@ import { toast } from "sonner";
 import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import { ComposePage, PageHeader } from "~/components/PageShell";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "~/components/ui/field";
@@ -70,7 +77,12 @@ export default function TopicCreate({ loaderData }: Route.ComponentProps) {
 
   const { run: submitTopic, pending: saving } = useAsyncAction(
     async () => {
-      const body: Record<string, unknown> = { title, tab, content, turnstileToken: getTurnstileToken() };
+      const body: Record<string, unknown> = {
+        title,
+        tab,
+        content,
+        turnstileToken: getTurnstileToken(),
+      };
       if (tab === "job") {
         body.job_meta = {
           company: jobMeta.company,
@@ -120,7 +132,11 @@ export default function TopicCreate({ loaderData }: Route.ComponentProps) {
   return (
     <Layout>
       <ComposePage>
-        <PageHeader breadcrumbs={[{ label: "首页", to: "/" }, { label: "发布话题" }]} title="发布话题" description="选择正确分类，写清楚上下文，代码和日志请使用 Markdown 代码块。" />
+        <PageHeader
+          breadcrumbs={[{ label: "首页", to: "/" }, { label: "发布话题" }]}
+          title="发布话题"
+          description="选择正确分类，写清楚上下文，代码和日志请使用 Markdown 代码块。"
+        />
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <Card className="min-w-0">
             <CardHeader>
@@ -129,50 +145,59 @@ export default function TopicCreate({ loaderData }: Route.ComponentProps) {
             <CardContent>
               <form onSubmit={handleSubmit}>
                 <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor="title">标题</FieldLabel>
-                  <Input
-                    id="title"
-                    name="title"
-                    autoComplete="off"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="例如：如何在 Node.js 中定位内存泄漏…"
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="tab">分类</FieldLabel>
-                  <Select value={tab} onValueChange={(value) => value && setTab(value)}>
-                    <SelectTrigger id="tab" aria-describedby={!canPostJob ? "tab-description" : undefined}>
-                      <SelectValue>{(value) => topicTabLabels[value] ?? value}</SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectItem value="share">分享</SelectItem>
-                        <SelectItem value="ask">问答</SelectItem>
-                        <SelectItem value="job" disabled={!canPostJob}>招聘{canPostJob ? "" : "（需要授权）"}</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                  {!canPostJob && <FieldDescription id="tab-description">招聘发布需要猎头角色授权。</FieldDescription>}
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="content">正文</FieldLabel>
-                  <MarkdownEditor
-                    id="content"
-                    name="content"
-                    value={content}
-                    onChange={setContent}
-                    placeholder="支持 Markdown 格式…"
-                    minHeight={320}
-                  />
-                </Field>
-                <TurnstileWidget />
-                <div className="flex justify-end">
-                  <Button type="submit" disabled={saving}>
-                    {saving ? "发布中…" : "发布"}
-                  </Button>
-                </div>
+                  <Field>
+                    <FieldLabel htmlFor="title">标题</FieldLabel>
+                    <Input
+                      id="title"
+                      name="title"
+                      autoComplete="off"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="例如：如何在 Node.js 中定位内存泄漏…"
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="tab">分类</FieldLabel>
+                    <Select value={tab} onValueChange={(value) => value && setTab(value)}>
+                      <SelectTrigger
+                        id="tab"
+                        aria-describedby={!canPostJob ? "tab-description" : undefined}
+                      >
+                        <SelectValue>{(value) => topicTabLabels[value] ?? value}</SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="share">分享</SelectItem>
+                          <SelectItem value="ask">问答</SelectItem>
+                          <SelectItem value="job" disabled={!canPostJob}>
+                            招聘{canPostJob ? "" : "（需要授权）"}
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                    {!canPostJob && (
+                      <FieldDescription id="tab-description">
+                        招聘发布需要猎头角色授权。
+                      </FieldDescription>
+                    )}
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="content">正文</FieldLabel>
+                    <MarkdownEditor
+                      id="content"
+                      name="content"
+                      value={content}
+                      onChange={setContent}
+                      placeholder="支持 Markdown 格式…"
+                      minHeight={320}
+                    />
+                  </Field>
+                  <TurnstileWidget />
+                  <div className="flex justify-end">
+                    <Button type="submit" disabled={saving}>
+                      {saving ? "发布中…" : "发布"}
+                    </Button>
+                  </div>
                 </FieldGroup>
               </form>
             </CardContent>

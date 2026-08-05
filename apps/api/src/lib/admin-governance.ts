@@ -19,7 +19,13 @@ export type AdminTopicFilters = {
   dateField: "create_at" | "update_at" | "last_reply_at";
   dateFrom: Date | null;
   dateTo: Date | null;
-  sort: "create_at_desc" | "update_at_desc" | "last_reply_at_desc" | "reply_count_desc" | "visit_count_desc" | "collect_count_desc";
+  sort:
+    | "create_at_desc"
+    | "update_at_desc"
+    | "last_reply_at_desc"
+    | "reply_count_desc"
+    | "visit_count_desc"
+    | "collect_count_desc";
 };
 
 function parseDateBound(value: string | null | undefined, endOfDay = false) {
@@ -32,11 +38,17 @@ function parseDateBound(value: string | null | undefined, endOfDay = false) {
   return date;
 }
 
-function enumValue<T extends string>(value: string | null | undefined, allowed: Set<string>, fallback: T): T {
+function enumValue<T extends string>(
+  value: string | null | undefined,
+  allowed: Set<string>,
+  fallback: T,
+): T {
   return value && allowed.has(value) ? (value as T) : fallback;
 }
 
-export function parseAdminTopicFilters(query: Record<string, string | null | undefined>): AdminTopicFilters {
+export function parseAdminTopicFilters(
+  query: Record<string, string | null | undefined>,
+): AdminTopicFilters {
   return {
     q: query.q?.trim() || "",
     tab: query.tab && query.tab !== "all" ? query.tab.trim() : "",
@@ -64,6 +76,9 @@ export function canRunJobBulkModerationAction(action: string, isAdmin: boolean) 
 
 export function normalizePermanentTopicDeleteIds(body: any) {
   return Array.isArray(body?.ids)
-    ? body.ids.map(Number).filter((id: number) => id > 0).slice(0, 20)
+    ? body.ids
+        .map(Number)
+        .filter((id: number) => id > 0)
+        .slice(0, 20)
     : [Number(body?.id || body?.topic_id || 0)].filter((id) => id > 0);
 }

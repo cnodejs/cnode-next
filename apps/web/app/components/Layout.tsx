@@ -47,7 +47,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         跳到主要内容
       </a>
       <Header />
-      <main id="main-content" tabIndex={-1} className={cn("flex-1 transition-opacity duration-200", isNavigating ? "opacity-60" : "opacity-100")}>
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className={cn(
+          "flex-1 transition-opacity duration-200",
+          isNavigating ? "opacity-60" : "opacity-100",
+        )}
+      >
         <PageContainer className="py-6">{children}</PageContainer>
       </main>
       <Footer />
@@ -60,7 +67,9 @@ export function Header() {
   const [commandOpen, setCommandOpen] = useState(false);
   const commandFinalFocusRef = useRef<HTMLElement | null>(null);
   const rootData = useRouteLoaderData("root") as { zones?: any[]; tabs?: any[] } | undefined;
-  const visibleZones = (rootData?.zones || []).filter((z: any) => z.visible).sort((a: any, b: any) => a.sort_order - b.sort_order);
+  const visibleZones = (rootData?.zones || [])
+    .filter((z: any) => z.visible)
+    .sort((a: any, b: any) => a.sort_order - b.sort_order);
 
   return (
     <header className="sticky top-0 z-40 bg-background/90 shadow-sm backdrop-blur-xl">
@@ -194,18 +203,17 @@ export function HeaderUserArea() {
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger
-          render={<Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 rounded-full p-0"
-            aria-label="用户菜单"
-          />}
+          render={
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-full p-0"
+              aria-label="用户菜单"
+            />
+          }
         >
           <Avatar className="size-7">
-            <AvatarImage
-              src={getAvatarUrl(user.avatar_url, 32)}
-              alt={user.loginname}
-            />
+            <AvatarImage src={getAvatarUrl(user.avatar_url, 32)} alt={user.loginname} />
             <AvatarFallback>{getAvatarFallback(user.loginname)}</AvatarFallback>
           </Avatar>
         </DropdownMenuTrigger>
@@ -213,16 +221,11 @@ export function HeaderUserArea() {
           <DropdownMenuGroup>
             <DropdownMenuLabel className="mb-1 flex items-center gap-2 rounded-lg bg-muted px-2 py-2 font-normal">
               <Avatar className="size-8">
-                <AvatarImage
-                  src={getAvatarUrl(user.avatar_url, 32)}
-                  alt={user.loginname}
-                />
+                <AvatarImage src={getAvatarUrl(user.avatar_url, 32)} alt={user.loginname} />
                 <AvatarFallback>{getAvatarFallback(user.loginname)}</AvatarFallback>
               </Avatar>
               <div className="min-w-0">
-                <div className="truncate text-sm font-medium text-foreground">
-                  {user.loginname}
-                </div>
+                <div className="truncate text-sm font-medium text-foreground">{user.loginname}</div>
                 <div className="text-xs text-muted-foreground">已登录</div>
               </div>
             </DropdownMenuLabel>
@@ -273,7 +276,10 @@ function MobileNavTrigger({ visibleZones = [] }: { visibleZones?: any[] }) {
         <SheetTrigger render={<Button variant="ghost" size="icon" aria-label="打开导航" />}>
           <Menu className="h-5 w-5" />
         </SheetTrigger>
-        <SheetContent side="bottom" className="max-h-[82vh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+        <SheetContent
+          side="bottom"
+          className="max-h-[82vh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+1rem)]"
+        >
           <SheetHeader className="text-left">
             <SheetTitle>导航</SheetTitle>
           </SheetHeader>
@@ -336,7 +342,8 @@ function MobileNavTrigger({ visibleZones = [] }: { visibleZones?: any[] }) {
                     to={user.is_admin ? "/admin" : "/admin/topics"}
                     className="col-span-2 flex min-h-12 items-center gap-3 rounded-xl bg-muted px-3 text-sm text-foreground transition-colors hover:bg-accent"
                   >
-                    <Shield className="h-5 w-5 text-primary" /> {user.is_admin ? "管理后台" : "内容管理"}
+                    <Shield className="h-5 w-5 text-primary" />{" "}
+                    {user.is_admin ? "管理后台" : "内容管理"}
                   </Link>
                 )}
               </>
@@ -375,11 +382,7 @@ export function Footer() {
                   <Button render={<Link to="/topic/create" />} size="sm">
                     发布话题
                   </Button>
-                  <Button
-                    render={<Link to="/about" />}
-                    variant="secondary"
-                    size="sm"
-                  >
+                  <Button render={<Link to="/about" />} variant="secondary" size="sm">
                     了解社区
                   </Button>
                 </div>
@@ -423,9 +426,7 @@ export function Footer() {
       <div>
         <PageContainer className="flex flex-col gap-2 py-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} CNode Next. Node.js 中文技术社区。</p>
-          <p>
-            Inspired by CNode 社区，内容版权归原作者所有。
-          </p>
+          <p>Inspired by CNode 社区，内容版权归原作者所有。</p>
         </PageContainer>
       </div>
     </footer>

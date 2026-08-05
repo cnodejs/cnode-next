@@ -29,7 +29,8 @@ function makePerDayLimiter(options: RateLimitOptions) {
     const cache = getCache();
     const count = await cache.incr(key, SECONDS_PER_DAY);
 
-    const limitCount = typeof options.limitCount === "function" ? await options.limitCount() : options.limitCount;
+    const limitCount =
+      typeof options.limitCount === "function" ? await options.limitCount() : options.limitCount;
 
     if (count > limitCount) {
       c.status(403);
@@ -54,7 +55,11 @@ function makePerDayLimiter(options: RateLimitOptions) {
   });
 }
 
-export function perUserPerDay(name: string, limitCount: number | (() => number | Promise<number>), showJson = true) {
+export function perUserPerDay(
+  name: string,
+  limitCount: number | (() => number | Promise<number>),
+  showJson = true,
+) {
   return makePerDayLimiter({
     identityName: "peruserperday",
     name,
@@ -92,10 +97,19 @@ export function perIpPerDay(name: string, limitCount: number, showJson = true) {
   });
 }
 
-export function perUserPerDaySetting(name: string, settingKey: string, defaultLimit: number, showJson = true) {
+export function perUserPerDaySetting(
+  name: string,
+  settingKey: string,
+  defaultLimit: number,
+  showJson = true,
+) {
   return perUserPerDay(
     name,
-    async () => Math.max(1, Number(await settingQueries.get(settingKey, String(defaultLimit))) || defaultLimit),
+    async () =>
+      Math.max(
+        1,
+        Number(await settingQueries.get(settingKey, String(defaultLimit))) || defaultLimit,
+      ),
     showJson,
   );
 }

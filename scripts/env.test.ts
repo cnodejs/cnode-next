@@ -38,7 +38,10 @@ test("explicit CNODE_ENV_FILE does not override shell environment", () => {
   const root = workspace();
   writeFileSync(join(root, ".env"), "POSTGRES_HOST=127.0.0.1\nPOSTGRES_PORT=5432\n");
   writeFileSync(join(root, ".env.remote.local"), "POSTGRES_HOST=remote\nPOSTGRES_PORT=15432\n");
-  const env: Record<string, string | undefined> = { CNODE_ENV_FILE: ".env.remote.local", POSTGRES_HOST: "from-shell" };
+  const env: Record<string, string | undefined> = {
+    CNODE_ENV_FILE: ".env.remote.local",
+    POSTGRES_HOST: "from-shell",
+  };
 
   loadRootEnv({ cwd: root, env });
 
@@ -62,7 +65,10 @@ test("throws when explicit CNODE_ENV_FILE is missing", () => {
   const root = workspace();
   writeFileSync(join(root, ".env"), "POSTGRES_HOST=127.0.0.1\n");
 
-  assert.throws(() => loadRootEnv({ cwd: root, env: { CNODE_ENV_FILE: ".env.missing.local" } }), /CNODE_ENV_FILE does not exist/);
+  assert.throws(
+    () => loadRootEnv({ cwd: root, env: { CNODE_ENV_FILE: ".env.missing.local" } }),
+    /CNODE_ENV_FILE does not exist/,
+  );
 });
 
 test("finds workspace root from nested package directory", () => {

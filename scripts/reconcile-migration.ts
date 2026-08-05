@@ -34,7 +34,10 @@ async function mongoReplyUps(client: MongoClient) {
   if (!exists) return 0;
   const result = await db
     .collection("replies")
-    .aggregate([{ $project: { count: { $size: { $ifNull: ["$ups", []] } } } }, { $group: { _id: null, total: { $sum: "$count" } } }])
+    .aggregate([
+      { $project: { count: { $size: { $ifNull: ["$ups", []] } } } },
+      { $group: { _id: null, total: { $sum: "$count" } } },
+    ])
     .toArray();
   return Number(result[0]?.total || 0);
 }
@@ -79,10 +82,31 @@ async function main() {
 
   const checks = [
     ["users", await mongoCount(mongo, "users"), 0, await pgCount(pool, "users")],
-    ["topics", await mongoCount(mongo, "topics"), skipped(migrationReport, ["topicsMissingAuthor"]), await pgCount(pool, "topics")],
-    ["replies", await mongoCount(mongo, "replies"), skipped(migrationReport, ["repliesMissingTopic", "repliesMissingAuthor"]), await pgCount(pool, "replies")],
-    ["messages", await mongoCount(mongo, "messages"), skipped(migrationReport, ["messagesMissingMaster", "messagesMissingAuthor"]), await pgCount(pool, "messages")],
-    ["reply_ups", await mongoReplyUps(mongo), skipped(migrationReport, ["replyUpsMissingReply", "replyUpsMissingUser"]) + await mongoReplyUpDuplicates(mongo), await pgCount(pool, "reply_ups")],
+    [
+      "topics",
+      await mongoCount(mongo, "topics"),
+      skipped(migrationReport, ["topicsMissingAuthor"]),
+      await pgCount(pool, "topics"),
+    ],
+    [
+      "replies",
+      await mongoCount(mongo, "replies"),
+      skipped(migrationReport, ["repliesMissingTopic", "repliesMissingAuthor"]),
+      await pgCount(pool, "replies"),
+    ],
+    [
+      "messages",
+      await mongoCount(mongo, "messages"),
+      skipped(migrationReport, ["messagesMissingMaster", "messagesMissingAuthor"]),
+      await pgCount(pool, "messages"),
+    ],
+    [
+      "reply_ups",
+      await mongoReplyUps(mongo),
+      skipped(migrationReport, ["replyUpsMissingReply", "replyUpsMissingUser"]) +
+        (await mongoReplyUpDuplicates(mongo)),
+      await pgCount(pool, "reply_ups"),
+    ],
   ] as const;
 
   await mongo.close();
@@ -93,7 +117,11 @@ async function main() {
     return { name, source, skipped: skippedCount, expected, target, pass: expected === target };
   });
   const pass = rows.every((row) => row.pass);
-  const report = { pass, durationSeconds: Number(((Date.now() - startedAt) / 1000).toFixed(1)), checks: rows };
+  const report = {
+    pass,
+    durationSeconds: Number(((Date.now() - startedAt) / 1000).toFixed(1)),
+    checks: rows,
+  };
   console.log(JSON.stringify(report, null, 2));
   if (!pass) process.exit(1);
 }

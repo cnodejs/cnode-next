@@ -7,7 +7,10 @@ type UploadImageResponse = {
   error_msg?: string;
 };
 
-async function uploadImage(file: File, purpose?: string): Promise<{ url: string; filename: string }> {
+async function uploadImage(
+  file: File,
+  purpose?: string,
+): Promise<{ url: string; filename: string }> {
   const formData = new FormData();
   formData.append("file", file);
   if (purpose) formData.append("purpose", purpose);

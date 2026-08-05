@@ -86,11 +86,11 @@ RSS feed 语义为“全站公开内容订阅”，不是首页版面列表。�
 
 `block` 的 UI 文案统一为“屏蔽用户内容 / 恢复用户内容”，状态 badge 使用“内容已屏蔽”。`mute` 继续表达为“禁言 / 解除禁言”。这让管理员能区分：
 
-| 操作 | 影响历史内容 | 影响未来发言 |
-| --- | --- | --- |
-| 屏蔽用户内容 | 是 | 不作为主要语义 |
-| 禁言 | 否 | 是 |
-| 删除所有发言 | 是，破坏性 | 否 |
+| 操作         | 影响历史内容 | 影响未来发言   |
+| ------------ | ------------ | -------------- |
+| 屏蔽用户内容 | 是           | 不作为主要语义 |
+| 禁言         | 否           | 是             |
+| 删除所有发言 | 是，破坏性   | 否             |
 
 替代方案：保留“隐藏/禁言”两个常用按钮，其他进更多。用户倾向安全审计优先，因此不采用。
 
@@ -110,23 +110,23 @@ RSS feed 语义为“全站公开内容订阅”，不是首页版面列表。�
 
 示例分类：
 
-| Category | Actions |
-| --- | --- |
+| Category | Actions                                                                                                                 |
+| -------- | ----------------------------------------------------------------------------------------------------------------------- |
 | 内容治理 | `top`, `untop`, `good`, `ungood`, `lock`, `unlock`, `delete_topic`, `delete_reply`, `permanent_delete_topic`, `batch_*` |
-| 用户治理 | `block_user`, `unblock_user`, `mute_user`, `unmute_user`, `delete_all_user_content` |
-| 角色权限 | `grant_role`, `revoke_role` |
-| 账号安全 | `reset_password`, `github_bind`, `github_unbind` |
-| 安全策略 | `ban_ip`, `unban_ip` |
-| 举报巡检 | `report_*`, `moderation_*`, `moderation_scan_*` |
-| 系统设置 | `update_settings`, `update_zone`, `update_tab` |
+| 用户治理 | `block_user`, `unblock_user`, `mute_user`, `unmute_user`, `delete_all_user_content`                                     |
+| 角色权限 | `grant_role`, `revoke_role`                                                                                             |
+| 账号安全 | `reset_password`, `github_bind`, `github_unbind`                                                                        |
+| 安全策略 | `ban_ip`, `unban_ip`                                                                                                    |
+| 举报巡检 | `report_*`, `moderation_*`, `moderation_scan_*`                                                                         |
+| 系统设置 | `update_settings`, `update_zone`, `update_tab`                                                                          |
 
 风险等级建议：
 
-| Risk | Examples |
-| --- | --- |
-| low | `top`, `untop`, `good`, `ungood`, `update_zone`, `update_tab` |
-| medium | `lock`, `unlock`, `block_user`, `unblock_user`, `mute_user`, `unmute_user` |
-| high | `grant_role`, `revoke_role`, `reset_password`, `ban_ip`, `unban_ip` |
+| Risk     | Examples                                                                            |
+| -------- | ----------------------------------------------------------------------------------- |
+| low      | `top`, `untop`, `good`, `ungood`, `update_zone`, `update_tab`                       |
+| medium   | `lock`, `unlock`, `block_user`, `unblock_user`, `mute_user`, `unmute_user`          |
+| high     | `grant_role`, `revoke_role`, `reset_password`, `ban_ip`, `unban_ip`                 |
 | critical | `delete_topic`, `delete_reply`, `delete_all_user_content`, `permanent_delete_topic` |
 
 API 应返回当前筛选全集的 summary，而不是只让 Web 根据当前页计算，否则指标卡会误导。

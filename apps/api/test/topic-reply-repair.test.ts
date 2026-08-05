@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import {
   repairTopicReplyAggregates,
   topicReplyRepairApplySql,
@@ -6,25 +6,39 @@ import {
   type TopicReplyRepairClient,
 } from "@cnode/db";
 
-type Topic = { id: number; replyCount: number; lastReplyId: number | null; lastReplyAt: Date | null };
+type Topic = {
+  id: number;
+  replyCount: number;
+  lastReplyId: number | null;
+  lastReplyAt: Date | null;
+};
 type Reply = { id: number; topicId: number; deleted: boolean; createAt: Date };
 
 class MemoryRepairClient implements TopicReplyRepairClient {
-  constructor(readonly topics: Topic[], readonly replies: Reply[]) {}
+  constructor(
+    readonly topics: Topic[],
+    readonly replies: Reply[],
+  ) {}
 
   private expected(topicId: number) {
     const active = this.replies
       .filter((reply) => reply.topicId === topicId && !reply.deleted)
       .sort((a, b) => b.createAt.getTime() - a.createAt.getTime() || b.id - a.id);
-    return { replyCount: active.length, lastReplyId: active[0]?.id ?? null, lastReplyAt: active[0]?.createAt ?? null };
+    return {
+      replyCount: active.length,
+      lastReplyId: active[0]?.id ?? null,
+      lastReplyAt: active[0]?.createAt ?? null,
+    };
   }
 
   private mismatches() {
     return this.topics.filter((topic) => {
       const expected = this.expected(topic.id);
-      return topic.replyCount !== expected.replyCount
-        || topic.lastReplyId !== expected.lastReplyId
-        || topic.lastReplyAt?.getTime() !== expected.lastReplyAt?.getTime();
+      return (
+        topic.replyCount !== expected.replyCount ||
+        topic.lastReplyId !== expected.lastReplyId ||
+        topic.lastReplyAt?.getTime() !== expected.lastReplyAt?.getTime()
+      );
     });
   }
 
@@ -60,8 +74,14 @@ describe("topic reply aggregate repair", () => {
     const users = [{ id: 9, score: 100, replyCount: 99 }];
     const client = new MemoryRepairClient(topics, replies);
 
-    expect(await repairTopicReplyAggregates(client, true)).toMatchObject({ mode: "dry-run", mismatchedTopics: 3 });
-    expect(await repairTopicReplyAggregates(client, false)).toMatchObject({ mode: "apply", repairedTopics: 3 });
+    expect(await repairTopicReplyAggregates(client, true)).toMatchObject({
+      mode: "dry-run",
+      mismatchedTopics: 3,
+    });
+    expect(await repairTopicReplyAggregates(client, false)).toMatchObject({
+      mode: "apply",
+      repairedTopics: 3,
+    });
     expect(topics).toEqual([
       { id: 1, replyCount: 0, lastReplyId: null, lastReplyAt: null },
       { id: 2, replyCount: 1, lastReplyId: 21, lastReplyAt: new Date("2026-02-01") },

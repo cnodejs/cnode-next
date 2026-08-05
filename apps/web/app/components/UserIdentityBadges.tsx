@@ -13,7 +13,11 @@ const identityVariants: Record<PublicIdentity, "default" | "secondary" | "outlin
   recruiter: "outline",
 };
 
-export function UserIdentityBadges({ identities = [] }: { identities?: readonly PublicIdentity[] }) {
+export function UserIdentityBadges({
+  identities = [],
+}: {
+  identities?: readonly PublicIdentity[];
+}) {
   if (identities.length === 0) return null;
 
   return (

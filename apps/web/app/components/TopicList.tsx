@@ -17,10 +17,10 @@ export function TopicListItem({ topic }: { topic: TopicDTO }) {
     <Item render={<article />}>
       <ItemMedia variant="image">
         <Link to={`/user/${author.loginname}`}>
-        <Avatar>
-          <AvatarImage src={getAvatarUrl(author.avatar_url, 48)} alt={author.loginname} />
-          <AvatarFallback>{getAvatarFallback(author.loginname)}</AvatarFallback>
-        </Avatar>
+          <Avatar>
+            <AvatarImage src={getAvatarUrl(author.avatar_url, 48)} alt={author.loginname} />
+            <AvatarFallback>{getAvatarFallback(author.loginname)}</AvatarFallback>
+          </Avatar>
         </Link>
       </ItemMedia>
 

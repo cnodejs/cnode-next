@@ -8,7 +8,7 @@
     "dev": "concurrently -n web,api -c blue,green \"pnpm --filter @cnode/web dev\" \"pnpm --filter @cnode/api dev\"",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
-    "lint": "oxlint .",
+    "lint": "vp lint .",
     "typecheck": "pnpm -r typecheck",
     "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm gen:openapi && openspec validate --all --strict && pnpm secrets:scan",
     "db:push": "pnpm --filter @cnode/db db:push",
@@ -22,7 +22,7 @@
     "smoke:api-contract": "tsx deployment/scripts/smoke-api-contract.ts",
     "gen:openapi": "pnpm --filter @cnode/api gen:openapi",
     "preflight:github-ids": "tsx deployment/scripts/preflight-github-id-uniqueness.ts",
-    "format": "oxfmt .",
+    "format": "vp fmt .",
     "secrets:scan": "gitleaks git --config .gitleaks.toml --redact --no-banner",
     "secrets:scan:staged": "gitleaks git --config .gitleaks.toml --redact --no-banner --pre-commit --staged",
     "hooks:install": "husky",
@@ -38,10 +38,10 @@
     "@types/pg": "^8.20.0",
     "concurrently": "^9.1.0",
     "husky": "^9.1.7",
-    "oxfmt": "^0.60.0",
-    "oxlint": "^1.75.0",
     "tsx": "^4.23.1",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
   },
   "engines": {
     "node": ">=24.0.0"

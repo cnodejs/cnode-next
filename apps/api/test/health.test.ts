@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import app from "../src/app";
 
 test("GET /health returns shallow build metadata without sensitive leakage", async () => {
@@ -24,7 +24,9 @@ test("GET /health returns shallow build metadata without sensitive leakage", asy
 
     const serialized = JSON.stringify(body);
     expect(serialized).not.toMatch(/POSTGRES_PASSWORD|AUTH_SESSION_SECRET|TURNSTILE_SECRET_KEY/);
-    expect(serialized).not.toMatch(/secret-postgres-password|super-secret-session|turnstile-secret-token/);
+    expect(serialized).not.toMatch(
+      /secret-postgres-password|super-secret-session|turnstile-secret-token/,
+    );
     expect(serialized).not.toMatch(/postgres:\/\//);
     expect(serialized).not.toMatch(/stack/i);
   } finally {

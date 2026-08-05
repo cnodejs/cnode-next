@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, Link, RouterProvider, useNavigate } from "react-router";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { UnsavedChangesDialog, useUnsavedChanges } from "~/hooks/use-unsaved-changes";
 import { useState } from "react";
 
@@ -29,11 +29,14 @@ function Draft() {
 }
 
 function renderDraft() {
-  const router = createMemoryRouter([
-    { path: "/draft", element: <Draft /> },
-    { path: "/elsewhere", element: <h1>其他页面</h1> },
-    { path: "/saved", element: <h1>已保存</h1> },
-  ], { initialEntries: ["/draft"] });
+  const router = createMemoryRouter(
+    [
+      { path: "/draft", element: <Draft /> },
+      { path: "/elsewhere", element: <h1>其他页面</h1> },
+      { path: "/saved", element: <h1>已保存</h1> },
+    ],
+    { initialEntries: ["/draft"] },
+  );
   return render(<RouterProvider router={router} />);
 }
 

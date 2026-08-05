@@ -1,7 +1,7 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, MemoryRouter, RouterProvider } from "react-router";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { TurnstileWidget } from "~/components/TurnstileWidget";
 import Search from "~/routes/search";
 
@@ -28,14 +28,11 @@ describe("异步反馈", () => {
       remove: vi.fn(),
       reset: vi.fn(),
     };
-    const router = createMemoryRouter(
-      [{ id: "root", path: "/", element: <TurnstileWidget /> }],
-      {
-        hydrationData: {
-          loaderData: { root: { publicConfig: { turnstileSiteKey: "site-key" } } },
-        },
+    const router = createMemoryRouter([{ id: "root", path: "/", element: <TurnstileWidget /> }], {
+      hydrationData: {
+        loaderData: { root: { publicConfig: { turnstileSiteKey: "site-key" } } },
       },
-    );
+    });
     render(<RouterProvider router={router} />);
 
     expect(await screen.findByRole("status")).toHaveTextContent("请完成人机验证");

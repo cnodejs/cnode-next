@@ -74,6 +74,8 @@ export async function decrementCollectTopicCount(userId: number) {
   const db = getDb();
   await db
     .update(users)
-    .set({ collectTopicCount: sql`case when ${users.collectTopicCount} - 1 < 0 then 0 else ${users.collectTopicCount} - 1 end` })
+    .set({
+      collectTopicCount: sql`case when ${users.collectTopicCount} - 1 < 0 then 0 else ${users.collectTopicCount} - 1 end`,
+    })
     .where(eq(users.id, userId));
 }

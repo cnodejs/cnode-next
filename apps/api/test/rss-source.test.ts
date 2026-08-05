@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { toRssPubDate, topicUrl } from "../src/routes/feed";
 
 test("rss source builds canonical topic URLs", () => {

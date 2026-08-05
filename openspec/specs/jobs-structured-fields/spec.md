@@ -1,8 +1,11 @@
 # jobs-structured-fields Specification
 
 ## Purpose
+
 TBD - created by archiving change add-jobs-zone. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: job_meta 表定义
 
 系统 SHALL 新增 `job_meta` 表，1:1 关联 `topics.id`，存储招聘结构化字段。`job_meta.topic_id` SHALL 既是主键又是外键，`ON DELETE CASCADE` 跟随 topic 生命周期。

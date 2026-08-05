@@ -24,7 +24,14 @@ export function isValidIpRule(rule: string) {
   if (isIP(rule)) return true;
   const [base, prefixRaw] = rule.split("/");
   const prefix = Number(prefixRaw);
-  return !!base && prefixRaw !== undefined && isIP(base) === 4 && Number.isInteger(prefix) && prefix >= 0 && prefix <= 32;
+  return (
+    !!base &&
+    prefixRaw !== undefined &&
+    isIP(base) === 4 &&
+    Number.isInteger(prefix) &&
+    prefix >= 0 &&
+    prefix <= 32
+  );
 }
 
 export function matchesIpRule(ip: string, rule: string) {

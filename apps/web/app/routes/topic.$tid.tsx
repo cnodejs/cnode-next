@@ -3,7 +3,21 @@ import type { PublicIdentity } from "@cnode/shared";
 import type { Route } from "../../.react-router/types/app/routes/+types/topic.$tid";
 import { Link, useRevalidator } from "react-router";
 import { toast } from "sonner";
-import { CalendarDays, Clock3, Code, Edit3, ExternalLink, Eye, Flag, MapPin, MessageSquare, MoreHorizontal, Star, ThumbsUp, Trash2 } from "lucide-react";
+import {
+  CalendarDays,
+  Clock3,
+  Code,
+  Edit3,
+  ExternalLink,
+  Eye,
+  Flag,
+  MapPin,
+  MessageSquare,
+  MoreHorizontal,
+  Star,
+  ThumbsUp,
+  Trash2,
+} from "lucide-react";
 import { Layout } from "~/components/Layout";
 import { MarkdownView } from "~/components/MarkdownView";
 import { TimeAgo } from "~/components/TimeAgo";
@@ -42,9 +56,20 @@ import { useAsyncAction } from "~/hooks/use-async-action";
 import { UserIdentityBadges } from "~/components/UserIdentityBadges";
 import { externalUrlLabel, githubProfileUrl, safeExternalUrl } from "~/lib/public-profile";
 import { getTopicActionPresentation } from "~/lib/topic-action-presentation";
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "~/components/ui/empty";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "~/components/ui/empty";
 import { Separator } from "~/components/ui/separator";
-import { discussionForumPostingJsonLd, firstMarkdownImage, markdownExcerpt, seoMeta } from "~/lib/seo";
+import {
+  discussionForumPostingJsonLd,
+  firstMarkdownImage,
+  markdownExcerpt,
+  seoMeta,
+} from "~/lib/seo";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -65,20 +90,27 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
   let topic = cached;
 
   if (!topic) {
-    const res = await apiFetch<{ success: boolean; data: any }>(`/api/v1/topic/${tid}?mdrender=false`, {
-      headers: { cookie },
-    });
+    const res = await apiFetch<{ success: boolean; data: any }>(
+      `/api/v1/topic/${tid}?mdrender=false`,
+      {
+        headers: { cookie },
+      },
+    );
     if (!res.success) return { topic: null, authorProfile: null, kv, currentUser };
     topic = res.data;
     if (!currentUser) await kvSet(kv, cacheKey, topic, 60);
   }
 
   const authorName = topic.author?.loginname;
-  let authorProfile = authorName && !currentUser ? await kvGet<any>(kv, `user:${authorName}`) : null;
+  let authorProfile =
+    authorName && !currentUser ? await kvGet<any>(kv, `user:${authorName}`) : null;
   if (authorName && !authorProfile) {
-    const profileResponse = await apiFetch<{ success: boolean; data: any }>(`/api/v1/user/${encodeURIComponent(authorName)}`, {
-      headers: { cookie },
-    }).catch(() => null);
+    const profileResponse = await apiFetch<{ success: boolean; data: any }>(
+      `/api/v1/user/${encodeURIComponent(authorName)}`,
+      {
+        headers: { cookie },
+      },
+    ).catch(() => null);
     if (profileResponse?.success) {
       authorProfile = profileResponse.data;
       if (!currentUser) await kvSet(kv, `user:${authorName}`, authorProfile, 60);
@@ -106,11 +138,12 @@ export default function TopicDetail({ loaderData }: Route.ComponentProps) {
     return (
       <Layout>
         <Empty>
-          <EmptyHeader><EmptyTitle>话题不存在或已被删除</EmptyTitle><EmptyDescription>返回首页继续浏览社区最新内容。</EmptyDescription></EmptyHeader>
+          <EmptyHeader>
+            <EmptyTitle>话题不存在或已被删除</EmptyTitle>
+            <EmptyDescription>返回首页继续浏览社区最新内容。</EmptyDescription>
+          </EmptyHeader>
           <EmptyContent>
-            <Button render={<Link to="/" />}>
-              返回首页
-            </Button>
+            <Button render={<Link to="/" />}>返回首页</Button>
           </EmptyContent>
         </Empty>
       </Layout>
@@ -128,33 +161,37 @@ export default function TopicDetail({ loaderData }: Route.ComponentProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
       <ReadingPage>
-      <ReadingGrid
-        aside={<TopicContext topic={topic} authorProfile={authorProfile} />}
-        afterAside={(
-          <div className="flex flex-col gap-5">
-            <TopicActions topic={topic} currentUser={currentUser} />
-            <ReplySection replies={topic.replies || []} topicId={topic.id} currentUser={currentUser} />
-          </div>
-        )}
-      >
-        <article className="flex flex-col gap-5">
-          <TopicHeader topic={topic} />
-          <Card>
-            <CardContent className="flex flex-col gap-4">
-              {toc}
-              {topic.tab === "job" && topic.job_meta && (
-                <div>
-                  <JobMetaCard meta={topic.job_meta} />
-                </div>
-              )}
-              <MarkdownView
-                content={topic.content}
-                className="prose-base prose-img:rounded-xl prose-pre:overflow-x-auto"
+        <ReadingGrid
+          aside={<TopicContext topic={topic} authorProfile={authorProfile} />}
+          afterAside={
+            <div className="flex flex-col gap-5">
+              <TopicActions topic={topic} currentUser={currentUser} />
+              <ReplySection
+                replies={topic.replies || []}
+                topicId={topic.id}
+                currentUser={currentUser}
               />
-            </CardContent>
-          </Card>
-        </article>
-      </ReadingGrid>
+            </div>
+          }
+        >
+          <article className="flex flex-col gap-5">
+            <TopicHeader topic={topic} />
+            <Card>
+              <CardContent className="flex flex-col gap-4">
+                {toc}
+                {topic.tab === "job" && topic.job_meta && (
+                  <div>
+                    <JobMetaCard meta={topic.job_meta} />
+                  </div>
+                )}
+                <MarkdownView
+                  content={topic.content}
+                  className="prose-base prose-img:rounded-xl prose-pre:overflow-x-auto"
+                />
+              </CardContent>
+            </Card>
+          </article>
+        </ReadingGrid>
       </ReadingPage>
     </Layout>
   );
@@ -175,7 +212,9 @@ function TopicHeader({ topic }: { topic: any }) {
           </Link>
         </div>
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <h1 className="min-w-0 flex-1 text-2xl font-medium tracking-tight sm:text-3xl">{topic.title}</h1>
+          <h1 className="min-w-0 flex-1 text-2xl font-medium tracking-tight sm:text-3xl">
+            {topic.title}
+          </h1>
           <div className="flex shrink-0 flex-wrap items-center gap-2 pt-1">
             {topic.top && <StatusBadge type="top" />}
             {topic.good && <StatusBadge type="good" />}
@@ -187,9 +226,15 @@ function TopicHeader({ topic }: { topic: any }) {
       <CardContent>
         <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <Link to={`/user/${author?.loginname}`} className="flex items-center gap-2 text-foreground hover:text-primary">
+            <Link
+              to={`/user/${author?.loginname}`}
+              className="flex items-center gap-2 text-foreground hover:text-primary"
+            >
               <Avatar className="size-8">
-                <AvatarImage src={getAvatarUrl(author?.avatar_url, 36)} alt={author?.loginname || "CNode"} />
+                <AvatarImage
+                  src={getAvatarUrl(author?.avatar_url, 36)}
+                  alt={author?.loginname || "CNode"}
+                />
                 <AvatarFallback>{getAvatarFallback(author?.loginname)}</AvatarFallback>
               </Avatar>
               <span className="font-medium">{author?.loginname || "社区成员"}</span>
@@ -206,15 +251,27 @@ function TopicHeader({ topic }: { topic: any }) {
             )}
           </div>
           <div className="flex items-center gap-3 sm:justify-end">
-            <span className="flex items-center gap-1" aria-label={`${topic.reply_count || 0} 回复`} title="回复">
+            <span
+              className="flex items-center gap-1"
+              aria-label={`${topic.reply_count || 0} 回复`}
+              title="回复"
+            >
               <MessageSquare aria-hidden="true" className="size-3.5" />
               {topic.reply_count || 0}
             </span>
-            <span className="flex items-center gap-1" aria-label={`${topic.visit_count || 0} 浏览`} title="浏览">
+            <span
+              className="flex items-center gap-1"
+              aria-label={`${topic.visit_count || 0} 浏览`}
+              title="浏览"
+            >
               <Eye aria-hidden="true" className="size-3.5" />
               {topic.visit_count || 0}
             </span>
-            <span className="flex items-center gap-1" aria-label={`${topic.collect_count || 0} 收藏`} title="收藏">
+            <span
+              className="flex items-center gap-1"
+              aria-label={`${topic.collect_count || 0} 收藏`}
+              title="收藏"
+            >
               <Star aria-hidden="true" className="size-3.5" />
               {topic.collect_count || 0}
             </span>
@@ -257,16 +314,32 @@ function TopicContext({ topic, authorProfile }: { topic: any; authorProfile?: an
           <CardTitle>话题信息</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
-          <div className="flex justify-between"><span>分类</span><span>{getTabLabel(topic.tab)}</span></div>
-          <div className="flex justify-between"><span>回复</span><span>{topic.reply_count || 0}</span></div>
-          <div className="flex justify-between"><span>浏览</span><span>{topic.visit_count || 0}</span></div>
+          <div className="flex justify-between">
+            <span>分类</span>
+            <span>{getTabLabel(topic.tab)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>回复</span>
+            <span>{topic.reply_count || 0}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>浏览</span>
+            <span>{topic.visit_count || 0}</span>
+          </div>
         </CardContent>
       </Card>
       <Card size="sm">
         <CardContent className="flex flex-col gap-3">
           <p className="text-sm font-medium text-foreground">参与讨论前</p>
-          <p className="text-xs text-muted-foreground">请提供可复现信息、尊重不同经验背景，并善用 Markdown 格式化代码。</p>
-          <Button render={<Link to="/about#discussion" />} variant="outline" size="sm" className="w-full">
+          <p className="text-xs text-muted-foreground">
+            请提供可复现信息、尊重不同经验背景，并善用 Markdown 格式化代码。
+          </p>
+          <Button
+            render={<Link to="/about#discussion" />}
+            variant="outline"
+            size="sm"
+            className="w-full"
+          >
             查看讨论规范
           </Button>
         </CardContent>
@@ -293,26 +366,50 @@ function TopicAuthorCard({ author, profile }: { author: any; profile?: any }) {
             <AvatarFallback>{getAvatarFallback(loginname)}</AvatarFallback>
           </Avatar>
           <div className="flex min-w-0 flex-col gap-1.5">
-            <Link to={`/user/${loginname}`} className="block truncate font-semibold hover:text-primary">
+            <Link
+              to={`/user/${loginname}`}
+              className="block truncate font-semibold hover:text-primary"
+            >
               {loginname}
             </Link>
             <UserIdentityBadges identities={(profile?.identities || []) as PublicIdentity[]} />
           </div>
         </div>
 
-        {profile?.signature && <p className="whitespace-pre-wrap break-words text-sm leading-5 text-foreground/80">{profile.signature}</p>}
+        {profile?.signature && (
+          <p className="whitespace-pre-wrap break-words text-sm leading-5 text-foreground/80">
+            {profile.signature}
+          </p>
+        )}
 
         {(profile?.location || websiteUrl || githubUrl) && (
           <div className="flex flex-col gap-2 text-xs text-muted-foreground">
-            {profile?.location && <div className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" /><span className="truncate">{profile.location}</span></div>}
+            {profile?.location && (
+              <div className="flex items-center gap-2">
+                <MapPin className="h-3.5 w-3.5" />
+                <span className="truncate">{profile.location}</span>
+              </div>
+            )}
             {websiteUrl && (
-              <a className="flex items-center gap-2 hover:text-primary" href={websiteUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="h-3.5 w-3.5" /><span className="truncate">{externalUrlLabel(websiteUrl)}</span>
+              <a
+                className="flex items-center gap-2 hover:text-primary"
+                href={websiteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                <span className="truncate">{externalUrlLabel(websiteUrl)}</span>
               </a>
             )}
             {githubUrl && (
-              <a className="flex items-center gap-2 hover:text-primary" href={githubUrl} target="_blank" rel="noopener noreferrer">
-                <Code className="h-3.5 w-3.5" /><span className="truncate">@{profile.githubUsername}</span>
+              <a
+                className="flex items-center gap-2 hover:text-primary"
+                href={githubUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Code className="h-3.5 w-3.5" />
+                <span className="truncate">@{profile.githubUsername}</span>
               </a>
             )}
           </div>
@@ -333,7 +430,12 @@ function TopicAuthorCard({ author, profile }: { author: any; profile?: any }) {
           </dl>
         )}
 
-        <Button render={<Link to={`/user/${loginname}`} />} variant="outline" size="sm" className="w-full">
+        <Button
+          render={<Link to={`/user/${loginname}`} />}
+          variant="outline"
+          size="sm"
+          className="w-full"
+        >
           查看用户主页
         </Button>
       </CardContent>
@@ -354,11 +456,16 @@ export function TopicActions({ topic, currentUser }: { topic: any; currentUser: 
         toast.error("登录后即可收藏话题");
         return { success: false, skipped: true };
       }
-      const path = topic.is_collect ? "/api/v1/topic_collect/de_collect" : "/api/v1/topic_collect/collect";
+      const path = topic.is_collect
+        ? "/api/v1/topic_collect/de_collect"
+        : "/api/v1/topic_collect/collect";
       return apiFetch<{ success: boolean; error_msg?: string }>(path, {
         method: "POST",
         body: JSON.stringify({ topic_id: topic.id }),
-      }).catch(() => ({ success: false, error_msg: topic.is_collect ? "取消收藏失败" : "收藏失败" }));
+      }).catch(() => ({
+        success: false,
+        error_msg: topic.is_collect ? "取消收藏失败" : "收藏失败",
+      }));
     },
     {
       onSuccess: (res) => {
@@ -376,9 +483,23 @@ export function TopicActions({ topic, currentUser }: { topic: any; currentUser: 
   const { run: runTopicAction, pending: adminPending } = useAsyncAction(
     async (
       action: "delete" | "top" | "good",
-    ): Promise<{ success: boolean; message?: string; error_msg?: string; skipped?: boolean; actionLabel: string }> => {
+    ): Promise<{
+      success: boolean;
+      message?: string;
+      error_msg?: string;
+      skipped?: boolean;
+      actionLabel: string;
+    }> => {
       const actionLabel =
-        action === "delete" ? "删除帖子" : action === "top" ? (topic.top ? "取消置顶" : "置顶") : topic.good ? "取消高亮" : "高亮";
+        action === "delete"
+          ? "删除帖子"
+          : action === "top"
+            ? topic.top
+              ? "取消置顶"
+              : "置顶"
+            : topic.good
+              ? "取消高亮"
+              : "高亮";
       if (!canManage) return { success: false, skipped: true, actionLabel };
       const res = await apiFetch<{ success: boolean; message?: string; error_msg?: string }>(
         `/api/v1/topic/${topic.id}/${action}`,
@@ -406,8 +527,14 @@ export function TopicActions({ topic, currentUser }: { topic: any; currentUser: 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex flex-wrap gap-2">
-        <Button variant={topic.is_collect ? "default" : "outline"} size="sm" onClick={() => toggleCollect()} disabled={collecting}>
-          <Star className="h-4 w-4" /> {collecting ? "处理中" : topic.is_collect ? "取消收藏" : "收藏话题"}
+        <Button
+          variant={topic.is_collect ? "default" : "outline"}
+          size="sm"
+          onClick={() => toggleCollect()}
+          disabled={collecting}
+        >
+          <Star className="h-4 w-4" />{" "}
+          {collecting ? "处理中" : topic.is_collect ? "取消收藏" : "收藏话题"}
         </Button>
         <Button render={<a href="#replies" />} variant="ghost" size="sm">
           <MessageSquare className="h-4 w-4" /> 查看回复
@@ -425,11 +552,22 @@ export function TopicActions({ topic, currentUser }: { topic: any; currentUser: 
             <>
               <DropdownMenu>
                 <DropdownMenuTrigger
-                  render={<Button ref={managementTriggerRef} type="button" variant="outline" size="sm" disabled={adminPending} />}
+                  render={
+                    <Button
+                      ref={managementTriggerRef}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={adminPending}
+                    />
+                  }
                 >
                   <MoreHorizontal className="h-4 w-4" /> 管理
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 pb-[max(0.25rem,env(safe-area-inset-bottom))]">
+                <DropdownMenuContent
+                  align="end"
+                  className="w-48 pb-[max(0.25rem,env(safe-area-inset-bottom))]"
+                >
                   <DropdownMenuGroup>
                     <DropdownMenuLabel>话题管理</DropdownMenuLabel>
                     {presentation.showManagementEdit && (
@@ -438,12 +576,18 @@ export function TopicActions({ topic, currentUser }: { topic: any; currentUser: 
                       </DropdownMenuItem>
                     )}
                     {presentation.showPin && (
-                      <DropdownMenuItem onClick={() => runTopicAction("top")} disabled={adminPending}>
+                      <DropdownMenuItem
+                        onClick={() => runTopicAction("top")}
+                        disabled={adminPending}
+                      >
                         {topic.top ? "取消置顶" : "置顶帖子"}
                       </DropdownMenuItem>
                     )}
                     {presentation.showHighlight && (
-                      <DropdownMenuItem onClick={() => runTopicAction("good")} disabled={adminPending}>
+                      <DropdownMenuItem
+                        onClick={() => runTopicAction("good")}
+                        disabled={adminPending}
+                      >
                         {topic.good ? "取消高亮" : "高亮帖子"}
                       </DropdownMenuItem>
                     )}
@@ -482,10 +626,13 @@ export function TopicActions({ topic, currentUser }: { topic: any; currentUser: 
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel disabled={adminPending}>
-                  取消
-                </AlertDialogCancel>
-                <Button type="button" variant="destructive" onClick={() => runTopicAction("delete")} disabled={adminPending}>
+                <AlertDialogCancel disabled={adminPending}>取消</AlertDialogCancel>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => runTopicAction("delete")}
+                  disabled={adminPending}
+                >
                   {adminPending ? "删除中" : "确认删除帖子"}
                 </Button>
               </AlertDialogFooter>
@@ -498,7 +645,9 @@ export function TopicActions({ topic, currentUser }: { topic: any; currentUser: 
 }
 
 export function canEditTopic(topic: any, currentUser: any) {
-  return !!currentUser && (currentUser.is_admin || currentUser.loginname === topic?.author?.loginname);
+  return (
+    !!currentUser && (currentUser.is_admin || currentUser.loginname === topic?.author?.loginname)
+  );
 }
 
 function ReplySection({
@@ -533,10 +682,17 @@ function ReplySection({
 
   const { run: submitReply, pending: submitting } = useAsyncAction(
     async () => {
-      return apiFetch<{ success: boolean; error_msg?: string }>(`/api/v1/topic/${topicId}/replies`, {
-        method: "POST",
-        body: JSON.stringify({ content, reply_id: targetReply?.id, turnstileToken: getTurnstileToken() }),
-      });
+      return apiFetch<{ success: boolean; error_msg?: string }>(
+        `/api/v1/topic/${topicId}/replies`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            content,
+            reply_id: targetReply?.id,
+            turnstileToken: getTurnstileToken(),
+          }),
+        },
+      );
     },
     {
       onSuccess: (res) => {
@@ -571,21 +727,37 @@ function ReplySection({
 
       {replies.length === 0 ? (
         <Card>
-          <CardContent><p className="text-center text-sm text-muted-foreground">暂无回复，成为第一个参与讨论的人。</p></CardContent>
+          <CardContent>
+            <p className="text-center text-sm text-muted-foreground">
+              暂无回复，成为第一个参与讨论的人。
+            </p>
+          </CardContent>
         </Card>
       ) : (
         <div className="flex flex-col gap-3">
           {replies.map((reply, index) => (
-            <ReplyItem key={reply.id} reply={reply} floor={index + 1} currentUser={currentUser} onReply={() => startReply(reply)} />
+            <ReplyItem
+              key={reply.id}
+              reply={reply}
+              floor={index + 1}
+              currentUser={currentUser}
+              onReply={() => startReply(reply)}
+            />
           ))}
         </div>
       )}
 
       <Card>
         <CardContent>
-        <h2 className="mb-4 text-base font-semibold">{targetReply ? `回复 ${targetReply.author?.loginname}` : "参与回复"}</h2>
+          <h2 className="mb-4 text-base font-semibold">
+            {targetReply ? `回复 ${targetReply.author?.loginname}` : "参与回复"}
+          </h2>
           {currentUser ? (
-            <form ref={formRef} onSubmit={handleSubmit} className="flex scroll-mt-24 flex-col gap-3">
+            <form
+              ref={formRef}
+              onSubmit={handleSubmit}
+              className="flex scroll-mt-24 flex-col gap-3"
+            >
               {targetReply && (
                 <div className="rounded-lg bg-accent p-3 text-sm text-accent-foreground">
                   <div className="mb-1 flex items-center justify-between gap-3">
@@ -597,7 +769,11 @@ function ReplySection({
                   <p className="line-clamp-2 text-muted-foreground">{targetReply.content}</p>
                 </div>
               )}
-              <MarkdownEditor value={content} onChange={setContent} placeholder="支持 Markdown，建议贴出代码和错误信息" />
+              <MarkdownEditor
+                value={content}
+                onChange={setContent}
+                placeholder="支持 Markdown，建议贴出代码和错误信息"
+              />
               <TurnstileWidget />
               <div className="flex justify-end">
                 <Button type="submit" size="sm" disabled={!content.trim() || submitting}>
@@ -636,15 +812,23 @@ function ReplyItem({
   const { revalidate } = useRevalidator();
 
   const { run: toggleUp, pending: upping } = useAsyncAction(
-    async (): Promise<{ success: boolean; action?: "up" | "down"; error_msg?: string; skipped?: boolean }> => {
+    async (): Promise<{
+      success: boolean;
+      action?: "up" | "down";
+      error_msg?: string;
+      skipped?: boolean;
+    }> => {
       if (!currentUser) {
         toast.error("登录后即可点赞回复");
         return { success: false, skipped: true };
       }
-      return apiFetch<{ success: boolean; action?: "up" | "down"; error_msg?: string }>(`/api/v1/reply/${reply.id}/ups`, {
-        method: "POST",
-        body: JSON.stringify({}),
-      }).catch(() => ({ success: false, error_msg: "点赞失败" }));
+      return apiFetch<{ success: boolean; action?: "up" | "down"; error_msg?: string }>(
+        `/api/v1/reply/${reply.id}/ups`,
+        {
+          method: "POST",
+          body: JSON.stringify({}),
+        },
+      ).catch(() => ({ success: false, error_msg: "点赞失败" }));
     },
     {
       onSuccess: (res) => {
@@ -662,7 +846,9 @@ function ReplyItem({
   const { run: deleteReply, pending: deleting } = useAsyncAction(
     async (): Promise<{ success: boolean; error_msg?: string; skipped?: boolean }> => {
       if (!currentUser) return { success: false, skipped: true };
-      const path = currentUser.is_mod ? `/api/v1/admin/reply/${reply.id}/delete` : `/api/v1/reply/${reply.id}/delete`;
+      const path = currentUser.is_mod
+        ? `/api/v1/admin/reply/${reply.id}/delete`
+        : `/api/v1/reply/${reply.id}/delete`;
       return apiFetch<{ success: boolean; error_msg?: string }>(path, {
         method: "POST",
         body: JSON.stringify({}),
@@ -683,13 +869,17 @@ function ReplyItem({
   );
 
   const upCount = Array.isArray(reply.ups) ? reply.ups.length : 0;
-  const canDelete = currentUser && (currentUser.is_mod || currentUser.loginname === author?.loginname);
+  const canDelete =
+    currentUser && (currentUser.is_mod || currentUser.loginname === author?.loginname);
   return (
     <Card id={reply.id} className="scroll-mt-24">
       <CardHeader>
         <div className="flex min-w-0 items-center gap-3">
           <Avatar className="size-8">
-            <AvatarImage src={getAvatarUrl(author?.avatar_url, 40)} alt={author?.loginname || "CNode"} />
+            <AvatarImage
+              src={getAvatarUrl(author?.avatar_url, 40)}
+              alt={author?.loginname || "CNode"}
+            />
             <AvatarFallback>{getAvatarFallback(author?.loginname)}</AvatarFallback>
           </Avatar>
           <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm">
@@ -711,25 +901,32 @@ function ReplyItem({
               href={`#${reply.reply_to.id}`}
               className="block rounded-lg bg-muted p-3 text-sm transition-colors hover:bg-accent"
             >
-              <span className="font-medium text-foreground">引用 {reply.reply_to.author?.loginname || "社区成员"}</span>
-              <span className="mt-1 block line-clamp-2 text-muted-foreground">{reply.reply_to.content_excerpt}</span>
+              <span className="font-medium text-foreground">
+                引用 {reply.reply_to.author?.loginname || "社区成员"}
+              </span>
+              <span className="mt-1 block line-clamp-2 text-muted-foreground">
+                {reply.reply_to.content_excerpt}
+              </span>
             </a>
           )}
           <MarkdownView content={reply.content} />
-          <div className="flex flex-wrap items-center justify-between gap-2" aria-label={`回复 #${floor} 操作`}>
+          <div
+            className="flex flex-wrap items-center justify-between gap-2"
+            aria-label={`回复 #${floor} 操作`}
+          >
             <div className="flex items-center gap-1" aria-label="参与操作">
-            <Button
-              type="button"
-              variant={reply.is_uped ? "default" : "ghost"}
-              size="sm"
-              onClick={toggleUp}
-              disabled={upping}
-            >
-              <ThumbsUp /> {upping ? "处理中" : upCount > 0 ? `${upCount} 赞` : "赞"}
-            </Button>
-            <Button type="button" variant="ghost" size="sm" onClick={onReply}>
-              <MessageSquare /> 回复
-            </Button>
+              <Button
+                type="button"
+                variant={reply.is_uped ? "default" : "ghost"}
+                size="sm"
+                onClick={toggleUp}
+                disabled={upping}
+              >
+                <ThumbsUp /> {upping ? "处理中" : upCount > 0 ? `${upCount} 赞` : "赞"}
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={onReply}>
+                <MessageSquare /> 回复
+              </Button>
             </div>
             {(currentUser || canDelete) && (
               <div className="flex items-center gap-1" aria-label="治理操作">
@@ -767,10 +964,20 @@ function ReplyItem({
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setDeleteOpen(false)} disabled={deleting}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setDeleteOpen(false)}
+                  disabled={deleting}
+                >
                   取消
                 </Button>
-                <Button type="button" variant="destructive" onClick={deleteReply} disabled={deleting}>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={deleteReply}
+                  disabled={deleting}
+                >
                   {deleting ? "删除中" : "确认删除回复"}
                 </Button>
               </DialogFooter>
@@ -782,7 +989,13 @@ function ReplyItem({
   );
 }
 
-function ReportButton({ targetType, targetId }: { targetType: "topic" | "reply"; targetId: string }) {
+function ReportButton({
+  targetType,
+  targetId,
+}: {
+  targetType: "topic" | "reply";
+  targetId: string;
+}) {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState("spam");
   const [description, setDescription] = useState("");
@@ -810,7 +1023,13 @@ function ReportButton({ targetType, targetId }: { targetType: "topic" | "reply";
 
   return (
     <>
-      <Button ref={triggerRef} type="button" variant="ghost" size="sm" onClick={() => setOpen(true)}>
+      <Button
+        ref={triggerRef}
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={() => setOpen(true)}
+      >
         <Flag /> 举报
       </Button>
       <Dialog
@@ -826,10 +1045,16 @@ function ReportButton({ targetType, targetId }: { targetType: "topic" | "reply";
         <DialogContent finalFocus={triggerRef}>
           <DialogHeader>
             <DialogTitle>举报内容</DialogTitle>
-            <DialogDescription>请选择举报类型，也可以补充说明，管理员会在后台处理。</DialogDescription>
+            <DialogDescription>
+              请选择举报类型，也可以补充说明，管理员会在后台处理。
+            </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-3">
-            <NativeSelect value={type} onChange={(event) => setType(event.target.value)} aria-label="举报类型">
+            <NativeSelect
+              value={type}
+              onChange={(event) => setType(event.target.value)}
+              aria-label="举报类型"
+            >
               <option value="spam">垃圾广告</option>
               <option value="attack">攻击辱骂</option>
               <option value="irrelevant">无关内容</option>
@@ -843,8 +1068,17 @@ function ReportButton({ targetType, targetId }: { targetType: "topic" | "reply";
             />
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={submitting}>取消</Button>
-            <Button type="button" onClick={submitReport} disabled={submitting}>{submitting ? "提交中" : "提交举报"}</Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={submitting}
+            >
+              取消
+            </Button>
+            <Button type="button" onClick={submitReport} disabled={submitting}>
+              {submitting ? "提交中" : "提交举报"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

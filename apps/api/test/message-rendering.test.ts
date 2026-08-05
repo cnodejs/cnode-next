@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import type { AuthVars } from "../src/middleware/auth";
 
 const message = {
@@ -62,7 +62,9 @@ describe("message mdrender compatibility", () => {
       const body = await response.json();
 
       expect(response.status).toBe(200);
-      expect(body.data.hasnot_read_messages[0].reply.content).toBe("<p><strong>不错哦</strong></p>");
+      expect(body.data.hasnot_read_messages[0].reply.content).toBe(
+        "<p><strong>不错哦</strong></p>",
+      );
     },
   );
 

@@ -45,7 +45,9 @@ function createReport(): MigrationReport {
   return {
     startedAt: new Date().toISOString(),
     source: {},
-    skipped: Object.fromEntries(skipKeys.map((key) => [key, { count: 0, samples: [] }])) as MigrationReport["skipped"],
+    skipped: Object.fromEntries(
+      skipKeys.map((key) => [key, { count: 0, samples: [] }]),
+    ) as MigrationReport["skipped"],
   };
 }
 
@@ -129,7 +131,11 @@ async function buildIdMap(client: MongoClient, collectionName: string | null): P
   return map;
 }
 
-async function forEachDoc(client: MongoClient, collectionName: string | null, handler: (doc: LegacyDoc) => Promise<void>) {
+async function forEachDoc(
+  client: MongoClient,
+  collectionName: string | null,
+  handler: (doc: LegacyDoc) => Promise<void>,
+) {
   if (!collectionName) return;
   const cursor = client
     .db(process.env.MONGO_DB || undefined)
@@ -159,14 +165,27 @@ async function resetTarget(pool: Pool) {
   );
 }
 
-async function insertUsers(client: MongoClient, pool: Pool, collectionName: string | null, userMap: IdMap) {
+async function insertUsers(
+  client: MongoClient,
+  pool: Pool,
+  collectionName: string | null,
+  userMap: IdMap,
+) {
   const loginNames = new Set<string>();
   const emails = new Set<string>();
   await forEachDoc(client, collectionName, async (user) => {
     const id = userMap.get(user._id.toHexString())!;
     const suffix = user._id.toHexString();
-    const loginname = uniqueValue(cleanText(user.loginname || user.name, `legacy_user_${id}`), loginNames, suffix);
-    const email = uniqueValue(cleanText(user.email, `${loginname}-${id}@legacy.invalid`), emails, suffix);
+    const loginname = uniqueValue(
+      cleanText(user.loginname || user.name, `legacy_user_${id}`),
+      loginNames,
+      suffix,
+    );
+    const email = uniqueValue(
+      cleanText(user.email, `${loginname}-${id}@legacy.invalid`),
+      emails,
+      suffix,
+    );
     await pool.query(
       `insert into users (
         id, loginname, pass, email, url, profile_image_url, location, signature, profile, weibo,
@@ -189,8 +208,12 @@ async function insertUsers(client: MongoClient, pool: Pool, collectionName: stri
         user.weibo ? cleanText(user.weibo) : null,
         user.avatar || user.avatar_url ? cleanText(user.avatar || user.avatar_url) : null,
         user.githubId || user.github_id ? cleanText(user.githubId || user.github_id) : null,
-        user.githubUsername || user.github_username ? cleanText(user.githubUsername || user.github_username) : null,
-        user.githubAccessToken || user.github_access_token ? cleanText(user.githubAccessToken || user.github_access_token) : null,
+        user.githubUsername || user.github_username
+          ? cleanText(user.githubUsername || user.github_username)
+          : null,
+        user.githubAccessToken || user.github_access_token
+          ? cleanText(user.githubAccessToken || user.github_access_token)
+          : null,
         toBool(user.is_block),
         Number(user.score || 0),
         Number(user.topic_count || 0),
@@ -199,7 +222,9 @@ async function insertUsers(client: MongoClient, pool: Pool, collectionName: stri
         user.is_star === null || user.is_star === undefined ? null : toBool(user.is_star),
         user.level ? cleanText(user.level) : null,
         toBool(user.active),
-        user.accessToken || user.access_token ? cleanText(user.accessToken || user.access_token) : null,
+        user.accessToken || user.access_token
+          ? cleanText(user.accessToken || user.access_token)
+          : null,
         toBool(user.receive_reply_mail),
         toBool(user.receive_at_mail),
         user.retrieve_key ? cleanText(user.retrieve_key) : null,
@@ -211,7 +236,15 @@ async function insertUsers(client: MongoClient, pool: Pool, collectionName: stri
   });
 }
 
-async function insertTopics(client: MongoClient, pool: Pool, collectionName: string | null, topicMap: IdMap, replyMap: IdMap, userMap: IdMap, report: MigrationReport) {
+async function insertTopics(
+  client: MongoClient,
+  pool: Pool,
+  collectionName: string | null,
+  topicMap: IdMap,
+  replyMap: IdMap,
+  userMap: IdMap,
+  report: MigrationReport,
+) {
   await forEachDoc(client, collectionName, async (topic) => {
     const id = topicMap.get(topic._id.toHexString())!;
     const authorId = mapId(userMap, topic.author_id);
@@ -248,7 +281,15 @@ async function insertTopics(client: MongoClient, pool: Pool, collectionName: str
   });
 }
 
-async function insertRepliesAndUps(client: MongoClient, pool: Pool, collectionName: string | null, replyMap: IdMap, topicMap: IdMap, userMap: IdMap, report: MigrationReport) {
+async function insertRepliesAndUps(
+  client: MongoClient,
+  pool: Pool,
+  collectionName: string | null,
+  replyMap: IdMap,
+  topicMap: IdMap,
+  userMap: IdMap,
+  report: MigrationReport,
+) {
   await forEachDoc(client, collectionName, async (reply) => {
     const id = replyMap.get(reply._id.toHexString())!;
     const topicId = mapId(topicMap, reply.topic_id);
@@ -291,7 +332,16 @@ async function insertRepliesAndUps(client: MongoClient, pool: Pool, collectionNa
   });
 }
 
-async function insertMessages(client: MongoClient, pool: Pool, collectionName: string | null, messageMap: IdMap, topicMap: IdMap, replyMap: IdMap, userMap: IdMap, report: MigrationReport) {
+async function insertMessages(
+  client: MongoClient,
+  pool: Pool,
+  collectionName: string | null,
+  messageMap: IdMap,
+  topicMap: IdMap,
+  replyMap: IdMap,
+  userMap: IdMap,
+  report: MigrationReport,
+) {
   await forEachDoc(client, collectionName, async (message) => {
     const id = messageMap.get(message._id.toHexString())!;
     const masterId = mapId(userMap, message.master_id);
@@ -321,7 +371,14 @@ async function insertMessages(client: MongoClient, pool: Pool, collectionName: s
   });
 }
 
-async function insertTopicCollects(client: MongoClient, pool: Pool, collectionName: string | null, topicMap: IdMap, userMap: IdMap, report: MigrationReport) {
+async function insertTopicCollects(
+  client: MongoClient,
+  pool: Pool,
+  collectionName: string | null,
+  topicMap: IdMap,
+  userMap: IdMap,
+  report: MigrationReport,
+) {
   await forEachDoc(client, collectionName, async (collect) => {
     const userId = mapId(userMap, collect.user_id);
     const topicId = mapId(topicMap, collect.topic_id);
@@ -342,7 +399,9 @@ async function insertTopicCollects(client: MongoClient, pool: Pool, collectionNa
 
 async function resetSequences(pool: Pool) {
   for (const table of ["users", "topics", "replies", "messages"]) {
-    await pool.query(`select setval(pg_get_serial_sequence('${table}', 'id'), coalesce((select max(id) from ${table}), 1))`);
+    await pool.query(
+      `select setval(pg_get_serial_sequence('${table}', 'id'), coalesce((select max(id) from ${table}), 1))`,
+    );
   }
 }
 
@@ -363,7 +422,12 @@ async function main() {
   const topicMap = await buildIdMap(mongo, topicsCollection);
   const replyMap = await buildIdMap(mongo, repliesCollection);
   const messageMap = await buildIdMap(mongo, messagesCollection);
-  report.source = { users: userMap.size, topics: topicMap.size, replies: replyMap.size, messages: messageMap.size };
+  report.source = {
+    users: userMap.size,
+    topics: topicMap.size,
+    replies: replyMap.size,
+    messages: messageMap.size,
+  };
 
   try {
     await resetTarget(pool);
@@ -374,7 +438,16 @@ async function main() {
     console.log(`migrating replies (${replyMap.size}) and reply_ups...`);
     await insertRepliesAndUps(mongo, pool, repliesCollection, replyMap, topicMap, userMap, report);
     console.log(`migrating messages (${messageMap.size})...`);
-    await insertMessages(mongo, pool, messagesCollection, messageMap, topicMap, replyMap, userMap, report);
+    await insertMessages(
+      mongo,
+      pool,
+      messagesCollection,
+      messageMap,
+      topicMap,
+      replyMap,
+      userMap,
+      report,
+    );
     console.log("migrating topic collects...");
     await insertTopicCollects(mongo, pool, collectsCollection, topicMap, userMap, report);
     await resetSequences(pool);
@@ -388,7 +461,18 @@ async function main() {
   const seconds = ((Date.now() - startedAt) / 1000).toFixed(1);
   console.log(`migration complete in ${seconds}s`);
   console.log(`migration report written to ${reportPath}`);
-  console.log(JSON.stringify({ users: userMap.size, topics: topicMap.size, replies: replyMap.size, messages: messageMap.size }, null, 2));
+  console.log(
+    JSON.stringify(
+      {
+        users: userMap.size,
+        topics: topicMap.size,
+        replies: replyMap.size,
+        messages: messageMap.size,
+      },
+      null,
+      2,
+    ),
+  );
 }
 
 main().catch((error) => {

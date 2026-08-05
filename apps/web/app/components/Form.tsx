@@ -9,12 +9,7 @@ import {
   type FieldPath,
   type FieldValues,
 } from "react-hook-form";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-} from "~/components/ui/field";
+import { Field, FieldDescription, FieldError, FieldLabel } from "~/components/ui/field";
 
 const Form = FormProvider;
 
@@ -90,36 +85,28 @@ FormItemBody.displayName = "FormItemBody";
 
 const FormLabel = React.forwardRef<HTMLLabelElement, React.ComponentPropsWithoutRef<"label">>(
   ({ className, ...props }, ref) => {
-  const { formItemId } = useFormField();
-  return (
-    <FieldLabel
-      ref={ref}
-      className={className}
-      htmlFor={formItemId}
-      {...props}
-    />
-  );
-});
+    const { formItemId } = useFormField();
+    return <FieldLabel ref={ref} className={className} htmlFor={formItemId} {...props} />;
+  },
+);
 FormLabel.displayName = "FormLabel";
 
 const FormControl = React.forwardRef<HTMLElement, useRender.ComponentProps<"div">>(
   ({ render, ...props }, ref) => {
-  const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
-  return useRender({
-    defaultTagName: "div",
-    render,
-    ref,
-    props: mergeProps<"div">(
-      {
-        id: formItemId,
-        "aria-describedby": !error
-          ? formDescriptionId
-          : `${formDescriptionId} ${formMessageId}`,
-        "aria-invalid": !!error,
-      },
-      props,
-    ),
-  });
+    const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
+    return useRender({
+      defaultTagName: "div",
+      render,
+      ref,
+      props: mergeProps<"div">(
+        {
+          id: formItemId,
+          "aria-describedby": !error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`,
+          "aria-invalid": !!error,
+        },
+        props,
+      ),
+    });
   },
 );
 FormControl.displayName = "FormControl";
@@ -129,14 +116,7 @@ const FormDescription = React.forwardRef<
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => {
   const { formDescriptionId } = useFormField();
-  return (
-    <FieldDescription
-      ref={ref}
-      id={formDescriptionId}
-      className={className}
-      {...props}
-    />
-  );
+  return <FieldDescription ref={ref} id={formDescriptionId} className={className} {...props} />;
 });
 FormDescription.displayName = "FormDescription";
 
@@ -148,12 +128,7 @@ const FormMessage = React.forwardRef<
   const body = error ? String(error?.message ?? "") : children;
   if (!body) return null;
   return (
-    <FieldError
-      ref={ref}
-      id={formMessageId}
-      className={className}
-      {...props}
-    >
+    <FieldError ref={ref} id={formMessageId} className={className} {...props}>
       {body}
     </FieldError>
   );

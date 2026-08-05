@@ -1,5 +1,10 @@
-import { expect, test } from "vitest";
-import { auditEventMeta, buildBulkUserGovernancePlan, bulkUserGovernanceAuditAction, sanitizeAuditDetail } from "../src/routes/admin";
+import { expect, test } from "vite-plus/test";
+import {
+  auditEventMeta,
+  buildBulkUserGovernancePlan,
+  bulkUserGovernanceAuditAction,
+  sanitizeAuditDetail,
+} from "../src/routes/admin";
 
 test("audit events classify sensitive actions by category and risk", () => {
   expect(auditEventMeta("delete_all_user_content")).toEqual({
@@ -46,7 +51,11 @@ test("bulk user governance plan maps unblock without changing mute", () => {
 
 test("audit detail sanitizer redacts sensitive JSON and text values", () => {
   expect(
-    sanitizeAuditDetail(JSON.stringify({ role: "admin", token: "secret-token", nested: { password: "pw" } })),
-  ).toBe(JSON.stringify({ role: "admin", token: "[redacted]", nested: { password: "[redacted]" } }));
+    sanitizeAuditDetail(
+      JSON.stringify({ role: "admin", token: "secret-token", nested: { password: "pw" } }),
+    ),
+  ).toBe(
+    JSON.stringify({ role: "admin", token: "[redacted]", nested: { password: "[redacted]" } }),
+  );
   expect(sanitizeAuditDetail("token=abc123 action=ok")).toBe("token=[redacted] action=ok");
 });

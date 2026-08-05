@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { TopicActions } from "~/routes/topic.$tid";
 
 const { apiFetch } = vi.hoisted(() => ({ apiFetch: vi.fn() }));
@@ -40,7 +40,10 @@ describe("话题动作层级", () => {
 
   it("keeps author edit direct without exposing governance", () => {
     renderActions({ loginname: "alice" });
-    expect(screen.getByRole("link", { name: "编辑话题" })).toHaveAttribute("href", "/topic/42/edit");
+    expect(screen.getByRole("link", { name: "编辑话题" })).toHaveAttribute(
+      "href",
+      "/topic/42/edit",
+    );
     expect(screen.queryByRole("button", { name: "管理" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /举报/ })).not.toBeInTheDocument();
   });
@@ -58,8 +61,14 @@ describe("话题动作层级", () => {
     screen.getByRole("button", { name: "管理" }).focus();
     await user.keyboard("{Enter}");
     expect(await screen.findByRole("menuitem", { name: "编辑话题" })).toBeInTheDocument();
-    expect(screen.getByRole("menu")).toHaveClass("overscroll-contain", "pb-[max(0.25rem,env(safe-area-inset-bottom))]");
-    expect(screen.getByLabelText("更多话题操作").parentElement).toHaveClass("flex-col", "sm:flex-row");
+    expect(screen.getByRole("menu")).toHaveClass(
+      "overscroll-contain",
+      "pb-[max(0.25rem,env(safe-area-inset-bottom))]",
+    );
+    expect(screen.getByLabelText("更多话题操作").parentElement).toHaveClass(
+      "flex-col",
+      "sm:flex-row",
+    );
     expect(screen.getByRole("menuitem", { name: "置顶帖子" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "高亮帖子" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "删除帖子" })).toBeInTheDocument();
@@ -83,7 +92,11 @@ describe("话题动作层级", () => {
     await user.keyboard("{Enter}");
     await user.click(await screen.findByRole("menuitem", { name: "删除帖子" }));
     let resolveRequest: (value: unknown) => void = () => {};
-    apiFetch.mockReturnValueOnce(new Promise((resolve) => { resolveRequest = resolve; }));
+    apiFetch.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveRequest = resolve;
+      }),
+    );
     await user.click(screen.getByRole("button", { name: "确认删除帖子" }));
     expect(screen.getByRole("button", { name: "删除中" })).toBeDisabled();
     await user.keyboard("{Escape}");
@@ -95,7 +108,11 @@ describe("话题动作层级", () => {
   it("prevents duplicate governance actions while reporting pending state", async () => {
     const user = userEvent.setup();
     let resolveRequest: (value: unknown) => void = () => {};
-    apiFetch.mockReturnValueOnce(new Promise((resolve) => { resolveRequest = resolve; }));
+    apiFetch.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveRequest = resolve;
+      }),
+    );
     renderActions({ loginname: "moderator", is_mod: true });
     const trigger = screen.getByRole("button", { name: "管理" });
     trigger.focus();

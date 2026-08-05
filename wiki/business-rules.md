@@ -18,181 +18,181 @@ CNode 社区的核心业务规则：积分、发帖、回复、收藏、消息�
 
 ## Scoring
 
-| Action | ΔScore | Source |
-| ------ | ------ | ------ |
-| Create topic | +5 | `CREATE_TOPIC_SCORE = 5` in `topic.ts` |
-| Create reply | +5 | `CREATE_REPLY_SCORE = 5` in `reply.ts` |
-| Delete reply | -5 | `decrementScoreAndReplyCount(authorId, 5, 1)` in `reply.ts` |
-| Collect topic | (no score) | only `collectTopicCount` incremented |
-| Reply upvote | (no score) | toggle only, no score change |
+| Action        | ΔScore     | Source                                                      |
+| ------------- | ---------- | ----------------------------------------------------------- |
+| Create topic  | +5         | `CREATE_TOPIC_SCORE = 5` in `topic.ts`                      |
+| Create reply  | +5         | `CREATE_REPLY_SCORE = 5` in `reply.ts`                      |
+| Delete reply  | -5         | `decrementScoreAndReplyCount(authorId, 5, 1)` in `reply.ts` |
+| Collect topic | (no score) | only `collectTopicCount` incremented                        |
+| Reply upvote  | (no score) | toggle only, no score change                                |
 
 所有积分增减都带下限保护：`case when score - N < 0 then 0 else score - N end`，积分不会为负。
 
-| Counter | Increment | Decrement |
-| ------- | --------- | --------- |
-| `users.topicCount` | +1 on create topic | -1 on delete topic |
-| `users.replyCount` | +1 on create reply | -1 on delete reply |
-| `users.collectTopicCount` | +1 on collect | -1 on de-collect |
-| `topics.replyCount` | +1 via `updateLastReply` | -1 via `decrementReplyCount` |
-| `topics.visitCount` | +1 on topic detail view | (none) |
-| `topics.collectCount` | +1 on collect | -1 on de-collect |
+| Counter                   | Increment                | Decrement                    |
+| ------------------------- | ------------------------ | ---------------------------- |
+| `users.topicCount`        | +1 on create topic       | -1 on delete topic           |
+| `users.replyCount`        | +1 on create reply       | -1 on delete reply           |
+| `users.collectTopicCount` | +1 on collect            | -1 on de-collect             |
+| `topics.replyCount`       | +1 via `updateLastReply` | -1 via `decrementReplyCount` |
+| `topics.visitCount`       | +1 on topic detail view  | (none)                       |
+| `topics.collectCount`     | +1 on collect            | -1 on de-collect             |
 
 ## Topic Rules
 
 ### Creation
 
-| Rule | Value | Source |
-| ---- | ----- | ------ |
-| Score for creating | +5 | `CREATE_TOPIC_SCORE` |
-| Rate limit | 1000/user/day | `CREATE_TOPIC_PER_DAY` |
-| New user gate | 注册满 24h 且回复 ≥ 3 条 | `assertNewUserCanCreateTopic`，settings `new_user_min_hours`/`new_user_min_replies` |
-| Title length | ≥ 5, ≤ 100 | Zod schema |
-| Tab | `share` / `ask` / `job` | Zod enum |
-| Content | ≥ 5 chars | Zod schema |
-| Content check | 敏感词命中 → 422 | `checkContent` |
-| Turnstile | 启用时必传 `turnstileToken` | `verifyTurnstile` |
-| Mute/block | 禁言或封禁用户 → 403 | `ensureMuteNotExpired` |
-| Mention | `@loginname` → 发送 `at` 消息 | `sendMessageToMentionUsers` |
+| Rule               | Value                         | Source                                                                              |
+| ------------------ | ----------------------------- | ----------------------------------------------------------------------------------- |
+| Score for creating | +5                            | `CREATE_TOPIC_SCORE`                                                                |
+| Rate limit         | 1000/user/day                 | `CREATE_TOPIC_PER_DAY`                                                              |
+| New user gate      | 注册满 24h 且回复 ≥ 3 条      | `assertNewUserCanCreateTopic`，settings `new_user_min_hours`/`new_user_min_replies` |
+| Title length       | ≥ 5, ≤ 100                    | Zod schema                                                                          |
+| Tab                | `share` / `ask` / `job`       | Zod enum                                                                            |
+| Content            | ≥ 5 chars                     | Zod schema                                                                          |
+| Content check      | 敏感词命中 → 422              | `checkContent`                                                                      |
+| Turnstile          | 启用时必传 `turnstileToken`   | `verifyTurnstile`                                                                   |
+| Mute/block         | 禁言或封禁用户 → 403          | `ensureMuteNotExpired`                                                              |
+| Mention            | `@loginname` → 发送 `at` 消息 | `sendMessageToMentionUsers`                                                         |
 
 ### Editing
 
-| Rule | Value |
-| ---- | ----- |
-| Permission | 作者或 admin |
-| Lock check | `topic.lock === true` → 403 |
-| Content check | 敏感词命中 → 422 |
-| Mention | 重新解析 `@loginname` |
+| Rule          | Value                       |
+| ------------- | --------------------------- |
+| Permission    | 作者或 admin                |
+| Lock check    | `topic.lock === true` → 403 |
+| Content check | 敏感词命中 → 422            |
+| Mention       | 重新解析 `@loginname`       |
 
 ### Deletion
 
-| Rule | Value |
-| ---- | ----- |
-| Permission | 作者或 admin |
-| Soft delete | `deleted = true` |
-| Score | 作者 -5, `topicCount` -1 |
+| Rule        | Value                    |
+| ----------- | ------------------------ |
+| Permission  | 作者或 admin             |
+| Soft delete | `deleted = true`         |
+| Score       | 作者 -5, `topicCount` -1 |
 
 ### Admin Permanent Deletion
 
-| Rule | Value |
-| ---- | ----- |
-| Permission | admin only |
-| Entry point | 后台话题管理中的独立危险操作 |
-| Effect | 从 PostgreSQL 删除话题记录，并清理直接依赖数据 |
+| Rule         | Value                                                        |
+| ------------ | ------------------------------------------------------------ |
+| Permission   | admin only                                                   |
+| Entry point  | 后台话题管理中的独立危险操作                                 |
+| Effect       | 从 PostgreSQL 删除话题记录，并清理直接依赖数据               |
 | Dependencies | 回复、回复点赞、收藏、招聘扩展、巡检命中、消息引用和举报引用 |
-| Audit | 必须写入审计日志 |
+| Audit        | 必须写入审计日志                                             |
 
 永久删除不同于普通删除。普通删除和巡检确认删除都沿用软删除语义；巡检任务级批量确认删除会删除命中的原始话题或回复，但仍然只是软删除，不从数据库物理移除内容。
 
 ### Admin Actions
 
-| Action | Effect | Route |
-| ------ | ------ | ----- |
-| Top | toggle `topics.top` | `POST /topic/:tid/top` |
-| Good | toggle `topics.good` | `POST /topic/:tid/good` |
-| Lock | toggle `topics.lock` | `POST /topic/:tid/lock` |
-| Delete | soft delete | `POST /topic/:tid/delete` |
-| Permanent delete | physical delete, admin only | 后台管理 API |
+| Action           | Effect                      | Route                     |
+| ---------------- | --------------------------- | ------------------------- |
+| Top              | toggle `topics.top`         | `POST /topic/:tid/top`    |
+| Good             | toggle `topics.good`        | `POST /topic/:tid/good`   |
+| Lock             | toggle `topics.lock`        | `POST /topic/:tid/lock`   |
+| Delete           | soft delete                 | `POST /topic/:tid/delete` |
+| Permanent delete | physical delete, admin only | 后台管理 API              |
 
 ## Reply Rules
 
 ### Creation
 
-| Rule | Value | Source |
-| ---- | ----- | ------ |
-| Score for creating | +5 | `CREATE_REPLY_SCORE` |
-| Rate limit | 1000/user/day | `CREATE_REPLY_PER_DAY` |
-| Content | ≥ 1 char | Zod schema |
-| Content check | 敏感词命中 → 422 | `checkContent` |
-| Turnstile | 启用时必传 | `verifyTurnstile` |
-| Mute/block | 禁言或封禁 → 403 | `ensureMuteNotExpired` |
-| Lock check | `topic.lock === true` → 403 | |
-| Nested reply | `reply_id` 指向父回复 | `replyQueries.newAndSave(content, topicId, authorId, replyId)` |
+| Rule               | Value                       | Source                                                         |
+| ------------------ | --------------------------- | -------------------------------------------------------------- |
+| Score for creating | +5                          | `CREATE_REPLY_SCORE`                                           |
+| Rate limit         | 1000/user/day               | `CREATE_REPLY_PER_DAY`                                         |
+| Content            | ≥ 1 char                    | Zod schema                                                     |
+| Content check      | 敏感词命中 → 422            | `checkContent`                                                 |
+| Turnstile          | 启用时必传                  | `verifyTurnstile`                                              |
+| Mute/block         | 禁言或封禁 → 403            | `ensureMuteNotExpired`                                         |
+| Lock check         | `topic.lock === true` → 403 |                                                                |
+| Nested reply       | `reply_id` 指向父回复       | `replyQueries.newAndSave(content, topicId, authorId, replyId)` |
 
 ### Message Creation On Reply
 
-| Condition | Message type | Recipient |
-| --------- | ------------ | --------- |
-| 回复话题（作者不是自己） | `reply` | 话题作者 |
-| 回复别人的回复（父回复作者不是自己也不是话题作者） | `reply2` | 父回复作者 |
-| `@loginname`（被 @ 的人不是自己、不是话题作者、不是父回复作者） | `at` | 被 @ 的用户 |
+| Condition                                                       | Message type | Recipient   |
+| --------------------------------------------------------------- | ------------ | ----------- |
+| 回复话题（作者不是自己）                                        | `reply`      | 话题作者    |
+| 回复别人的回复（父回复作者不是自己也不是话题作者）              | `reply2`     | 父回复作者  |
+| `@loginname`（被 @ 的人不是自己、不是话题作者、不是父回复作者） | `at`         | 被 @ 的用户 |
 
 `sendReplyMessage` 和 `sendReply2Message` 都跳过 `masterId === authorId`。
 `@` 消息排除话题作者和父回复作者以避免重复通知。
 
 ### Editing
 
-| Rule | Value |
-| ---- | ----- |
-| Permission | 作者或 admin |
-| Content | ≥ 1 char |
-| Content check | 敏感词命中 → 422 |
-| Mention | 重新解析 `@loginname` |
+| Rule          | Value                 |
+| ------------- | --------------------- |
+| Permission    | 作者或 admin          |
+| Content       | ≥ 1 char              |
+| Content check | 敏感词命中 → 422      |
+| Mention       | 重新解析 `@loginname` |
 
 ### Deletion
 
-| Rule | Value |
-| ---- | ----- |
-| Permission | 作者或 mod |
-| Soft delete | `deleted = true` |
-| Score | 作者 -5, `replyCount` -1 |
-| Topic counter | `topics.replyCount` -1 |
+| Rule          | Value                    |
+| ------------- | ------------------------ |
+| Permission    | 作者或 mod               |
+| Soft delete   | `deleted = true`         |
+| Score         | 作者 -5, `replyCount` -1 |
+| Topic counter | `topics.replyCount` -1   |
 
 ### Upvote
 
-| Rule | Value |
-| ---- | ----- |
-| Toggle | push/splice `reply_ups` |
-| Self-upvote | 禁止 → 403 |
-| Response | `{ success, action: "up"\|"down" }` |
+| Rule        | Value                               |
+| ----------- | ----------------------------------- |
+| Toggle      | push/splice `reply_ups`             |
+| Self-upvote | 禁止 → 403                          |
+| Response    | `{ success, action: "up"\|"down" }` |
 
 ## Collection Rules
 
-| Rule | Value |
-| ---- | ----- |
-| Unique | `(userId, topicId)` primary key |
+| Rule              | Value                                                    |
+| ----------------- | -------------------------------------------------------- |
+| Unique            | `(userId, topicId)` primary key                          |
 | Public topic only | `isPublicTopic`: 非删除、非 `dev`/`test` tab、作者未封禁 |
-| Collect | `collectTopicCount` +1, `topics.collectCount` +1 |
-| De-collect | `collectTopicCount` -1, `topics.collectCount` -1 |
-| Duplicate | 已收藏 → `已经收藏过该主题` |
+| Collect           | `collectTopicCount` +1, `topics.collectCount` +1         |
+| De-collect        | `collectTopicCount` -1, `topics.collectCount` -1         |
+| Duplicate         | 已收藏 → `已经收藏过该主题`                              |
 
 ## Message Rules
 
 ### Types
 
-| Type | Trigger | Source |
-| ---- | ------- | ------ |
-| `reply` | 回复了你的话题 | `sendReplyMessage` |
-| `reply2` | 在话题中回复了你 | `sendReply2Message` |
-| `at` | @了你 | `sendAtMessage` |
-| `follow` | (not implemented) | — |
+| Type     | Trigger           | Source              |
+| -------- | ----------------- | ------------------- |
+| `reply`  | 回复了你的话题    | `sendReplyMessage`  |
+| `reply2` | 在话题中回复了你  | `sendReply2Message` |
+| `at`     | @了你             | `sendAtMessage`     |
+| `follow` | (not implemented) | —                   |
 
 ### Email Notification
 
-| Type | Condition | Source |
-| ---- | --------- | ------ |
-| reply | `master.receiveReplyMail === true` | `sendReplyNotifyMail` |
-| at | `master.receiveAtMail === true` | `sendAtNotifyMail` |
-| reply2 | (no email) | — |
+| Type   | Condition                          | Source                |
+| ------ | ---------------------------------- | --------------------- |
+| reply  | `master.receiveReplyMail === true` | `sendReplyNotifyMail` |
+| at     | `master.receiveAtMail === true`    | `sendAtNotifyMail`    |
+| reply2 | (no email)                         | —                     |
 
 ### Read State
 
-| Item | Value |
-| ---- | ----- |
-| `has_read` | Boolean, default false |
-| Mark all read | `POST /api/v1/message/mark_all` |
-| Mark one read | `POST /api/v1/message/mark_one/{msg_id}` |
-| Unread count | `GET /api/v1/message/count` |
-| Read list limit | 20 most recent |
+| Item            | Value                                    |
+| --------------- | ---------------------------------------- |
+| `has_read`      | Boolean, default false                   |
+| Mark all read   | `POST /api/v1/message/mark_all`          |
+| Mark one read   | `POST /api/v1/message/mark_one/{msg_id}` |
+| Unread count    | `GET /api/v1/message/count`              |
+| Read list limit | 20 most recent                           |
 
 ## User Status Rules
 
-| Status | Effect | Source |
-| ------ | ------ | ------ |
-| `isBlock` | 封禁，无法发帖/回复，话题对他人不可见 | `ensureMuteNotExpired`, `isPublicTopic` |
-| `isMuted` | 禁言，无法发帖/回复 | `ensureMuteNotExpired` |
-| `isStar` | 达人标记 | `isAdvanced` inference |
-| `active` | 账号激活状态，未激活无法登录 | `sign.ts` |
-| `retrieveKey`/`retrieveTime` | 密码重置令牌，24h 有效 | `sign.ts` |
+| Status                       | Effect                                | Source                                  |
+| ---------------------------- | ------------------------------------- | --------------------------------------- |
+| `isBlock`                    | 封禁，无法发帖/回复，话题对他人不可见 | `ensureMuteNotExpired`, `isPublicTopic` |
+| `isMuted`                    | 禁言，无法发帖/回复                   | `ensureMuteNotExpired`                  |
+| `isStar`                     | 达人标记                              | `isAdvanced` inference                  |
+| `active`                     | 账号激活状态，未激活无法登录          | `sign.ts`                               |
+| `retrieveKey`/`retrieveTime` | 密码重置令牌，24h 有效                | `sign.ts`                               |
 
 ### Advanced User
 
@@ -210,34 +210,34 @@ Legacy: `score > 700 || is_star` → `isAdvanced`。当前实现是否保留此�
 
 公开 `/rss` 是唯一对外 RSS 订阅地址。RSS feed 表示全站公开内容订阅，不等同首页 `all` feed。
 
-| Rule | Value |
-| ---- | ----- |
-| Format | RSS 2.0 XML |
-| Source | API RSS source JSON + Web XML serialization |
-| Limit | 最多 50 条 |
-| Sort | `create_at desc` |
-| Include | 公开 `share` / `ask` / `job` 等话题 |
+| Rule    | Value                                                            |
+| ------- | ---------------------------------------------------------------- |
+| Format  | RSS 2.0 XML                                                      |
+| Source  | API RSS source JSON + Web XML serialization                      |
+| Limit   | 最多 50 条                                                       |
+| Sort    | `create_at desc`                                                 |
+| Include | 公开 `share` / `ask` / `job` 等话题                              |
 | Exclude | `dev` / `test`、`deleted=true`、`status=deleted`、block 作者内容 |
 
 ## Rate Limiting
 
-| Scope | Limit | Source |
-| ----- | ----- | ------ |
-| Create topic | 1000/user/day | `CREATE_TOPIC_PER_DAY` |
-| Create reply | 1000/user/day | `CREATE_REPLY_PER_DAY` |
-| Create account | 1000/ip/day | `CREATE_USER_PER_IP` (legacy) |
-| Rate settings | 可通过 `site_settings` 覆盖 | `perUserPerDaySetting` |
+| Scope          | Limit                       | Source                        |
+| -------------- | --------------------------- | ----------------------------- |
+| Create topic   | 1000/user/day               | `CREATE_TOPIC_PER_DAY`        |
+| Create reply   | 1000/user/day               | `CREATE_REPLY_PER_DAY`        |
+| Create account | 1000/ip/day                 | `CREATE_USER_PER_IP` (legacy) |
+| Rate settings  | 可通过 `site_settings` 覆盖 | `perUserPerDaySetting`        |
 
 ## Tabs
 
-| Tab | Display | Source |
-| --- | ------- | ------ |
-| `share` | 分享 | `config.tabs` |
-| `ask` | 问答 | `config.tabs` |
-| `job` | 招聘 | `config.tabs` |
-| `good` | 精华（显示用） | display-only |
-| `dev` | 内部（不公开） | `INTERNAL_TABS` |
-| `test` | 内部（不公开） | `INTERNAL_TABS` |
+| Tab     | Display        | Source          |
+| ------- | -------------- | --------------- |
+| `share` | 分享           | `config.tabs`   |
+| `ask`   | 问答           | `config.tabs`   |
+| `job`   | 招聘           | `config.tabs`   |
+| `good`  | 精华（显示用） | display-only    |
+| `dev`   | 内部（不公开） | `INTERNAL_TABS` |
+| `test`  | 内部（不公开） | `INTERNAL_TABS` |
 
 ## Inferences
 

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vite-plus/test";
 import { applyResolvedTheme } from "~/lib/stores/theme-store";
 
 describe("theme system integration", () => {

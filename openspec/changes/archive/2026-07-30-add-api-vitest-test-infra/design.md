@@ -47,12 +47,12 @@ flowchart LR
 
 ### 3. 测试分层命名
 
-| 层级 | 允许内容 | 禁止内容 |
-| --- | --- | --- |
-| Unit | 纯函数、权限判定、schema 解析 | DB 连接 |
-| Route | `app.request`、mock service/db 边界 | 真实 PostgreSQL |
-| Contract | OpenAPI 生成与静态校验 | 手写漂移契约 |
-| DB behavior | 暂不在本 change 建立 | SQLite、真实测试库 |
+| 层级        | 允许内容                            | 禁止内容           |
+| ----------- | ----------------------------------- | ------------------ |
+| Unit        | 纯函数、权限判定、schema 解析       | DB 连接            |
+| Route       | `app.request`、mock service/db 边界 | 真实 PostgreSQL    |
+| Contract    | OpenAPI 生成与静态校验              | 手写漂移契约       |
+| DB behavior | 暂不在本 change 建立                | SQLite、真实测试库 |
 
 ### 4. 不为了测试扩大生产 API 表面
 

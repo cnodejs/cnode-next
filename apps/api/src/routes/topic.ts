@@ -1,6 +1,13 @@
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import _ from "lodash";
-import { settingQueries, topicQueries, userQueries, replyQueries, jobMetaQueries, roleQueries } from "../lib/db";
+import {
+  settingQueries,
+  topicQueries,
+  userQueries,
+  replyQueries,
+  jobMetaQueries,
+  roleQueries,
+} from "../lib/db";
 import { incrementScoreAndTopicCount } from "../lib/score";
 import { sendMessageToMentionUsers } from "../lib/at";
 import { checkContent } from "../lib/moderation";
@@ -32,7 +39,10 @@ const INTERNAL_TABS = new Set(["dev", "test"]);
 
 async function assertNewUserCanCreateTopic(user: any) {
   const minHours = Math.max(0, Number(await settingQueries.get("new_user_min_hours", "24")) || 24);
-  const minReplies = Math.max(0, Number(await settingQueries.get("new_user_min_replies", "3")) || 3);
+  const minReplies = Math.max(
+    0,
+    Number(await settingQueries.get("new_user_min_replies", "3")) || 3,
+  );
   const createdAt = user.createAt ? new Date(user.createAt).getTime() : Date.now();
   const accountAgeHours = Math.floor((Date.now() - createdAt) / 3600000);
   if (accountAgeHours < minHours || Number(user.replyCount || 0) < minReplies) {
@@ -43,7 +53,10 @@ async function assertNewUserCanCreateTopic(user: any) {
 
 async function isNewUserForTopicGate(user: any) {
   const minHours = Math.max(0, Number(await settingQueries.get("new_user_min_hours", "24")) || 24);
-  const minReplies = Math.max(0, Number(await settingQueries.get("new_user_min_replies", "3")) || 3);
+  const minReplies = Math.max(
+    0,
+    Number(await settingQueries.get("new_user_min_replies", "3")) || 3,
+  );
   const createdAt = user.createAt ? new Date(user.createAt).getTime() : Date.now();
   const accountAgeHours = Math.floor((Date.now() - createdAt) / 3600000);
   return accountAgeHours < minHours || Number(user.replyCount || 0) < minReplies;
@@ -201,7 +214,10 @@ topic.openapi(getTopicRoute, async (c) => {
   await topicQueries.incrementVisitCount(id);
 
   const author = await userQueries.getById(topicData.authorId);
-  if (!c.get("isAdmin") && (topicData.status === "deleted" || INTERNAL_TABS.has(topicData.tab || "") || author?.isBlock)) {
+  if (
+    !c.get("isAdmin") &&
+    (topicData.status === "deleted" || INTERNAL_TABS.has(topicData.tab || "") || author?.isBlock)
+  ) {
     return c.json({ success: false as const, error_msg: "话题不存在" }, 404);
   }
   const repliesList = await replyQueries.getByTopicId(id);
@@ -221,7 +237,9 @@ topic.openapi(getTopicRoute, async (c) => {
         ? replyMap.get(r.replyId) || (await replyQueries.getById(r.replyId))
         : null;
       const visibleParentReply = parentReply && !parentReply.deleted ? parentReply : null;
-      const parentAuthor = visibleParentReply ? await userQueries.getById(visibleParentReply.authorId) : null;
+      const parentAuthor = visibleParentReply
+        ? await userQueries.getById(visibleParentReply.authorId)
+        : null;
       const ups = upsByReplyId.get(r.id) || [];
       return {
         id: String(r.id),
@@ -287,9 +305,7 @@ const createTopicRoute = createRoute({
   tags: ["topics"],
   summary: "创建话题",
   description: "需要登录。新用户需通过 Turnstile 人机验证。",
-  middleware: [
-    perUserPerDaySetting("create_topic", "rate_topic", CREATE_TOPIC_PER_DAY, true),
-  ],
+  middleware: [perUserPerDaySetting("create_topic", "rate_topic", CREATE_TOPIC_PER_DAY, true)],
   request: {
     body: {
       content: { "application/json": { schema: createTopicBodySchema } },
@@ -329,7 +345,10 @@ topic.openapi(createTopicRoute, async (c) => {
     return c.json({ success: false as const, error_msg: "您已被禁言" }, 403);
   }
   const body = c.req.valid("json");
-  if ((await isNewUserForTopicGate(user)) && !(await verifyTurnstile(body.turnstileToken, requestIp(c)))) {
+  if (
+    (await isNewUserForTopicGate(user)) &&
+    !(await verifyTurnstile(body.turnstileToken, requestIp(c)))
+  ) {
     return c.json({ success: false as const, error_msg: "人机验证失败" }, 403);
   }
   const newUserError = await assertNewUserCanCreateTopic(user);

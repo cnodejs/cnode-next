@@ -20,5 +20,9 @@ export async function verifyTurnstile(token: string | undefined, remoteIp?: stri
 }
 
 export function requestIp(c: any) {
-  return c.req.header("x-real-ip") || c.req.header("cf-connecting-ip") || c.req.header("x-forwarded-for")?.split(",")[0]?.trim();
+  return (
+    c.req.header("x-real-ip") ||
+    c.req.header("cf-connecting-ip") ||
+    c.req.header("x-forwarded-for")?.split(",")[0]?.trim()
+  );
 }

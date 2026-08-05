@@ -1,7 +1,7 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import Setting from "~/routes/setting";
 
 const { apiFetch } = vi.hoisted(() => ({ apiFetch: vi.fn() }));
@@ -44,10 +44,11 @@ describe("设置页 GitHub 账号身份", () => {
     expect(screen.getByText("octocat")).toBeInTheDocument();
     expect(screen.getByText("已绑定")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "解除绑定" })).toBeInTheDocument();
-    expect(screen.getByRole("checkbox", { name: "有人回复我的话题时邮件通知" }).closest('[data-slot="field"]')).toHaveAttribute(
-      "data-orientation",
-      "horizontal",
-    );
+    expect(
+      screen
+        .getByRole("checkbox", { name: "有人回复我的话题时邮件通知" })
+        .closest('[data-slot="field"]'),
+    ).toHaveAttribute("data-orientation", "horizontal");
   });
 
   it("shows the unbound state and bind action in the same GitHub row", () => {

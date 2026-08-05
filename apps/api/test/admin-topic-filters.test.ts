@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { parseAdminTopicFilters } from "../src/lib/admin-governance";
 
 test("admin topic filters parse supported values", () => {

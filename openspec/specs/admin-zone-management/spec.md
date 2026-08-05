@@ -1,8 +1,11 @@
 # admin-zone-management Specification
 
 ## Purpose
+
 TBD - created by archiving change add-jobs-zone. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: zones 注册表
 
 系统 SHALL 新增 `zones` 表作为专区注册表，存储专区的 slug、名称、描述、图标、可见性、排序。`zones.slug` SHALL 与专区路由 `/zone/:slug` 对应，UNIQUE 约束。

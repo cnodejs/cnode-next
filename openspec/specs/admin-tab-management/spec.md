@@ -1,8 +1,11 @@
 # admin-tab-management Specification
 
 ## Purpose
+
 TBD - created by archiving change add-jobs-zone. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: tabs 注册表
 
 系统 SHALL 新增 `tabs` 表，存储首页 tab 按钮的 key、标签、可见性、排序和访问范围。`tabs.key` SHALL 与代码支持的 `topics.tab` 字段值对应，UNIQUE 约束。tab 的存在性 SHALL 由代码/migration/bootstrap 控制，管理后台 SHALL NOT 支持运行时新增或删除 tab。

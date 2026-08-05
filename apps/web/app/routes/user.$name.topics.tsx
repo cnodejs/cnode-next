@@ -26,7 +26,14 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const res = await apiFetch<{ success: boolean; data: any[]; total?: number; user?: any }>(
     `/api/v1/user/${name}/topics?page=${page}&limit=${limit}`,
   );
-  return { topics: res.success ? res.data || [] : [], user: res.success ? res.user : null, loginname: name, page, limit, total: res.total || 0 };
+  return {
+    topics: res.success ? res.data || [] : [],
+    user: res.success ? res.user : null,
+    loginname: name,
+    page,
+    limit,
+    total: res.total || 0,
+  };
 }
 
 export default function UserTopics({ loaderData }: Route.ComponentProps) {
@@ -38,10 +45,19 @@ export default function UserTopics({ loaderData }: Route.ComponentProps) {
         {user && <UserHero user={user} />}
         <UserTabs loginname={loginname} active="topics" />
         <Card>
-          <CardHeader><CardTitle>{loginname} 的话题</CardTitle></CardHeader>
-          <CardContent><TopicList topics={topics} /></CardContent>
+          <CardHeader>
+            <CardTitle>{loginname} 的话题</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TopicList topics={topics} />
+          </CardContent>
         </Card>
-        <Pagination page={page} total={total} limit={limit} basePath={`/user/${loginname}/topics`} />
+        <Pagination
+          page={page}
+          total={total}
+          limit={limit}
+          basePath={`/user/${loginname}/topics`}
+        />
       </FeedPage>
     </Layout>
   );

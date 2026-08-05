@@ -13,7 +13,7 @@ export function parseRepairMode(args: string[]) {
   if (args.some((arg) => arg !== "--dry-run" && arg !== "--apply")) {
     throw new Error("usage: pnpm repair:topic-replies [--dry-run|--apply]");
   }
-  return args.includes("--apply") ? "apply" as const : "dry-run" as const;
+  return args.includes("--apply") ? ("apply" as const) : ("dry-run" as const);
 }
 
 async function main() {

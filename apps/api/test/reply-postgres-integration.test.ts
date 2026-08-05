@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { afterAll, beforeAll, describe, expect, test } from "vite-plus/test";
 import { and, eq } from "drizzle-orm";
 import { replies, topics, users } from "@cnode/db";
 import { getDb, replyQueries } from "../src/lib/db";
@@ -12,10 +12,10 @@ runPostgresIntegration("PostgreSQL reply transactions", () => {
 
   beforeAll(async () => {
     if (
-      process.env.POSTGRES_HOST !== "127.0.0.1"
-      || process.env.POSTGRES_PORT !== "65433"
-      || process.env.POSTGRES_DB !== "cnode_validation"
-      || process.env.POSTGRES_USER !== "cnode_validation"
+      process.env.POSTGRES_HOST !== "127.0.0.1" ||
+      process.env.POSTGRES_PORT !== "65433" ||
+      process.env.POSTGRES_DB !== "cnode_validation" ||
+      process.env.POSTGRES_USER !== "cnode_validation"
     ) {
       throw new Error("PostgreSQL integration tests require the isolated validation database");
     }
@@ -24,13 +24,20 @@ runPostgresIntegration("PostgreSQL reply transactions", () => {
     const suffix = `${process.pid}-${Date.now()}`;
     const [user] = await db
       .insert(users)
-      .values({ loginname: `reply-validation-${suffix}`, email: `reply-validation-${suffix}@invalid.test` })
+      .values({
+        loginname: `reply-validation-${suffix}`,
+        email: `reply-validation-${suffix}@invalid.test`,
+      })
       .returning({ id: users.id });
     userId = user.id;
 
     const [topic] = await db
       .insert(topics)
-      .values({ title: "Reply transaction validation", content: "isolated fixture", authorId: userId })
+      .values({
+        title: "Reply transaction validation",
+        content: "isolated fixture",
+        authorId: userId,
+      })
       .returning({ id: topics.id });
     topicId = topic.id;
   });
@@ -93,8 +100,9 @@ runPostgresIntegration("PostgreSQL reply transactions", () => {
   test("rejects creation when the locked topic row is rechecked", async () => {
     await db.update(topics).set({ lock: true }).where(eq(topics.id, topicId));
 
-    await expect(replyQueries.createWithAggregates("blocked", topicId, userId))
-      .resolves.toEqual({ status: "locked" });
+    await expect(replyQueries.createWithAggregates("blocked", topicId, userId)).resolves.toEqual({
+      status: "locked",
+    });
 
     const activeReplies = await db
       .select({ id: replies.id })

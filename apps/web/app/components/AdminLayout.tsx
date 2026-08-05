@@ -51,15 +51,11 @@ const NAV_GROUPS = [
   },
   {
     label: "审计",
-    items: [
-      { href: "/admin/audit", icon: ScrollText, label: "审计日志", adminOnly: true },
-    ],
+    items: [{ href: "/admin/audit", icon: ScrollText, label: "审计日志", adminOnly: true }],
   },
   {
     label: "系统",
-    items: [
-      { href: "/admin/settings", icon: Settings, label: "系统设置", adminOnly: true },
-    ],
+    items: [{ href: "/admin/settings", icon: Settings, label: "系统设置", adminOnly: true }],
   },
 ];
 
@@ -83,7 +79,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           <div className="flex min-w-0 items-center gap-3">
             <div className="md:hidden">
               <Sheet>
-                <SheetTrigger render={<Button variant="ghost" size="icon" aria-label="打开后台导航" />}>
+                <SheetTrigger
+                  render={<Button variant="ghost" size="icon" aria-label="打开后台导航" />}
+                >
                   <Menu />
                 </SheetTrigger>
                 <SheetContent side="left" className="w-72 max-w-[calc(100%-2rem)]">
@@ -96,38 +94,38 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             </div>
             <CNodeLogo admin />
             <Button
-                type="button"
-                variant="secondary"
-                className="hidden w-64 justify-start lg:inline-flex"
-                onClick={(event) => {
-                  commandFinalFocusRef.current = event.currentTarget;
-                  setCommandOpen(true);
-                }}
-                aria-label="搜索后台内容"
-              >
-                <Search />
-                <span className="min-w-0 flex-1 truncate text-left">搜索后台内容...</span>
-                <kbd className="text-xs text-muted-foreground">⌘K</kbd>
-              </Button>
+              type="button"
+              variant="secondary"
+              className="hidden w-64 justify-start lg:inline-flex"
+              onClick={(event) => {
+                commandFinalFocusRef.current = event.currentTarget;
+                setCommandOpen(true);
+              }}
+              aria-label="搜索后台内容"
+            >
+              <Search />
+              <span className="min-w-0 flex-1 truncate text-left">搜索后台内容...</span>
+              <kbd className="text-xs text-muted-foreground">⌘K</kbd>
+            </Button>
             <AdminTopNavigation isAdmin={isAdmin} />
           </div>
 
           <div className="flex items-center gap-2 md:gap-3">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="lg:hidden"
-                onClick={(event) => {
-                  commandFinalFocusRef.current = event.currentTarget;
-                  setCommandOpen(true);
-                }}
-                aria-label="搜索后台"
-              >
-                <Search />
-              </Button>
-              <ThemeToggle />
-              <HeaderUserArea />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              onClick={(event) => {
+                commandFinalFocusRef.current = event.currentTarget;
+                setCommandOpen(true);
+              }}
+              aria-label="搜索后台"
+            >
+              <Search />
+            </Button>
+            <ThemeToggle />
+            <HeaderUserArea />
           </div>
         </PageContainer>
         <CommandPalette
@@ -174,21 +172,24 @@ function AdminNavigation({ isAdmin }: { isAdmin: boolean }) {
         <div key={group.label} className="flex flex-col gap-1">
           <p className="px-2 text-xs font-medium text-muted-foreground">{group.label}</p>
           <div className="flex flex-col gap-1">
-              {group.items.map(({ href, icon: Icon, label }) => {
-                const active = pathname === href || (href !== "/admin" && pathname.startsWith(href));
+            {group.items.map(({ href, icon: Icon, label }) => {
+              const active = pathname === href || (href !== "/admin" && pathname.startsWith(href));
 
-                return (
-                  <Link
-                    key={href}
-                    to={href}
-                    aria-current={active ? "page" : undefined}
-                    className={cn(buttonVariants({ variant: active ? "default" : "ghost", size: "sm" }), "w-full justify-start")}
-                  >
-                    <Icon data-icon="inline-start" />
-                    <span>{label}</span>
-                  </Link>
-                );
-              })}
+              return (
+                <Link
+                  key={href}
+                  to={href}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    buttonVariants({ variant: active ? "default" : "ghost", size: "sm" }),
+                    "w-full justify-start",
+                  )}
+                >
+                  <Icon data-icon="inline-start" />
+                  <span>{label}</span>
+                </Link>
+              );
+            })}
           </div>
         </div>
       ))}
@@ -203,7 +204,10 @@ function AdminTopNavigation({ isAdmin }: { isAdmin: boolean }) {
     <nav aria-label="后台分区" className="hidden items-center gap-1 xl:flex">
       {visibleGroups(isAdmin).map((group) => {
         const href = group.items[0].href;
-        const active = group.items.some((item) => pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href)));
+        const active = group.items.some(
+          (item) =>
+            pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href)),
+        );
         return (
           <Link
             key={group.label}

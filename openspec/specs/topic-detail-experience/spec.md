@@ -3,7 +3,9 @@
 ## Purpose
 
 定义话题详情页的阅读布局、上下文信息、正文展示和状态处理要求，确保迁移后的话题内容在桌面和移动端都具备清晰层级、可读排版和可用交互。
+
 ## Requirements
+
 ### Requirement: Topic 详情 reading layout
 
 Topic 详情页 SHALL 根据 viewport 使用 reading layout，包含主 topic 内容和右侧上下文 rail。目录不得占用独立左侧 rail；主内容列在响应式断点前后 MUST 保持连续且可读的宽度变化。

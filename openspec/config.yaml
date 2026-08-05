@@ -27,9 +27,9 @@ context: |
 rules:
   proposal:
     - "Keep proposals under 800 words"
-    - "Always include a \"Non-goals\" section"
+    - 'Always include a "Non-goals" section'
     - "Always define the change scope: in-scope areas, out-of-scope areas, affected systems, and high-risk categories"
-    - "Always include a \"Documentation Impact\" section covering docs/ and wiki/ updates, deferrals, or why they are not required"
+    - 'Always include a "Documentation Impact" section covering docs/ and wiki/ updates, deferrals, or why they are not required'
     - "Reference the legacy nodeclub/egg-cnode code by path when explaining what is being replaced"
   tasks:
     - Group tasks into phases (MVP first, then feature-complete)

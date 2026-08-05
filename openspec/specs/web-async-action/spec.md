@@ -18,8 +18,8 @@ function useAsyncAction<TArgs extends unknown[], TResult>(
     errorMessage?: string | ((error: unknown) => string);
     onSuccess?: (result: TResult) => void;
     onError?: (error: unknown) => void;
-  }
-): { run: (...args: TArgs) => void; pending: boolean }
+  },
+): { run: (...args: TArgs) => void; pending: boolean };
 ```
 
 #### Scenario: 基本 pending 状态

@@ -216,7 +216,9 @@ export const roleQueries = {
     const rows = await db
       .select({ id: userRoles.id })
       .from(userRoles)
-      .where(and(eq(userRoles.userId, userId), eq(userRoles.role, role), isNull(userRoles.revokedAt)))
+      .where(
+        and(eq(userRoles.userId, userId), eq(userRoles.role, role), isNull(userRoles.revokedAt)),
+      )
       .limit(1);
     return rows.length > 0;
   },
@@ -225,7 +227,14 @@ export const roleQueries = {
     const db = getDb();
     await db
       .insert(userRoles)
-      .values({ userId, role, grantedBy, reason: reason || null, createAt: new Date(), updateAt: new Date() })
+      .values({
+        userId,
+        role,
+        grantedBy,
+        reason: reason || null,
+        createAt: new Date(),
+        updateAt: new Date(),
+      })
       .onConflictDoNothing();
     return roleQueries.listByUserId(userId);
   },
@@ -235,7 +244,9 @@ export const roleQueries = {
     await db
       .update(userRoles)
       .set({ revokedAt: new Date(), updateAt: new Date() })
-      .where(and(eq(userRoles.userId, userId), eq(userRoles.role, role), isNull(userRoles.revokedAt)));
+      .where(
+        and(eq(userRoles.userId, userId), eq(userRoles.role, role), isNull(userRoles.revokedAt)),
+      );
     return roleQueries.listByUserId(userId);
   },
 };
@@ -377,7 +388,11 @@ export function buildTopicsByQuery(db: DB, where: any, opt?: any) {
   const limit = opt?.limit || 20;
   const offset = opt?.offset || 0;
   return q
-    .orderBy(desc(topics.top), sql`coalesce(${topics.lastReplyAt}, ${topics.createAt}) desc nulls last`, desc(topics.id))
+    .orderBy(
+      desc(topics.top),
+      sql`coalesce(${topics.lastReplyAt}, ${topics.createAt}) desc nulls last`,
+      desc(topics.id),
+    )
     .limit(limit)
     .offset(offset);
 }
@@ -408,57 +423,60 @@ export const replyQueries = {
   async createWithAggregates(content: string, topicId: number, authorId: number, replyId?: number) {
     const db = getDb();
     const store: ReplyCreationStore = {
-      transaction: (callback) => db.transaction(async (tx: DB) => callback({
-        async lockTopic(id) {
-          const rows = await tx
-            .select({ locked: topics.lock })
-            .from(topics)
-            .where(eq(topics.id, id))
-            .limit(1)
-            .for("update");
-          return rows[0] ? (rows[0].locked ? "locked" : "open") : null;
-        },
-        async insertReply(input) {
-          const now = new Date();
-          const [reply] = await tx
-            .insert(replies)
-            .values({ ...input, createAt: now, updateAt: now })
-            .returning();
-          return reply;
-        },
-        async incrementAuthor(id) {
-          await tx
-            .update(users)
-            .set({
-              score: sql`coalesce(${users.score}, 0) + 5`,
-              replyCount: sql`coalesce(${users.replyCount}, 0) + 1`,
-            })
-            .where(eq(users.id, id));
-        },
-        async readTopicAggregate(id) {
-          const [countRows, latestRows] = await Promise.all([
-            tx
-              .select({ value: count() })
-              .from(replies)
-              .where(and(eq(replies.topicId, id), boolEq(replies.deleted, false))),
-            tx
-              .select({ id: replies.id, createAt: replies.createAt })
-              .from(replies)
-              .where(and(eq(replies.topicId, id), boolEq(replies.deleted, false)))
-              .orderBy(sql`${replies.createAt} desc nulls last`, desc(replies.id))
-              .limit(1),
-          ]);
-          const latest = latestRows[0];
-          return {
-            replyCount: Number(countRows[0]?.value || 0),
-            lastReplyId: latest?.id ?? null,
-            lastReplyAt: latest?.createAt ?? null,
-          };
-        },
-        async writeTopicAggregate(id, aggregate) {
-          await tx.update(topics).set(aggregate).where(eq(topics.id, id));
-        },
-      })),
+      transaction: (callback) =>
+        db.transaction(async (tx: DB) =>
+          callback({
+            async lockTopic(id) {
+              const rows = await tx
+                .select({ locked: topics.lock })
+                .from(topics)
+                .where(eq(topics.id, id))
+                .limit(1)
+                .for("update");
+              return rows[0] ? (rows[0].locked ? "locked" : "open") : null;
+            },
+            async insertReply(input) {
+              const now = new Date();
+              const [reply] = await tx
+                .insert(replies)
+                .values({ ...input, createAt: now, updateAt: now })
+                .returning();
+              return reply;
+            },
+            async incrementAuthor(id) {
+              await tx
+                .update(users)
+                .set({
+                  score: sql`coalesce(${users.score}, 0) + 5`,
+                  replyCount: sql`coalesce(${users.replyCount}, 0) + 1`,
+                })
+                .where(eq(users.id, id));
+            },
+            async readTopicAggregate(id) {
+              const [countRows, latestRows] = await Promise.all([
+                tx
+                  .select({ value: count() })
+                  .from(replies)
+                  .where(and(eq(replies.topicId, id), boolEq(replies.deleted, false))),
+                tx
+                  .select({ id: replies.id, createAt: replies.createAt })
+                  .from(replies)
+                  .where(and(eq(replies.topicId, id), boolEq(replies.deleted, false)))
+                  .orderBy(sql`${replies.createAt} desc nulls last`, desc(replies.id))
+                  .limit(1),
+              ]);
+              const latest = latestRows[0];
+              return {
+                replyCount: Number(countRows[0]?.value || 0),
+                lastReplyId: latest?.id ?? null,
+                lastReplyAt: latest?.createAt ?? null,
+              };
+            },
+            async writeTopicAggregate(id, aggregate) {
+              await tx.update(topics).set(aggregate).where(eq(topics.id, id));
+            },
+          }),
+        ),
     };
     return createReplyWithStore(store, { content, topicId, authorId, replyId });
   },
@@ -482,61 +500,69 @@ export const replyQueries = {
   async deleteWithAggregates(replyId: number, actorId: number, isAdmin: boolean) {
     const db = getDb();
     const store: ReplyDeletionStore = {
-      transaction: (callback) => db.transaction(async (tx: DB) => callback({
-        async lockReply(id) {
-          const rows = await tx.select().from(replies).where(eq(replies.id, id)).limit(1).for("update");
-          return rows[0] || null;
-        },
-        async lockTopic(topicId) {
-          const rows = await tx
-            .select({ id: topics.id })
-            .from(topics)
-            .where(eq(topics.id, topicId))
-            .limit(1)
-            .for("update");
-          return rows.length > 0;
-        },
-        async markDeleted(id) {
-          const rows = await tx
-            .update(replies)
-            .set({ deleted: boolValue(true) } as any)
-            .where(and(eq(replies.id, id), boolEq(replies.deleted, false)))
-            .returning({ id: replies.id });
-          return rows.length > 0;
-        },
-        async decrementAuthor(authorId) {
-          await tx
-            .update(users)
-            .set({
-              score: sql`greatest(coalesce(${users.score}, 0) - 5, 0)`,
-              replyCount: sql`greatest(coalesce(${users.replyCount}, 0) - 1, 0)`,
-            })
-            .where(eq(users.id, authorId));
-        },
-        async readTopicAggregate(topicId) {
-          const [countRows, latestRows] = await Promise.all([
-            tx
-              .select({ value: count() })
-              .from(replies)
-              .where(and(eq(replies.topicId, topicId), boolEq(replies.deleted, false))),
-            tx
-              .select({ id: replies.id, createAt: replies.createAt })
-              .from(replies)
-              .where(and(eq(replies.topicId, topicId), boolEq(replies.deleted, false)))
-              .orderBy(sql`${replies.createAt} desc nulls last`, desc(replies.id))
-              .limit(1),
-          ]);
-          const latest = latestRows[0];
-          return {
-            replyCount: Number(countRows[0]?.value || 0),
-            lastReplyId: latest?.id ?? null,
-            lastReplyAt: latest?.createAt ?? null,
-          };
-        },
-        async writeTopicAggregate(topicId, aggregate) {
-          await tx.update(topics).set(aggregate).where(eq(topics.id, topicId));
-        },
-      })),
+      transaction: (callback) =>
+        db.transaction(async (tx: DB) =>
+          callback({
+            async lockReply(id) {
+              const rows = await tx
+                .select()
+                .from(replies)
+                .where(eq(replies.id, id))
+                .limit(1)
+                .for("update");
+              return rows[0] || null;
+            },
+            async lockTopic(topicId) {
+              const rows = await tx
+                .select({ id: topics.id })
+                .from(topics)
+                .where(eq(topics.id, topicId))
+                .limit(1)
+                .for("update");
+              return rows.length > 0;
+            },
+            async markDeleted(id) {
+              const rows = await tx
+                .update(replies)
+                .set({ deleted: boolValue(true) } as any)
+                .where(and(eq(replies.id, id), boolEq(replies.deleted, false)))
+                .returning({ id: replies.id });
+              return rows.length > 0;
+            },
+            async decrementAuthor(authorId) {
+              await tx
+                .update(users)
+                .set({
+                  score: sql`greatest(coalesce(${users.score}, 0) - 5, 0)`,
+                  replyCount: sql`greatest(coalesce(${users.replyCount}, 0) - 1, 0)`,
+                })
+                .where(eq(users.id, authorId));
+            },
+            async readTopicAggregate(topicId) {
+              const [countRows, latestRows] = await Promise.all([
+                tx
+                  .select({ value: count() })
+                  .from(replies)
+                  .where(and(eq(replies.topicId, topicId), boolEq(replies.deleted, false))),
+                tx
+                  .select({ id: replies.id, createAt: replies.createAt })
+                  .from(replies)
+                  .where(and(eq(replies.topicId, topicId), boolEq(replies.deleted, false)))
+                  .orderBy(sql`${replies.createAt} desc nulls last`, desc(replies.id))
+                  .limit(1),
+              ]);
+              const latest = latestRows[0];
+              return {
+                replyCount: Number(countRows[0]?.value || 0),
+                lastReplyId: latest?.id ?? null,
+                lastReplyAt: latest?.createAt ?? null,
+              };
+            },
+            async writeTopicAggregate(topicId, aggregate) {
+              await tx.update(topics).set(aggregate).where(eq(topics.id, topicId));
+            },
+          }),
+        ),
     };
     return deleteReplyWithStore(store, replyId, actorId, isAdmin);
   },
@@ -560,9 +586,7 @@ export const replyQueries = {
         .where(and(eq(replyUps.replyId, replyId), eq(replyUps.userId, userId)));
       return "down" as const;
     }
-    await db
-      .insert(replyUps)
-      .values({ replyId, userId, createAt: new Date() } as any);
+    await db.insert(replyUps).values({ replyId, userId, createAt: new Date() } as any);
     return "up" as const;
   },
 };
@@ -720,18 +744,21 @@ export const settingQueries = {
 };
 
 export const jobMetaQueries = {
-  async upsert(topicId: number, data: {
-    company: string;
-    companyLogo?: string | null;
-    position: string;
-    location: string;
-    remote: string;
-    salaryMin?: number | null;
-    salaryMax?: number | null;
-    experience?: string | null;
-    techTags?: string[];
-    contact: string;
-  }) {
+  async upsert(
+    topicId: number,
+    data: {
+      company: string;
+      companyLogo?: string | null;
+      position: string;
+      location: string;
+      remote: string;
+      salaryMin?: number | null;
+      salaryMax?: number | null;
+      experience?: string | null;
+      techTags?: string[];
+      contact: string;
+    },
+  ) {
     const db = getDb();
     await db
       .insert(jobMeta)
@@ -793,7 +820,9 @@ export const jobMetaQueries = {
     if (params.remote) conditions.push(eq(jobMeta.remote, params.remote));
     if (params.salaryMin) conditions.push(sql`${jobMeta.salaryMax} >= ${params.salaryMin}`);
     if (params.tags && params.tags.length > 0) {
-      conditions.push(sql`${jobMeta.techTags} && ${sql.raw(`ARRAY[${params.tags.map((t) => `'${t.replace(/'/g, "''")}'`).join(",")}]::text[]`)}`);
+      conditions.push(
+        sql`${jobMeta.techTags} && ${sql.raw(`ARRAY[${params.tags.map((t) => `'${t.replace(/'/g, "''")}'`).join(",")}]::text[]`)}`,
+      );
     }
     const where = and(...conditions);
     const listQuery = db
@@ -842,7 +871,9 @@ export const jobMetaQueries = {
     if (params.remote) conditions.push(eq(jobMeta.remote, params.remote));
     if (params.salaryMin) conditions.push(sql`${jobMeta.salaryMax} >= ${params.salaryMin}`);
     if (params.tags && params.tags.length > 0) {
-      conditions.push(sql`${jobMeta.techTags} && ${sql.raw(`ARRAY[${params.tags.map((t) => `'${t.replace(/'/g, "''")}'`).join(",")}]::text[]`)}`);
+      conditions.push(
+        sql`${jobMeta.techTags} && ${sql.raw(`ARRAY[${params.tags.map((t) => `'${t.replace(/'/g, "''")}'`).join(",")}]::text[]`)}`,
+      );
     }
     const where = and(...conditions);
     const result = await db
@@ -872,11 +903,7 @@ export const tabQueries = {
 
   async listVisible() {
     const db = getDb();
-    return db
-      .select()
-      .from(tabs)
-      .where(boolEq(tabs.visible, true))
-      .orderBy(tabs.sortOrder);
+    return db.select().from(tabs).where(boolEq(tabs.visible, true)).orderBy(tabs.sortOrder);
   },
 
   async updateById(id: number, data: { label?: string; visible?: boolean; sortOrder?: number }) {
@@ -902,7 +929,16 @@ export const zoneQueries = {
     return db.select().from(zones).where(boolEq(zones.visible, true)).orderBy(zones.sortOrder);
   },
 
-  async updateById(id: number, data: { name?: string; description?: string; icon?: string; visible?: boolean; sortOrder?: number }) {
+  async updateById(
+    id: number,
+    data: {
+      name?: string;
+      description?: string;
+      icon?: string;
+      visible?: boolean;
+      sortOrder?: number;
+    },
+  ) {
     const db = getDb();
     const update: any = { updateAt: new Date() };
     if (data.name !== undefined) update.name = data.name;

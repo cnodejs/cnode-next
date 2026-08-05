@@ -1,8 +1,11 @@
 # at-mention Specification
 
 ## Purpose
+
 TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: @提及解析
 
 @提及解析和消息发送 MUST 与 nodeclub `common/at.js` 的行为对齐。系统 MUST 从文本中提取 @username,将它们链接化,并向被提及的用户发送通知消息。
@@ -41,4 +44,3 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 - **AND** 对每个被提及的用户发 type='at' 消息
 - **AND** 排除原作者 (防止 @帖主 时重复)
 - **AND** 如果用户设置了 receive_at_mail,发邮件通知
-

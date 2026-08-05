@@ -23,7 +23,11 @@ export default function Top100({ loaderData }: Route.ComponentProps) {
   return (
     <Layout>
       <DirectoryPage>
-        <PageHeader breadcrumbs={[{ label: "首页", to: "/" }, { label: "积分榜" }]} title="积分榜" description="未禁言用户按积分排序的前 100 名。" />
+        <PageHeader
+          breadcrumbs={[{ label: "首页", to: "/" }, { label: "积分榜" }]}
+          title="积分榜"
+          description="未禁言用户按积分排序的前 100 名。"
+        />
         <UserGrid users={users} empty="暂无用户" />
       </DirectoryPage>
     </Layout>

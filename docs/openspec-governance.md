@@ -58,15 +58,15 @@ Every proposal must state how `docs/` and `wiki/` are affected. The answer can b
 
 `docs/` describes current development, runtime, architecture, database, API, moderation, security, migration, and deployment tasks. `wiki/` preserves sourced business knowledge, legacy behavior, migration background, community rules, and facts that need review. Do not write implementation logs into either domain.
 
-| Change kind | Usually update |
-| --- | --- |
-| Runtime architecture, request flow, worker boundary | `docs/architecture.md` |
-| Local development or verification commands | `docs/development.md`, `docs/conventions.md` |
-| PostgreSQL schema, migration, index, data repair | `docs/database.md`, `wiki/migration-background.md` |
-| Security, auth, roles, audit, secret handling | `docs/security.md` |
-| Content moderation operation | `docs/content-moderation.md`, `wiki/community-rules.md` |
-| Business rule or legacy behavior | `wiki/business-rules.md`, `wiki/legacy-behavior.md` |
-| Mongo to PostgreSQL mapping or migration background | `wiki/migration-background.md` |
+| Change kind                                         | Usually update                                          |
+| --------------------------------------------------- | ------------------------------------------------------- |
+| Runtime architecture, request flow, worker boundary | `docs/architecture.md`                                  |
+| Local development or verification commands          | `docs/development.md`, `docs/conventions.md`            |
+| PostgreSQL schema, migration, index, data repair    | `docs/database.md`, `wiki/migration-background.md`      |
+| Security, auth, roles, audit, secret handling       | `docs/security.md`                                      |
+| Content moderation operation                        | `docs/content-moderation.md`, `wiki/community-rules.md` |
+| Business rule or legacy behavior                    | `wiki/business-rules.md`, `wiki/legacy-behavior.md`     |
+| Mongo to PostgreSQL mapping or migration background | `wiki/migration-background.md`                          |
 
 Wiki updates must follow `wiki/writing-guidelines.md`: cite sources, separate facts from inferences, and mark uncertain statements as `To Confirm`.
 
@@ -74,14 +74,14 @@ Wiki updates must follow `wiki/writing-guidelines.md`: cite sources, separate fa
 
 Use diagrams when prose alone would hide boundaries, ordering, or risk.
 
-| Impact | Preferred form |
-| --- | --- |
-| Architecture or module boundary | Mermaid `flowchart` or `graph` |
-| Request, auth, or integration flow | Mermaid `sequenceDiagram` |
-| Data model or relationship | Mermaid `erDiagram` or a field table |
-| Lifecycle or state transition | Mermaid `stateDiagram-v2` |
-| Permission boundary | Matrix table or Mermaid `flowchart` |
-| Migration, backfill, or release ordering | Mermaid `flowchart LR` |
+| Impact                                   | Preferred form                       |
+| ---------------------------------------- | ------------------------------------ |
+| Architecture or module boundary          | Mermaid `flowchart` or `graph`       |
+| Request, auth, or integration flow       | Mermaid `sequenceDiagram`            |
+| Data model or relationship               | Mermaid `erDiagram` or a field table |
+| Lifecycle or state transition            | Mermaid `stateDiagram-v2`            |
+| Permission boundary                      | Matrix table or Mermaid `flowchart`  |
+| Migration, backfill, or release ordering | Mermaid `flowchart LR`               |
 
 If no diagram is needed, explain why the change is single-boundary or clear enough in prose.
 

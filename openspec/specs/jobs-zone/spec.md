@@ -1,8 +1,11 @@
 # jobs-zone Specification
 
 ## Purpose
+
 TBD - created by archiving change add-jobs-zone. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: 专区路由独立全宽布局
 
 专区页 `/zone/jobs` SHALL 使用全宽布局展示卡片网格，不复用首页 `FeedGrid` 的主区+20rem 侧栏骨架。专区页 SHALL 只包含顶部筛选条和下方卡片网格两个区域。

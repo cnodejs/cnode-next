@@ -1,5 +1,7 @@
 export interface TopicReplyRepairClient {
-  query(sql: string): Promise<{ rowCount?: number | null; rows?: Array<{ mismatch_count?: number | string }> }>;
+  query(
+    sql: string,
+  ): Promise<{ rowCount?: number | null; rows?: Array<{ mismatch_count?: number | string }> }>;
 }
 
 const expectedAggregatesSql = `
@@ -53,9 +55,17 @@ export const topicReplyRepairApplySql = `
 export async function repairTopicReplyAggregates(client: TopicReplyRepairClient, dryRun: boolean) {
   if (dryRun) {
     const result = await client.query(topicReplyRepairDryRunSql);
-    return { mode: "dry-run" as const, mismatchedTopics: Number(result.rows?.[0]?.mismatch_count || 0), repairedTopics: 0 };
+    return {
+      mode: "dry-run" as const,
+      mismatchedTopics: Number(result.rows?.[0]?.mismatch_count || 0),
+      repairedTopics: 0,
+    };
   }
 
   const result = await client.query(topicReplyRepairApplySql);
-  return { mode: "apply" as const, mismatchedTopics: result.rowCount || 0, repairedTopics: result.rowCount || 0 };
+  return {
+    mode: "apply" as const,
+    mismatchedTopics: result.rowCount || 0,
+    repairedTopics: result.rowCount || 0,
+  };
 }

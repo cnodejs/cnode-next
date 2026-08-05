@@ -23,9 +23,12 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
   const limit = 20;
-  const collectionsRes = await apiFetch<{ success: boolean; data: any[]; total?: number; user?: any }>(
-    `/api/v1/user/${name}/collections?page=${page}&limit=${limit}`,
-  );
+  const collectionsRes = await apiFetch<{
+    success: boolean;
+    data: any[];
+    total?: number;
+    user?: any;
+  }>(`/api/v1/user/${name}/collections?page=${page}&limit=${limit}`);
   return {
     topics: collectionsRes.success ? collectionsRes.data : [],
     user: collectionsRes.success ? collectionsRes.user : null,
@@ -45,10 +48,19 @@ export default function UserCollections({ loaderData }: Route.ComponentProps) {
         {user && <UserHero user={user} />}
         <UserTabs loginname={loginname} active="collections" />
         <Card>
-          <CardHeader><CardTitle>{loginname} 的收藏</CardTitle></CardHeader>
-          <CardContent><TopicList topics={topics} /></CardContent>
+          <CardHeader>
+            <CardTitle>{loginname} 的收藏</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TopicList topics={topics} />
+          </CardContent>
         </Card>
-        <Pagination page={page} total={total} limit={limit} basePath={`/user/${loginname}/collections`} />
+        <Pagination
+          page={page}
+          total={total}
+          limit={limit}
+          basePath={`/user/${loginname}/collections`}
+        />
       </FeedPage>
     </Layout>
   );

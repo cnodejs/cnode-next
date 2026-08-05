@@ -18,25 +18,25 @@ erDiagram
   users ||--o{ reply_ups : likes
 ```
 
-| Rule | Requirement |
-| ---- | ----------- |
-| Runtime database | PostgreSQL only. |
-| Schema source | `packages/db/src/schema/`. |
-| Migration files | `packages/db/migrations/pg/`. |
-| Compatibility | Do not add dialect fallback or local database compatibility paths. |
+| Rule             | Requirement                                                        |
+| ---------------- | ------------------------------------------------------------------ |
+| Runtime database | PostgreSQL only.                                                   |
+| Schema source    | `packages/db/src/schema/`.                                         |
+| Migration files  | `packages/db/migrations/pg/`.                                      |
+| Compatibility    | Do not add dialect fallback or local database compatibility paths. |
 
 ## Tables
 
-| Table | Purpose |
-| ----- | ------- |
-| `users` | Accounts, auth fields, profile fields, counters. |
-| `topics` | Topics and lifecycle status. |
-| `replies` | Topic replies. |
-| `reply_ups` | Reply likes as a join table. |
-| `messages` | Reply, reply2, and mention notifications. |
-| `topic_collects` | Topic collections with user/topic uniqueness. |
-| `moderation_scan_jobs` | Historical or scheduled moderation scan jobs. |
-| `moderation_hits` | Moderation findings and handling state. |
+| Table                  | Purpose                                          |
+| ---------------------- | ------------------------------------------------ |
+| `users`                | Accounts, auth fields, profile fields, counters. |
+| `topics`               | Topics and lifecycle status.                     |
+| `replies`              | Topic replies.                                   |
+| `reply_ups`            | Reply likes as a join table.                     |
+| `messages`             | Reply, reply2, and mention notifications.        |
+| `topic_collects`       | Topic collections with user/topic uniqueness.    |
+| `moderation_scan_jobs` | Historical or scheduled moderation scan jobs.    |
+| `moderation_hits`      | Moderation findings and handling state.          |
 
 ## Schema Workflow
 
@@ -51,13 +51,13 @@ flowchart LR
   Push --> Pg
 ```
 
-| Command | Use |
-| ------- | --- |
-| `pnpm db:generate` | Generate PostgreSQL migration files. |
-| `pnpm db:push:pg` | Create or update a disposable local PostgreSQL schema. |
-| `pnpm db:migrate` | Apply reviewed PostgreSQL migration files. |
-| `pnpm migrate:mongo-to-pg` | Run explicit data migration tooling. |
-| `pnpm migrate:reconcile` | Compare migrated target counts with source expectations. |
+| Command                               | Use                                                                        |
+| ------------------------------------- | -------------------------------------------------------------------------- |
+| `pnpm db:generate`                    | Generate PostgreSQL migration files.                                       |
+| `pnpm db:push:pg`                     | Create or update a disposable local PostgreSQL schema.                     |
+| `pnpm db:migrate`                     | Apply reviewed PostgreSQL migration files.                                 |
+| `pnpm migrate:mongo-to-pg`            | Run explicit data migration tooling.                                       |
+| `pnpm migrate:reconcile`              | Compare migrated target counts with source expectations.                   |
 | `pnpm repair:topic-replies --dry-run` | Count topics whose reply aggregates differ from active PostgreSQL replies. |
 
 ## PostgreSQL Constraints

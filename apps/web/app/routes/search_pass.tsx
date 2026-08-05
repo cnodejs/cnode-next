@@ -49,38 +49,46 @@ export default function SearchPass() {
   return (
     <Layout>
       <AccountPage className="max-w-none">
-      <AuthShell
-        eyebrow="ACCOUNT RECOVERY"
-        title="找回你的 CNode 账号"
-        description="输入注册邮箱后，我们会发送密码重置邮件，帮助你安全回到社区。"
-      >
+        <AuthShell
+          eyebrow="ACCOUNT RECOVERY"
+          title="找回你的 CNode 账号"
+          description="输入注册邮箱后，我们会发送密码重置邮件，帮助你安全回到社区。"
+        >
           <h2 className="mb-6 text-lg font-semibold tracking-tight">找回密码</h2>
           <div>
-            {success && <Alert><AlertDescription role="status">{success}</AlertDescription></Alert>}
+            {success && (
+              <Alert>
+                <AlertDescription role="status">{success}</AlertDescription>
+              </Alert>
+            )}
             <form onSubmit={handleSubmit} aria-busy={loading}>
               <FieldGroup>
-              <Field data-invalid={!!error}>
-                <FieldLabel htmlFor="recovery-email">注册邮箱</FieldLabel>
-                <Input
-                  id="recovery-email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  spellCheck={false}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  aria-invalid={!!error}
-                  aria-describedby={error ? "email-error" : undefined}
-                  placeholder="your@email.com"
-                  required
-                />
-                <FieldError id="email-error">{error}</FieldError>
-              </Field>
-              <TurnstileWidget />
-              <Button type="submit" disabled={loading} className="w-full">
-                {loading ? "发送中..." : "发送重置邮件"}
-              </Button>
-              {loading && <p role="status" className="text-center text-sm text-muted-foreground">正在发送重置邮件</p>}
+                <Field data-invalid={!!error}>
+                  <FieldLabel htmlFor="recovery-email">注册邮箱</FieldLabel>
+                  <Input
+                    id="recovery-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    spellCheck={false}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    aria-invalid={!!error}
+                    aria-describedby={error ? "email-error" : undefined}
+                    placeholder="your@email.com"
+                    required
+                  />
+                  <FieldError id="email-error">{error}</FieldError>
+                </Field>
+                <TurnstileWidget />
+                <Button type="submit" disabled={loading} className="w-full">
+                  {loading ? "发送中..." : "发送重置邮件"}
+                </Button>
+                {loading && (
+                  <p role="status" className="text-center text-sm text-muted-foreground">
+                    正在发送重置邮件
+                  </p>
+                )}
               </FieldGroup>
             </form>
             <div className="mt-4 text-sm text-muted-foreground">
@@ -89,7 +97,7 @@ export default function SearchPass() {
               </Link>
             </div>
           </div>
-      </AuthShell>
+        </AuthShell>
       </AccountPage>
     </Layout>
   );

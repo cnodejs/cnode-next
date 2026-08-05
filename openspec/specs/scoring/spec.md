@@ -1,8 +1,11 @@
 # scoring Specification
 
 ## Purpose
+
 TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: 积分和计数器行为对齐
 
 发帖、回复、删除等操作 MUST 正确修改对应的积分和计数器。egg-cnode 存在 bug:发帖时调用了 `incrementScoreAndReplyCount`(reply_count+1 而非 topic_count+1),新项目 MUST 修正。
@@ -54,4 +57,3 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 
 - **WHEN** 创建回复
 - **THEN** 调用的函数签名为 `incrementScoreAndReplyCount(userId, score, replyCount)`
-

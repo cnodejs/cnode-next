@@ -118,7 +118,14 @@ async function seed() {
   await db
     .insert(zones)
     .values([
-      { slug: "jobs", name: "招聘", description: "Node.js 招聘信息专区", icon: "briefcase", visible: false, sortOrder: 1 },
+      {
+        slug: "jobs",
+        name: "招聘",
+        description: "Node.js 招聘信息专区",
+        icon: "briefcase",
+        visible: false,
+        sortOrder: 1,
+      },
     ])
     .onConflictDoUpdate({
       target: zones.slug,

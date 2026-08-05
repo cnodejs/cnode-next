@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { Pagination } from "~/components/Pagination";
 
 describe("Pagination", () => {
@@ -38,8 +38,14 @@ describe("Pagination", () => {
     }
     expect(screen.getByRole("link", { name: "1" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "12" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "上一页" })).toHaveAttribute("href", "/zone/jobs?page=5");
-    expect(screen.getByRole("link", { name: "下一页" })).toHaveAttribute("href", "/zone/jobs?page=7");
+    expect(screen.getByRole("link", { name: "上一页" })).toHaveAttribute(
+      "href",
+      "/zone/jobs?page=5",
+    );
+    expect(screen.getByRole("link", { name: "下一页" })).toHaveAttribute(
+      "href",
+      "/zone/jobs?page=7",
+    );
   });
 
   it("renders simple pagination without page numbers", () => {

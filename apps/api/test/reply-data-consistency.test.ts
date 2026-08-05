@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "@cnode/db";
 import { buildRepliesByTopicQuery, buildTopicsByQuery } from "../src/lib/db";
@@ -28,7 +28,9 @@ describe("reply query ordering", () => {
     const db = drizzle.mock({ schema });
     const { sql } = buildTopicsByQuery(db, { deleted: false }).toSQL();
 
-    expect(sql).toContain('coalesce("topics"."last_reply_at", "topics"."create_at") desc nulls last');
+    expect(sql).toContain(
+      'coalesce("topics"."last_reply_at", "topics"."create_at") desc nulls last',
+    );
   });
 });
 
@@ -60,7 +62,9 @@ class MemoryReplyDeletionStore implements ReplyDeletionStore {
   private async runExclusive<T>(callback: () => Promise<T>): Promise<T> {
     const previous = this.queue;
     let release!: () => void;
-    this.queue = new Promise<void>((resolve) => { release = resolve; });
+    this.queue = new Promise<void>((resolve) => {
+      release = resolve;
+    });
     await previous;
     try {
       return await callback();
@@ -97,13 +101,15 @@ class MemoryReplyDeletionStore implements ReplyDeletionStore {
         this.author.replyCount = Math.max(0, this.author.replyCount - 1);
       },
       readTopicAggregate: async (topicId) => this.aggregate(topicId),
-      writeTopicAggregate: async (_id, aggregate) => { Object.assign(this.topic, aggregate); },
+      writeTopicAggregate: async (_id, aggregate) => {
+        Object.assign(this.topic, aggregate);
+      },
     };
   }
 
   private creationTransaction(): ReplyCreationTransaction {
     return {
-      lockTopic: async (id) => id === this.topic.id ? (this.locked ? "locked" : "open") : null,
+      lockTopic: async (id) => (id === this.topic.id ? (this.locked ? "locked" : "open") : null),
       insertReply: async (input) => {
         const reply = {
           id: Math.max(0, ...this.replies.map(({ id }) => id)) + 1,
@@ -121,7 +127,9 @@ class MemoryReplyDeletionStore implements ReplyDeletionStore {
         this.author.replyCount += 1;
       },
       readTopicAggregate: async (topicId) => this.aggregate(topicId),
-      writeTopicAggregate: async (_id, aggregate) => { Object.assign(this.topic, aggregate); },
+      writeTopicAggregate: async (_id, aggregate) => {
+        Object.assign(this.topic, aggregate);
+      },
     };
   }
 }
@@ -136,7 +144,12 @@ function storeWithReplies(ids: number[]) {
   }));
   return new MemoryReplyDeletionStore(
     replies,
-    { id: 10, replyCount: ids.length, lastReplyId: ids.at(-1) ?? null, lastReplyAt: replies.at(-1)?.createAt ?? null },
+    {
+      id: 10,
+      replyCount: ids.length,
+      lastReplyId: ids.at(-1) ?? null,
+      lastReplyAt: replies.at(-1)?.createAt ?? null,
+    },
     { id: 7, score: 20, replyCount: ids.length },
   );
 }
@@ -174,11 +187,13 @@ describe("atomic reply deletion", () => {
     const base = storeWithReplies([]);
     const store = new MemoryReplyDeletionStore(base.replies, base.topic, base.author, true);
 
-    await expect(createReplyWithStore(store.creationStore(), {
-      content: "blocked reply",
-      topicId: 10,
-      authorId: 7,
-    })).resolves.toEqual({ status: "locked" });
+    await expect(
+      createReplyWithStore(store.creationStore(), {
+        content: "blocked reply",
+        topicId: 10,
+        authorId: 7,
+      }),
+    ).resolves.toEqual({ status: "locked" });
     expect(store.replies).toHaveLength(0);
     expect(store.topic.replyCount).toBe(0);
   });
@@ -186,7 +201,11 @@ describe("atomic reply deletion", () => {
   test("deleting the latest reply falls back to the previous active reply", async () => {
     const store = storeWithReplies([1, 2, 3]);
     await deleteReplyWithStore(store, 3, 7, false);
-    expect(store.topic).toMatchObject({ replyCount: 2, lastReplyId: 2, lastReplyAt: store.replies[1].createAt });
+    expect(store.topic).toMatchObject({
+      replyCount: 2,
+      lastReplyId: 2,
+      lastReplyAt: store.replies[1].createAt,
+    });
   });
 
   test("deleting the only reply clears last reply metadata", async () => {

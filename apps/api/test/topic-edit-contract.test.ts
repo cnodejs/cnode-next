@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { mdrenderQuerySchema, updateTopicBodySchema } from "@cnode/shared";
 import { renderMarkdown } from "../src/lib/markdown";
 

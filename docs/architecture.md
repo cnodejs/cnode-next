@@ -29,14 +29,14 @@ graph TB
   Worker --> Pg
 ```
 
-| Component | Responsibility |
-| --------- | -------------- |
-| `apps/web` | SSR pages, client interactions, runtime public config. |
-| `apps/api` | HTTP API, auth, moderation/admin routes, workers. |
-| `packages/db` | Drizzle PostgreSQL schema and database helpers. |
-| `packages/shared` | API types, Zod schemas, constants, pure helpers. |
-| Redis | Session/cache/rate-limit state and worker locks. |
-| PostgreSQL | The only supported runtime database. |
+| Component         | Responsibility                                         |
+| ----------------- | ------------------------------------------------------ |
+| `apps/web`        | SSR pages, client interactions, runtime public config. |
+| `apps/api`        | HTTP API, auth, moderation/admin routes, workers.      |
+| `packages/db`     | Drizzle PostgreSQL schema and database helpers.        |
+| `packages/shared` | API types, Zod schemas, constants, pure helpers.       |
+| Redis             | Session/cache/rate-limit state and worker locks.       |
+| PostgreSQL        | The only supported runtime database.                   |
 
 ## Request And Upload Flow
 
@@ -60,11 +60,11 @@ sequenceDiagram
   B->>O: PUT file directly
 ```
 
-| Flow | Boundary |
-| ---- | -------- |
-| SSR data | Web server to API. |
+| Flow       | Boundary                                                     |
+| ---------- | ------------------------------------------------------------ |
+| SSR data   | Web server to API.                                           |
 | Client API | Browser to API with cookie or access token where applicable. |
-| Uploads | API signs; browser uploads directly to object storage. |
+| Uploads    | API signs; browser uploads directly to object storage.       |
 
 ## Release Boundary
 
@@ -80,26 +80,26 @@ flowchart LR
   Smoke --> Audit[audit record]
 ```
 
-| Stage | Task |
-| ----- | ---- |
-| Verify | Run lint, typecheck, tests, build, OpenSpec validation, and secret scan. |
-| Images | Use published image tags or digests. |
-| Runbook | Follow [deployment/README.md](../deployment/README.md). |
-| Audit | Record what changed and what was checked. |
+| Stage   | Task                                                                     |
+| ------- | ------------------------------------------------------------------------ |
+| Verify  | Run lint, typecheck, tests, build, OpenSpec validation, and secret scan. |
+| Images  | Use published image tags or digests.                                     |
+| Runbook | Follow [deployment/README.md](../deployment/README.md).                  |
+| Audit   | Record what changed and what was checked.                                |
 
 ## Repository Map
 
-| Path | Role |
-| ---- | ---- |
-| `apps/web` | React Router SSR application. |
-| `apps/api` | Hono API and worker entrypoints. |
-| `packages/db` | PostgreSQL schema and migrations. |
-| `packages/shared` | Shared TypeScript contracts. |
-| `docs` | Stable task documentation. |
-| `wiki` | Sourced historical and business-logic notes. |
-| `api` | OpenAPI specification (single source of truth for API contracts). |
-| `openspec` | Behavior change proposals and specs. |
-| `deployment` | Production runbook and deployment assets. |
+| Path              | Role                                                              |
+| ----------------- | ----------------------------------------------------------------- |
+| `apps/web`        | React Router SSR application.                                     |
+| `apps/api`        | Hono API and worker entrypoints.                                  |
+| `packages/db`     | PostgreSQL schema and migrations.                                 |
+| `packages/shared` | Shared TypeScript contracts.                                      |
+| `docs`            | Stable task documentation.                                        |
+| `wiki`            | Sourced historical and business-logic notes.                      |
+| `api`             | OpenAPI specification (single source of truth for API contracts). |
+| `openspec`        | Behavior change proposals and specs.                              |
+| `deployment`      | Production runbook and deployment assets.                         |
 
 ## Runtime Rules
 

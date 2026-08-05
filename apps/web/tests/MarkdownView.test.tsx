@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { renderToString } from "react-dom/server";
 import { MarkdownView } from "~/components/MarkdownView";
 
@@ -50,7 +50,9 @@ describe("MarkdownView", () => {
 
     expect(looseItem).not.toBeNull();
     expect(within(looseItem!).getByText("quote in list")).toBeInTheDocument();
-    expect(looseItem!.querySelector("pre code")).toHaveTextContent('const message = "long content";');
+    expect(looseItem!.querySelector("pre code")).toHaveTextContent(
+      'const message = "long content";',
+    );
     expect(container.querySelector("ol")).toBeInTheDocument();
   });
 
@@ -60,7 +62,10 @@ describe("MarkdownView", () => {
     );
 
     expect(container.querySelector("script")).not.toBeInTheDocument();
-    expect(screen.getByText("unsafe")).not.toHaveAttribute("href", expect.stringContaining("javascript:"));
+    expect(screen.getByText("unsafe")).not.toHaveAttribute(
+      "href",
+      expect.stringContaining("javascript:"),
+    );
   });
 
   it("renders a lazy image without leaking the Markdown AST node", () => {
@@ -76,11 +81,19 @@ describe("MarkdownView", () => {
     render(<MarkdownView content="![architecture](https://example.com/missing.png)" />);
     fireEvent.error(screen.getByRole("img", { name: "architecture" }));
 
-    expect(screen.getByRole("group", { name: "architecture加载失败" })).toHaveTextContent("图片暂时无法加载：architecture");
+    expect(screen.getByRole("group", { name: "architecture加载失败" })).toHaveTextContent(
+      "图片暂时无法加载：architecture",
+    );
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "打开原图" })).toHaveAttribute("href", "https://example.com/missing.png");
+    expect(screen.getByRole("link", { name: "打开原图" })).toHaveAttribute(
+      "href",
+      "https://example.com/missing.png",
+    );
     expect(screen.getByRole("link", { name: "打开原图" })).toHaveAttribute("target", "_blank");
-    expect(screen.getByRole("link", { name: "打开原图" })).toHaveAttribute("rel", "noopener noreferrer");
+    expect(screen.getByRole("link", { name: "打开原图" })).toHaveAttribute(
+      "rel",
+      "noopener noreferrer",
+    );
   });
 
   it("retries only after a manual action and can recover", async () => {
@@ -102,9 +115,7 @@ describe("MarkdownView", () => {
   });
 
   it("resets failure state when the image source changes", () => {
-    const { rerender } = render(
-      <MarkdownView content="![diagram](https://example.com/old.png)" />,
-    );
+    const { rerender } = render(<MarkdownView content="![diagram](https://example.com/old.png)" />);
     fireEvent.error(screen.getByRole("img", { name: "diagram" }));
 
     rerender(<MarkdownView content="![diagram](https://example.com/new.png)" />);
@@ -124,7 +135,13 @@ describe("MarkdownView", () => {
   });
 
   it("uses a useful fallback for missing alt and keeps unsafe image URLs sanitized", () => {
-    const { container } = render(<MarkdownView content={'![](https://example.com/image.png)\n\n<img src="javascript:alert(1)" alt="unsafe">'} />);
+    const { container } = render(
+      <MarkdownView
+        content={
+          '![](https://example.com/image.png)\n\n<img src="javascript:alert(1)" alt="unsafe">'
+        }
+      />,
+    );
     const image = screen.getByRole("img", { name: "文章图片" });
     fireEvent.error(image);
 
@@ -145,7 +162,9 @@ describe("MarkdownView", () => {
 
   it("assigns semantic ids to persisted HTML headings", () => {
     const html = renderToString(
-      <MarkdownView content={'<h2 id="legacy">创建数据库</h2>\r\n<h2>编写接口</h2>\r\n<h2>创建数据库</h2>'} />,
+      <MarkdownView
+        content={'<h2 id="legacy">创建数据库</h2>\r\n<h2>编写接口</h2>\r\n<h2>创建数据库</h2>'}
+      />,
     );
 
     expect(html).toContain('id="创建数据库"');

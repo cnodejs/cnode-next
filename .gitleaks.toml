@@ -5,10 +5,7 @@ useDefault = true
 
 [[allowlists]]
 description = "Repository files that intentionally contain secret-like patterns"
-paths = [
-  '''(^|/)\.gitleaks\.toml$''',
-  '''(^|/)pnpm-lock\.yaml$''',
-]
+paths = ['''(^|/)\.gitleaks\.toml$''', '''(^|/)pnpm-lock\.yaml$''']
 
 [[rules]]
 id = "alibaba-cloud-access-key-id"
