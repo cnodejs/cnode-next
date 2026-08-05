@@ -41,7 +41,7 @@ export function PkgSidebar({ manifest, version }: { manifest: RegistryManifest; 
 
   return (
     <div className="flex flex-col gap-5">
-      <DownloadCard pkgName={manifest.name} version={version} />
+      <DownloadCard pkgName={manifest.name} />
       {manifest.maintainers && manifest.maintainers.length > 0 && (
         <MaintainersCard maintainers={manifest.maintainers} />
       )}

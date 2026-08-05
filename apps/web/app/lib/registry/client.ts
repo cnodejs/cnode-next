@@ -38,12 +38,15 @@ function ensureLeadingSlash(path: string) {
   return path.startsWith("/") ? path : `/${path}`;
 }
 
-export function getManifest(pkg: string) {
-  return registryJson<RegistryManifest>(`/${pkgPath(pkg)}`);
+function encodeFilePath(path: string) {
+  return path
+    .split("/")
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
 }
 
-export function getVersion(pkg: string, version: string) {
-  return registryJson<RegistryManifest>(`/${pkgPath(pkg)}/${encodeURIComponent(version)}`);
+export function getManifest(pkg: string) {
+  return registryJson<RegistryManifest>(`/${pkgPath(pkg)}`);
 }
 
 export function searchPackages(text: string, from = 0, size = 20) {
@@ -69,7 +72,7 @@ export function getDownloads(pkg: string, range = 7) {
 }
 
 export function getDir(pkg: string, spec: string, path: string) {
-  const dirPath = path && path !== "/" ? `${ensureLeadingSlash(path)}/` : "";
+  const dirPath = path && path !== "/" ? `${encodeFilePath(ensureLeadingSlash(path))}/` : "";
   return registryJson<RegistryFilesResponse>(
     `/${pkgPath(pkg)}/${encodeURIComponent(spec)}/files${dirPath}?meta`,
   );
@@ -77,7 +80,7 @@ export function getDir(pkg: string, spec: string, path: string) {
 
 export async function getFileContent(pkg: string, spec: string, path: string) {
   const res = await fetch(
-    `${REGISTRY}/${pkgPath(pkg)}/${encodeURIComponent(spec)}/files${ensureLeadingSlash(path)}`,
+    `${REGISTRY}/${pkgPath(pkg)}/${encodeURIComponent(spec)}/files${encodeFilePath(ensureLeadingSlash(path))}`,
   );
   if (res.status === 404) {
     throw new RegistryError(`Not Found: ${path}`, 404);

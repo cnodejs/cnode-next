@@ -20,11 +20,16 @@ import { useRecentVisited } from "~/lib/registry/use-recent";
 import { seoMeta } from "~/lib/seo";
 
 export function meta({ params }: { params: { "*"?: string } }) {
-  const { name } = parsePkgPath(params["*"]);
+  const { name, tab } = parsePkgPath(params["*"]);
+  const path = name
+    ? tab === "home"
+      ? `/cnpm/pkg/${name}`
+      : `/cnpm/pkg/${name}/${tab}`
+    : "/cnpm";
   return seoMeta({
     title: name ? `${name} · CNPM 镜像` : "CNPM 包浏览器",
     description: name ? `查看 npm 包 ${name} 的 README、版本、依赖与文件。` : undefined,
-    path: name ? `/cnpm/pkg/${name}` : "/cnpm",
+    path,
   });
 }
 
@@ -136,7 +141,7 @@ function CnpmPkgInner({ rest }: { rest?: string }) {
 
         {tab === "trends" && (
           <div className="flex flex-col gap-4">
-            <DownloadCard pkgName={name} version={version} range={30} />
+            <DownloadCard pkgName={name} range={30} />
             <Empty>
               <EmptyTitle>趋势对比即将到来</EmptyTitle>
               <EmptyDescription>多包下载对比与时间范围切换将在此提供</EmptyDescription>

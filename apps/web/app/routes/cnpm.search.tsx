@@ -18,11 +18,12 @@ import { cn } from "~/lib/utils";
 const PAGE_SIZE = 20;
 
 export function meta({ location }: { location: { search: string } }) {
-  const q = new URLSearchParams(location.search).get("q") || "npm 包";
+  const q = new URLSearchParams(location.search).get("q") || "";
+  const label = q || "npm 包";
   return seoMeta({
-    title: `搜索 ${q} · CNPM 镜像`,
-    description: `在 npmmirror 镜像搜索 npm 包「${q}」。`,
-    path: `/cnpm/search?q=${encodeURIComponent(q)}`,
+    title: `搜索 ${label} · CNPM 镜像`,
+    description: `在 npmmirror 镜像搜索 npm 包「${label}」。`,
+    path: q ? `/cnpm/search?q=${encodeURIComponent(q)}` : "/cnpm/search",
   });
 }
 
