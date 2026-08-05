@@ -11,6 +11,7 @@ import {
   User,
   Settings,
   LogOut,
+  Boxes,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { useNavTransition } from "./NavProgress";
@@ -102,6 +103,10 @@ export function Header() {
                 {z.name}
               </NavLink>
             ))}
+            <NavLink to="/cnpm">
+              <Boxes className="h-4 w-4" />
+              CNPM
+            </NavLink>
             <NavLink to="/api">
               <Code className="h-4 w-4" />
               API
@@ -316,6 +321,12 @@ function MobileNavTrigger({ visibleZones = [] }: { visibleZones?: any[] }) {
               className="flex min-h-12 items-center gap-3 rounded-xl bg-muted px-3 text-sm text-foreground transition-colors hover:bg-accent"
             >
               <Code className="h-5 w-5 text-primary" /> API
+            </Link>
+            <Link
+              to="/cnpm"
+              className="flex min-h-12 items-center gap-3 rounded-xl bg-muted px-3 text-sm text-foreground transition-colors hover:bg-accent"
+            >
+              <Boxes className="h-5 w-5 text-primary" /> CNPM
             </Link>
             <Link
               to="/about"
