@@ -15,7 +15,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "~/components/u
 import { Alert, AlertDescription } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
 import { getManifest, RegistryError, useRegistryQuery } from "~/lib/registry/client";
-import { parsePkgPath, sortVersions } from "~/lib/registry/parse";
+import { createReadmeUrlResolver, parsePkgPath, rewriteReadmeUrls, sortVersions } from "~/lib/registry/parse";
 import { useRecentVisited } from "~/lib/registry/use-recent";
 import { seoMeta } from "~/lib/seo";
 
@@ -59,6 +59,15 @@ function CnpmPkgInner({ rest }: { rest?: string }) {
     requestedVersion && manifest?.versions?.[requestedVersion]
       ? requestedVersion
       : manifest?.["dist-tags"]?.latest || fallbackVersion;
+
+  const resolveReadmeUrl = createReadmeUrlResolver(
+    manifest?.repository,
+    manifest?.name || name!,
+    version,
+  );
+  const readme = manifest?.readme
+    ? rewriteReadmeUrls(manifest.readme, resolveReadmeUrl)
+    : undefined;
 
   useEffect(() => {
     if (!manifest?.name) return;
@@ -144,10 +153,10 @@ function CnpmPkgInner({ rest }: { rest?: string }) {
 
         {tab === "home" && (
           <ReadingGrid aside={<PkgSidebar manifest={manifest} version={version} />}>
-            {manifest.readme ? (
+            {readme ? (
               <Card>
                 <CardContent className="pt-4">
-                  <MarkdownView content={manifest.readme} />
+                  <MarkdownView content={readme} />
                 </CardContent>
               </Card>
             ) : (

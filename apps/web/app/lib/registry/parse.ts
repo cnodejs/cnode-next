@@ -1,4 +1,5 @@
 import type { RegistryManifest, RegistryVersion } from "./types";
+import { REGISTRY } from "./client";
 
 export const PACKAGE_TABS = ["home", "versions", "files", "deps", "trends"] as const;
 export type PkgTab = (typeof PACKAGE_TABS)[number];
@@ -21,6 +22,70 @@ export function repoUrl(repository: RegistryManifest["repository"]) {
   }
   if (url.startsWith("http")) return url.replace(/\.git$/, "");
   return undefined;
+}
+
+export type ReadmeUrlKind = "link" | "image";
+
+const GITHUB_REPO = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/?$/;
+
+export function createReadmeUrlResolver(
+  repository: RegistryManifest["repository"],
+  pkg: string,
+  version: string,
+): (url: string, kind: ReadmeUrlKind) => string {
+  const repo = repoUrl(repository);
+  const github = repo?.match(GITHUB_REPO);
+  const registryBase = `${REGISTRY}/${encodeURIComponent(pkg)}/${encodeURIComponent(version)}/files`;
+  const branchPath = (kind: ReadmeUrlKind) =>
+    kind === "image" ? `raw/HEAD` : `blob/HEAD`;
+
+  return (url, kind) => {
+    if (!url || /^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i.test(url)) return url;
+    const path = url.replace(/^\.\//, "").replace(/^\.\.\//, "").replace(/^\/+/, "");
+    if (github) {
+      return `https://github.com/${github[1]}/${github[2]}/${branchPath(kind)}/${path}`;
+    }
+    return `${registryBase}/${path}`;
+  };
+}
+
+const CODE_BLOCK = /(`[^`\n]+`|```[\s\S]*?```)/g;
+const INLINE_URL =
+  /(!?)\[([^\]]*)\]\(\s*(<[^>]+>|[^)\s]+)(?:\s+["'][^"']*["'])?\s*\)/g;
+const HTML_ATTR =
+  /<(img|a)\b([^>]*?)\s(src|href)\s*=\s*(["'])(.*?)\4([^>]*)>/gi;
+const REF_DEF =
+  /^(\s*\[([^\]]+)\]:\s*)(<[^>]+>|[^\s]+)(.*)$/gm;
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function isImageReference(content: string, label: string) {
+  return new RegExp(`!\\[[^\\]]*\\]\\[${escapeRegExp(label)}\\]`).test(content);
+}
+
+export function rewriteReadmeUrls(
+  content: string,
+  resolve: (url: string, kind: ReadmeUrlKind) => string,
+): string {
+  const rewrite = (text: string) =>
+    text
+      .replace(INLINE_URL, (_match, bang, label, rawUrl) => {
+        const url = rawUrl.replace(/^<|>$/g, "");
+        return `${bang}[${label}](${resolve(url, bang ? "image" : "link")})`;
+      })
+      .replace(
+        HTML_ATTR,
+        (_match, tag, before, attr, quote, url, after) =>
+          `<${tag}${before} ${attr}=${quote}${resolve(url, tag === "img" ? "image" : "link")}${quote}${after}>`,
+      )
+      .replace(REF_DEF, (_match, prefix, label, rawUrl, rest) => {
+        const url = rawUrl.replace(/^<|>$/g, "");
+        return `${prefix}${resolve(url, isImageReference(content, label) ? "image" : "link")}${rest}`;
+      });
+
+  return content.split(CODE_BLOCK).map((part, index) => (index % 2 === 1 ? part : rewrite(part))).join("");
 }
 
 export function parsePkgPath(rest: string | undefined): ParsedPkgRoute {

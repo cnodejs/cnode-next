@@ -1,14 +1,16 @@
 import { describe, expect, it } from "vite-plus/test";
 import {
+  createReadmeUrlResolver,
   formatBytes,
   formatCompactNumber,
   normalizeVersionSpec,
   parsePkgPath,
   repoUrl,
+  rewriteReadmeUrls,
   safeExternalUrl,
   sortVersions,
-} from "./parse";
-import type { RegistryVersion } from "./types";
+} from "~/lib/registry/parse";
+import type { RegistryVersion } from "~/lib/registry/types";
 
 describe("parsePkgPath", () => {
   it("解析普通包名且无 tab", () => {
@@ -126,5 +128,89 @@ describe("safeExternalUrl", () => {
   it("无效或空地址返回 undefined", () => {
     expect(safeExternalUrl(undefined)).toBeUndefined();
     expect(safeExternalUrl("not-a-url")).toBeUndefined();
+  });
+});
+
+describe("createReadmeUrlResolver", () => {
+  const repo = { type: "git", url: "git+https://github.com/koajs/koa.git" };
+  const resolve = createReadmeUrlResolver(repo, "koa", "3.2.1");
+
+  it("将图片相对路径指向 GitHub raw", () => {
+    expect(resolve("/docs/logo.png", "image")).toBe(
+      "https://github.com/koajs/koa/raw/HEAD/docs/logo.png",
+    );
+    expect(resolve("./docs/logo.png", "image")).toBe(
+      "https://github.com/koajs/koa/raw/HEAD/docs/logo.png",
+    );
+    expect(resolve("docs/logo.png", "image")).toBe(
+      "https://github.com/koajs/koa/raw/HEAD/docs/logo.png",
+    );
+  });
+
+  it("将链接相对路径指向 GitHub blob", () => {
+    expect(resolve("docs/guide.md", "link")).toBe(
+      "https://github.com/koajs/koa/blob/HEAD/docs/guide.md",
+    );
+    expect(resolve("../docs/guide.md", "link")).toBe(
+      "https://github.com/koajs/koa/blob/HEAD/docs/guide.md",
+    );
+  });
+
+  it("保留绝对地址与锚点", () => {
+    expect(resolve("https://example.com/image.png", "image")).toBe(
+      "https://example.com/image.png",
+    );
+    expect(resolve("mailto:hi@example.com", "link")).toBe("mailto:hi@example.com");
+    expect(resolve("#backers", "link")).toBe("#backers");
+    expect(resolve("", "image")).toBe("");
+  });
+
+  it("仓库非 GitHub 时回退到 registry 文件地址", () => {
+    const fallback = createReadmeUrlResolver(
+      { type: "git", url: "git+https://gitlab.com/foo/bar.git" },
+      "foo",
+      "1.0.0",
+    );
+    expect(fallback("docs/guide.md", "link")).toBe(
+      "https://registry.npmmirror.com/foo/1.0.0/files/docs/guide.md",
+    );
+  });
+});
+
+describe("rewriteReadmeUrls", () => {
+  const repo = { type: "git", url: "git+https://github.com/koajs/koa.git" };
+  const resolve = createReadmeUrlResolver(repo, "koa", "3.2.1");
+
+  it("重写 Markdown 图片与链接的相对地址", () => {
+    const input = '![logo](/docs/logo.png)\n\n[guide](docs/guide.md)\n\n[home](https://koajs.com)';
+    const output = rewriteReadmeUrls(input, resolve);
+
+    expect(output).toContain(
+      "![logo](https://github.com/koajs/koa/raw/HEAD/docs/logo.png)",
+    );
+    expect(output).toContain(
+      "[guide](https://github.com/koajs/koa/blob/HEAD/docs/guide.md)",
+    );
+    expect(output).toContain("[home](https://koajs.com)");
+  });
+
+  it("重写 HTML 图片与链接的相对地址", () => {
+    const input = '<img src="/docs/logo.png" alt="Koa"/>\n\n<a href="docs/guide.md">guide</a>';
+    const output = rewriteReadmeUrls(input, resolve);
+
+    expect(output).toContain(
+      '<img src="https://github.com/koajs/koa/raw/HEAD/docs/logo.png" alt="Koa"/>',
+    );
+    expect(output).toContain(
+      '<a href="https://github.com/koajs/koa/blob/HEAD/docs/guide.md">guide</a>',
+    );
+  });
+
+  it("不修改代码块内的地址", () => {
+    const input = '```sh\nnpm i -g pnpm\n```\n\n![diagram](https://example.com/a.png)';
+    const output = rewriteReadmeUrls(input, resolve);
+
+    expect(output).toContain("npm i -g pnpm");
+    expect(output).toContain("https://example.com/a.png");
   });
 });
