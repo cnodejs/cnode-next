@@ -21,18 +21,18 @@
   },
   "dependencies": {
     "@cnode/shared": "workspace:*",
-    "bcryptjs": "^2.4.3",
-    "drizzle-orm": "^0.39.0",
-    "pg": "^8.13.0",
-    "uuid": "^11.0.0"
+    "bcryptjs": "catalog:",
+    "drizzle-orm": "catalog:",
+    "pg": "catalog:",
+    "uuid": "catalog:"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
-    "@types/node": "^24.0.0",
-    "@types/pg": "^8.11.0",
-    "@types/uuid": "^10.0.0",
+    "@types/bcryptjs": "catalog:",
+    "@types/node": "catalog:",
+    "@types/pg": "catalog:",
+    "@types/uuid": "catalog:",
     "drizzle-kit": "^0.30.0",
-    "tsx": "^4.19.0",
-    "typescript": "^7.0.0"
+    "tsx": "catalog:",
+    "typescript": "catalog:"
   }
 }
