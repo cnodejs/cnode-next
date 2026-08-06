@@ -101,7 +101,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
               onValueChange={(value) => {
                 const params = new URLSearchParams();
                 if (value !== "all") params.set("tab", value);
-                navigate(params.size ? `/?${params.toString()}` : "/");
+                void navigate(params.size ? `/?${params.toString()}` : "/");
               }}
             >
               <Card>

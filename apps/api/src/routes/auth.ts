@@ -572,7 +572,7 @@ auth.openapi(githubCreateRoute, async (c) => {
   if (!profile)
     return c.json({ success: false as const, error_msg: "GitHub 登录状态已过期，请重新授权" }, 401);
   const body = c.req.valid("json");
-  let user: Awaited<ReturnType<typeof userQueries.getById>> | null = null;
+  let user: Awaited<ReturnType<typeof userQueries.getById>> = null;
   if (body.isnew) {
     const loginname = profile.login.toLowerCase();
     if (await userQueries.getByLoginName(loginname))
@@ -706,7 +706,7 @@ auth.openapi(githubUnbindRoute, async (c) => {
   let result: Awaited<ReturnType<typeof executeGithubUnbind>>;
   try {
     result = await executeGithubUnbind(user, password, {
-      clearGithubInfo: userQueries.clearGithubInfo,
+      clearGithubInfo: (userId, githubId) => userQueries.clearGithubInfo(userId, githubId),
       revokeToken: revokeGithubToken,
       verifyPassword: bcryptjs.compare,
     });
@@ -999,8 +999,8 @@ auth.post("/upload/image", async (c) => {
     return c.json({ success: false, error_msg: "只支持 png/jpeg/gif/webp/svg 图片上传" }, 422);
   const maxSize = Number(process.env.OSS_UPLOAD_MAX_BYTES || 5 * 1024 * 1024);
   if (file.size > maxSize) return c.json({ success: false, error_msg: "图片不能超过 5MB" }, 413);
-  const purpose =
-    typeof formData?.get("purpose") === "string" ? String(formData.get("purpose")) : null;
+  const purposeValue = formData?.get("purpose");
+  const purpose = typeof purposeValue === "string" ? purposeValue : null;
   const filename = `${uploadPrefix(purpose)}/${uuidv4()}${extensionForContentType(file.type)}`;
   await createOssClient().put(filename, Buffer.from(await file.arrayBuffer()), {
     headers: { "Content-Type": file.type },

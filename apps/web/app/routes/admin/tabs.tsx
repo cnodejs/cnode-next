@@ -71,7 +71,7 @@ export default function AdminTabs({ loaderData }: { loaderData: any }) {
       );
       if (res.success) {
         toast.success("已保存");
-        revalidate();
+        void revalidate();
       } else {
         toast.error(res.error_msg || "保存失败");
       }

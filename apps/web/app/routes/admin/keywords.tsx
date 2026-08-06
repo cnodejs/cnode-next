@@ -63,7 +63,7 @@ export default function AdminKeywords({ loaderData }: any) {
         if (res.success) {
           toast.success("已添加");
           setNewWord("");
-          revalidate();
+          void revalidate();
         } else {
           toast.error(res.error_msg || "添加失败");
         }
@@ -93,8 +93,8 @@ export default function AdminKeywords({ loaderData }: any) {
             currentItemCount: keywords.length,
             removedCount: 1,
           });
-          if (fallback) navigate(fallback, { replace: true });
-          else revalidate();
+          if (fallback) void navigate(fallback, { replace: true });
+          else void revalidate();
         } else {
           toast.error(res.error_msg || "删除失败");
         }
@@ -120,7 +120,7 @@ export default function AdminKeywords({ loaderData }: any) {
           toast.success(`已导入 ${result.count} 条`);
           setBulkText("");
           setShowBulk(false);
-          revalidate();
+          void revalidate();
         } else {
           toast.error(result.error_msg || "导入失败");
         }

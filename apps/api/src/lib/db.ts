@@ -21,7 +21,7 @@ import { boolEq, boolValue } from "./db-compat";
 import { deleteReplyWithStore, type ReplyDeletionStore } from "./reply-deletion";
 import { createReplyWithStore, type ReplyCreationStore } from "./reply-creation";
 
-let dbInstance: DB | null = null;
+let dbInstance: DB = null;
 const INTERNAL_TABS = ["dev", "test"];
 
 function getDb(): DB {

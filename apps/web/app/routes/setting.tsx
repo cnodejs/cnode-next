@@ -138,7 +138,7 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
     }
     toast.success("GitHub 已解除绑定");
     handleUnbindOpenChange(false);
-    revalidator.revalidate();
+    void revalidator.revalidate();
   };
 
   const onProfileSubmit = async (values: ProfileValues) => {

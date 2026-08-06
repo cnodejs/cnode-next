@@ -35,8 +35,9 @@ export function scanDefaults() {
 function decodeJsonArray(value: unknown): number[] | null {
   if (!value) return null;
   if (Array.isArray(value)) return value.map(Number).filter((v) => v > 0);
+  if (typeof value !== "string") return null;
   try {
-    const parsed = JSON.parse(String(value));
+    const parsed = JSON.parse(value);
     return Array.isArray(parsed) ? parsed.map(Number).filter((v) => v > 0) : null;
   } catch {
     return null;

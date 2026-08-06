@@ -23,6 +23,20 @@ import {
   ItemTitle,
 } from "~/components/ui/item";
 
+type ReportRow = {
+  id: number;
+  type: string;
+  description: string | null;
+  status: string;
+  reporter_count: number;
+  target_type: string;
+  target_id: string;
+  topic_id: number | null;
+  topic_title: string;
+  target_summary: string;
+  create_at: string;
+};
+
 export function meta() {
   return [{ title: "举报队列 · CNode Admin" }];
 }
@@ -46,7 +60,7 @@ export default function AdminReports({ loaderData }: any) {
   const { revalidate } = useRevalidator();
   const location = useLocation();
   const navigate = useNavigate();
-  const [confirmTarget, setConfirmTarget] = useState<any | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<ReportRow | null>(null);
   const confirmTriggerRef = useRef<HTMLElement | null>(null);
 
   const { run: handleAction, pending: handling } = useAsyncAction(
@@ -69,8 +83,8 @@ export default function AdminReports({ loaderData }: any) {
             currentItemCount: reports.length,
             removedCount: 1,
           });
-          if (fallback) navigate(fallback, { replace: true });
-          else revalidate();
+          if (fallback) void navigate(fallback, { replace: true });
+          else void revalidate();
         } else {
           toast.error(result.error_msg || "操作失败");
         }

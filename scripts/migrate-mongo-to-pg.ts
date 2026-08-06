@@ -46,7 +46,7 @@ function createReport(): MigrationReport {
     startedAt: new Date().toISOString(),
     source: {},
     skipped: Object.fromEntries(
-      skipKeys.map((key) => [key, { count: 0, samples: [] }]),
+      skipKeys.map((key) => [key, { count: 0, samples: [] as string[] }]),
     ) as MigrationReport["skipped"],
   };
 }
@@ -79,8 +79,12 @@ function pgPool() {
 
 function toDate(value: unknown): Date | null {
   if (!value) return null;
-  const date = value instanceof Date ? value : new Date(String(value));
-  return Number.isNaN(date.getTime()) ? null : date;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  if (typeof value === "string" || typeof value === "number") {
+    const date = new Date(String(value));
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+  return null;
 }
 
 function toBool(value: unknown): boolean {
@@ -88,13 +92,24 @@ function toBool(value: unknown): boolean {
 }
 
 function cleanText(value: unknown, fallback = ""): string {
-  return String(value ?? fallback).replaceAll("\0", "");
+  const raw = value ?? fallback;
+  const text =
+    typeof raw === "string"
+      ? raw
+      : typeof raw === "number" || typeof raw === "boolean" || typeof raw === "bigint"
+        ? String(raw)
+        : (JSON.stringify(raw) ?? "");
+  return text.replaceAll("\0", "");
 }
 
 function oid(value: unknown): string | null {
   if (!value) return null;
   if (value instanceof ObjectId) return value.toHexString();
-  return String(value);
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean" || typeof value === "bigint") {
+    return String(value);
+  }
+  return null;
 }
 
 function mapId(map: IdMap, value: unknown): number | null {

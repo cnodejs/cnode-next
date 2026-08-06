@@ -156,8 +156,8 @@ export default function AdminBans({ loaderData }: any) {
             currentItemCount: bannedUsers.length,
             removedCount: 1,
           });
-          if (fallback) navigate(fallback, { replace: true });
-          else revalidate();
+          if (fallback) void navigate(fallback, { replace: true });
+          else void revalidate();
         } else {
           toast.error(result.error_msg || `${userActionLabel}失败`);
         }
@@ -195,8 +195,8 @@ export default function AdminBans({ loaderData }: any) {
             currentItemCount: bannedUsers.length,
             removedCount: result.processed || 0,
           });
-          if (fallback) navigate(fallback, { replace: true });
-          else revalidate();
+          if (fallback) void navigate(fallback, { replace: true });
+          else void revalidate();
         } else {
           toast.error(result.error_msg || `批量${userActionLabel}失败`);
         }
@@ -218,7 +218,7 @@ export default function AdminBans({ loaderData }: any) {
           setIp("");
           setReason("");
           setAddIpConfirmOpen(false);
-          revalidate();
+          void revalidate();
         } else {
           toast.error(result.error_msg || "添加 IP 规则失败");
         }
@@ -243,8 +243,8 @@ export default function AdminBans({ loaderData }: any) {
             currentItemCount: bannedIps.length,
             removedCount: 1,
           });
-          if (fallback) navigate(fallback, { replace: true });
-          else revalidate();
+          if (fallback) void navigate(fallback, { replace: true });
+          else void revalidate();
         } else {
           toast.error(res.error_msg || "移除失败");
         }

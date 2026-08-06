@@ -8,7 +8,8 @@ import { useState } from "react";
 function Draft() {
   const [value, setValue] = useState("");
   const navigate = useNavigate();
-  const { blocker, allowNavigation } = useUnsavedChanges(value !== "");
+  const unsavedChanges = useUnsavedChanges(value !== "");
+  const { blocker } = unsavedChanges;
   return (
     <>
       <label htmlFor="draft">草稿</label>
@@ -17,8 +18,8 @@ function Draft() {
       <button
         type="button"
         onClick={() => {
-          allowNavigation();
-          navigate("/saved");
+          unsavedChanges.allowNavigation();
+          void navigate("/saved");
         }}
       >
         保存成功

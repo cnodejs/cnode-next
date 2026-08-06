@@ -4,7 +4,7 @@ import { roleQueries, userQueries } from "../lib/db";
 import { resolveUserAccess } from "../lib/user-access";
 
 export interface AuthVars {
-  user: Awaited<ReturnType<typeof userQueries.getById>> | null;
+  user: Awaited<ReturnType<typeof userQueries.getById>>;
   isLogin: boolean;
   isAdmin: boolean;
   isMod: boolean;

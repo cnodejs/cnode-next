@@ -55,7 +55,7 @@ export default function Messages({ loaderData }: Route.ComponentProps) {
   useEffect(() => {
     setReadMsgs(initialRead || []);
     setUnreadMsgs(initialUnread || []);
-    fetchUnread();
+    void fetchUnread();
   }, [initialRead, initialUnread, fetchUnread]);
 
   const { run: markOneRead, pending: markingOne } = useAsyncAction(
@@ -74,8 +74,8 @@ export default function Messages({ loaderData }: Route.ComponentProps) {
         if (msg) setReadMsgs((items) => [{ ...msg, has_read: true }, ...items]);
         setUnreadCount(Math.max(0, unreadMsgs.length - 1));
         toast.success("已标记已读");
-        fetchUnread();
-        revalidate();
+        void fetchUnread();
+        void revalidate();
       },
     },
   );
@@ -97,8 +97,8 @@ export default function Messages({ loaderData }: Route.ComponentProps) {
         setUnreadMsgs([]);
         setUnreadCount(0);
         toast.success("已全部标记已读");
-        fetchUnread();
-        revalidate();
+        void fetchUnread();
+        void revalidate();
       },
     },
   );
