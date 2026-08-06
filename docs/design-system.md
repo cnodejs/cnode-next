@@ -44,16 +44,16 @@ Theme values use OKLCH. Base Nova radius is `0.625rem`; consumers use standard r
 
 ## Page Archetypes
 
-| Archetype | Purpose | Representative routes |
-| --- | --- | --- |
-| feed | filters, feed, optional rail, pagination | `/`, search, stars, collections |
-| reading | readable content, context, replies | topic detail |
-| compose | fields, editor, action footer | topic/reply create and edit |
-| account | constrained identity and settings forms | sign-in, sign-up, settings |
-| directory | responsive people/resource records | profiles, top users, jobs |
-| dashboard | real summaries and recent records | `/admin` |
-| data-list | filters, comparison records, pagination | admin users/topics/config lists |
-| workflow | queues and actionable event records | moderation, reports, audit |
+| Archetype | Purpose                                  | Representative routes           |
+| --------- | ---------------------------------------- | ------------------------------- |
+| feed      | filters, feed, optional rail, pagination | `/`, search, stars, collections |
+| reading   | readable content, context, replies       | topic detail                    |
+| compose   | fields, editor, action footer            | topic/reply create and edit     |
+| account   | constrained identity and settings forms  | sign-in, sign-up, settings      |
+| directory | responsive people/resource records       | profiles, top users, jobs       |
+| dashboard | real summaries and recent records        | `/admin`                        |
+| data-list | filters, comparison records, pagination  | admin users/topics/config lists |
+| workflow  | queues and actionable event records      | moderation, reports, audit      |
 
 Public entry and explanatory pages use the larger marketing `PageHeader`. Task-oriented pages use the compact variant with breadcrumbs above the title surface. Both variants share the same brand surface, title hierarchy, description treatment, radius, and action alignment; scale and surrounding context distinguish a Hero from an application header.
 
@@ -67,14 +67,14 @@ Review representative pages at 375px, 768px, 1280px, and 1440px in light and dar
 
 Admin data that requires column comparison remains one scrollable Table. Task-oriented records use responsive Item composition. Do not maintain separate mobile and desktop behavior trees.
 
-| Admin route | Narrow-screen decision | Priority |
-| --- | --- | --- |
-| users, bans | scrollable Table | identity/rule, status, action |
-| topics | scrollable Table | selection, title, status, metrics, action |
-| tabs, zones, keywords | scrollable inline-edit Table | key fields and save/delete action |
-| reports, audit, moderation | responsive Item/workflow record | status, target, reason/detail, action |
-| dashboard | Item summaries | identity/title and timestamp |
-| settings | constrained FieldSet | label, control, validation, save action |
+| Admin route                | Narrow-screen decision          | Priority                                  |
+| -------------------------- | ------------------------------- | ----------------------------------------- |
+| users, bans                | scrollable Table                | identity/rule, status, action             |
+| topics                     | scrollable Table                | selection, title, status, metrics, action |
+| tabs, zones, keywords      | scrollable inline-edit Table    | key fields and save/delete action         |
+| reports, audit, moderation | responsive Item/workflow record | status, target, reason/detail, action     |
+| dashboard                  | Item summaries                  | identity/title and timestamp              |
+| settings                   | constrained FieldSet            | label, control, validation, save action   |
 
 ## Markdown
 

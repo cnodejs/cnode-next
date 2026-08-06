@@ -27,16 +27,13 @@ export function MarkdownView({ content, className }: MarkdownViewProps) {
   const headingIdsByLine = markdownHeadingIdsByLine(content);
 
   function headingId(children: React.ReactNode, node: unknown, line?: number) {
-    return headingIdsByLine.get(line ?? -1) ?? slugifyHeading(nodeText(children) || hastNodeText(node));
+    return (
+      headingIdsByLine.get(line ?? -1) ?? slugifyHeading(nodeText(children) || hastNodeText(node))
+    );
   }
 
   return (
-    <div
-      className={cn(
-        "typeset typeset-docs max-w-none",
-        className,
-      )}
-    >
+    <div className={cn("typeset typeset-docs max-w-none", className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[
@@ -93,7 +90,12 @@ function MarkdownImage({ alt, src, ...props }: ComponentPropsWithoutRef<"img">) 
           重新加载
         </button>
         {src && (
-          <a href={src} target="_blank" rel="noopener noreferrer" className="font-medium text-foreground underline-offset-4 hover:underline">
+          <a
+            href={src}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-foreground underline-offset-4 hover:underline"
+          >
             打开原图
           </a>
         )}
@@ -111,7 +113,8 @@ function MarkdownImage({ alt, src, ...props }: ComponentPropsWithoutRef<"img">) 
       decoding="async"
       onError={() => setFailed(true)}
       onLoad={(event) => {
-        if (!event.currentTarget.naturalWidth || !event.currentTarget.naturalHeight) setFailed(true);
+        if (!event.currentTarget.naturalWidth || !event.currentTarget.naturalHeight)
+          setFailed(true);
       }}
     />
   );
@@ -129,6 +132,7 @@ function nodeText(node: React.ReactNode): string {
 function hastNodeText(node: unknown): string {
   if (!node || typeof node !== "object") return "";
   if ("value" in node && typeof node.value === "string") return node.value;
-  if ("children" in node && Array.isArray(node.children)) return node.children.map(hastNodeText).join("");
+  if ("children" in node && Array.isArray(node.children))
+    return node.children.map(hastNodeText).join("");
   return "";
 }

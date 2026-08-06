@@ -21,7 +21,13 @@ function required(env: RuntimeEnv, name: string): string {
   return value;
 }
 
-function integer(env: RuntimeEnv, name: string, fallback: number, minimum: number, maximum: number): number {
+function integer(
+  env: RuntimeEnv,
+  name: string,
+  fallback: number,
+  minimum: number,
+  maximum: number,
+): number {
   const raw = env[name];
   if (raw === undefined || raw === "") return fallback;
 

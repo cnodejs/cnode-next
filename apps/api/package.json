@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "vitest run",
+    "test": "vp test run",
     "worker:moderation": "tsx src/worker/moderation-scan.ts",
     "typecheck": "tsc --noEmit",
     "gen:openapi": "tsx scripts/gen-openapi.ts"
@@ -45,6 +45,7 @@
     "@types/uuid": "^10.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
-    "vitest": "^4.1.10"
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
   }
 }

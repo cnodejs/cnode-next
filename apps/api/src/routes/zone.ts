@@ -125,10 +125,13 @@ const facetsRoute = createRoute({
 
 zone.openapi(facetsRoute, async (c) => {
   const locations = await jobMetaQueries.facetLocations();
-  return c.json({
-    success: true as const,
-    data: { locations, remote_options: REMOTE_OPTIONS },
-  }, 200);
+  return c.json(
+    {
+      success: true as const,
+      data: { locations, remote_options: REMOTE_OPTIONS },
+    },
+    200,
+  );
 });
 
 const listZonesRoute = createRoute({

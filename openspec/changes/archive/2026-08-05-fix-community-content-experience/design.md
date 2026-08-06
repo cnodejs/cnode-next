@@ -85,15 +85,15 @@ flowchart TD
 
 ## Database Change Audit
 
-| 项目 | 结论 |
-|---|---|
-| Schema / Drizzle migration | 不新增或修改字段；为有效回复聚合与稳定排序增加 reviewed partial index migration |
-| 字段语义 | `last_reply_id/at` 明确指向最后一条未删除回复；无有效回复时为 null |
-| 查询/index | 现有 schema 无回复 topic 索引；增加 `(topic_id, create_at, id) where deleted=false` partial index。部署前后仍需在真实 PostgreSQL 运行 `EXPLAIN` 核验 |
-| Backfill / repair | 新增幂等 PostgreSQL 修复脚本，回算 topic 回复聚合 |
-| Seed/bootstrap | 不修改 |
-| 数据清理/保留 | 不删除回复记录，仅修复聚合字段 |
-| 核验 | 修复前后统计不一致 topic 数，抽查 `49278` 类零回复记录与多回复回退记录 |
+| 项目                       | 结论                                                                                                                                                 |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Schema / Drizzle migration | 不新增或修改字段；为有效回复聚合与稳定排序增加 reviewed partial index migration                                                                      |
+| 字段语义                   | `last_reply_id/at` 明确指向最后一条未删除回复；无有效回复时为 null                                                                                   |
+| 查询/index                 | 现有 schema 无回复 topic 索引；增加 `(topic_id, create_at, id) where deleted=false` partial index。部署前后仍需在真实 PostgreSQL 运行 `EXPLAIN` 核验 |
+| Backfill / repair          | 新增幂等 PostgreSQL 修复脚本，回算 topic 回复聚合                                                                                                    |
+| Seed/bootstrap             | 不修改                                                                                                                                               |
+| 数据清理/保留              | 不删除回复记录，仅修复聚合字段                                                                                                                       |
+| 核验                       | 修复前后统计不一致 topic 数，抽查 `49278` 类零回复记录与多回复回退记录                                                                               |
 
 隔离 PostgreSQL 18 克隆验证使用 231,109 条回复：索引前 count/latest 查询采用 Parallel Seq Scan，执行约 39–51ms；应用 `replies_active_topic_order_idx` 后采用 Index Only Scan，执行约 0.12–0.38ms。migration 重复执行安全，repair 首次修复 48,972 个 topic，随后 dry-run 与第二次 apply 均为 0；用户数量、总积分、用户回复数和回复删除状态计数保持不变。
 

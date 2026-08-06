@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { extname, join, resolve } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 const webRoot = process.cwd();
 
@@ -30,15 +30,21 @@ describe("design system governance", () => {
     const routesRoot = resolve(webRoot, "app/routes");
     for (const file of sourceFiles(routesRoot)) {
       const source = readFileSync(file, "utf8");
-      expect(source, file).not.toMatch(/cnode-|surface-|brand-(?:ink|on)|shadow-(?:card|floating|brand)|space-[xy]-/);
-      expect(source, file).not.toMatch(/(?:bg|text|border|ring)-(?:red|blue|green|emerald|amber|orange|yellow|purple|pink|gray|slate|zinc|neutral)-\d/);
+      expect(source, file).not.toMatch(
+        /cnode-|surface-|brand-(?:ink|on)|shadow-(?:card|floating|brand)|space-[xy]-/,
+      );
+      expect(source, file).not.toMatch(
+        /(?:bg|text|border|ring)-(?:red|blue|green|emerald|amber|orange|yellow|purple|pink|gray|slate|zinc|neutral)-\d/,
+      );
       expect(source, file).not.toMatch(/rounded-(?:2xl|3xl|\[[^\]]+\])/);
     }
   });
 
   it("does not visually restyle core primitives from routes", () => {
-    const primitive = /<(?:Button|Input|Textarea|SelectTrigger|NativeSelect|Card|CardHeader|CardContent|Badge|TabsList|TableRow)\b[\s\S]*?>/g;
-    const visual = /className=(?:"[^"]*(?:\bbg-|\bborder-(?!collapse)|\bshadow-|\bring-|\brounded-|\bp[trblxy]?-)"|\{[^}]*(?:\bbg-|\bborder-|\bshadow-|\bring-|\brounded-|\bp[trblxy]?-)\})/;
+    const primitive =
+      /<(?:Button|Input|Textarea|SelectTrigger|NativeSelect|Card|CardHeader|CardContent|Badge|TabsList|TableRow)\b[\s\S]*?>/g;
+    const visual =
+      /className=(?:"[^"]*(?:\bbg-|\bborder-(?!collapse)|\bshadow-|\bring-|\brounded-|\bp[trblxy]?-)"|\{[^}]*(?:\bbg-|\bborder-|\bshadow-|\bring-|\brounded-|\bp[trblxy]?-)\})/;
     for (const file of sourceFiles(resolve(webRoot, "app/routes"))) {
       const source = readFileSync(file, "utf8");
       for (const tag of source.match(primitive) ?? []) {

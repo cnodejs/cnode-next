@@ -29,7 +29,13 @@ export function cleanXml(value: string) {
   let result = "";
   for (const char of value) {
     const codePoint = char.codePointAt(0) || 0;
-    if (codePoint === 0x09 || codePoint === 0x0a || codePoint === 0x0d || (codePoint >= 0x20 && codePoint <= 0xd7ff) || (codePoint >= 0xe000 && codePoint <= 0xfffd)) {
+    if (
+      codePoint === 0x09 ||
+      codePoint === 0x0a ||
+      codePoint === 0x0d ||
+      (codePoint >= 0x20 && codePoint <= 0xd7ff) ||
+      (codePoint >= 0xe000 && codePoint <= 0xfffd)
+    ) {
       result += char;
     }
   }
@@ -80,7 +86,9 @@ ${items ? `${items}\n` : ""}  </channel>
 }
 
 export async function loader() {
-  const res = await apiFetch<{ success: boolean; data?: RssSource }>("/api/v1/rss-source").catch(() => null);
+  const res = await apiFetch<{ success: boolean; data?: RssSource }>("/api/v1/rss-source").catch(
+    () => null,
+  );
   const source = res?.success && res.data ? res.data : fallbackSource;
   return new Response(buildRssXml(source), {
     headers: { "Content-Type": "application/rss+xml; charset=utf-8" },

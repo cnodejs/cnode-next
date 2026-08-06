@@ -1,8 +1,11 @@
 # session-management Specification
 
 ## Purpose
+
 TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: 密码强度校验
 
 系统 MUST 在注册和修改密码时校验密码强度。
@@ -40,4 +43,3 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 - **WHEN** 用户登录
 - **THEN** session 记录存入 Redis, key 包含 session_id + user_id
 - **AND** 每次请求更新最后活跃时间
-

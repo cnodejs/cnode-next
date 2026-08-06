@@ -1,18 +1,43 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 const css = readFileSync(resolve(process.cwd(), "app/styles/global.css"), "utf8");
 
 describe("Base Nova semantic theme", () => {
   it("declares complete core, chart and sidebar token families", () => {
     for (const token of [
-      "background", "foreground", "card", "card-foreground", "popover", "popover-foreground",
-      "primary", "primary-foreground", "secondary", "secondary-foreground", "muted",
-      "muted-foreground", "accent", "accent-foreground", "destructive", "border", "input", "ring",
-      "chart-1", "chart-2", "chart-3", "chart-4", "chart-5", "sidebar", "sidebar-foreground",
-      "sidebar-primary", "sidebar-primary-foreground", "sidebar-accent", "sidebar-accent-foreground",
-      "sidebar-border", "sidebar-ring",
+      "background",
+      "foreground",
+      "card",
+      "card-foreground",
+      "popover",
+      "popover-foreground",
+      "primary",
+      "primary-foreground",
+      "secondary",
+      "secondary-foreground",
+      "muted",
+      "muted-foreground",
+      "accent",
+      "accent-foreground",
+      "destructive",
+      "border",
+      "input",
+      "ring",
+      "chart-1",
+      "chart-2",
+      "chart-3",
+      "chart-4",
+      "chart-5",
+      "sidebar",
+      "sidebar-foreground",
+      "sidebar-primary",
+      "sidebar-primary-foreground",
+      "sidebar-accent",
+      "sidebar-accent-foreground",
+      "sidebar-border",
+      "sidebar-ring",
     ]) {
       expect(css).toContain(`--${token}:`);
       expect(css).toContain(`--color-${token}: var(--${token})`);

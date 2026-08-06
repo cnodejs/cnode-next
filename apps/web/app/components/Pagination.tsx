@@ -48,7 +48,9 @@ export function Pagination({
             {page > 1 ? <PaginationPrevious render={<Link to={buildUrl(page - 1)} />} /> : <span />}
           </PaginationItem>
           <PaginationItem>
-            {page < totalPages ? <PaginationNext render={<Link to={buildUrl(page + 1)} />} /> : null}
+            {page < totalPages ? (
+              <PaginationNext render={<Link to={buildUrl(page + 1)} />} />
+            ) : null}
           </PaginationItem>
         </PaginationContent>
       </PaginationNav>
@@ -68,16 +70,28 @@ export function Pagination({
             <PaginationLink render={<Link to={buildUrl(1)} />}>1</PaginationLink>
           </PaginationItem>
         )}
-        {start > 2 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+        {start > 2 && (
+          <PaginationItem>
+            <PaginationEllipsis />
+          </PaginationItem>
+        )}
         {pages.map((p) => (
           <PaginationItem key={p}>
-            <PaginationLink render={<Link to={buildUrl(p)} />} isActive={p === page}>{p}</PaginationLink>
+            <PaginationLink render={<Link to={buildUrl(p)} />} isActive={p === page}>
+              {p}
+            </PaginationLink>
           </PaginationItem>
         ))}
-        {end < totalPages - 1 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+        {end < totalPages - 1 && (
+          <PaginationItem>
+            <PaginationEllipsis />
+          </PaginationItem>
+        )}
         {end < totalPages && (
           <PaginationItem>
-            <PaginationLink render={<Link to={buildUrl(totalPages)} />}>{totalPages}</PaginationLink>
+            <PaginationLink render={<Link to={buildUrl(totalPages)} />}>
+              {totalPages}
+            </PaginationLink>
           </PaginationItem>
         )}
         {page < totalPages && (

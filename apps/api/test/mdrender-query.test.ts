@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vite-plus/test";
 import { mdrenderQuerySchema } from "@cnode/shared";
 
 test("mdrender query parses explicit false strings", () => {

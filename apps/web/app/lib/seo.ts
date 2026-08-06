@@ -37,7 +37,9 @@ export function markdownExcerpt(value?: string | null, length = 140) {
 
 export function firstMarkdownImage(value?: string | null) {
   if (!value) return null;
-  const markdown = value.match(/!\[[^\]]*\]\(\s*<?(https:\/\/[^\s)>]+|\/[^\s)>]+)>?(?:\s+["'][^"']*["'])?\s*\)/i)?.[1];
+  const markdown = value.match(
+    /!\[[^\]]*\]\(\s*<?(https:\/\/[^\s)>]+|\/[^\s)>]+)>?(?:\s+["'][^"']*["'])?\s*\)/i,
+  )?.[1];
   if (markdown) return absoluteUrl(markdown);
   const html = value.match(/<img\b[^>]*\bsrc=["'](https:\/\/[^"']+|\/[^"']+)["'][^>]*>/i)?.[1];
   return html ? absoluteUrl(html) : null;
@@ -92,7 +94,9 @@ export function discussionForumPostingJsonLd(topic: {
     articleBody: markdownExcerpt(topic.content, 500),
     url,
     mainEntityOfPage: url,
-    image: topic.image ? absoluteUrl(topic.image) : firstMarkdownImage(topic.content) || DEFAULT_OG_IMAGE,
+    image: topic.image
+      ? absoluteUrl(topic.image)
+      : firstMarkdownImage(topic.content) || DEFAULT_OG_IMAGE,
     author: {
       "@type": "Person",
       name: topic.author?.loginname || "CNode 用户",

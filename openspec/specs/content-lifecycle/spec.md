@@ -1,8 +1,11 @@
 # content-lifecycle Specification
 
 ## Purpose
+
 TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: 话题状态
 
 系统 MUST 用 status 字段管理话题生命周期,替代单一 deleted 布尔值。
@@ -186,6 +189,7 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 系统 MUST 允许 admin 和 mod 在帖子详情页执行内容删除动作，删除帖子和删除回复必须保持不同目标粒度，并且删除后公共列表与详情不再展示对应内容。
 
 #### Scenario: 版主或管理员删除帖子
+
 - **WHEN** admin 或 mod 在帖子详情页删除帖子
 - **THEN** 系统 MUST 将目标话题标记为已删除
 - **AND** 目标话题 MUST 不再出现在公开话题列表
@@ -193,6 +197,7 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 - **AND** 系统 MUST 写入审计日志
 
 #### Scenario: 版主或管理员删除回复
+
 - **WHEN** admin 或 mod 在回复项上删除回复
 - **THEN** 系统 MUST 只将目标回复标记为已删除
 - **AND** 系统 MUST 维护回复作者积分、回复数和话题回复数
@@ -201,11 +206,13 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 - **AND** 系统 MUST 写入审计日志
 
 #### Scenario: 删除动作目标粒度明确
+
 - **WHEN** 管理人员查看帖子详情页的删除按钮
 - **THEN** UI MUST 使用“删除帖子”和“删除回复”等明确文案
 - **AND** 不得用同一个模糊动作同时表示删除帖子和删除回复
 
 #### Scenario: 非管理人员不可执行前台内容删除
+
 - **WHEN** 非 admin 且非 mod 用户尝试调用前台内容管理删除接口
 - **THEN** 系统 MUST 返回权限错误
 - **AND** 目标帖子或回复状态保持不变
@@ -215,25 +222,30 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 公共查询 SHALL 使用统一内容可见性规则：隐藏已删除话题、内部 tab 话题、被 block 用户创建的话题，以及所属话题不可见的回复聚合。mute 用户只受写入限制，不因 mute 自动隐藏历史内容。
 
 #### Scenario: 已删除话题不可公开
+
 - **WHEN** 话题 `deleted=true` 或 `status='deleted'`
 - **THEN** 该话题 MUST 不出现在任何公共列表、sidebar、用户聚合或收藏结果中
 - **AND** 普通用户访问详情 MUST 得到不存在或不可见响应
 
 #### Scenario: 内部 tab 话题不可公开
+
 - **WHEN** 话题 `tab=dev` 或 `tab=test`
 - **THEN** 该话题 MUST 不出现在首页 feed、最新回复、无人回复、用户话题、用户参与或用户收藏中
 
 #### Scenario: 被 block 用户创建的话题不可公开
+
 - **WHEN** 话题作者处于 block 状态
 - **THEN** 该话题 MUST 不出现在公共列表、sidebar、用户聚合或收藏结果中
 - **AND** 其他用户在该话题下的回复也 MUST 不通过最新回复或用户参与聚合曝光该话题
 
 #### Scenario: 被 mute 用户不能新增内容但历史内容不自动隐藏
+
 - **WHEN** 用户处于 mute 状态且未处于 block 状态
 - **THEN** 该用户 MUST 不能新增话题或回复
 - **AND** 该用户已有话题 MUST 不因 mute 状态被公共查询隐藏
 
 #### Scenario: 管理后台不受公共过滤影响
+
 - **WHEN** 管理员访问后台话题、用户、巡检或审计页面
 - **THEN** 系统 MAY 展示 dev/test、已删除或 block 用户内容用于运营处理
 - **AND** 这些后台入口 MUST 继续由后端权限校验保护
@@ -281,28 +293,33 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 系统 SHALL 在后台话题管理中提供 admin-only 的真实删除能力，用于从数据库中物理删除指定话题及其直接依赖数据。真实删除 MUST 与现有软删除操作分离，且不得改变普通删除按钮的软删除语义。
 
 #### Scenario: 管理员真实删除话题
+
 - **WHEN** admin 在后台话题管理中确认真实删除某个话题
 - **THEN** 系统 MUST 从数据库删除该话题记录
 - **AND** 系统 MUST 清理该话题的回复、收藏、招聘扩展、巡检命中和消息引用等直接依赖数据
 - **AND** 系统 MUST 写入审计日志
 
 #### Scenario: 真实删除需要明确确认
+
 - **WHEN** admin 触发真实删除入口
 - **THEN** 页面 MUST 展示二次确认
 - **AND** 文案 MUST 明确说明该操作会从数据库永久删除且不可通过系统自动恢复
 - **AND** admin 取消确认时 MUST 不删除任何数据
 
 #### Scenario: 非管理员不可真实删除话题
+
 - **WHEN** 非 admin 用户调用真实删除接口
 - **THEN** 系统 MUST 返回权限错误
 - **AND** 目标话题及其依赖数据 MUST 保持不变
 
 #### Scenario: 软删除语义保持不变
+
 - **WHEN** 管理员或版主执行现有话题删除操作
 - **THEN** 系统 MUST 继续将话题标记为已删除
 - **AND** 系统 MUST NOT 因本变更把现有删除操作改为物理删除
 
 #### Scenario: 巡检确认删除不执行真实删除
+
 - **WHEN** 管理员对巡检命中执行确认删除或任务级批量确认删除
 - **THEN** 系统 MUST 沿用现有话题或回复删除生命周期
 - **AND** 系统 MUST NOT 从数据库物理删除命中的话题或回复

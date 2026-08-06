@@ -62,7 +62,13 @@ export async function sendReply2Message(
   });
 }
 
-export async function sendAtMessage(masterId: number, authorId: number, topicId: number, replyId: number, content = "") {
+export async function sendAtMessage(
+  masterId: number,
+  authorId: number,
+  topicId: number,
+  replyId: number,
+  content = "",
+) {
   if (masterId === authorId) return;
 
   const db = getDb();
@@ -74,7 +80,10 @@ export async function sendAtMessage(masterId: number, authorId: number, topicId:
     replyId,
     createAt: new Date(),
   });
-  const [master, topic] = await Promise.all([userQueries.getById(masterId), topicQueries.getById(topicId)]);
+  const [master, topic] = await Promise.all([
+    userQueries.getById(masterId),
+    topicQueries.getById(topicId),
+  ]);
   if (master?.receiveAtMail && master.email && topic) {
     await sendAtNotifyMail(
       master.email,
@@ -140,5 +149,8 @@ export async function updateMessagesToRead(userId: number, msgIds: number[]) {
 
 export async function updateOneMessageToRead(msgId: number) {
   const db = getDb();
-  await db.update(messages).set({ hasRead: boolValue(true) } as any).where(eq(messages.id, msgId));
+  await db
+    .update(messages)
+    .set({ hasRead: boolValue(true) } as any)
+    .where(eq(messages.id, msgId));
 }

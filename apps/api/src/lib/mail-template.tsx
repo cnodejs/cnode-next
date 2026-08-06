@@ -170,7 +170,12 @@ function CNodeEmailLayout({
           <Section style={styles.header}>
             <Row>
               <Column>
-                <Img src={logoUrl || absoluteWebUrl(CNODE_LOGO_LIGHT_PATH)} width="120" alt="CNode" style={styles.logo} />
+                <Img
+                  src={logoUrl || absoluteWebUrl(CNODE_LOGO_LIGHT_PATH)}
+                  width="120"
+                  alt="CNode"
+                  style={styles.logo}
+                />
               </Column>
               <Column style={styles.tagline}>Node.js 中文技术社区</Column>
             </Row>

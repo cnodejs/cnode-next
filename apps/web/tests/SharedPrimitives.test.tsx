@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vite-plus/test";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import {
   AlertDialog,
@@ -17,7 +17,13 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "~/components/u
 import { NativeSelect } from "~/components/ui/native-select";
 import { Pagination } from "~/components/Pagination";
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import { Textarea } from "~/components/ui/textarea";
 
 function renderWithRouter(element: React.ReactNode) {
@@ -49,10 +55,12 @@ describe("shared primitives", () => {
         <Textarea id="note" name="note" defaultValue="hello" />
         <RadioGroup name="visibility" defaultValue="public" aria-label="可见性">
           <label className="flex items-center gap-2">
-            <RadioGroupItem value="public" />公开
+            <RadioGroupItem value="public" />
+            公开
           </label>
           <label className="flex items-center gap-2">
-            <RadioGroupItem value="private" />私有
+            <RadioGroupItem value="private" />
+            私有
           </label>
         </RadioGroup>
         <button type="submit">提交</button>
@@ -61,7 +69,11 @@ describe("shared primitives", () => {
 
     await operator.click(screen.getByRole("button", { name: "提交" }));
 
-    expect(submit.mock.results[0]?.value).toEqual({ tab: "share", note: "hello", visibility: "public" });
+    expect(submit.mock.results[0]?.value).toEqual({
+      tab: "share",
+      note: "hello",
+      visibility: "public",
+    });
   });
 
   it("submits the selected Base Select value through a native form", async () => {
@@ -76,12 +88,16 @@ describe("shared primitives", () => {
         <label htmlFor="topic-tab">分类</label>
         <Select name="tab" defaultValue="share">
           <SelectTrigger id="topic-tab">
-            <SelectValue>{(value) => ({ share: "分享", ask: "问答", job: "招聘" })[value as string] ?? value}</SelectValue>
+            <SelectValue>
+              {(value) => ({ share: "分享", ask: "问答", job: "招聘" })[value as string] ?? value}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="share">分享</SelectItem>
             <SelectItem value="ask">问答</SelectItem>
-            <SelectItem value="job" disabled>招聘（需要授权）</SelectItem>
+            <SelectItem value="job" disabled>
+              招聘（需要授权）
+            </SelectItem>
           </SelectContent>
         </Select>
         <button type="submit">提交</button>
@@ -113,12 +129,21 @@ describe("shared primitives", () => {
 
   it("keeps domain pagination URL generation and current-page semantics", () => {
     renderWithRouter(
-      <Pagination page={3} total={100} limit={10} basePath="/topics" searchParams={{ tab: "share" }} />,
+      <Pagination
+        page={3}
+        total={100}
+        limit={10}
+        basePath="/topics"
+        searchParams={{ tab: "share" }}
+      />,
     );
 
     expect(screen.getByRole("navigation", { name: "分页导航" })).toBeInTheDocument();
     expect(screen.getByRole("link", { current: "page" })).toHaveTextContent("3");
-    expect(screen.getByRole("link", { name: "上一页" })).toHaveAttribute("href", "/topics?tab=share&page=2");
+    expect(screen.getByRole("link", { name: "上一页" })).toHaveAttribute(
+      "href",
+      "/topics?tab=share&page=2",
+    );
   });
 
   it("renders branded empty and command empty states", () => {

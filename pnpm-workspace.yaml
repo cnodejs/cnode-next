@@ -3,10 +3,12 @@ packages:
   - "packages/*"
 overrides:
   "shadcn>zod": "3.25.76"
+  vite: "catalog:"
+  vitest: "catalog:"
 allowBuilds:
-  '@fission-ai/openspec': true
-  '@scarf/scarf': false
-  '@tree-sitter-grammars/tree-sitter-yaml': false
+  "@fission-ai/openspec": true
+  "@scarf/scarf": false
+  "@tree-sitter-grammars/tree-sitter-yaml": false
   core-js-pure: false
   esbuild: true
   msw: true
@@ -15,4 +17,25 @@ allowBuilds:
   tree-sitter-json: false
   workerd: true
 minimumReleaseAgeExclude:
-  - '@hookform/resolvers@5.7.1'
+  - "@hookform/resolvers@5.7.1"
+  - "@voidzero-dev/vite-plus-core@0.2.8"
+  - "@voidzero-dev/vite-plus-darwin-arm64@0.2.8"
+  - "@voidzero-dev/vite-plus-darwin-x64@0.2.8"
+  - "@voidzero-dev/vite-plus-linux-arm64-gnu@0.2.8"
+  - "@voidzero-dev/vite-plus-linux-arm64-musl@0.2.8"
+  - "@voidzero-dev/vite-plus-linux-x64-gnu@0.2.8"
+  - "@voidzero-dev/vite-plus-linux-x64-musl@0.2.8"
+  - "@voidzero-dev/vite-plus-win32-arm64-msvc@0.2.8"
+  - "@voidzero-dev/vite-plus-win32-x64-msvc@0.2.8"
+  - vite-plus@0.2.8
+catalog:
+  vite: npm:@voidzero-dev/vite-plus-core@0.2.8
+  vitest: 4.1.10
+  vite-plus: 0.2.8
+peerDependencyRules:
+  allowAny:
+    - vite
+    - vitest
+  allowedVersions:
+    vite: "*"
+    vitest: "*"

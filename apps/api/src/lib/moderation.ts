@@ -49,7 +49,10 @@ export async function incrementSensitiveWordHits(hits: ContentHit[]) {
   if (!ids.length) return;
   const db = getDb();
   for (const id of ids) {
-    await db.update(sensitiveWords).set({ hitCount: sql`${sensitiveWords.hitCount} + 1` } as any).where(eq(sensitiveWords.id, id));
+    await db
+      .update(sensitiveWords)
+      .set({ hitCount: sql`${sensitiveWords.hitCount} + 1` } as any)
+      .where(eq(sensitiveWords.id, id));
   }
 }
 
@@ -77,6 +80,11 @@ export function createHitPreview(content: string, index: number, radius = 80): s
   return `${prefix}${content.slice(start, end)}${suffix}`;
 }
 
-export function createHitDedupeKey(targetType: string, targetId: number, field: string, keyword: string): string {
+export function createHitDedupeKey(
+  targetType: string,
+  targetId: number,
+  field: string,
+  keyword: string,
+): string {
   return `${targetType}:${targetId}:${field}:${keyword.toLowerCase()}`;
 }

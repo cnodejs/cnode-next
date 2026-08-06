@@ -13,9 +13,11 @@
 ## Capabilities
 
 ### New Capabilities
+
 - `topic-pin-management`: 管理员和版主在后台对话题执行置顶/取消置顶，并保证公开列表排序和状态展示与 legacy 行为一致。
 
 ### Modified Capabilities
+
 - `admin-dashboard`: 后台话题管理页的运营操作权限从仅 admin 扩展为 mod 和 admin 可执行置顶管理。
 
 ## Non-goals

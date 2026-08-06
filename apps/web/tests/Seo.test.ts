@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { getAvatarUrl } from "~/lib/brand";
 import {
   DEFAULT_OG_IMAGE,
@@ -10,15 +10,28 @@ import {
 
 describe("SEO metadata", () => {
   it("builds canonical Open Graph and Twitter metadata", () => {
-    const meta = seoMeta({ title: "测试 · CNode", description: "测试描述", path: "/topic/1", type: "article" });
-    expect(meta).toContainEqual({ tagName: "link", rel: "canonical", href: "https://cnodejs.org/topic/1" });
+    const meta = seoMeta({
+      title: "测试 · CNode",
+      description: "测试描述",
+      path: "/topic/1",
+      type: "article",
+    });
+    expect(meta).toContainEqual({
+      tagName: "link",
+      rel: "canonical",
+      href: "https://cnodejs.org/topic/1",
+    });
     expect(meta).toContainEqual({ property: "og:image", content: DEFAULT_OG_IMAGE });
     expect(meta).toContainEqual({ name: "twitter:card", content: "summary_large_image" });
   });
 
   it("cleans Markdown and extracts only secure images", () => {
-    expect(markdownExcerpt("# 标题\n\n[链接](https://example.com) **正文**")).toBe("标题 链接 正文");
-    expect(firstMarkdownImage("![图](https://static.example.com/a.png)")).toBe("https://static.example.com/a.png");
+    expect(markdownExcerpt("# 标题\n\n[链接](https://example.com) **正文**")).toBe(
+      "标题 链接 正文",
+    );
+    expect(firstMarkdownImage("![图](https://static.example.com/a.png)")).toBe(
+      "https://static.example.com/a.png",
+    );
     expect(firstMarkdownImage("![图](http://static.example.com/a.png)")).toBeNull();
   });
 
@@ -42,9 +55,11 @@ describe("SEO metadata", () => {
 
 describe("avatar metadata safety", () => {
   it("upgrades legacy Gravatar URLs without rewriting unrelated hosts", () => {
-    expect(getAvatarUrl("http://www.gravatar.com/avatar/hash?size=48"))
-      .toBe("https://www.gravatar.com/avatar/hash?size=48");
-    expect(getAvatarUrl("http://images.example.com/avatar.png"))
-      .toBe("http://images.example.com/avatar.png");
+    expect(getAvatarUrl("http://www.gravatar.com/avatar/hash?size=48")).toBe(
+      "https://www.gravatar.com/avatar/hash?size=48",
+    );
+    expect(getAvatarUrl("http://images.example.com/avatar.png")).toBe(
+      "http://images.example.com/avatar.png",
+    );
   });
 });

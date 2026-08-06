@@ -3,7 +3,9 @@
 ## Purpose
 
 定义 CNode Web UI 的品牌锚点、官方 logo 使用、品牌绿色 token、surface 层级和交互状态要求，确保主站、后台和系统状态页面保持一致视觉身份。
+
 ## Requirements
+
 ### Requirement: 官方 CNode 品牌锚点
 
 Web UI SHALL 在主站、后台、footer、empty/error 等场景使用官方 CNode logo 与品牌绿 `#80bd01` 作为主要品牌锚点。

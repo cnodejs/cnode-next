@@ -11,11 +11,14 @@ export type TopicActionPresentation = {
 
 export function getTopicActionPresentation(
   topic: { author?: { loginname?: string } } | null | undefined,
-  currentUser: {
-    loginname?: string;
-    is_admin?: boolean;
-    is_mod?: boolean;
-  } | null | undefined,
+  currentUser:
+    | {
+        loginname?: string;
+        is_admin?: boolean;
+        is_mod?: boolean;
+      }
+    | null
+    | undefined,
 ): TopicActionPresentation {
   const authenticated = !!currentUser;
   const isAuthor = authenticated && currentUser.loginname === topic?.author?.loginname;

@@ -52,7 +52,10 @@ export async function apiFetch<T>(path: string, opts: FetchOptions = {}): Promis
   const data = await res.json().catch(() => null);
 
   if (data === null) {
-    return { success: false, error_msg: res.ok ? "响应解析失败" : `请求失败 (HTTP ${res.status})` } as T;
+    return {
+      success: false,
+      error_msg: res.ok ? "响应解析失败" : `请求失败 (HTTP ${res.status})`,
+    } as T;
   }
 
   return data as T;

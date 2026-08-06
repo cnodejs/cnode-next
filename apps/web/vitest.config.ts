@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig } from "vite-plus";
 import { resolve } from "node:path";
 
 export default defineConfig({

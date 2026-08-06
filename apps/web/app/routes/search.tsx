@@ -90,10 +90,16 @@ export default function Search() {
   return (
     <Layout>
       <FeedPage>
-        <PageHeader breadcrumbs={[{ label: "首页", to: "/" }, { label: "搜索" }]} title="搜索 CNode 内容" description="输入关键词查找话题标题、内容和社区讨论。" />
+        <PageHeader
+          breadcrumbs={[{ label: "首页", to: "/" }, { label: "搜索" }]}
+          title="搜索 CNode 内容"
+          description="输入关键词查找话题标题、内容和社区讨论。"
+        />
         <form onSubmit={handleSubmit} aria-busy={loading}>
           <Field orientation="horizontal">
-            <FieldLabel htmlFor="site-search" className="sr-only">搜索话题</FieldLabel>
+            <FieldLabel htmlFor="site-search" className="sr-only">
+              搜索话题
+            </FieldLabel>
             <Input
               id="site-search"
               name="q"
@@ -119,10 +125,17 @@ export default function Search() {
 
         {!loading && error && (
           <Alert variant="destructive">
-            <AlertDescription className="flex items-center justify-between gap-3">{error}
-            <Button type="button" variant="outline" size="sm" onClick={() => setRetryCount((count) => count + 1)}>
-              重试
-            </Button></AlertDescription>
+            <AlertDescription className="flex items-center justify-between gap-3">
+              {error}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setRetryCount((count) => count + 1)}
+              >
+                重试
+              </Button>
+            </AlertDescription>
           </Alert>
         )}
 
@@ -131,17 +144,21 @@ export default function Search() {
             {results.length > 0 ? (
               <Card>
                 <CardContent>
-                <p role="status" className="text-sm text-muted-foreground">
-                  找到 {results.length} 条与 “{q}” 相关的结果
-                </p>
-                <TopicList topics={results} />
+                  <p role="status" className="text-sm text-muted-foreground">
+                    找到 {results.length} 条与 “{q}” 相关的结果
+                  </p>
+                  <TopicList topics={results} />
                 </CardContent>
               </Card>
             ) : (
               <EmptyState
                 title="没有匹配的搜索结果"
                 message={`未找到与 "${q}" 相关的内容`}
-                action={<Button render={<Link to="/search" />} variant="outline">清除搜索</Button>}
+                action={
+                  <Button render={<Link to="/search" />} variant="outline">
+                    清除搜索
+                  </Button>
+                }
               />
             )}
           </>

@@ -60,11 +60,11 @@ function useAsyncAction<TArgs extends unknown[], TResult>(
     errorMessage?: string | ((error: unknown) => string);
     onSuccess?: (result: TResult) => void;
     onError?: (error: unknown) => void;
-  }
+  },
 ): {
   run: (...args: TArgs) => void;
   pending: boolean;
-}
+};
 ```
 
 **设计要点**：
@@ -81,25 +81,25 @@ function useAsyncAction<TArgs extends unknown[], TResult>(
 
 **替换范围**（全量）：
 
-| 文件 | 当前模式 | 替换为 |
-|------|---------|--------|
-| `topic.create.tsx` | `saving` useState | `useAsyncAction` |
-| `topic.$tid.tsx` | `collecting`、`adminAction` useState | `useAsyncAction`（多个实例） |
-| `topic.$tid.edit.tsx` | `saving` useState | `useAsyncAction` |
-| `my.messages.tsx` | 无 pending 状态 | `useAsyncAction` |
-| `setting.tsx` | 多处手写 | `useAsyncAction` |
-| `reply.$id.edit.tsx` | `saving` useState | `useAsyncAction` |
-| `user.$name.tsx` | 手写 follow/unfollow | `useAsyncAction` |
-| `signin.tsx` / `signup.tsx` | 手写 | `useAsyncAction` |
-| `reset_pass.tsx` / `search_pass.tsx` | 手写 | `useAsyncAction` |
-| `auth.github.new.tsx` | 手写 | `useAsyncAction` |
-| `admin/mod.tsx` | 多处手写 | `useAsyncAction` |
-| `admin/bans.tsx` | 多处手写 | `useAsyncAction` |
-| `admin/keywords.tsx` | 多处手写 | `useAsyncAction` |
-| `admin/reports.tsx` | 手写 | `useAsyncAction` |
-| `admin/settings.tsx` | 手写 | `useAsyncAction` |
-| `admin/topics.tsx` | 手写 | `useAsyncAction` |
-| `admin/users.tsx` | 手写 | `useAsyncAction` |
+| 文件                                 | 当前模式                             | 替换为                       |
+| ------------------------------------ | ------------------------------------ | ---------------------------- |
+| `topic.create.tsx`                   | `saving` useState                    | `useAsyncAction`             |
+| `topic.$tid.tsx`                     | `collecting`、`adminAction` useState | `useAsyncAction`（多个实例） |
+| `topic.$tid.edit.tsx`                | `saving` useState                    | `useAsyncAction`             |
+| `my.messages.tsx`                    | 无 pending 状态                      | `useAsyncAction`             |
+| `setting.tsx`                        | 多处手写                             | `useAsyncAction`             |
+| `reply.$id.edit.tsx`                 | `saving` useState                    | `useAsyncAction`             |
+| `user.$name.tsx`                     | 手写 follow/unfollow                 | `useAsyncAction`             |
+| `signin.tsx` / `signup.tsx`          | 手写                                 | `useAsyncAction`             |
+| `reset_pass.tsx` / `search_pass.tsx` | 手写                                 | `useAsyncAction`             |
+| `auth.github.new.tsx`                | 手写                                 | `useAsyncAction`             |
+| `admin/mod.tsx`                      | 多处手写                             | `useAsyncAction`             |
+| `admin/bans.tsx`                     | 多处手写                             | `useAsyncAction`             |
+| `admin/keywords.tsx`                 | 多处手写                             | `useAsyncAction`             |
+| `admin/reports.tsx`                  | 手写                                 | `useAsyncAction`             |
+| `admin/settings.tsx`                 | 手写                                 | `useAsyncAction`             |
+| `admin/topics.tsx`                   | 手写                                 | `useAsyncAction`             |
+| `admin/users.tsx`                    | 手写                                 | `useAsyncAction`             |
 
 ### D3: apiFetch 错误处理修复
 

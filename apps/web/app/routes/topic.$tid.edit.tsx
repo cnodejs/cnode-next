@@ -10,7 +10,14 @@ import { toast } from "sonner";
 import { useAsyncAction } from "~/hooks/use-async-action";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import { Skeleton } from "~/components/ui/skeleton";
 import { ComposePage, PageHeader } from "~/components/PageShell";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -80,15 +87,19 @@ export default function TopicEdit() {
             };
             setJobMeta(nextJobMeta);
           }
-          initialRef.current = JSON.stringify({ title: nextTitle, tab: nextTab, content: nextContent, jobMeta: nextJobMeta });
+          initialRef.current = JSON.stringify({
+            title: nextTitle,
+            tab: nextTab,
+            content: nextContent,
+            jobMeta: nextJobMeta,
+          });
         }
       })
       .finally(() => setLoading(false));
   }, [tid]);
 
   const isDirty =
-    !loading &&
-    initialRef.current !== JSON.stringify({ title, tab, content, jobMeta });
+    !loading && initialRef.current !== JSON.stringify({ title, tab, content, jobMeta });
   const { blocker, allowNavigation } = useUnsavedChanges(isDirty);
 
   const { run: submitTopic, pending: saving } = useAsyncAction(
@@ -147,7 +158,11 @@ export default function TopicEdit() {
   return (
     <Layout>
       <ComposePage>
-        <PageHeader breadcrumbs={[{ label: "首页", to: "/" }, { label: "编辑话题" }]} title="编辑话题" description="更新标题、分类和正文内容。" />
+        <PageHeader
+          breadcrumbs={[{ label: "首页", to: "/" }, { label: "编辑话题" }]}
+          title="编辑话题"
+          description="更新标题、分类和正文内容。"
+        />
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <Card className="min-w-0">
             <CardHeader>
@@ -156,34 +171,46 @@ export default function TopicEdit() {
             <CardContent>
               <form onSubmit={handleSubmit}>
                 <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor="title">标题</FieldLabel>
-                  <Input id="title" name="title" autoComplete="off" value={title} onChange={(e) => setTitle(e.target.value)} />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="tab">分类</FieldLabel>
-                  <Select value={tab} onValueChange={(value) => value && setTab(value)}>
-                    <SelectTrigger id="tab">
-                      <SelectValue>{(value) => topicTabLabels[value] ?? value}</SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectItem value="share">分享</SelectItem>
-                        <SelectItem value="ask">问答</SelectItem>
-                        <SelectItem value="job">招聘</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="content">正文</FieldLabel>
-                  <MarkdownEditor id="content" name="content" value={content} onChange={setContent} minHeight={280} />
-                </Field>
-                <div className="flex justify-end">
-                  <Button type="submit" disabled={saving}>
-                    {saving ? "保存中…" : "保存"}
-                  </Button>
-                </div>
+                  <Field>
+                    <FieldLabel htmlFor="title">标题</FieldLabel>
+                    <Input
+                      id="title"
+                      name="title"
+                      autoComplete="off"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="tab">分类</FieldLabel>
+                    <Select value={tab} onValueChange={(value) => value && setTab(value)}>
+                      <SelectTrigger id="tab">
+                        <SelectValue>{(value) => topicTabLabels[value] ?? value}</SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="share">分享</SelectItem>
+                          <SelectItem value="ask">问答</SelectItem>
+                          <SelectItem value="job">招聘</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="content">正文</FieldLabel>
+                    <MarkdownEditor
+                      id="content"
+                      name="content"
+                      value={content}
+                      onChange={setContent}
+                      minHeight={280}
+                    />
+                  </Field>
+                  <div className="flex justify-end">
+                    <Button type="submit" disabled={saving}>
+                      {saving ? "保存中…" : "保存"}
+                    </Button>
+                  </div>
                 </FieldGroup>
               </form>
             </CardContent>

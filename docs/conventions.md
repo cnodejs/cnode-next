@@ -4,13 +4,13 @@ This repository keeps public project documentation concise, task-oriented, and s
 
 ## Documentation Domains
 
-| Domain | Purpose | Rules |
-| ------ | ------- | ----- |
-| `README.md` | Open-source project entry | Intro, features, stack, quick start, docs, contributing, security, license. No large diagrams or historical narrative. |
-| `docs/` | Stable task documentation | Architecture, development, database, migration, API reference, moderation, and security tasks. Keep current behavior first. |
-| `wiki/` | Knowledge base | Historical context, legacy behavior, migration background, community rules, and business logic notes. Must follow [wiki/writing-guidelines.md](../wiki/writing-guidelines.md). |
-| `deployment/` | Production deployment domain | Production runbook, compose file, grouped dotenv template, audit template, and real operator assets. |
-| `openspec/` | Proposed and accepted behavior changes | Use for scoped product, API, migration, release, architecture, database, security, permissions, deployment, or data repair changes. |
+| Domain        | Purpose                                | Rules                                                                                                                                                                          |
+| ------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `README.md`   | Open-source project entry              | Intro, features, stack, quick start, docs, contributing, security, license. No large diagrams or historical narrative.                                                         |
+| `docs/`       | Stable task documentation              | Architecture, development, database, migration, API reference, moderation, and security tasks. Keep current behavior first.                                                    |
+| `wiki/`       | Knowledge base                         | Historical context, legacy behavior, migration background, community rules, and business logic notes. Must follow [wiki/writing-guidelines.md](../wiki/writing-guidelines.md). |
+| `deployment/` | Production deployment domain           | Production runbook, compose file, grouped dotenv template, audit template, and real operator assets.                                                                           |
+| `openspec/`   | Proposed and accepted behavior changes | Use for scoped product, API, migration, release, architecture, database, security, permissions, deployment, or data repair changes.                                            |
 
 `docs/`, `wiki/`, and `deployment/` are sibling domains. `docs/` answers "how do I develop, understand, or use this now?". `wiki/` records "why is this true, where did it come from, and what still needs review?". `deployment/` contains the production runbook and files operators can copy, validate, or execute.
 
@@ -60,29 +60,29 @@ These are current implementation conventions, so no `wiki/` synchronization is r
 
 ## Git Workflow
 
-| Item | Rule |
-| ---- | ---- |
-| Branch naming | `feat/<scope>-<short>`, `fix/<scope>-<short>`, `docs/<short>`, `chore/<short>`, or OpenSpec change name. |
-| Base branch | `main`. |
-| Commit style | Conventional Commits: `feat:`, `fix:`, `docs:`, `test:`, `chore:`, `ci:`, `refactor:`, `perf:`. Scope optional, e.g. `feat(api):`. |
-| Commit message | Imperative mood, lowercase first letter, no trailing period. Body explains why, not what. |
-| Atomic commits | One logical change per commit. Split mixed changes into a chain of PRs when possible. |
-| Branch lifecycle | Delete feature branches after merge. |
-| Force push | Never on shared branches. Use `--force-with-lease` on your own branch only when truly needed. |
+| Item             | Rule                                                                                                                               |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Branch naming    | `feat/<scope>-<short>`, `fix/<scope>-<short>`, `docs/<short>`, `chore/<short>`, or OpenSpec change name.                           |
+| Base branch      | `main`.                                                                                                                            |
+| Commit style     | Conventional Commits: `feat:`, `fix:`, `docs:`, `test:`, `chore:`, `ci:`, `refactor:`, `perf:`. Scope optional, e.g. `feat(api):`. |
+| Commit message   | Imperative mood, lowercase first letter, no trailing period. Body explains why, not what.                                          |
+| Atomic commits   | One logical change per commit. Split mixed changes into a chain of PRs when possible.                                              |
+| Branch lifecycle | Delete feature branches after merge.                                                                                               |
+| Force push       | Never on shared branches. Use `--force-with-lease` on your own branch only when truly needed.                                      |
 
 ## Pull Requests
 
-| Step | Expectation |
-| ---- | ----------- |
-| Scope | One concern per PR. Reference an OpenSpec change when behavior, product, API, migration, release, or architecture is touched. |
-| Title | Conventional Commit format matching the primary change type. |
-| Description | State what changed and why. Note migration, deployment, and secret-handling impact. |
-| Tests | Add or update tests for behavior changes. Pure refactors still pass `pnpm test`. |
-| Docs | Update `docs/` and `apps/api/src/routes/*.ts` zod-openapi declarations when API behavior changes. Run `pnpm gen:openapi` to regenerate `api/openapi.json`. |
+| Step           | Expectation                                                                                                                                                                         |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scope          | One concern per PR. Reference an OpenSpec change when behavior, product, API, migration, release, or architecture is touched.                                                       |
+| Title          | Conventional Commit format matching the primary change type.                                                                                                                        |
+| Description    | State what changed and why. Note migration, deployment, and secret-handling impact.                                                                                                 |
+| Tests          | Add or update tests for behavior changes. Pure refactors still pass `pnpm test`.                                                                                                    |
+| Docs           | Update `docs/` and `apps/api/src/routes/*.ts` zod-openapi declarations when API behavior changes. Run `pnpm gen:openapi` to regenerate `api/openapi.json`.                          |
 | Database audit | For PostgreSQL schema, migration, seed/bootstrap, index, constraint, backfill, cleanup, repair, retention, or field semantic changes, link to the OpenSpec `Database Change Audit`. |
-| Verification | Run `pnpm verify` when feasible. If not, list the subset that was run and why. |
-| Reviews | At least one maintainer approval for `main`. Request review from domain owners for affected packages. |
-| Squash merge | Default. The squashed commit message should follow Conventional Commits. |
+| Verification   | Run `pnpm verify` when feasible. If not, list the subset that was run and why.                                                                                                      |
+| Reviews        | At least one maintainer approval for `main`. Request review from domain owners for affected packages.                                                                               |
+| Squash merge   | Default. The squashed commit message should follow Conventional Commits.                                                                                                            |
 
 ## Code Review
 
@@ -94,15 +94,15 @@ These are current implementation conventions, so no `wiki/` synchronization is r
 
 ## Testing
 
-| Level | Expectation |
-| ----- | ----------- |
-| Unit | Pure logic in `packages/shared` and helpers must have unit tests. |
-| API route | `apps/api` uses Vitest. Route tests may use Hono `app.request` and fake/mock service boundaries, but must not connect to a real database. |
+| Level       | Expectation                                                                                                                                                  |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Unit        | Pure logic in `packages/shared` and helpers must have unit tests.                                                                                            |
+| API route   | `apps/api` uses Vitest. Route tests may use Hono `app.request` and fake/mock service boundaries, but must not connect to a real database.                    |
 | DB behavior | Do not add database integration tests unless a future OpenSpec change defines a PostgreSQL-only strategy. Current API tests do not use a real test database. |
-| Contract | `pnpm gen:openapi` regenerates `api/openapi.json` from route zod-openapi declarations. `pnpm verify` includes this step. |
-| No SQLite | Tests must not make SQLite, PGlite, in-memory SQL, or dialect fallback a release path. Pure logic checks are acceptable when no DB is needed. |
-| Naming | `apps/api` tests live under `apps/api/test/**/*.test.ts`; other packages use `*.test.ts` next to source or under `__tests__`. |
-| Running | `apps/api` runs `vitest run` with automatic test discovery. Use `pnpm test` per package, `pnpm -r test` across the workspace. |
+| Contract    | `pnpm gen:openapi` regenerates `api/openapi.json` from route zod-openapi declarations. `pnpm verify` includes this step.                                     |
+| No SQLite   | Tests must not make SQLite, PGlite, in-memory SQL, or dialect fallback a release path. Pure logic checks are acceptable when no DB is needed.                |
+| Naming      | `apps/api` tests live under `apps/api/test/**/*.test.ts`; other packages use `*.test.ts` next to source or under `__tests__`.                                |
+| Running     | `apps/api` runs `vitest run` with automatic test discovery. Use `pnpm test` per package, `pnpm -r test` across the workspace.                                |
 
 API tests must not require `POSTGRES_HOST`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, or any real PostgreSQL test database. Tests that need database-backed branches should fake the service/query boundary and state that they verify route behavior, not PostgreSQL semantics.
 
@@ -118,11 +118,11 @@ API tests must not require `POSTGRES_HOST`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
 
 ## Documentation Sync Rules
 
-| Change area | Documentation expectation |
-| ----------- | ------------------------- |
-| Current development, runtime, architecture, API, database, migration, moderation, or security behavior | Update the relevant `docs/` page or explain why stable docs are not affected. |
-| Business rules, legacy behavior, migration background, community rules, or sourced historical context | Update the relevant `wiki/` page and follow [wiki/writing-guidelines.md](../wiki/writing-guidelines.md). |
-| API contract behavior | Update route zod-openapi declarations and regenerate `api/openapi.json` with `pnpm gen:openapi`. |
+| Change area                                                                                               | Documentation expectation                                                                                                             |
+| --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Current development, runtime, architecture, API, database, migration, moderation, or security behavior    | Update the relevant `docs/` page or explain why stable docs are not affected.                                                         |
+| Business rules, legacy behavior, migration background, community rules, or sourced historical context     | Update the relevant `wiki/` page and follow [wiki/writing-guidelines.md](../wiki/writing-guidelines.md).                              |
+| API contract behavior                                                                                     | Update route zod-openapi declarations and regenerate `api/openapi.json` with `pnpm gen:openapi`.                                      |
 | PostgreSQL schema, migration, index, constraint, backfill, cleanup, repair, retention, or field semantics | Include OpenSpec `Database Change Audit`; update `docs/database.md` or `wiki/migration-background.md` when durable knowledge changes. |
 
 ## API Documentation Rules

@@ -43,7 +43,9 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
   const filterControls = (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="job-location-filter" className="text-xs">地点</Label>
+        <Label htmlFor="job-location-filter" className="text-xs">
+          地点
+        </Label>
         <NativeSelect
           id="job-location-filter"
           className="w-full"
@@ -60,7 +62,9 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="job-remote-filter" className="text-xs">远程</Label>
+        <Label htmlFor="job-remote-filter" className="text-xs">
+          远程
+        </Label>
         <NativeSelect
           id="job-remote-filter"
           className="w-full"
@@ -77,7 +81,9 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="job-salary-filter" className="text-xs">薪资下限 (K)</Label>
+        <Label htmlFor="job-salary-filter" className="text-xs">
+          薪资下限 (K)
+        </Label>
         <Input
           id="job-salary-filter"
           name="salary_min"
@@ -90,7 +96,9 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="job-tags-filter" className="text-xs">技术栈</Label>
+        <Label htmlFor="job-tags-filter" className="text-xs">
+          技术栈
+        </Label>
         <Input
           id="job-tags-filter"
           name="tags"
@@ -111,7 +119,9 @@ export function JobFilterBar({ locations }: JobFilterBarProps) {
             <div className="flex items-center gap-2 font-semibold text-foreground">
               <Filter className="h-4 w-4 text-primary" /> 筛选职位
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">按地点、办公方式、薪资和技术栈缩小结果范围</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              按地点、办公方式、薪资和技术栈缩小结果范围
+            </p>
           </div>
           {activeFilterCount > 0 && (
             <Button type="button" variant="ghost" size="sm" onClick={clearAll}>

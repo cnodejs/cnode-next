@@ -40,11 +40,7 @@ export function useUnsavedChanges(isDirty: boolean) {
   };
 }
 
-export function UnsavedChangesDialog({
-  blocker,
-}: {
-  blocker: ReturnType<typeof useBlocker>;
-}) {
+export function UnsavedChangesDialog({ blocker }: { blocker: ReturnType<typeof useBlocker> }) {
   const blocked = blocker.state === "blocked";
   return (
     <AlertDialog
@@ -64,9 +60,7 @@ export function UnsavedChangesDialog({
           <AlertDialogCancel onClick={() => blocker.state === "blocked" && blocker.reset()}>
             继续编辑
           </AlertDialogCancel>
-          <AlertDialogAction
-            onClick={() => blocker.state === "blocked" && blocker.proceed()}
-          >
+          <AlertDialogAction onClick={() => blocker.state === "blocked" && blocker.proceed()}>
             放弃并离开
           </AlertDialogAction>
         </AlertDialogFooter>

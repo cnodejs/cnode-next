@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { TopicAuthorCard, TopicToc } from "~/routes/topic.$tid";
 import { ReadingGrid } from "~/components/PageShell";
 
@@ -41,7 +41,10 @@ describe("话题详情作者卡", () => {
     expect(screen.getByText("回复").parentElement).toHaveTextContent("42");
     expect(screen.queryByText("不应显示的最近话题")).not.toBeInTheDocument();
     expect(screen.queryByText("不应显示的最近参与")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "查看用户主页" })).toHaveAttribute("href", "/user/alice");
+    expect(screen.getByRole("link", { name: "查看用户主页" })).toHaveAttribute(
+      "href",
+      "/user/alice",
+    );
   });
 
   it("falls back to the lightweight topic author", () => {
@@ -50,7 +53,10 @@ describe("话题详情作者卡", () => {
     expect(screen.getByText("alice")).toBeInTheDocument();
     expect(screen.queryByLabelText("用户身份")).not.toBeInTheDocument();
     expect(screen.queryByText("积分")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "查看用户主页" })).toHaveAttribute("href", "/user/alice");
+    expect(screen.getByRole("link", { name: "查看用户主页" })).toHaveAttribute(
+      "href",
+      "/user/alice",
+    );
   });
 
   it("places author context between the topic body and replies in the mobile document order", () => {
@@ -67,23 +73,28 @@ describe("话题详情作者卡", () => {
     const context = screen.getByTestId("author-context");
     const replies = screen.getByTestId("reply-flow");
     expect(body.compareDocumentPosition(context) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(context.compareDocumentPosition(replies) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(
+      context.compareDocumentPosition(replies) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
-  it.each([1279, 1280, 1440])("keeps the %dpx reading layout to main content and one right rail", (width) => {
-    window.innerWidth = width;
-    const { container } = render(
-      <ReadingGrid aside={<div>上下文</div>} afterAside={<div>回复</div>}>
-        <div>正文</div>
-      </ReadingGrid>,
-    );
-    const grid = container.firstElementChild;
+  it.each([1279, 1280, 1440])(
+    "keeps the %dpx reading layout to main content and one right rail",
+    (width) => {
+      window.innerWidth = width;
+      const { container } = render(
+        <ReadingGrid aside={<div>上下文</div>} afterAside={<div>回复</div>}>
+          <div>正文</div>
+        </ReadingGrid>,
+      );
+      const grid = container.firstElementChild;
 
-    expect(grid).toHaveClass("xl:grid-cols-[minmax(0,1fr)_18rem]");
-    expect(grid?.className).not.toContain("12rem");
-    expect(grid?.querySelectorAll("aside")).toHaveLength(1);
-    expect(screen.getByText("正文").parentElement).toHaveClass("xl:col-start-1");
-  });
+      expect(grid).toHaveClass("xl:grid-cols-[minmax(0,1fr)_18rem]");
+      expect(grid?.className).not.toContain("12rem");
+      expect(grid?.querySelectorAll("aside")).toHaveLength(1);
+      expect(screen.getByText("正文").parentElement).toHaveClass("xl:col-start-1");
+    },
+  );
 
   it("renders the topic TOC as a default-collapsed disclosure and closes it after navigation", async () => {
     const user = userEvent.setup();

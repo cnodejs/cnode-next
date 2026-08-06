@@ -21,13 +21,21 @@ export async function ensureMuteNotExpired(user: any) {
   const state = parsePenaltyState(user.level);
   if (state.muteUntil && Date.now() > state.muteUntil && !user.isBlock) {
     const nextLevel = JSON.stringify({ ...state, muteUntil: null });
-    await getDb().update(users).set({ isMuted: boolValue(false), level: nextLevel } as any).where(eq(users.id, user.id));
+    await getDb()
+      .update(users)
+      .set({ isMuted: boolValue(false), level: nextLevel } as any)
+      .where(eq(users.id, user.id));
     return { ...user, isMuted: false, level: nextLevel };
   }
   return user;
 }
 
-export async function applyProgressivePenalty(authorId: number, operatorId: number, operatorName: string, reason: string) {
+export async function applyProgressivePenalty(
+  authorId: number,
+  operatorId: number,
+  operatorName: string,
+  reason: string,
+) {
   const db = getDb();
   const user = (await db.select().from(users).where(eq(users.id, authorId)).limit(1))[0] as any;
   if (!user) return null;
@@ -52,6 +60,13 @@ export async function applyProgressivePenalty(authorId: number, operatorId: numb
   }
 
   await db.update(users).set(updates).where(eq(users.id, authorId));
-  await auditQueries.log(operatorId, operatorName, `progressive_penalty_${action}`, { type: "user", id: String(authorId), name: user.loginname }, "success", reason);
+  await auditQueries.log(
+    operatorId,
+    operatorName,
+    `progressive_penalty_${action}`,
+    { type: "user", id: String(authorId), name: user.loginname },
+    "success",
+    reason,
+  );
   return { action, strikes };
 }

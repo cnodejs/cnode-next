@@ -38,6 +38,7 @@ cnode-next 的 API 契约目前有四份独立维护的"真理"：
 **理由**：`@hono/zod-openapi` 1.5.1 的 peerDep 是 `zod ^4.0.0` + `hono >=4.10.0`。项目当前是 `zod ^3.24.0` + `hono ^4.6.0`。zod 4 有破坏性变更（错误消息格式、`z.infer` 行为、`z.object().strict()` 等），但项目里只有 8 个文件 import zod，schema 定义集中在 `apps/api/routes/` 和 `packages/shared/schemas/`，可控。
 
 **被否决的方案**：
+
 - 用 `@hono/zod-openapi@0.18.2`（最后支持 zod 3 的版本）——避免升级，但锁定在旧版，未来 zod 4 迟早要升，只是把债推迟。
 - 分两个 change（先升 zod，再迁移 zod-openapi）——增加协调成本，且 zod 升级单独做没有直接收益。
 
@@ -48,6 +49,7 @@ cnode-next 的 API 契约目前有四份独立维护的"真理"：
 **理由**：`@hono/zod-openapi` 是 Hono 官方维护的中间件，与现有 `@hono/zod-validator` API 接近，迁移成本低。它内部用 `@asteasolutions/zod-to-openapi` 将 zod schema 转为 OAS schema，支持 `z.infer` 派生类型。
 
 **被否决的方案**：
+
 - 手写 `openapi.yaml` + `zod-validator` 双轨——当前状态，漂移无法消灭。
 - 用 `@asteasolutions/zod-to-openapi` 直接注册不走 hono 中间件——失去路由级声明和运行时校验的统一。
 
@@ -68,6 +70,7 @@ flowchart TD
 ```
 
 **被否决的方案**：
+
 - `openapi-typescript` 从 OAS codegen 类型——多一层 codegen，且 OAS→TS 会丢失 zod 富信息。类型和表单 zod 来源不同（类型从 OAS，表单 zod 从直接 import），链路分裂。
 - `openapi-fetch` / `orval` 生成 runtime client——改动 42 处 `apiFetch<T>` 调用点为 hooks 或 client 方法，侵入性过大，超出"只维护 OAS"的诉求。
 
@@ -80,6 +83,7 @@ flowchart TD
 OAS→zod codegen 工具链不成熟（`openapi-zod` 自述"use at your own risk, un-tested"，`openapi2zod` 低下载），且 OAS 天然表达不了 `.refine()`/`.extend()`，反向 codegen 必然有损。直接在 shared 定义 schema 是零损耗、零额外工具的唯一可靠路径。
 
 **被否决的方案**：
+
 - shared re-export from api——循环依赖（shared → api → shared），架构不合法。
 - OAS→zod codegen（`openapi-zod`/`openapi2zod`）——工具不稳，有损转换。
 - web 手写一份 zod schema——当前状态，漂移无法消灭。
@@ -103,6 +107,7 @@ OAS→zod codegen 工具链不成熟（`openapi-zod` 自述"use at your own risk
 **理由**：只迁移已覆盖的 42 个端点会让"唯一数据源"仍不完整，admin/user/message/community 的契约继续漂移。一次性迁移消灭所有盲区。
 
 **被否决的方案**：
+
 - 只迁移 OAS 已覆盖的 42 个端点——"唯一数据源"不唯一，admin 等继续手写。
 - 分两期（本期 42 个，下期 95 个）——协调成本高，且 42 个已覆盖端点的迁移方式会成为后续的参考，分批反而增加不确定性。
 

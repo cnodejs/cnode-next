@@ -29,7 +29,11 @@ function loadTurnstileScript() {
     const existing = document.querySelector<HTMLScriptElement>('script[data-turnstile-api="true"]');
     if (existing) {
       existing.addEventListener("load", () => resolve(), { once: true });
-      existing.addEventListener("error", () => reject(new Error("Turnstile script failed to load")), { once: true });
+      existing.addEventListener(
+        "error",
+        () => reject(new Error("Turnstile script failed to load")),
+        { once: true },
+      );
       return;
     }
 
@@ -39,7 +43,9 @@ function loadTurnstileScript() {
     script.defer = true;
     script.dataset.turnstileApi = "true";
     script.addEventListener("load", () => resolve(), { once: true });
-    script.addEventListener("error", () => reject(new Error("Turnstile script failed to load")), { once: true });
+    script.addEventListener("error", () => reject(new Error("Turnstile script failed to load")), {
+      once: true,
+    });
     document.head.appendChild(script);
   });
   return turnstileScriptPromise;
@@ -111,7 +117,9 @@ export function TurnstileWidget() {
       <div ref={containerRef} />
       <p
         role={status === "error" ? "alert" : "status"}
-        className={status === "error" ? "text-sm text-destructive" : "text-sm text-muted-foreground"}
+        className={
+          status === "error" ? "text-sm text-destructive" : "text-sm text-muted-foreground"
+        }
       >
         {message}
       </p>
@@ -121,5 +129,9 @@ export function TurnstileWidget() {
 
 export function getTurnstileToken() {
   if (typeof document === "undefined") return "";
-  return currentToken || (document.querySelector('[name="cf-turnstile-response"]') as HTMLInputElement | null)?.value || "";
+  return (
+    currentToken ||
+    (document.querySelector('[name="cf-turnstile-response"]') as HTMLInputElement | null)?.value ||
+    ""
+  );
 }

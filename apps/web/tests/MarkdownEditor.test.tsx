@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vite-plus/test";
 import { MarkdownEditor } from "~/components/MarkdownEditor";
 
 vi.mock("~/lib/upload-client", () => ({
@@ -30,7 +30,9 @@ describe("MarkdownEditor", () => {
   it("inserts Markdown around the current selection", async () => {
     const onChange = vi.fn();
     render(<MarkdownEditor value="hello world" onChange={onChange} />);
-    const textarea = screen.getByRole("textbox", { name: "支持 Markdown 格式" }) as HTMLTextAreaElement;
+    const textarea = screen.getByRole("textbox", {
+      name: "支持 Markdown 格式",
+    }) as HTMLTextAreaElement;
 
     textarea.focus();
     textarea.setSelectionRange(6, 11);
@@ -48,7 +50,10 @@ describe("MarkdownEditor", () => {
     const onChange = vi.fn();
     render(<MarkdownEditor value="正文" onChange={onChange} />);
     const file = new File(["png"], "avatar.png", { type: "image/png" });
-    expect(screen.getByLabelText("上传图片文件")).toHaveAttribute("accept", expect.stringContaining("image/svg+xml"));
+    expect(screen.getByLabelText("上传图片文件")).toHaveAttribute(
+      "accept",
+      expect.stringContaining("image/svg+xml"),
+    );
 
     await userEvent.upload(screen.getByLabelText("上传图片文件"), file);
 

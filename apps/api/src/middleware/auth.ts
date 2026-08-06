@@ -11,10 +11,7 @@ export interface AuthVars {
   roles: string[];
 }
 
-export function setSessionCookie(
-  c: any,
-  userId: number,
-) {
+export function setSessionCookie(c: any, userId: number) {
   const cookieName = process.env.AUTH_COOKIE_NAME || "node_club";
   const domain = process.env.AUTH_COOKIE_DOMAIN || undefined;
   const secret = process.env.AUTH_SESSION_SECRET || "local-dev-secret";
@@ -42,7 +39,7 @@ export const authMiddleware = () =>
   }>(async (c, next) => {
     const cookieName = process.env.AUTH_COOKIE_NAME || "node_club";
     const secret = process.env.AUTH_SESSION_SECRET || "local-dev-secret";
-  const token = (getCookie as any)(c, cookieName, secret);
+    const token = (getCookie as any)(c, cookieName, secret);
 
     let user: AuthVars["user"] = null;
 

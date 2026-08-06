@@ -34,7 +34,10 @@ function extractHeadingEntries(markdown: string): Array<MarkdownHeading & { line
       return {
         line: index + 1,
         depth: Number(htmlMatch?.[1] ?? markdownMatch![1].length) as 2 | 3,
-        text: (htmlMatch?.[2] ?? markdownMatch![2]).replace(/<[^>]+>/g, "").replace(/#+$/, "").trim(),
+        text: (htmlMatch?.[2] ?? markdownMatch![2])
+          .replace(/<[^>]+>/g, "")
+          .replace(/#+$/, "")
+          .trim(),
       };
     })
     .filter((heading): heading is { line: number; depth: 2 | 3; text: string } => Boolean(heading))

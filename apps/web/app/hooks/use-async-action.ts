@@ -29,7 +29,9 @@ export function useAsyncAction<TArgs extends unknown[], TResult>(
       .then((result: TResult) => {
         const { successMessage, onSuccess } = optsRef.current;
         if (successMessage) {
-          toast.success(typeof successMessage === "function" ? successMessage(result) : successMessage);
+          toast.success(
+            typeof successMessage === "function" ? successMessage(result) : successMessage,
+          );
         }
         onSuccess?.(result);
       })

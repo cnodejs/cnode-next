@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { Sidebar } from "~/components/Sidebar";
 
 const mocks = vi.hoisted(() => ({ apiFetch: vi.fn() }));
@@ -34,19 +34,30 @@ describe("home Sidebar", () => {
 
     const sidebar = container.querySelector("aside")!;
     expect(sidebar).toHaveClass("gap-5", "md:gap-6");
-    expect(screen.getByRole("link", { name: "了解合作方式" })).toHaveAttribute("href", "/about#cooperation");
+    expect(screen.getByRole("link", { name: "了解合作方式" })).toHaveAttribute(
+      "href",
+      "/about#cooperation",
+    );
 
     const latestReplies = await screen.findByText("最新回复");
     const leaderboard = screen.getByText("积分榜");
     const unanswered = screen.getByText("无人回复的话题");
 
-    expect(latestReplies.compareDocumentPosition(leaderboard) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(leaderboard.compareDocumentPosition(unanswered) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(
+      latestReplies.compareDocumentPosition(leaderboard) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      leaderboard.compareDocumentPosition(unanswered) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it("uses the same top-level rhythm while skeleton cards are replaced", async () => {
     let resolveRequest!: (value: { success: boolean; data: typeof sidebarData }) => void;
-    mocks.apiFetch.mockReturnValue(new Promise((resolve) => { resolveRequest = resolve; }));
+    mocks.apiFetch.mockReturnValue(
+      new Promise((resolve) => {
+        resolveRequest = resolve;
+      }),
+    );
     const { container } = render(
       <MemoryRouter>
         <Sidebar />
@@ -61,10 +72,14 @@ describe("home Sidebar", () => {
     resolveRequest({ success: true, data: sidebarData });
     await screen.findByText("最新回复");
 
-    await waitFor(() => expect(sidebar.querySelector('[data-slot="skeleton"]')).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(sidebar.querySelector('[data-slot="skeleton"]')).not.toBeInTheDocument(),
+    );
     expect(sidebar.querySelectorAll(":scope > [data-slot=card]")).toHaveLength(5);
     expect(
-      Array.from(sidebar.querySelectorAll('[data-slot="card-title"]')).map((title) => title.textContent?.trim()),
+      Array.from(sidebar.querySelectorAll('[data-slot="card-title"]')).map((title) =>
+        title.textContent?.trim(),
+      ),
     ).toEqual(["社区合作", "最新回复", "积分榜", "无人回复的话题", "生态资源"]);
   });
 });

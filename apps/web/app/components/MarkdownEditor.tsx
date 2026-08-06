@@ -53,7 +53,7 @@ export function MarkdownEditor({
   useEffect(() => {
     const query = window.matchMedia("(min-width: 64rem)");
     const syncMode = () => {
-      if (!query.matches) setMode((current) => current === "split" ? "edit" : current);
+      if (!query.matches) setMode((current) => (current === "split" ? "edit" : current));
     };
     syncMode();
     query.addEventListener("change", syncMode);
@@ -83,12 +83,7 @@ export function MarkdownEditor({
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const selected = value.slice(start, end) || fallback;
-    const newValue =
-      value.slice(0, start) +
-      before +
-      selected +
-      after +
-      value.slice(end);
+    const newValue = value.slice(0, start) + before + selected + after + value.slice(end);
     updateValue(newValue, start + before.length, start + before.length + selected.length);
   }
 
@@ -99,7 +94,11 @@ export function MarkdownEditor({
     const end = textarea.selectionEnd;
     const selected = value.slice(start, end) || "链接文字";
     const markdown = `[${selected}](url)`;
-    updateValue(value.slice(0, start) + markdown + value.slice(end), start + 1, start + 1 + selected.length);
+    updateValue(
+      value.slice(0, start) + markdown + value.slice(end),
+      start + 1,
+      start + 1 + selected.length,
+    );
   }
 
   function insertImagePlaceholder() {
@@ -129,7 +128,11 @@ export function MarkdownEditor({
       .split("\n")
       .map((line) => (line.startsWith(prefix) ? line : `${prefix}${line || "内容"}`))
       .join("\n");
-    updateValue(value.slice(0, lineStart) + replacement + value.slice(end), lineStart, lineStart + replacement.length);
+    updateValue(
+      value.slice(0, lineStart) + replacement + value.slice(end),
+      lineStart,
+      lineStart + replacement.length,
+    );
   }
 
   async function uploadFiles(files: FileList | File[]) {
@@ -150,14 +153,18 @@ export function MarkdownEditor({
   }
 
   function handlePaste(event: ClipboardEvent<HTMLTextAreaElement>) {
-    const files = Array.from(event.clipboardData.files).filter((file) => file.type.startsWith("image/"));
+    const files = Array.from(event.clipboardData.files).filter((file) =>
+      file.type.startsWith("image/"),
+    );
     if (!files.length) return;
     event.preventDefault();
     void uploadFiles(files);
   }
 
   function handleDrop(event: DragEvent<HTMLTextAreaElement>) {
-    const files = Array.from(event.dataTransfer.files).filter((file) => file.type.startsWith("image/"));
+    const files = Array.from(event.dataTransfer.files).filter((file) =>
+      file.type.startsWith("image/"),
+    );
     setIsDragging(false);
     if (!files.length) return;
     event.preventDefault();
@@ -195,10 +202,7 @@ export function MarkdownEditor({
       placeholder={placeholder || "支持 Markdown 格式"}
       aria-label={placeholder || "支持 Markdown 格式"}
       style={{ minHeight }}
-      className={cn(
-        "resize-y",
-        isDragging && "ring-2 ring-ring",
-      )}
+      className={cn("resize-y", isDragging && "ring-2 ring-ring")}
     />
   );
   const preview = (
@@ -237,24 +241,57 @@ export function MarkdownEditor({
         />
         <div className="flex-1" />
         {uploading ? (
-          <span role="status" className="inline-flex items-center gap-1 px-2 text-xs text-muted-foreground">
+          <span
+            role="status"
+            className="inline-flex items-center gap-1 px-2 text-xs text-muted-foreground"
+          >
             <Spinner /> 上传中
           </span>
         ) : null}
         <div className="flex items-center gap-1" role="group" aria-label="编辑器视图">
-          <Button type="button" variant={mode === "edit" ? "secondary" : "ghost"} size="sm" onClick={() => setMode("edit")}>
+          <Button
+            type="button"
+            variant={mode === "edit" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setMode("edit")}
+          >
             <Pencil data-icon="inline-start" /> 编辑
           </Button>
-          <Button type="button" variant={mode === "preview" ? "secondary" : "ghost"} size="sm" onClick={() => setMode("preview")}>
+          <Button
+            type="button"
+            variant={mode === "preview" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setMode("preview")}
+          >
             <Eye data-icon="inline-start" /> 预览
           </Button>
-          <Button type="button" variant={mode === "split" ? "secondary" : "ghost"} size="sm" className="hidden lg:inline-flex" onClick={() => setMode("split")}>
+          <Button
+            type="button"
+            variant={mode === "split" ? "secondary" : "ghost"}
+            size="sm"
+            className="hidden lg:inline-flex"
+            onClick={() => setMode("split")}
+          >
             <Columns2 data-icon="inline-start" /> 双栏
           </Button>
         </div>
       </div>
-      {uploadError ? <div role="alert" className="mx-1 mb-1 rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">{uploadError}</div> : null}
-      {uploadSuccess ? <div role="status" className="mx-1 mb-1 rounded-lg bg-background px-3 py-2 text-xs text-muted-foreground">图片上传成功，已插入正文</div> : null}
+      {uploadError ? (
+        <div
+          role="alert"
+          className="mx-1 mb-1 rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive"
+        >
+          {uploadError}
+        </div>
+      ) : null}
+      {uploadSuccess ? (
+        <div
+          role="status"
+          className="mx-1 mb-1 rounded-lg bg-background px-3 py-2 text-xs text-muted-foreground"
+        >
+          图片上传成功，已插入正文
+        </div>
+      ) : null}
       {mode === "preview" ? preview : null}
       {mode === "edit" ? textarea : null}
       {mode === "split" ? (

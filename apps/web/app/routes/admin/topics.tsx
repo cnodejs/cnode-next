@@ -52,15 +52,46 @@ export async function loader({ request }: any) {
   if (dateFrom) params.set("date_from", dateFrom);
   if (dateTo) params.set("date_to", dateTo);
   if (sort && sort !== "create_at_desc") params.set("sort", sort);
-  const res = await apiFetch<{ success: boolean; data: any[]; total?: number; page?: number; limit?: number }>(
-    `/api/v1/admin/topics?${params.toString()}`,
-    { headers: { cookie } },
-  );
-  return { topics: res.success ? res.data || [] : [], total: res.total ?? 0, page, limit, q, tab, visibility, flag, dateField, dateFrom, dateTo, sort, user };
+  const res = await apiFetch<{
+    success: boolean;
+    data: any[];
+    total?: number;
+    page?: number;
+    limit?: number;
+  }>(`/api/v1/admin/topics?${params.toString()}`, { headers: { cookie } });
+  return {
+    topics: res.success ? res.data || [] : [],
+    total: res.total ?? 0,
+    page,
+    limit,
+    q,
+    tab,
+    visibility,
+    flag,
+    dateField,
+    dateFrom,
+    dateTo,
+    sort,
+    user,
+  };
 }
 
 export default function AdminTopics({ loaderData }: any) {
-  const { topics, total, page, limit, q, tab, visibility, flag, dateField, dateFrom, dateTo, sort, user } = loaderData;
+  const {
+    topics,
+    total,
+    page,
+    limit,
+    q,
+    tab,
+    visibility,
+    flag,
+    dateField,
+    dateFrom,
+    dateTo,
+    sort,
+    user,
+  } = loaderData;
   const isAdmin = !!user?.is_admin;
   const [selected, setSelected] = useState<number[]>([]);
   const [muteIds, setMuteIds] = useState<number[]>([]);
@@ -72,8 +103,19 @@ export default function AdminTopics({ loaderData }: any) {
   const { revalidate } = useRevalidator();
   const location = useLocation();
   const navigate = useNavigate();
-  const activeFilterCount = [q, tab, visibility !== "all" ? visibility : "", flag !== "all" ? flag : "", dateFrom, dateTo, dateField !== "create_at" ? dateField : "", sort !== "create_at_desc" ? sort : ""].filter(Boolean).length;
-  const visibleDeleted = topics.filter((topic: any) => topic.deleted > 0 || topic.status === "deleted").length;
+  const activeFilterCount = [
+    q,
+    tab,
+    visibility !== "all" ? visibility : "",
+    flag !== "all" ? flag : "",
+    dateFrom,
+    dateTo,
+    dateField !== "create_at" ? dateField : "",
+    sort !== "create_at_desc" ? sort : "",
+  ].filter(Boolean).length;
+  const visibleDeleted = topics.filter(
+    (topic: any) => topic.deleted > 0 || topic.status === "deleted",
+  ).length;
   const visibleMuted = topics.filter((topic: any) => topic.status === "muted").length;
   const visibleFeatured = topics.filter((topic: any) => topic.top > 0 || topic.good > 0).length;
   const paginationParams = {
@@ -106,7 +148,16 @@ export default function AdminTopics({ loaderData }: any) {
           setSelected([]);
           setMuteIds([]);
           setSoftDeleteIds([]);
-          const fallback = res.action === "delete" ? previousPageAfterRemoval({ pathname: location.pathname, search: location.search, page, currentItemCount: topics.length, removedCount: res.ids.length }) : null;
+          const fallback =
+            res.action === "delete"
+              ? previousPageAfterRemoval({
+                  pathname: location.pathname,
+                  search: location.search,
+                  page,
+                  currentItemCount: topics.length,
+                  removedCount: res.ids.length,
+                })
+              : null;
           if (fallback) navigate(fallback, { replace: true });
           else revalidate();
         } else {
@@ -128,7 +179,13 @@ export default function AdminTopics({ loaderData }: any) {
           toast.success(`已永久删除 ${res.deleted || permanentDeleteIds.length} 个话题`);
           setSelected([]);
           setPermanentDeleteIds([]);
-          const fallback = previousPageAfterRemoval({ pathname: location.pathname, search: location.search, page, currentItemCount: topics.length, removedCount: res.deleted || permanentDeleteIds.length });
+          const fallback = previousPageAfterRemoval({
+            pathname: location.pathname,
+            search: location.search,
+            page,
+            currentItemCount: topics.length,
+            removedCount: res.deleted || permanentDeleteIds.length,
+          });
           if (fallback) navigate(fallback, { replace: true });
           else revalidate();
         } else {
@@ -147,8 +204,15 @@ export default function AdminTopics({ loaderData }: any) {
   return (
     <AdminLayout>
       <AdminPage archetype="data-list">
-        <AdminPageHeader title="话题管理" description="集中处理置顶、加精、隐藏和删除等内容运营动作。" />
-        <AdminPanel title="内容治理队列" description={`当前页 ${topics.length} 条 / 共 ${total} 条`} flush>
+        <AdminPageHeader
+          title="话题管理"
+          description="集中处理置顶、加精、隐藏和删除等内容运营动作。"
+        />
+        <AdminPanel
+          title="内容治理队列"
+          description={`当前页 ${topics.length} 条 / 共 ${total} 条`}
+          flush
+        >
           <div className="grid gap-3 sm:grid-cols-4">
             <div>
               <div className="text-xs text-muted-foreground">筛选结果</div>
@@ -160,7 +224,9 @@ export default function AdminTopics({ loaderData }: any) {
             </div>
             <div>
               <div className="text-xs text-muted-foreground">隐藏 / 删除</div>
-              <div className="mt-1 text-2xl font-semibold text-foreground">{visibleMuted} / {visibleDeleted}</div>
+              <div className="mt-1 text-2xl font-semibold text-foreground">
+                {visibleMuted} / {visibleDeleted}
+              </div>
             </div>
             <div>
               <div className="text-xs text-muted-foreground">活跃筛选</div>
@@ -168,7 +234,10 @@ export default function AdminTopics({ loaderData }: any) {
             </div>
           </div>
           <AdminToolbar className="items-stretch sm:flex-col sm:items-stretch">
-            <Form method="get" className="grid gap-2 lg:grid-cols-[minmax(220px,1fr)_repeat(4,minmax(112px,auto))_auto_auto]">
+            <Form
+              method="get"
+              className="grid gap-2 lg:grid-cols-[minmax(220px,1fr)_repeat(4,minmax(112px,auto))_auto_auto]"
+            >
               <Input name="q" defaultValue={q} placeholder="搜索话题标题" />
               <NativeSelect name="tab" defaultValue={tab || "all"} size="sm" aria-label="Tab 筛选">
                 <option value="all">全部 Tab</option>
@@ -178,7 +247,12 @@ export default function AdminTopics({ loaderData }: any) {
                 <option value="dev">dev</option>
                 <option value="test">test</option>
               </NativeSelect>
-              <NativeSelect name="visibility" defaultValue={visibility} size="sm" aria-label="状态筛选">
+              <NativeSelect
+                name="visibility"
+                defaultValue={visibility}
+                size="sm"
+                aria-label="状态筛选"
+              >
                 <option value="all">全部状态</option>
                 <option value="normal">正常</option>
                 <option value="muted">已隐藏</option>
@@ -199,36 +273,73 @@ export default function AdminTopics({ loaderData }: any) {
                 <option value="visit_count_desc">浏览最多</option>
                 <option value="collect_count_desc">收藏最多</option>
               </NativeSelect>
-              <Button type="submit" size="sm">筛选</Button>
+              <Button type="submit" size="sm">
+                筛选
+              </Button>
               <Button render={<Link to="/admin/topics" />} size="sm" variant="ghost">
                 重置
               </Button>
               <div className="grid gap-2 border-t pt-2 lg:col-span-7 lg:grid-cols-[minmax(120px,160px)_minmax(120px,180px)_minmax(120px,180px)_1fr]">
-                <NativeSelect name="date_field" defaultValue={dateField} size="sm" aria-label="日期字段">
+                <NativeSelect
+                  name="date_field"
+                  defaultValue={dateField}
+                  size="sm"
+                  aria-label="日期字段"
+                >
                   <option value="create_at">创建时间</option>
                   <option value="update_at">更新时间</option>
                   <option value="last_reply_at">最后回复</option>
                 </NativeSelect>
                 <Input type="date" name="date_from" defaultValue={dateFrom} aria-label="开始日期" />
                 <Input type="date" name="date_to" defaultValue={dateTo} aria-label="结束日期" />
-                <div className="flex items-center text-xs text-muted-foreground">日期是辅助筛选，默认按创建时间倒序。</div>
+                <div className="flex items-center text-xs text-muted-foreground">
+                  日期是辅助筛选，默认按创建时间倒序。
+                </div>
               </div>
             </Form>
             {selected.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 border-t pt-3 text-sm">
                 <Badge variant="default">已选 {selected.length}</Badge>
-                <Button size="sm" variant="outline" disabled={actionPending} onClick={() => handleAction("top")}>{actionPending ? "处理中" : "切换置顶"}</Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={actionPending}
+                  onClick={() => handleAction("top")}
+                >
+                  {actionPending ? "处理中" : "切换置顶"}
+                </Button>
                 {isAdmin && (
                   <>
-                    <Button size="sm" variant="outline" disabled={actionPending} onClick={() => handleAction("good")}>加精</Button>
-                    <Button size="sm" variant="outline" disabled={actionPending} onClick={(event) => {
-                      muteFinalFocusRef.current = event.currentTarget;
-                      setMuteIds(selected);
-                    }}>隐藏</Button>
-                    <Button size="sm" variant="destructive" onClick={(event) => {
-                      softDeleteFinalFocusRef.current = event.currentTarget;
-                      setSoftDeleteIds(selected);
-                    }} disabled={actionPending}>删除</Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={actionPending}
+                      onClick={() => handleAction("good")}
+                    >
+                      加精
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={actionPending}
+                      onClick={(event) => {
+                        muteFinalFocusRef.current = event.currentTarget;
+                        setMuteIds(selected);
+                      }}
+                    >
+                      隐藏
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={(event) => {
+                        softDeleteFinalFocusRef.current = event.currentTarget;
+                        setSoftDeleteIds(selected);
+                      }}
+                      disabled={actionPending}
+                    >
+                      删除
+                    </Button>
                     <Button
                       size="sm"
                       variant="destructive"
@@ -236,97 +347,158 @@ export default function AdminTopics({ loaderData }: any) {
                         permanentDeleteFinalFocusRef.current = event.currentTarget;
                         setPermanentDeleteIds(selected);
                       }}
-                    >永久删除</Button>
+                    >
+                      永久删除
+                    </Button>
                   </>
                 )}
               </div>
             )}
           </AdminToolbar>
           <Table className="min-w-[1040px]">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-10">
-                <Checkbox
-                  aria-label="选择全部话题"
-                  checked={selected.length === topics.length && topics.length > 0}
-                  onCheckedChange={(checked) => setSelected(checked ? topics.map((t: any) => t.id) : [])}
-                />
-              </TableHead>
-              <TableHead>话题</TableHead>
-              <TableHead className="w-32">状态</TableHead>
-              <TableHead className="w-40">互动</TableHead>
-              <TableHead className="w-44">时间</TableHead>
-              <TableHead className="w-36 text-right">操作</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {topics.map((t: any) => (
-              <TableRow key={t.id} className="align-top">
-                <TableCell>
-                  <Checkbox aria-label={`选择话题 ${t.title}`} checked={selected.includes(t.id)} onCheckedChange={() => toggleSelect(t.id)} />
-                </TableCell>
-                <TableCell className="max-w-2xl">
-                  <div className="flex min-w-0 items-start gap-3">
-                    <TagBadge tab={t.tab} />
-                    <div className="flex min-w-0 flex-col gap-2">
-                      <a href={`/topic/${t.id}`} className="line-clamp-2 font-medium leading-6 text-foreground hover:text-primary hover:underline">
-                        {t.title}
-                      </a>
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        <span>#{t.id}</span>
-                        {t.status ? <span>status: {t.status}</span> : null}
-                        {t.deleted > 0 ? <Badge variant="destructive">已删除</Badge> : null}
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    aria-label="选择全部话题"
+                    checked={selected.length === topics.length && topics.length > 0}
+                    onCheckedChange={(checked) =>
+                      setSelected(checked ? topics.map((t: any) => t.id) : [])
+                    }
+                  />
+                </TableHead>
+                <TableHead>话题</TableHead>
+                <TableHead className="w-32">状态</TableHead>
+                <TableHead className="w-40">互动</TableHead>
+                <TableHead className="w-44">时间</TableHead>
+                <TableHead className="w-36 text-right">操作</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {topics.map((t: any) => (
+                <TableRow key={t.id} className="align-top">
+                  <TableCell>
+                    <Checkbox
+                      aria-label={`选择话题 ${t.title}`}
+                      checked={selected.includes(t.id)}
+                      onCheckedChange={() => toggleSelect(t.id)}
+                    />
+                  </TableCell>
+                  <TableCell className="max-w-2xl">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <TagBadge tab={t.tab} />
+                      <div className="flex min-w-0 flex-col gap-2">
+                        <a
+                          href={`/topic/${t.id}`}
+                          className="line-clamp-2 font-medium leading-6 text-foreground hover:text-primary hover:underline"
+                        >
+                          {t.title}
+                        </a>
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                          <span>#{t.id}</span>
+                          {t.status ? <span>status: {t.status}</span> : null}
+                          {t.deleted > 0 ? <Badge variant="destructive">已删除</Badge> : null}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1.5">
-                    {t.top > 0 && <StatusBadge type="top" />}
-                    {t.good > 0 && <StatusBadge type="good" />}
-                    {t.lock > 0 && <StatusBadge type="lock" />}
-                    {t.archived > 0 && <StatusBadge type="archived" />}
-                    {t.status === "muted" && <StatusBadge type="muted" />}
-                    {t.top <= 0 && t.good <= 0 && t.lock <= 0 && t.archived <= 0 && t.status !== "muted" && t.deleted <= 0 ? <Badge variant="outline">正常</Badge> : null}
-                  </div>
-                </TableCell>
-                <TableCell className="text-sm">
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <span><b>{t.reply_count}</b><br /><span className="text-xs text-muted-foreground">回复</span></span>
-                    <span><b>{t.visit_count}</b><br /><span className="text-xs text-muted-foreground">浏览</span></span>
-                    <span><b>{t.collect_count}</b><br /><span className="text-xs text-muted-foreground">收藏</span></span>
-                  </div>
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                  <div>创建 <TimeAgo date={t.create_at} /></div>
-                  {t.update_at ? <div>更新 <TimeAgo date={t.update_at} /></div> : null}
-                  {t.last_reply_at ? <div>回复 <TimeAgo date={t.last_reply_at} /></div> : null}
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-1">
-                    <Button size="sm" variant="ghost" disabled={actionPending} onClick={() => handleAction("top", t.id)}>{actionPending ? "处理中" : "置顶"}</Button>
-                    {isAdmin ? (
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1.5">
+                      {t.top > 0 && <StatusBadge type="top" />}
+                      {t.good > 0 && <StatusBadge type="good" />}
+                      {t.lock > 0 && <StatusBadge type="lock" />}
+                      {t.archived > 0 && <StatusBadge type="archived" />}
+                      {t.status === "muted" && <StatusBadge type="muted" />}
+                      {t.top <= 0 &&
+                      t.good <= 0 &&
+                      t.lock <= 0 &&
+                      t.archived <= 0 &&
+                      t.status !== "muted" &&
+                      t.deleted <= 0 ? (
+                        <Badge variant="outline">正常</Badge>
+                      ) : null}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <span>
+                        <b>{t.reply_count}</b>
+                        <br />
+                        <span className="text-xs text-muted-foreground">回复</span>
+                      </span>
+                      <span>
+                        <b>{t.visit_count}</b>
+                        <br />
+                        <span className="text-xs text-muted-foreground">浏览</span>
+                      </span>
+                      <span>
+                        <b>{t.collect_count}</b>
+                        <br />
+                        <span className="text-xs text-muted-foreground">收藏</span>
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                    <div>
+                      创建 <TimeAgo date={t.create_at} />
+                    </div>
+                    {t.update_at ? (
+                      <div>
+                        更新 <TimeAgo date={t.update_at} />
+                      </div>
+                    ) : null}
+                    {t.last_reply_at ? (
+                      <div>
+                        回复 <TimeAgo date={t.last_reply_at} />
+                      </div>
+                    ) : null}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1">
                       <Button
                         size="sm"
-                        variant="destructive"
-                        onClick={(event) => {
-                          permanentDeleteFinalFocusRef.current = event.currentTarget;
-                          setPermanentDeleteIds([t.id]);
-                        }}
-                      >永久删除</Button>
-                    ) : null}
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
+                        variant="ghost"
+                        disabled={actionPending}
+                        onClick={() => handleAction("top", t.id)}
+                      >
+                        {actionPending ? "处理中" : "置顶"}
+                      </Button>
+                      {isAdmin ? (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={(event) => {
+                            permanentDeleteFinalFocusRef.current = event.currentTarget;
+                            setPermanentDeleteIds([t.id]);
+                          }}
+                        >
+                          永久删除
+                        </Button>
+                      ) : null}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
           </Table>
-          <Pagination page={page} total={total} limit={limit} basePath="/admin/topics" searchParams={paginationParams} />
+          <Pagination
+            page={page}
+            total={total}
+            limit={limit}
+            basePath="/admin/topics"
+            searchParams={paginationParams}
+          />
           <ConfirmationDialog
             open={muteIds.length > 0}
             onOpenChange={(open) => !open && setMuteIds([])}
             title="确认切换话题可见性"
-            description={<>将切换 {muteIds.length} 个话题的隐藏状态，影响其公开列表和详情页可见性。该操作不会删除内容，也没有限时 undo。</>}
+            description={
+              <>
+                将切换 {muteIds.length}{" "}
+                个话题的隐藏状态，影响其公开列表和详情页可见性。该操作不会删除内容，也没有限时
+                undo。
+              </>
+            }
             confirmLabel={`确认切换 ${muteIds.length} 个话题`}
             pending={actionPending}
             finalFocus={muteFinalFocusRef}
@@ -336,7 +508,12 @@ export default function AdminTopics({ loaderData }: any) {
             open={softDeleteIds.length > 0}
             onOpenChange={(open) => !open && setSoftDeleteIds([])}
             title="确认删除话题"
-            description={<>将软删除 {softDeleteIds.length} 个话题，使其从公开列表和详情页隐藏。该操作不同于从数据库永久删除。</>}
+            description={
+              <>
+                将软删除 {softDeleteIds.length}{" "}
+                个话题，使其从公开列表和详情页隐藏。该操作不同于从数据库永久删除。
+              </>
+            }
             confirmLabel={`确认删除 ${softDeleteIds.length} 个话题`}
             pendingLabel="删除中"
             pending={actionPending}
@@ -347,7 +524,12 @@ export default function AdminTopics({ loaderData }: any) {
             open={permanentDeleteIds.length > 0}
             onOpenChange={(open) => !open && setPermanentDeleteIds([])}
             title="确认从数据库永久删除话题"
-            description={<>将永久删除 {permanentDeleteIds.length} 个话题及其回复、收藏、招聘扩展、巡检命中和消息引用。该操作不同于普通删除，无法通过系统自动恢复。</>}
+            description={
+              <>
+                将永久删除 {permanentDeleteIds.length}{" "}
+                个话题及其回复、收藏、招聘扩展、巡检命中和消息引用。该操作不同于普通删除，无法通过系统自动恢复。
+              </>
+            }
             confirmLabel={`确认永久删除 ${permanentDeleteIds.length} 个话题`}
             pendingLabel="永久删除中"
             pending={permanentDeletePending}

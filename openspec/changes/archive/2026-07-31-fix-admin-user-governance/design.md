@@ -41,9 +41,9 @@ flowchart LR
 
 替代方案：复用现有 `/user/:name/unmute` 和 `/user/:name/unblock` 在前端循环调用。拒绝原因是多个请求难以形成统一审计、部分失败反馈和 pending 状态，也会放大网络失败面。
 
-| Action | 更新字段 | 不改变字段 | 审计动作 |
-| ------ | -------- | ---------- | -------- |
-| `unmute` | `is_muted=false` | `is_block`、内容删除状态 | `bulk_unmute_user` |
+| Action    | 更新字段         | 不改变字段               | 审计动作            |
+| --------- | ---------------- | ------------------------ | ------------------- |
+| `unmute`  | `is_muted=false` | `is_block`、内容删除状态 | `bulk_unmute_user`  |
 | `unblock` | `is_block=false` | `is_muted`、内容删除状态 | `bulk_unblock_user` |
 
 ### 3. 批量操作跳过当前登录用户并返回 skipped

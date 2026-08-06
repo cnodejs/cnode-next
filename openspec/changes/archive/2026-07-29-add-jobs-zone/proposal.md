@@ -27,6 +27,7 @@ cnode-next 基础能力已完备，社区内容形态仍以"分享/问答"为主
 ## Capabilities
 
 ### New Capabilities
+
 - `jobs-zone`: 招聘专区展示与筛选能力 —— 卡片网格布局、顶条 facet 筛选、结构化字段筛选逻辑、专区路由与数据加载
 - `jobs-structured-fields`: 招聘结构化字段能力 —— job_meta 表、字段定义、发布/编辑表单、单次提交契约
 - `jobs-detail-card`: 招聘详情页 meta 卡片展示能力 —— content 上方插入 JobMetaCard、徽章渲染、CTA 投递入口
@@ -36,6 +37,7 @@ cnode-next 基础能力已完备，社区内容形态仍以"分享/问答"为主
 - `database-change-safety`: 数据库变更安全能力 —— Drizzle migration 流程、seed 边界、远程执行保护、备份与预检要求
 
 ### Modified Capabilities
+
 - `navigation-shell`: 导航栏新增"专区"下拉入口，指引类链接合并为单一入口
 - `topic-detail-experience`: 详情页在 `tab=job` 时于 content 上方渲染 meta 卡片
 - `web-ui-forms`: 发帖/编辑表单按 tab 条件渲染右侧 meta 字段面板

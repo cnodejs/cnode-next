@@ -50,9 +50,7 @@ export default function AdminTabs({ loaderData }: { loaderData: any }) {
   }, [initialTabs]);
 
   function updateField(id: number, field: keyof TabRow, value: any) {
-    setTabs((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, [field]: value } : t)),
-    );
+    setTabs((prev) => prev.map((t) => (t.id === id ? { ...t, [field]: value } : t)));
   }
 
   async function saveTab(id: number) {
@@ -85,70 +83,73 @@ export default function AdminTabs({ loaderData }: { loaderData: any }) {
   return (
     <AdminLayout>
       <AdminPage archetype="data-list">
-          <AdminPageHeader title="Tab 管理" description="控制首页 tab 按钮的可见性、标签和排序；内部 tab 仅管理员可见。" />
+        <AdminPageHeader
+          title="Tab 管理"
+          description="控制首页 tab 按钮的可见性、标签和排序；内部 tab 仅管理员可见。"
+        />
         <AdminPanel title="Tab 列表" description={`共 ${tabs.length} 个 tab`} flush>
-            <Table className="min-w-[640px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-24">Key (只读)</TableHead>
-                  <TableHead className="min-w-32">标签</TableHead>
-                  <TableHead className="w-24">范围</TableHead>
-                  <TableHead className="w-28">可见状态</TableHead>
-                  <TableHead className="w-20">排序</TableHead>
-                  <TableHead className="w-24 text-right">操作</TableHead>
+          <Table className="min-w-[640px]">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-24">Key (只读)</TableHead>
+                <TableHead className="min-w-32">标签</TableHead>
+                <TableHead className="w-24">范围</TableHead>
+                <TableHead className="w-28">可见状态</TableHead>
+                <TableHead className="w-20">排序</TableHead>
+                <TableHead className="w-24 text-right">操作</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {tabs.map((tab) => (
+                <TableRow key={tab.id}>
+                  <TableCell className="font-mono text-xs">{tab.key}</TableCell>
+                  <TableCell>
+                    <Input
+                      aria-label={`${tab.key} 标签`}
+                      value={tab.label}
+                      onChange={(e) => updateField(tab.id, "label", e.target.value)}
+                    />
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {tab.scope === "admin" ? "管理员专用" : "公开"}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={tab.visible ? "secondary" : "ghost"}
+                      aria-pressed={tab.visible}
+                      aria-label={`${tab.key} 当前${tab.visible ? "可见" : "隐藏"}，点击切换`}
+                      className="min-w-20 justify-start"
+                      onClick={() => updateField(tab.id, "visible", !tab.visible)}
+                    >
+                      {tab.visible ? <Eye /> : <EyeOff />}
+                      {tab.visible ? "显示" : "隐藏"}
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      aria-label={`${tab.key} 排序`}
+                      type="number"
+                      value={tab.sort_order}
+                      onChange={(e) => updateField(tab.id, "sort_order", Number(e.target.value))}
+                      className="w-20"
+                    />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => saveTab(tab.id)}
+                      disabled={saving === tab.id}
+                    >
+                      {saving === tab.id ? "保存中…" : "保存"}
+                    </Button>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tabs.map((tab) => (
-                  <TableRow key={tab.id}>
-                    <TableCell className="font-mono text-xs">{tab.key}</TableCell>
-                    <TableCell>
-                      <Input
-                        aria-label={`${tab.key} 标签`}
-                        value={tab.label}
-                        onChange={(e) => updateField(tab.id, "label", e.target.value)}
-                      />
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {tab.scope === "admin" ? "管理员专用" : "公开"}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant={tab.visible ? "secondary" : "ghost"}
-                        aria-pressed={tab.visible}
-                        aria-label={`${tab.key} 当前${tab.visible ? "可见" : "隐藏"}，点击切换`}
-                        className="min-w-20 justify-start"
-                        onClick={() => updateField(tab.id, "visible", !tab.visible)}
-                      >
-                        {tab.visible ? <Eye /> : <EyeOff />}
-                        {tab.visible ? "显示" : "隐藏"}
-                      </Button>
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        aria-label={`${tab.key} 排序`}
-                        type="number"
-                        value={tab.sort_order}
-                        onChange={(e) => updateField(tab.id, "sort_order", Number(e.target.value))}
-                        className="w-20"
-                      />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => saveTab(tab.id)}
-                        disabled={saving === tab.id}
-                      >
-                        {saving === tab.id ? "保存中…" : "保存"}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+              ))}
+            </TableBody>
+          </Table>
         </AdminPanel>
       </AdminPage>
     </AdminLayout>

@@ -1,4 +1,13 @@
-import { index, integer, jsonb, pgTable, serial, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 
 export const moderationScanJobs = pgTable(
   "moderation_scan_jobs",
@@ -25,7 +34,11 @@ export const moderationScanJobs = pgTable(
   },
   (table) => ({
     statusIdx: index("moderation_scan_jobs_status_idx").on(table.status),
-    scheduleIdx: index("moderation_scan_jobs_schedule_idx").on(table.mode, table.status, table.createAt),
+    scheduleIdx: index("moderation_scan_jobs_schedule_idx").on(
+      table.mode,
+      table.status,
+      table.createAt,
+    ),
   }),
 );
 

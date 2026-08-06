@@ -1,8 +1,11 @@
 # user-roles Specification
 
 ## Purpose
+
 TBD - created by archiving change add-user-roles-and-restricted-jobs. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: 用户角色分配表
 
 系统 SHALL 提供 DB-backed 用户角色分配能力，用于授予非 admin 的运营身份。首批 role key SHALL 固定为 `moderator` 和 `recruiter`，管理员身份 SHALL 继续由代码/env 级别判定，不依赖 `user_roles`。

@@ -23,7 +23,10 @@ function findWorkspaceRoot(cwd: string) {
 
 function parseValue(value: string) {
   const trimmed = value.trim();
-  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
     return trimmed.slice(1, -1);
   }
   return trimmed;
@@ -49,7 +52,9 @@ function loadEnvFile(path: string, protectedKeys: Set<string>, overrideLoaded: b
 
 export function loadRootEnv() {
   const root = findWorkspaceRoot(import.meta.dirname);
-  const protectedKeys = new Set(Object.keys(process.env).filter((key) => process.env[key] !== undefined));
+  const protectedKeys = new Set(
+    Object.keys(process.env).filter((key) => process.env[key] !== undefined),
+  );
 
   loadEnvFile(resolve(root, ".env"), protectedKeys, false);
 

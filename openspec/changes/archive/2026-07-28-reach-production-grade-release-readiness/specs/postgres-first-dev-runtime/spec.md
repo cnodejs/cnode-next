@@ -1,33 +1,41 @@
 ## MODIFIED Requirements
 
 ### Requirement: Development runtime SHALL use PostgreSQL as the default migration validation database
+
 The project MUST document PostgreSQL as the only supported database for current development, testing, migration validation, CI verification, and production runtime work.
 
 #### Scenario: Developer prepares a local runtime
+
 - **WHEN** a developer follows the development setup documentation
 - **THEN** the documented path MUST direct them to a PostgreSQL-backed runtime
 - **AND** the documented path MUST NOT offer SQLite as a fallback runtime
 
 #### Scenario: SQLite behavior is referenced
+
 - **WHEN** active code, scripts, docs, or specs mention SQLite
 - **THEN** the mention MUST be removed unless it is in archived historical change records or generic OpenSpec tooling instructions outside application scope
 
 #### Scenario: Runtime database client is created
+
 - **WHEN** API、worker、migration 或测试验证脚本创建数据库连接
 - **THEN** it MUST create a PostgreSQL-backed client
 - **AND** it MUST NOT branch on `DB_DIALECT` or import `better-sqlite3`
 
 ### Requirement: Developers SHALL provide PostgreSQL and Redis connection settings
+
 Developers MUST be able to run cnode-next against PostgreSQL/Redis by providing connection settings through the documented local environment contract.
 
 #### Scenario: Developer configures database/cache endpoints
+
 - **WHEN** a developer needs to run the project locally
 - **THEN** documentation MUST instruct them to provide PostgreSQL/Redis host, port, database, and credentials via local environment variables
 
 ### Requirement: Local secrets SHALL remain untracked
+
 Local database credentials MUST be stored outside tracked files.
 
 #### Scenario: Local override file is used
+
 - **WHEN** a developer stores local PostgreSQL connection values
 - **THEN** the values MUST be stored in an ignored `.env.local` file
 

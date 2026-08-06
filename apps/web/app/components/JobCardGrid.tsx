@@ -68,9 +68,7 @@ function JobCardItem({ job }: { job: JobCardData }) {
               )}
             </Avatar>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-foreground">
-                {job.company}
-              </p>
+              <p className="truncate text-sm font-semibold text-foreground">{job.company}</p>
               <p className="truncate text-xs text-muted-foreground">{job.position}</p>
             </div>
           </div>
@@ -99,9 +97,7 @@ function JobCardItem({ job }: { job: JobCardData }) {
             </div>
           )}
 
-          <p className="line-clamp-2 text-xs leading-4 text-muted-foreground">
-            {job.excerpt}
-          </p>
+          <p className="line-clamp-2 text-xs leading-4 text-muted-foreground">{job.excerpt}</p>
 
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">

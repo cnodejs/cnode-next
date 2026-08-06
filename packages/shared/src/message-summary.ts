@@ -15,7 +15,10 @@ function decodeHtmlEntities(value: string) {
   });
 }
 
-export function messageContentSummary(content: string | null | undefined, maxLength = DEFAULT_MESSAGE_SUMMARY_LENGTH) {
+export function messageContentSummary(
+  content: string | null | undefined,
+  maxLength = DEFAULT_MESSAGE_SUMMARY_LENGTH,
+) {
   if (!content || maxLength <= 0) return "";
 
   const plainText = decodeHtmlEntities(

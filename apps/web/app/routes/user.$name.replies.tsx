@@ -29,7 +29,14 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const res = await apiFetch<{ success: boolean; data: any[]; total?: number; user?: any }>(
     `/api/v1/user/${name}/replies?page=${page}&limit=${limit}`,
   );
-  return { replies: res.success ? res.data || [] : [], user: res.success ? res.user : null, loginname: name, page, limit, total: res.total || 0 };
+  return {
+    replies: res.success ? res.data || [] : [],
+    user: res.success ? res.user : null,
+    loginname: name,
+    page,
+    limit,
+    total: res.total || 0,
+  };
 }
 
 export default function UserReplies({ loaderData }: Route.ComponentProps) {
@@ -50,10 +57,11 @@ export default function UserReplies({ loaderData }: Route.ComponentProps) {
                 {replies.map((topic: any) => (
                   <Item key={topic.id} render={<Link to={`/topic/${topic.id}`} />}>
                     <ItemContent>
-                    <ItemDescription>
-                      在话题中回复 · {topic.last_reply_at ? <TimeAgo date={topic.last_reply_at} /> : null}
-                    </ItemDescription>
-                    <ItemTitle>{topic.title}</ItemTitle>
+                      <ItemDescription>
+                        在话题中回复 ·{" "}
+                        {topic.last_reply_at ? <TimeAgo date={topic.last_reply_at} /> : null}
+                      </ItemDescription>
+                      <ItemTitle>{topic.title}</ItemTitle>
                     </ItemContent>
                   </Item>
                 ))}
@@ -63,7 +71,12 @@ export default function UserReplies({ loaderData }: Route.ComponentProps) {
             )}
           </CardContent>
         </Card>
-        <Pagination page={page} total={total} limit={limit} basePath={`/user/${loginname}/replies`} />
+        <Pagination
+          page={page}
+          total={total}
+          limit={limit}
+          basePath={`/user/${loginname}/replies`}
+        />
       </FeedPage>
     </Layout>
   );

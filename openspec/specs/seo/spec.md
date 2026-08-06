@@ -1,8 +1,11 @@
 # seo Specification
 
 ## Purpose
+
 TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Open Graph 标签
 
 系统 MUST 在页面 head 中输出 Open Graph 和 Twitter Card 标签，使社交分享时显示预览卡片；所有公开可分享页面 MUST 提供站点名、页面标题、描述、绝对 URL 和图片，并在页面没有专属图片时使用 CNode 默认分享图。
@@ -103,4 +106,3 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 - **WHEN** 客户端读取 manifest icons
 - **THEN** icons SHALL 引用 `/cnode/icon-192.png` 和 `/cnode/icon-512.png`
 - **AND** 图标资源 SHALL 使用 CNode 自有品牌标识。
-

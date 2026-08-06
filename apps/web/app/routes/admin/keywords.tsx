@@ -78,13 +78,21 @@ export default function AdminKeywords({ loaderData }: any) {
 
   const { run: handleDelete, pending: deleting } = useAsyncAction(
     (id: number) =>
-      apiFetch<{ success: boolean; error_msg?: string }>(`/api/v1/admin/keywords/${id}`, { method: "DELETE" }),
+      apiFetch<{ success: boolean; error_msg?: string }>(`/api/v1/admin/keywords/${id}`, {
+        method: "DELETE",
+      }),
     {
       onSuccess: (res) => {
         if (res.success) {
           toast.success("已删除");
           setDeleteTarget(null);
-          const fallback = previousPageAfterRemoval({ pathname: location.pathname, search: location.search, page, currentItemCount: keywords.length, removedCount: 1 });
+          const fallback = previousPageAfterRemoval({
+            pathname: location.pathname,
+            search: location.search,
+            page,
+            currentItemCount: keywords.length,
+            removedCount: 1,
+          });
           if (fallback) navigate(fallback, { replace: true });
           else revalidate();
         } else {
@@ -97,10 +105,13 @@ export default function AdminKeywords({ loaderData }: any) {
   const { run: runBulk, pending: importing } = useAsyncAction(
     async () => {
       const lines = bulkText.split("\n").filter(Boolean);
-      const res = await apiFetch<{ success: boolean; error_msg?: string }>("/api/v1/admin/keywords/bulk", {
-        method: "POST",
-        body: JSON.stringify({ words: lines }),
-      });
+      const res = await apiFetch<{ success: boolean; error_msg?: string }>(
+        "/api/v1/admin/keywords/bulk",
+        {
+          method: "POST",
+          body: JSON.stringify({ words: lines }),
+        },
+      );
       return { ...res, count: lines.length };
     },
     {
@@ -124,25 +135,36 @@ export default function AdminKeywords({ loaderData }: any) {
   return (
     <AdminLayout>
       <AdminPage archetype="data-list">
-        <AdminPageHeader title="敏感词管理" description="维护巡检词库，让内容审核有稳定、可追踪的判断依据。" />
-        <AdminPanel title="词库" description={`当前显示 ${keywords.length} / ${total} 个敏感词`} flush>
+        <AdminPageHeader
+          title="敏感词管理"
+          description="维护巡检词库，让内容审核有稳定、可追踪的判断依据。"
+        />
+        <AdminPanel
+          title="词库"
+          description={`当前显示 ${keywords.length} / ${total} 个敏感词`}
+          flush
+        >
           <AdminToolbar className="items-stretch sm:items-center">
             <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <Form method="get" className="flex w-full gap-2 sm:max-w-sm">
                 <Input name="q" defaultValue={q} placeholder="搜索敏感词" className="flex-1" />
-                <Button type="submit" variant="outline">搜索</Button>
+                <Button type="submit" variant="outline">
+                  搜索
+                </Button>
               </Form>
               <div className="flex w-full gap-2 sm:max-w-xl">
-              <Input
-                value={newWord}
-                onChange={(e) => setNewWord(e.target.value)}
-                placeholder="添加敏感词"
-                className="flex-1"
-              />
-               <Button onClick={handleAdd} disabled={adding || !newWord.trim()}>{adding ? "添加中" : "添加"}</Button>
-              <Button variant="outline" onClick={() => setShowBulk(!showBulk)}>
-                批量导入
-              </Button>
+                <Input
+                  value={newWord}
+                  onChange={(e) => setNewWord(e.target.value)}
+                  placeholder="添加敏感词"
+                  className="flex-1"
+                />
+                <Button onClick={handleAdd} disabled={adding || !newWord.trim()}>
+                  {adding ? "添加中" : "添加"}
+                </Button>
+                <Button variant="outline" onClick={() => setShowBulk(!showBulk)}>
+                  批量导入
+                </Button>
               </div>
             </div>
           </AdminToolbar>
@@ -154,57 +176,70 @@ export default function AdminKeywords({ loaderData }: any) {
                 placeholder="一行一个词"
                 rows={5}
               />
-               <Button onClick={handleBulk} disabled={importing || !bulkText.trim()}>
-                 {importing ? "导入中" : "导入"}
+              <Button onClick={handleBulk} disabled={importing || !bulkText.trim()}>
+                {importing ? "导入中" : "导入"}
               </Button>
             </div>
           )}
           <Table className="min-w-[560px]">
-          <colgroup>
-            <col />
-            <col className="w-32" />
-            <col className="w-24" />
-          </colgroup>
-          <TableHeader>
-            <TableRow>
-              <TableHead>敏感词</TableHead>
-              <TableHead className="text-right">命中次数</TableHead>
-              <TableHead className="text-right">操作</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {keywords.map((kw: any) => (
-              <TableRow key={kw.id}>
-                <TableCell className="max-w-md break-all">{kw.word}</TableCell>
-                <TableCell className="text-right tabular-nums text-muted-foreground">{kw.hit_count}</TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={(event) => {
-                      deleteTriggerRef.current = event.currentTarget;
-                      setDeleteTarget({ id: kw.id, word: kw.word });
-                    }}
-                  >
-                    删除
-                  </Button>
-                </TableCell>
+            <colgroup>
+              <col />
+              <col className="w-32" />
+              <col className="w-24" />
+            </colgroup>
+            <TableHeader>
+              <TableRow>
+                <TableHead>敏感词</TableHead>
+                <TableHead className="text-right">命中次数</TableHead>
+                <TableHead className="text-right">操作</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
+            </TableHeader>
+            <TableBody>
+              {keywords.map((kw: any) => (
+                <TableRow key={kw.id}>
+                  <TableCell className="max-w-md break-all">{kw.word}</TableCell>
+                  <TableCell className="text-right tabular-nums text-muted-foreground">
+                    {kw.hit_count}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={(event) => {
+                        deleteTriggerRef.current = event.currentTarget;
+                        setDeleteTarget({ id: kw.id, word: kw.word });
+                      }}
+                    >
+                      删除
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
           </Table>
           <ConfirmationDialog
             open={deleteTarget !== null}
             onOpenChange={(open) => !open && setDeleteTarget(null)}
             title="删除敏感词规则"
-            description={<>将删除敏感词“{deleteTarget?.word}”。删除后新内容不再匹配该规则，历史巡检记录不会被删除。</>}
+            description={
+              <>
+                将删除敏感词“{deleteTarget?.word}
+                ”。删除后新内容不再匹配该规则，历史巡检记录不会被删除。
+              </>
+            }
             confirmLabel="确认删除规则"
             pendingLabel="删除中"
             pending={deleting}
             finalFocus={deleteTriggerRef}
             onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
           />
-          <Pagination page={page} total={total} limit={limit} basePath="/admin/keywords" searchParams={{ ...(q ? { q } : {}) }} />
+          <Pagination
+            page={page}
+            total={total}
+            limit={limit}
+            basePath="/admin/keywords"
+            searchParams={{ ...(q ? { q } : {}) }}
+          />
         </AdminPanel>
       </AdminPage>
     </AdminLayout>

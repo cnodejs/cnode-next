@@ -3,7 +3,9 @@
 ## Purpose
 
 定义 Web 表单的状态管理、共享校验、组件渲染、提交反馈、可访问性和设置页账号身份信息展示要求，确保用户输入流程一致、安全且可维护。
+
 ## Requirements
+
 ### Requirement: react-hook-form + zod 作为表单标准
 
 所有表单(登录、注册、发帖、回复编辑、设置、管理后台设置)SHALL 用 `react-hook-form` 管理状态,用 `@hookform/resolvers/zod` 接 zod resolver 做校验。MUST NOT 用 `useState` 管理表单字段值。
@@ -27,6 +29,7 @@
 表单字段 MUST 使用当前 Base Nova Field family（`FieldGroup`、`Field`、`FieldLabel`、`FieldDescription`、`FieldError`、适用时的 `FieldSet`/`FieldLegend`）组合 Input、Textarea、Select、NativeSelect、Checkbox、RadioGroup 或 Switch。React Hook Form SHALL 通过 Controller 与 Field composition 集成，resolver 或服务端字段错误 SHALL 由 `FieldError` 自动渲染；无效状态 MUST 同时在 Field 上使用 `data-invalid` 并在控件上使用 `aria-invalid`。页面 MUST NOT 使用裸 `div + Label`、`space-y-*`、手动管理的字段状态/错误元素或页面自定义控件间距替代 Field composition。
 
 #### Scenario: 字段错误自动显示
+
 - **WHEN** 用户提交登录表单且 `pass` 为空或密码字段无效
 - **THEN** FieldError 自动展示 shared schema 定义的“密码不能为空”或对应 schema/服务端字段错误，无需手写条件错误元素
 - **AND** Field、控件、说明和错误之间保持 Base Nova 定义的可访问关系与间距。
@@ -79,24 +82,29 @@
 - **AND** 提交时 job_meta 与 topic 主体在单次 PUT 一起提交
 
 ### Requirement: 设置页必须展示账号身份信息
+
 用户设置页 SHALL 展示当前账号的只读身份信息，并区分可编辑个人资料和不可直接编辑的登录身份字段。
 
 #### Scenario: 设置页显示邮箱
+
 - **WHEN** 登录用户访问 `/setting`
 - **THEN** 页面 MUST 显示当前账号邮箱
 - **AND** 邮箱 MUST 作为只读身份信息展示
 - **AND** 页面 MUST NOT 提供无验证的直接修改邮箱表单
 
 #### Scenario: 设置页显示 GitHub 绑定状态
+
 - **WHEN** 登录用户访问 `/setting`
 - **THEN** 页面 MUST 显示当前 GitHub 绑定状态
 - **AND** 未绑定账号 MUST 显示绑定入口
 - **AND** 已绑定账号 MUST 显示绑定的 GitHub 用户名或等价标识
 
 ### Requirement: 设置页卡片内容间距必须一致
+
 设置页所有 Card body SHALL 使用一致的 padding 和文本间距，避免侧栏说明卡片内容贴边。
 
 #### Scenario: 通知说明卡片有 body padding
+
 - **WHEN** `/setting` 渲染通知说明卡片
 - **THEN** 卡片 header 与 body MUST 视觉分离
 - **AND** body 内容 MUST 有与 API Token 卡片一致的内边距
@@ -243,11 +251,13 @@ GitHub 解绑 SHALL 使用可访问的确认 Dialog，并以 `react-hook-form`�
 公共表单、后台筛选和表格内联编辑 SHALL 使用 Base Nova 控件的标准 default/small size 与 Field orientation；页面不得通过高度、padding 或圆角 class 建立第三种密度。
 
 #### Scenario: 后台表格内联编辑
+
 - **WHEN** 后台 Table cell 渲染 Input 或 NativeSelect
 - **THEN** 控件使用标准 small size 或专门的紧凑 composition
 - **AND** 同一行的 Input、Select、Button 和状态控件 MUST 保持一致高度。
 
 #### Scenario: 移动端表单重排
+
 - **WHEN** horizontal 或 responsive Field 在窄屏渲染
 - **THEN** label、control、description 和 action MUST 按 Field 的 responsive orientation 自然堆叠
 - **AND** 不得发生水平溢出或操作被固定宽度遮挡。

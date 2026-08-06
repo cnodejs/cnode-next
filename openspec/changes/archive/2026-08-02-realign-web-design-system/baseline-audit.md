@@ -9,13 +9,13 @@
 
 ## Captured Visual Baseline
 
-| Surface | Viewport | Theme | File |
-| --- | --- | --- | --- |
-| Feed/home | 1280px | light | `baseline-home-1280-light.png` |
-| Feed/home | 1280px | dark | `baseline-home-1280-dark.png` |
-| Feed/home | 375px | light | `baseline-home-375-light.png` |
-| Feed/home | 375px | dark | `baseline-home-375-dark.png` |
-| Account/sign-in | 1280px | dark | `baseline-account-1280-dark.png` |
+| Surface         | Viewport | Theme | File                             |
+| --------------- | -------- | ----- | -------------------------------- |
+| Feed/home       | 1280px   | light | `baseline-home-1280-light.png`   |
+| Feed/home       | 1280px   | dark  | `baseline-home-1280-dark.png`    |
+| Feed/home       | 375px    | light | `baseline-home-375-light.png`    |
+| Feed/home       | 375px    | dark  | `baseline-home-375-dark.png`     |
+| Account/sign-in | 1280px   | dark  | `baseline-account-1280-dark.png` |
 
 Anonymous navigation to `/admin` redirects to `/signin`, so an authenticated admin visual baseline remains part of the final browser audit. No credentials or production session material may be added to the repository to bypass that boundary.
 
@@ -31,33 +31,33 @@ The former `components/ui/form.tsx` wrapper now lives at the application layer a
 
 ## Blast Radius
 
-| Primitive/system | Current direct reach | Main risk |
-| --- | --- | --- |
-| Layout | 49 route callers | Header, footer, navigation and shell regressions |
-| AdminLayout | 25 route callers | Navigation, mobile behavior and admin width |
-| Button | 83 callers | Base Nova size changes and removed `inverse` variant |
-| Card | 49 callers | New spacing model and removal of page padding overrides |
-| Input | 38 callers | Base Nova control density and Field migration |
-| Table | 12 callers | Admin density, row states and horizontal overflow |
-| Sheet | 3 callers | Mobile navigation/filter/contact focus and safe-area |
-| MarkdownView | 5 callers through topic/reply/editor | Typeset affects all rendered Markdown |
+| Primitive/system | Current direct reach                 | Main risk                                               |
+| ---------------- | ------------------------------------ | ------------------------------------------------------- |
+| Layout           | 49 route callers                     | Header, footer, navigation and shell regressions        |
+| AdminLayout      | 25 route callers                     | Navigation, mobile behavior and admin width             |
+| Button           | 83 callers                           | Base Nova size changes and removed `inverse` variant    |
+| Card             | 49 callers                           | New spacing model and removal of page padding overrides |
+| Input            | 38 callers                           | Base Nova control density and Field migration           |
+| Table            | 12 callers                           | Admin density, row states and horizontal overflow       |
+| Sheet            | 3 callers                            | Mobile navigation/filter/contact focus and safe-area    |
+| MarkdownView     | 5 callers through topic/reply/editor | Typeset affects all rendered Markdown                   |
 
 Literal audit found more than 100 displayed matches for raw `cnode-*`/`surface-*`/`brand-*` utilities and more than 100 displayed primitive `className` overrides before result truncation. These are migration inputs, not patterns to preserve. Remaining `space-y-*` form/layout composition is also a migration target.
 
 ## Route Archetype Map
 
-| Archetype | Routes/surfaces |
-| --- | --- |
-| feed | `/`, `/search`, `/stars`, `/user/:name/topics`, `/user/:name/replies`, `/user/:name/collections`, `/my/messages` |
-| reading | `/topic/:tid` |
-| compose | `/topic/create`, `/topic/:tid/edit`, `/reply/:id/edit` |
-| account | `/signin`, `/signup`, `/setting`, `/search_pass`, `/reset_pass`, `/active_account`, GitHub auth result routes |
-| directory | `/user/:name`, `/users/top100`, `/zone/jobs` |
-| content | `/about`, `/api`, app download and shell footer content; implemented with the nearest public application blocks |
-| dashboard | `/admin` |
-| data-list | `/admin/users`, `/admin/bans`, `/admin/topics`, `/admin/tabs`, `/admin/zones`, `/admin/keywords`, `/admin/settings` |
-| workflow | `/admin/moderation`, `/admin/reports`, `/admin/audit` |
-| non-visual resource | RSS, robots, sitemap, OAuth callback and redirect-only routes; no page primitive migration |
+| Archetype           | Routes/surfaces                                                                                                     |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| feed                | `/`, `/search`, `/stars`, `/user/:name/topics`, `/user/:name/replies`, `/user/:name/collections`, `/my/messages`    |
+| reading             | `/topic/:tid`                                                                                                       |
+| compose             | `/topic/create`, `/topic/:tid/edit`, `/reply/:id/edit`                                                              |
+| account             | `/signin`, `/signup`, `/setting`, `/search_pass`, `/reset_pass`, `/active_account`, GitHub auth result routes       |
+| directory           | `/user/:name`, `/users/top100`, `/zone/jobs`                                                                        |
+| content             | `/about`, `/api`, app download and shell footer content; implemented with the nearest public application blocks     |
+| dashboard           | `/admin`                                                                                                            |
+| data-list           | `/admin/users`, `/admin/bans`, `/admin/topics`, `/admin/tabs`, `/admin/zones`, `/admin/keywords`, `/admin/settings` |
+| workflow            | `/admin/moderation`, `/admin/reports`, `/admin/audit`                                                               |
+| non-visual resource | RSS, robots, sitemap, OAuth callback and redirect-only routes; no page primitive migration                          |
 
 ## Locked Registry Baseline
 
@@ -96,12 +96,12 @@ pnpm --filter @cnode/web exec shadcn add <component> --diff <file>
 
 The migrated public shell was audited in light and dark mode at 375px, 768px, 1280px, and 1440px. Time-dependent animation was disabled before capture.
 
-| Viewport | Result |
-| --- | --- |
-| 375px | Header, mobile navigation Sheet, CommandPalette, main and footer visible; Sheet occupies the viewport width and respects the bottom edge |
-| 768px | Desktop navigation replaces the mobile trigger; CommandPalette remains within the viewport |
-| 1280px | Header, content measure, CommandPalette and footer remain bounded |
-| 1440px | Content keeps its maximum measure and does not stretch to the viewport edge |
+| Viewport | Result                                                                                                                                   |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| 375px    | Header, mobile navigation Sheet, CommandPalette, main and footer visible; Sheet occupies the viewport width and respects the bottom edge |
+| 768px    | Desktop navigation replaces the mobile trigger; CommandPalette remains within the viewport                                               |
+| 1280px   | Header, content measure, CommandPalette and footer remain bounded                                                                        |
+| 1440px   | Content keeps its maximum measure and does not stretch to the viewport edge                                                              |
 
 Every audited pair reported `documentElement.scrollWidth === clientWidth`. CommandPalette focused its search input after opening and closed with Escape. The 375px navigation Sheet opened and closed with Escape. No browser console errors remained after the final reload.
 
@@ -126,30 +126,30 @@ Existing topic `47408` is the fixed long-content reading fixture. The latest rea
 
 Each matrix cell is stored as `acceptance-{archetype}-{viewport}-{theme}.png` for all four viewports and both themes.
 
-| Archetype | Representative route | Design reason | Result |
-| --- | --- | --- | --- |
-| feed | `/` | Samples public header, filters, topic Items, rail and pagination | Pass |
-| reading | `/topic/47408` | Samples long Markdown, code, images, TOC, context and replies | Pass |
-| compose | `/topic/create` | Samples Field composition, editor mode switching, Turnstile and action footer | Pass |
-| account | `/signin` | Samples constrained account measure, autocomplete fields and helper navigation | Pass |
-| directory | `/users/top100` | Samples responsive identity Items and directory density | Pass |
-| dashboard | `/admin` | Samples authenticated Sidebar shell and real summary/list content | Pass |
-| data-list | `/admin/topics` | Samples dense filters, explicit table scrolling, status and actions | Pass |
-| workflow | `/admin/reports` | Samples queue summary and vertically readable actionable records | Pass |
+| Archetype | Representative route | Design reason                                                                  | Result |
+| --------- | -------------------- | ------------------------------------------------------------------------------ | ------ |
+| feed      | `/`                  | Samples public header, filters, topic Items, rail and pagination               | Pass   |
+| reading   | `/topic/47408`       | Samples long Markdown, code, images, TOC, context and replies                  | Pass   |
+| compose   | `/topic/create`      | Samples Field composition, editor mode switching, Turnstile and action footer  | Pass   |
+| account   | `/signin`            | Samples constrained account measure, autocomplete fields and helper navigation | Pass   |
+| directory | `/users/top100`      | Samples responsive identity Items and directory density                        | Pass   |
+| dashboard | `/admin`             | Samples authenticated Sidebar shell and real summary/list content              | Pass   |
+| data-list | `/admin/topics`      | Samples dense filters, explicit table scrolling, status and actions            | Pass   |
+| workflow  | `/admin/reports`     | Samples queue summary and vertically readable actionable records               | Pass   |
 
 The baseline update is intentional: primitives now match Base Nova, brand color is supplied by semantic tokens, routes share named application shells, and Markdown uses one Typeset preset. The screenshots must not be bulk-accepted for unrelated spacing, color, or hierarchy changes.
 
 ## State Evidence
 
-| State | Evidence | Check |
-| --- | --- | --- |
-| default and long content | archetype matrix | Shell, content rhythm, responsive density and bounded measure |
-| focus | `acceptance-state-focus.png` | 3px semantic focus ring and focused Command input |
-| selected and disabled | `acceptance-state-selected-disabled-375.png` | State remains distinguishable without raw brand classes |
-| pending | `acceptance-state-pending-375.png` | Pending control remains named and unavailable for repeat submission |
-| error | `acceptance-state-error-375.png` | Alert/Field error composition remains readable on mobile |
-| empty | `acceptance-state-empty-375.png` | Empty composition retains title, description and recovery action |
-| overlay | `acceptance-state-admin-sidebar-375.png`, `acceptance-state-admin-command-375.png` | Sheet/Dialog remain within safe-area and return final focus after Escape |
+| State                    | Evidence                                                                           | Check                                                                    |
+| ------------------------ | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| default and long content | archetype matrix                                                                   | Shell, content rhythm, responsive density and bounded measure            |
+| focus                    | `acceptance-state-focus.png`                                                       | 3px semantic focus ring and focused Command input                        |
+| selected and disabled    | `acceptance-state-selected-disabled-375.png`                                       | State remains distinguishable without raw brand classes                  |
+| pending                  | `acceptance-state-pending-375.png`                                                 | Pending control remains named and unavailable for repeat submission      |
+| error                    | `acceptance-state-error-375.png`                                                   | Alert/Field error composition remains readable on mobile                 |
+| empty                    | `acceptance-state-empty-375.png`                                                   | Empty composition retains title, description and recovery action         |
+| overlay                  | `acceptance-state-admin-sidebar-375.png`, `acceptance-state-admin-command-375.png` | Sheet/Dialog remain within safe-area and return final focus after Escape |
 
 ## Overflow And Accessibility Audit
 

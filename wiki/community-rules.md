@@ -20,33 +20,33 @@ CNode 社区的内容审核规则、敏感词管理和用户举报处理。当�
 
 ### Data Model
 
-| Field | Type | Description |
-| ----- | ---- | ----------- |
-| `id` | serial | PK |
-| `word` | text, unique | 敏感词，不区分大小写匹配 |
-| `category` | text, nullable | 分类标签 |
-| `hitCount` | integer, default 0 | 被命中次数 |
-| `createAt` | timestamp | 创建时间 |
+| Field      | Type               | Description              |
+| ---------- | ------------------ | ------------------------ |
+| `id`       | serial             | PK                       |
+| `word`     | text, unique       | 敏感词，不区分大小写匹配 |
+| `category` | text, nullable     | 分类标签                 |
+| `hitCount` | integer, default 0 | 被命中次数               |
+| `createAt` | timestamp          | 创建时间                 |
 
 ### Management
 
-| Action | Route | Effect |
-| ------ | ----- | ------ |
-| List | `GET /admin/keywords` | 返回所有敏感词，按创建时间倒序 |
-| Add | `POST /admin/keywords` | 添加单个敏感词，返回新记录 |
-| Bulk add | `POST /admin/keywords/bulk` | 批量添加，`on conflict do nothing` |
-| Remove | `DELETE /admin/keywords/:id` | 删除敏感词 |
+| Action   | Route                        | Effect                             |
+| -------- | ---------------------------- | ---------------------------------- |
+| List     | `GET /admin/keywords`        | 返回所有敏感词，按创建时间倒序     |
+| Add      | `POST /admin/keywords`       | 添加单个敏感词，返回新记录         |
+| Bulk add | `POST /admin/keywords/bulk`  | 批量添加，`on conflict do nothing` |
+| Remove   | `DELETE /admin/keywords/:id` | 删除敏感词                         |
 
 添加敏感词后调用 `invalidateWordCache()` 清除缓存，使新词立即生效。
 
 ### Matching
 
-| Item | Value |
-| ---- | ----- |
-| 算法 | case-insensitive substring |
-| 缓存 TTL | 60 秒 (`CACHE_TTL = 60000`) |
-| 缓存失效 | `invalidateWordCache()` |
-| 返回 | `ContentHit[]` with `word`, `keywordId`, `index` |
+| Item     | Value                                            |
+| -------- | ------------------------------------------------ |
+| 算法     | case-insensitive substring                       |
+| 缓存 TTL | 60 秒 (`CACHE_TTL = 60000`)                      |
+| 缓存失效 | `invalidateWordCache()`                          |
+| 返回     | `ContentHit[]` with `word`, `keywordId`, `index` |
 
 `matchContent(content, words)` 对每个敏感词做 `content.toLowerCase().indexOf(word.toLowerCase())`，命中返回 `ContentHit`。
 
@@ -65,19 +65,19 @@ CNode 社区的内容审核规则、敏感词管理和用户举报处理。当�
 
 ### Data Model
 
-| Field | Type | Description |
-| ----- | ---- | ----------- |
-| `scope` | text | `topics` / `replies` / `all` |
-| `mode` | text | `historical` / `incremental` |
-| `reason` | text | `keyword_added` / `manual` / `scheduled` |
-| `status` | text | `pending` / `running` / `paused` / `done` / `failed` / `cancelled` |
-| `cursorTopicId` | integer | topic 批次游标 |
-| `cursorReplyId` | integer | reply 批次游标 |
-| `batchSize` | integer, default 200 | 每批扫描数量 |
-| `throttleMs` | integer, default 500 | 批间间隔 |
-| `maxBatchesPerRun` | integer, default 100 | 单次运行最大批次 |
-| `scannedCount` | integer | 已扫描总数 |
-| `hitCount` | integer | 命中总数 |
+| Field              | Type                 | Description                                                        |
+| ------------------ | -------------------- | ------------------------------------------------------------------ |
+| `scope`            | text                 | `topics` / `replies` / `all`                                       |
+| `mode`             | text                 | `historical` / `incremental`                                       |
+| `reason`           | text                 | `keyword_added` / `manual` / `scheduled`                           |
+| `status`           | text                 | `pending` / `running` / `paused` / `done` / `failed` / `cancelled` |
+| `cursorTopicId`    | integer              | topic 批次游标                                                     |
+| `cursorReplyId`    | integer              | reply 批次游标                                                     |
+| `batchSize`        | integer, default 200 | 每批扫描数量                                                       |
+| `throttleMs`       | integer, default 500 | 批间间隔                                                           |
+| `maxBatchesPerRun` | integer, default 100 | 单次运行最大批次                                                   |
+| `scannedCount`     | integer              | 已扫描总数                                                         |
+| `hitCount`         | integer              | 命中总数                                                           |
 
 ### Scan Flow
 
@@ -94,12 +94,12 @@ flowchart LR
 
 ### Batch Scanning
 
-| Step | Logic |
-| ---- | ----- |
+| Step        | Logic                                                                                     |
+| ----------- | ----------------------------------------------------------------------------------------- |
 | Topic batch | `WHERE deleted=false AND status!=draft`，historical 按 `id DESC`，incremental 按 `id ASC` |
-| Reply batch | `WHERE deleted=false`，同上游标策略 |
-| Field scan | topic: `title` + `content`；reply: `content` |
-| Hit insert | `onConflictDoNothing` by `dedupeKey` |
+| Reply batch | `WHERE deleted=false`，同上游标策略                                                       |
+| Field scan  | topic: `title` + `content`；reply: `content`                                              |
+| Hit insert  | `onConflictDoNothing` by `dedupeKey`                                                      |
 
 ### Hit Deduplication
 
@@ -115,48 +115,48 @@ flowchart LR
 
 ### Data Model
 
-| Field | Type | Description |
-| ----- | ---- | ----------- |
-| `scanJobId` | integer, FK | 关联扫描任务 |
-| `targetType` | text | `topic` / `reply` |
-| `targetId` | integer | 命中目标 ID |
-| `topicId` | integer, nullable | 关联话题 ID |
-| `authorId` | integer, nullable | 内容作者 ID |
-| `field` | text | 命中字段（`title` / `content`） |
-| `keywordIds` | jsonb | 命中的敏感词 ID 数组 |
-| `keywords` | jsonb | 命中的敏感词文本数组 |
-| `preview` | text | 命中上下文预览 |
-| `dedupeKey` | text, unique | 去重键 |
-| `status` | text, default `pending` | `pending` / `resolved` |
-| `action` | text, default `none` | `none` / `keep` / `mute` / `delete` / `restore` |
-| `handledBy` | integer, nullable | 处理人 ID |
-| `handledAt` | timestamp, nullable | 处理时间 |
+| Field        | Type                    | Description                                     |
+| ------------ | ----------------------- | ----------------------------------------------- |
+| `scanJobId`  | integer, FK             | 关联扫描任务                                    |
+| `targetType` | text                    | `topic` / `reply`                               |
+| `targetId`   | integer                 | 命中目标 ID                                     |
+| `topicId`    | integer, nullable       | 关联话题 ID                                     |
+| `authorId`   | integer, nullable       | 内容作者 ID                                     |
+| `field`      | text                    | 命中字段（`title` / `content`）                 |
+| `keywordIds` | jsonb                   | 命中的敏感词 ID 数组                            |
+| `keywords`   | jsonb                   | 命中的敏感词文本数组                            |
+| `preview`    | text                    | 命中上下文预览                                  |
+| `dedupeKey`  | text, unique            | 去重键                                          |
+| `status`     | text, default `pending` | `pending` / `resolved`                          |
+| `action`     | text, default `none`    | `none` / `keep` / `mute` / `delete` / `restore` |
+| `handledBy`  | integer, nullable       | 处理人 ID                                       |
+| `handledAt`  | timestamp, nullable     | 处理时间                                        |
 
 ### Admin Review
 
 管理员在 admin 面板查看 pending hits，执行操作：
 
-| Action | Effect |
-| ------ | ------ |
-| `keep` | 保留内容，标记为 resolved |
-| `mute` | 禁言作者（调用 `toggleBlock` 设置 `isMuted`） |
-| `delete` | 删除内容（topic 或 reply soft delete） |
-| `restore` | 恢复内容 |
+| Action    | Effect                                        |
+| --------- | --------------------------------------------- |
+| `keep`    | 保留内容，标记为 resolved                     |
+| `mute`    | 禁言作者（调用 `toggleBlock` 设置 `isMuted`） |
+| `delete`  | 删除内容（topic 或 reply soft delete）        |
+| `restore` | 恢复内容                                      |
 
 ## Reports
 
 ### Data Model
 
-| Field | Type | Description |
-| ----- | ---- | ----------- |
-| `targetType` | text | `topic` / `reply` |
-| `targetId` | integer | 举报目标 ID |
-| `reporterId` | integer | 举报人 ID |
-| `type` | text | 举报类型 |
-| `description` | text, nullable | 举报描述 |
-| `status` | text, default `pending` | `pending` / `confirmed` / `dismissed` |
-| `handlerId` | integer, nullable | 处理人 ID |
-| `handleAt` | timestamp, nullable | 处理时间 |
+| Field         | Type                    | Description                           |
+| ------------- | ----------------------- | ------------------------------------- |
+| `targetType`  | text                    | `topic` / `reply`                     |
+| `targetId`    | integer                 | 举报目标 ID                           |
+| `reporterId`  | integer                 | 举报人 ID                             |
+| `type`        | text                    | 举报类型                              |
+| `description` | text, nullable          | 举报描述                              |
+| `status`      | text, default `pending` | `pending` / `confirmed` / `dismissed` |
+| `handlerId`   | integer, nullable       | 处理人 ID                             |
+| `handleAt`    | timestamp, nullable     | 处理时间                              |
 
 ### Report Flow
 
@@ -172,29 +172,29 @@ flowchart LR
 
 ## Audit Log
 
-| Field | Type | Description |
-| ----- | ---- | ----------- |
-| `operatorId` | integer, nullable | 操作人 ID |
-| `operatorName` | text | 操作人名称 |
-| `action` | text | 操作类型 |
-| `targetType` | text, nullable | 目标类型 |
-| `targetId` | text, nullable | 目标 ID |
-| `targetName` | text, nullable | 目标名称 |
-| `result` | text | 操作结果 |
-| `detail` | text, nullable | 详细信息 |
-| `createAt` | timestamp | 操作时间 |
+| Field          | Type              | Description |
+| -------------- | ----------------- | ----------- |
+| `operatorId`   | integer, nullable | 操作人 ID   |
+| `operatorName` | text              | 操作人名称  |
+| `action`       | text              | 操作类型    |
+| `targetType`   | text, nullable    | 目标类型    |
+| `targetId`     | text, nullable    | 目标 ID     |
+| `targetName`   | text, nullable    | 目标名称    |
+| `result`       | text              | 操作结果    |
+| `detail`       | text, nullable    | 详细信息    |
+| `createAt`     | timestamp         | 操作时间    |
 
 所有 admin 操作都通过 `auditQueries.log()` 记录审计日志。
 
 ## Scheduled Scanning
 
-| Config | Env | Default |
-| ------ | --- | ------- |
-| Enabled | `MODERATION_SCHEDULE_ENABLED` | `0` (disabled) |
-| Interval | `MODERATION_SCHEDULE_INTERVAL_MS` | `3600000` (1h) |
-| Batch size | `MODERATION_SCAN_BATCH_SIZE` | `200` |
-| Throttle | `MODERATION_SCAN_THROTTLE_MS` | `500` |
-| Max batches/run | `MODERATION_SCAN_MAX_BATCHES_PER_RUN` | `100` |
+| Config          | Env                                   | Default        |
+| --------------- | ------------------------------------- | -------------- |
+| Enabled         | `MODERATION_SCHEDULE_ENABLED`         | `0` (disabled) |
+| Interval        | `MODERATION_SCHEDULE_INTERVAL_MS`     | `3600000` (1h) |
+| Batch size      | `MODERATION_SCAN_BATCH_SIZE`          | `200`          |
+| Throttle        | `MODERATION_SCAN_THROTTLE_MS`         | `500`          |
+| Max batches/run | `MODERATION_SCAN_MAX_BATCHES_PER_RUN` | `100`          |
 
 Worker 通过 `pnpm --filter @cnode/api worker:moderation` 启动，可与 API/Web 独立启停。
 

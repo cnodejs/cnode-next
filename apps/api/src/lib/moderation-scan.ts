@@ -2,7 +2,14 @@ import { and, asc, desc, eq, gt, inArray, lt, ne, sql } from "drizzle-orm";
 import { moderationHits, moderationScanJobs, replies, topics } from "@cnode/db";
 import { getDb } from "./db";
 import { boolEq } from "./db-compat";
-import { createHitDedupeKey, createHitPreview, incrementSensitiveWordHits, loadWords, matchContent, type SensitiveWordEntry } from "./moderation";
+import {
+  createHitDedupeKey,
+  createHitPreview,
+  incrementSensitiveWordHits,
+  loadWords,
+  matchContent,
+  type SensitiveWordEntry,
+} from "./moderation";
 import { getRedis } from "./redis";
 
 export type ScanScope = "topics" | "replies" | "all";
@@ -19,7 +26,9 @@ export function scanDefaults() {
   return {
     batchSize: Number(process.env.MODERATION_SCAN_BATCH_SIZE || DEFAULT_BATCH_SIZE),
     throttleMs: Number(process.env.MODERATION_SCAN_THROTTLE_MS || DEFAULT_THROTTLE_MS),
-    maxBatchesPerRun: Number(process.env.MODERATION_SCAN_MAX_BATCHES_PER_RUN || DEFAULT_MAX_BATCHES),
+    maxBatchesPerRun: Number(
+      process.env.MODERATION_SCAN_MAX_BATCHES_PER_RUN || DEFAULT_MAX_BATCHES,
+    ),
   };
 }
 
@@ -103,7 +112,12 @@ export async function createScheduledScanJobIfNeeded() {
   const existing = await db
     .select()
     .from(moderationScanJobs)
-    .where(and(eq(moderationScanJobs.reason, "scheduled"), inArray(moderationScanJobs.status, ["pending", "running", "paused"])))
+    .where(
+      and(
+        eq(moderationScanJobs.reason, "scheduled"),
+        inArray(moderationScanJobs.status, ["pending", "running", "paused"]),
+      ),
+    )
     .limit(1);
   if (existing.length) return null;
   const lastDone = await db
@@ -123,17 +137,29 @@ export async function createScheduledScanJobIfNeeded() {
 
 export async function listScanJobs(limit = 50) {
   const db = getDb();
-  return db.select().from(moderationScanJobs).orderBy(desc(moderationScanJobs.createAt)).limit(limit);
+  return db
+    .select()
+    .from(moderationScanJobs)
+    .orderBy(desc(moderationScanJobs.createAt))
+    .limit(limit);
 }
 
 export async function listPendingHits(limit = 100) {
   const db = getDb();
-  return db.select().from(moderationHits).where(eq(moderationHits.status, "pending")).orderBy(desc(moderationHits.scannedAt)).limit(limit);
+  return db
+    .select()
+    .from(moderationHits)
+    .where(eq(moderationHits.status, "pending"))
+    .orderBy(desc(moderationHits.scannedAt))
+    .limit(limit);
 }
 
 export async function pendingHitCount() {
   const db = getDb();
-  const rows = await db.select({ c: sql<number>`count(*)` }).from(moderationHits).where(eq(moderationHits.status, "pending"));
+  const rows = await db
+    .select({ c: sql<number>`count(*)` })
+    .from(moderationHits)
+    .where(eq(moderationHits.status, "pending"));
   return Number(rows[0]?.c || 0);
 }
 
@@ -143,7 +169,10 @@ export async function claimNextScanJob() {
     .select()
     .from(moderationScanJobs)
     .where(inArray(moderationScanJobs.status, ["running", "pending"]))
-    .orderBy(sql`case when ${moderationScanJobs.status} = 'running' then 0 else 1 end`, asc(moderationScanJobs.createAt))
+    .orderBy(
+      sql`case when ${moderationScanJobs.status} = 'running' then 0 else 1 end`,
+      asc(moderationScanJobs.createAt),
+    )
     .limit(1);
   const job = rows[0];
   if (!job) return null;
@@ -157,7 +186,11 @@ export async function claimNextScanJob() {
 
 export async function runScanJobNow(id: number) {
   const db = getDb();
-  const rows = await db.select().from(moderationScanJobs).where(eq(moderationScanJobs.id, id)).limit(1);
+  const rows = await db
+    .select()
+    .from(moderationScanJobs)
+    .where(eq(moderationScanJobs.id, id))
+    .limit(1);
   const job = rows[0];
   if (!job) return null;
   if (["done", "failed", "cancelled"].includes(job.status)) return job;
@@ -169,32 +202,50 @@ export async function runScanJobNow(id: number) {
       .returning();
     return updated || job;
   }
-  await db.update(moderationScanJobs).set({ updateAt: dateValue() } as any).where(eq(moderationScanJobs.id, id));
+  await db
+    .update(moderationScanJobs)
+    .set({ updateAt: dateValue() } as any)
+    .where(eq(moderationScanJobs.id, id));
   return job;
 }
 
 export async function cancelScanJob(id: number) {
   const db = getDb();
-  const rows = await db.select().from(moderationScanJobs).where(eq(moderationScanJobs.id, id)).limit(1);
+  const rows = await db
+    .select()
+    .from(moderationScanJobs)
+    .where(eq(moderationScanJobs.id, id))
+    .limit(1);
   const job = rows[0];
   if (!job) return null;
   if (["done", "failed", "cancelled"].includes(job.status)) return job;
   const [updated] = await db
     .update(moderationScanJobs)
     .set({ status: "cancelled", finishedAt: dateValue(), updateAt: dateValue() } as any)
-    .where(and(eq(moderationScanJobs.id, id), inArray(moderationScanJobs.status, ["pending", "running", "paused"])))
+    .where(
+      and(
+        eq(moderationScanJobs.id, id),
+        inArray(moderationScanJobs.status, ["pending", "running", "paused"]),
+      ),
+    )
     .returning();
   return updated || job;
 }
 
 export async function pauseScanJob(id: number) {
   const db = getDb();
-  await db.update(moderationScanJobs).set({ status: "paused", updateAt: dateValue() } as any).where(eq(moderationScanJobs.id, id));
+  await db
+    .update(moderationScanJobs)
+    .set({ status: "paused", updateAt: dateValue() } as any)
+    .where(eq(moderationScanJobs.id, id));
 }
 
 export async function resumeScanJob(id: number) {
   const db = getDb();
-  await db.update(moderationScanJobs).set({ status: "pending", updateAt: dateValue() } as any).where(eq(moderationScanJobs.id, id));
+  await db
+    .update(moderationScanJobs)
+    .set({ status: "pending", updateAt: dateValue() } as any)
+    .where(eq(moderationScanJobs.id, id));
 }
 
 export async function failScanJob(id: number, error: unknown) {
@@ -203,22 +254,38 @@ export async function failScanJob(id: number, error: unknown) {
   if (current?.status === "cancelled") return;
   await db
     .update(moderationScanJobs)
-    .set({ status: "failed", error: error instanceof Error ? error.message : String(error), finishedAt: dateValue(), updateAt: dateValue() } as any)
+    .set({
+      status: "failed",
+      error: error instanceof Error ? error.message : String(error),
+      finishedAt: dateValue(),
+      updateAt: dateValue(),
+    } as any)
     .where(eq(moderationScanJobs.id, id));
 }
 
 async function finishScanJob(id: number) {
   const db = getDb();
-  await db.update(moderationScanJobs).set({ status: "done", finishedAt: dateValue(), updateAt: dateValue() } as any).where(eq(moderationScanJobs.id, id));
+  await db
+    .update(moderationScanJobs)
+    .set({ status: "done", finishedAt: dateValue(), updateAt: dateValue() } as any)
+    .where(eq(moderationScanJobs.id, id));
 }
 
 async function refreshJob(id: number) {
   const db = getDb();
-  const rows = await db.select().from(moderationScanJobs).where(eq(moderationScanJobs.id, id)).limit(1);
+  const rows = await db
+    .select()
+    .from(moderationScanJobs)
+    .where(eq(moderationScanJobs.id, id))
+    .limit(1);
   return rows[0] || null;
 }
 
-async function updateScanJobProgress(id: number, topicResult: { scanned: number; hits: number; cursor: number }, replyResult: { scanned: number; hits: number; cursor: number }) {
+async function updateScanJobProgress(
+  id: number,
+  topicResult: { scanned: number; hits: number; cursor: number },
+  replyResult: { scanned: number; hits: number; cursor: number },
+) {
   const scanned = topicResult.scanned + replyResult.scanned;
   const hits = topicResult.hits + replyResult.hits;
   await getDb()
@@ -256,8 +323,17 @@ async function insertHit(data: {
   const db = getDb();
   const keywords = data.hits.map((hit) => hit.word);
   const keywordIds = data.hits.map((hit) => hit.keywordId).filter((id): id is number => !!id);
-  const dedupeKey = createHitDedupeKey(data.targetType, data.targetId, data.field, keywords.join("|"));
-  const existing = await db.select().from(moderationHits).where(eq(moderationHits.dedupeKey, dedupeKey)).limit(1);
+  const dedupeKey = createHitDedupeKey(
+    data.targetType,
+    data.targetId,
+    data.field,
+    keywords.join("|"),
+  );
+  const existing = await db
+    .select()
+    .from(moderationHits)
+    .where(eq(moderationHits.dedupeKey, dedupeKey))
+    .limit(1);
   if (existing[0]?.status === "confirmed") {
     await db
       .update(moderationHits)
@@ -315,7 +391,12 @@ async function scanTopicBatch(job: any, words: SensitiveWordEntry[]) {
     conditions.unshift(gt(topics.id, cursor));
   }
   const rows = await db
-    .select({ id: topics.id, title: topics.title, content: topics.content, authorId: topics.authorId })
+    .select({
+      id: topics.id,
+      title: topics.title,
+      content: topics.content,
+      authorId: topics.authorId,
+    })
     .from(topics)
     .where(and(...conditions))
     .orderBy(historical ? desc(topics.id) : asc(topics.id))
@@ -356,7 +437,12 @@ async function scanReplyBatch(job: any, words: SensitiveWordEntry[]) {
     conditions.unshift(gt(replies.id, cursor));
   }
   const rows = await db
-    .select({ id: replies.id, topicId: replies.topicId, content: replies.content, authorId: replies.authorId })
+    .select({
+      id: replies.id,
+      topicId: replies.topicId,
+      content: replies.content,
+      authorId: replies.authorId,
+    })
     .from(replies)
     .where(and(...conditions))
     .orderBy(historical ? desc(replies.id) : asc(replies.id))
@@ -393,17 +479,23 @@ export async function processScanBatch(job: any) {
   const scope = current.scope as ScanScope;
   const shouldScanTopics = scope === "topics" || scope === "all";
   const shouldScanReplies = scope === "replies" || scope === "all";
-  const topicResult = shouldScanTopics ? await scanTopicBatch(current, words) : { scanned: 0, hits: 0, cursor: Number(current.cursorTopicId || 0) };
+  const topicResult = shouldScanTopics
+    ? await scanTopicBatch(current, words)
+    : { scanned: 0, hits: 0, cursor: Number(current.cursorTopicId || 0) };
   const afterTopics = await refreshJob(current.id);
   if (!afterTopics || afterTopics.status !== "running") {
     const replyResult = { scanned: 0, hits: 0, cursor: Number(current.cursorReplyId || 0) };
     const progress = await updateScanJobProgress(current.id, topicResult, replyResult);
     return { done: true, ...progress };
   }
-  const replyResult = shouldScanReplies ? await scanReplyBatch(afterTopics || current, words) : { scanned: 0, hits: 0, cursor: Number(current.cursorReplyId || 0) };
+  const replyResult = shouldScanReplies
+    ? await scanReplyBatch(afterTopics || current, words)
+    : { scanned: 0, hits: 0, cursor: Number(current.cursorReplyId || 0) };
   const { scanned, hits } = await updateScanJobProgress(current.id, topicResult, replyResult);
 
-  const done = (!shouldScanTopics || topicResult.scanned === 0) && (!shouldScanReplies || replyResult.scanned === 0);
+  const done =
+    (!shouldScanTopics || topicResult.scanned === 0) &&
+    (!shouldScanReplies || replyResult.scanned === 0);
   if (done) {
     const latest = await refreshJob(current.id);
     if (latest?.status === "running") await finishScanJob(current.id);
@@ -447,15 +539,26 @@ export async function triggerScanDrain() {
   }
 }
 
-export async function handleModerationHit(id: number, action: "confirm" | "falsepositive" | "ignore", handlerId: number) {
+export async function handleModerationHit(
+  id: number,
+  action: "confirm" | "falsepositive" | "ignore",
+  handlerId: number,
+) {
   const db = getDb();
   const rows = await db.select().from(moderationHits).where(eq(moderationHits.id, id)).limit(1);
   const hit = rows[0];
   if (!hit) return null;
-  const status = action === "confirm" ? "confirmed" : action === "falsepositive" ? "false_positive" : "ignored";
+  const status =
+    action === "confirm" ? "confirmed" : action === "falsepositive" ? "false_positive" : "ignored";
   await db
     .update(moderationHits)
-    .set({ status, action, handledBy: handlerId, handledAt: dateValue(), updateAt: dateValue() } as any)
+    .set({
+      status,
+      action,
+      handledBy: handlerId,
+      handledAt: dateValue(),
+      updateAt: dateValue(),
+    } as any)
     .where(eq(moderationHits.id, id));
   return hit;
 }

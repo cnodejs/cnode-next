@@ -28,10 +28,10 @@ ID map 必须先于数据迁移构建，因为 topics 引用 users，replies 引
 
 ## ID Mapping Strategy
 
-| Source | Target | Strategy |
-| ------ | ------ | -------- |
+| Source           | Target                      | Strategy                   |
+| ---------------- | --------------------------- | -------------------------- |
 | Mongo `ObjectId` | PostgreSQL `serial` integer | 按 `_id` 升序从 1 递增分配 |
-| ID map | `Map<string, number>` | 全表扫描构建，内存保存 |
+| ID map           | `Map<string, number>`       | 全表扫描构建，内存保存     |
 
 `buildIdMap` 按 `_id` 升序遍历，分配 1, 2, 3...。`mapId` 通过 ObjectId hex string 查找对应整数。
 
@@ -39,116 +39,116 @@ ID map 必须先于数据迁移构建，因为 topics 引用 users，replies 引
 
 ### users
 
-| Mongo field | PG column | Transform |
-| ----------- | --------- | --------- |
-| `_id` | `id` | ObjectId → integer via map |
-| `loginname` / `name` | `loginname` | `cleanText`, fallback `legacy_user_{id}`, dedupe via suffix |
-| `pass` | `pass` | `cleanText`, null if missing |
-| `email` | `email` | `cleanText`, fallback `{loginname}-{id}@legacy.invalid`, dedupe |
-| `url` | `url` | `cleanText` |
-| `profile_image_url` | `profile_image_url` | `cleanText` |
-| `location` | `location` | `cleanText` |
-| `signature` | `signature` | `cleanText` |
-| `profile` | `profile` | `cleanText` |
-| `weibo` | `weibo` | `cleanText` |
-| `avatar` / `avatar_url` | `avatar` | `cleanText`, prefer `avatar` then `avatar_url` |
-| `githubId` / `github_id` | `github_id` | `cleanText`, prefer camelCase |
-| `githubUsername` / `github_username` | `github_username` | `cleanText`, prefer camelCase |
-| `githubAccessToken` / `github_access_token` | `github_access_token` | `cleanText`, prefer camelCase |
-| `is_block` | `is_block` | `toBool` |
-| `score` | `score` | `Number(… \|\| 0)` |
-| `topic_count` | `topic_count` | `Number(… \|\| 0)` |
-| `reply_count` | `reply_count` | `Number(… \|\| 0)` |
-| `collect_topic_count` | `collect_topic_count` | `Number(… \|\| 0)` |
-| `is_star` | `is_star` | `toBool`, null if missing |
-| `level` | `level` | `cleanText` |
-| `active` | `active` | `toBool` |
-| `accessToken` / `access_token` | `access_token` | `cleanText`, prefer camelCase |
-| `receive_reply_mail` | `receive_reply_mail` | `toBool` |
-| `receive_at_mail` | `receive_at_mail` | `toBool` |
-| `retrieve_key` | `retrieve_key` | `cleanText` |
-| `retrieve_time` | `retrieve_time` | passthrough |
-| `create_at` | `create_at` | `toDate`, fallback `new Date(0)` |
-| `update_at` | `update_at` | `toDate`, fallback `create_at` then `new Date(0)` |
+| Mongo field                                 | PG column             | Transform                                                       |
+| ------------------------------------------- | --------------------- | --------------------------------------------------------------- |
+| `_id`                                       | `id`                  | ObjectId → integer via map                                      |
+| `loginname` / `name`                        | `loginname`           | `cleanText`, fallback `legacy_user_{id}`, dedupe via suffix     |
+| `pass`                                      | `pass`                | `cleanText`, null if missing                                    |
+| `email`                                     | `email`               | `cleanText`, fallback `{loginname}-{id}@legacy.invalid`, dedupe |
+| `url`                                       | `url`                 | `cleanText`                                                     |
+| `profile_image_url`                         | `profile_image_url`   | `cleanText`                                                     |
+| `location`                                  | `location`            | `cleanText`                                                     |
+| `signature`                                 | `signature`           | `cleanText`                                                     |
+| `profile`                                   | `profile`             | `cleanText`                                                     |
+| `weibo`                                     | `weibo`               | `cleanText`                                                     |
+| `avatar` / `avatar_url`                     | `avatar`              | `cleanText`, prefer `avatar` then `avatar_url`                  |
+| `githubId` / `github_id`                    | `github_id`           | `cleanText`, prefer camelCase                                   |
+| `githubUsername` / `github_username`        | `github_username`     | `cleanText`, prefer camelCase                                   |
+| `githubAccessToken` / `github_access_token` | `github_access_token` | `cleanText`, prefer camelCase                                   |
+| `is_block`                                  | `is_block`            | `toBool`                                                        |
+| `score`                                     | `score`               | `Number(… \|\| 0)`                                              |
+| `topic_count`                               | `topic_count`         | `Number(… \|\| 0)`                                              |
+| `reply_count`                               | `reply_count`         | `Number(… \|\| 0)`                                              |
+| `collect_topic_count`                       | `collect_topic_count` | `Number(… \|\| 0)`                                              |
+| `is_star`                                   | `is_star`             | `toBool`, null if missing                                       |
+| `level`                                     | `level`               | `cleanText`                                                     |
+| `active`                                    | `active`              | `toBool`                                                        |
+| `accessToken` / `access_token`              | `access_token`        | `cleanText`, prefer camelCase                                   |
+| `receive_reply_mail`                        | `receive_reply_mail`  | `toBool`                                                        |
+| `receive_at_mail`                           | `receive_at_mail`     | `toBool`                                                        |
+| `retrieve_key`                              | `retrieve_key`        | `cleanText`                                                     |
+| `retrieve_time`                             | `retrieve_time`       | passthrough                                                     |
+| `create_at`                                 | `create_at`           | `toDate`, fallback `new Date(0)`                                |
+| `update_at`                                 | `update_at`           | `toDate`, fallback `create_at` then `new Date(0)`               |
 
 Login name 和 email dedupe：遇到重复时追加 `__legacy_{objectId}` 后缀。
 
 ### topics
 
-| Mongo field | PG column | Transform |
-| ----------- | --------- | --------- |
-| `_id` | `id` | map |
-| `title` | `title` | `cleanText` |
-| `content` | `content` | `cleanText` |
-| `author_id` | `author_id` | `mapId(userMap)`，缺失则 skip |
-| `tab` | `tab` | `cleanText` |
-| `top` | `top` | `toBool` |
-| `good` | `good` | `toBool` |
-| `lock` | `lock` | `toBool` |
-| (none) | `status` | default `published` |
-| `reply_count` | `reply_count` | `Number(… \|\| 0)` |
-| `visit_count` | `visit_count` | `Number(… \|\| 0)` |
-| `collect_count` | `collect_count` | `Number(… \|\| 0)` |
-| `last_reply` | `last_reply_id` | `mapId(replyMap)` |
-| `last_reply_at` | `last_reply_at` | `toDate` |
-| (none) | `archived` | `toBool` |
-| `deleted` | `deleted` | `toBool` |
-| `create_at` | `create_at` | `toDate`, fallback `new Date(0)` |
-| `update_at` | `update_at` | `toDate`, fallback chain |
+| Mongo field     | PG column       | Transform                        |
+| --------------- | --------------- | -------------------------------- |
+| `_id`           | `id`            | map                              |
+| `title`         | `title`         | `cleanText`                      |
+| `content`       | `content`       | `cleanText`                      |
+| `author_id`     | `author_id`     | `mapId(userMap)`，缺失则 skip    |
+| `tab`           | `tab`           | `cleanText`                      |
+| `top`           | `top`           | `toBool`                         |
+| `good`          | `good`          | `toBool`                         |
+| `lock`          | `lock`          | `toBool`                         |
+| (none)          | `status`        | default `published`              |
+| `reply_count`   | `reply_count`   | `Number(… \|\| 0)`               |
+| `visit_count`   | `visit_count`   | `Number(… \|\| 0)`               |
+| `collect_count` | `collect_count` | `Number(… \|\| 0)`               |
+| `last_reply`    | `last_reply_id` | `mapId(replyMap)`                |
+| `last_reply_at` | `last_reply_at` | `toDate`                         |
+| (none)          | `archived`      | `toBool`                         |
+| `deleted`       | `deleted`       | `toBool`                         |
+| `create_at`     | `create_at`     | `toDate`, fallback `new Date(0)` |
+| `update_at`     | `update_at`     | `toDate`, fallback chain         |
 
 `content_is_html` 字段不迁移——cnode-next 统一用 `mdrender` 参数控制渲染。
 
 ### replies + reply_ups
 
-| Mongo field | PG column | Transform |
-| ----------- | --------- | --------- |
-| `_id` | `id` | map |
-| `content` | `content` | `cleanText` |
-| `topic_id` | `topic_id` | `mapId(topicMap)`，缺失则 skip |
-| `author_id` | `author_id` | `mapId(userMap)`，缺失则 skip |
-| `reply_id` | `reply_id` | `mapId(replyMap)` |
-| `deleted` | `deleted` | `toBool` |
-| `create_at` | `create_at` | `toDate`, fallback `new Date(0)` |
-| `update_at` | `update_at` | `toDate`, fallback chain |
-| `ups[]` | `reply_ups` rows | 每个 ObjectId → `(reply_id, user_id)`，`on conflict do nothing` |
+| Mongo field | PG column        | Transform                                                       |
+| ----------- | ---------------- | --------------------------------------------------------------- |
+| `_id`       | `id`             | map                                                             |
+| `content`   | `content`        | `cleanText`                                                     |
+| `topic_id`  | `topic_id`       | `mapId(topicMap)`，缺失则 skip                                  |
+| `author_id` | `author_id`      | `mapId(userMap)`，缺失则 skip                                   |
+| `reply_id`  | `reply_id`       | `mapId(replyMap)`                                               |
+| `deleted`   | `deleted`        | `toBool`                                                        |
+| `create_at` | `create_at`      | `toDate`, fallback `new Date(0)`                                |
+| `update_at` | `update_at`      | `toDate`, fallback chain                                        |
+| `ups[]`     | `reply_ups` rows | 每个 ObjectId → `(reply_id, user_id)`，`on conflict do nothing` |
 
 `content_is_html` 不迁移。
 
 ### messages
 
-| Mongo field | PG column | Transform |
-| ----------- | --------- | --------- |
-| `_id` | `id` | map |
-| `type` | `type` | `cleanText` |
-| `master_id` | `master_id` | `mapId(userMap)`，缺失则 skip |
-| `author_id` | `author_id` | `mapId(userMap)`，缺失则 skip |
-| `topic_id` | `topic_id` | `mapId(topicMap)` |
-| `reply_id` | `reply_id` | `mapId(replyMap)` |
-| `has_read` | `has_read` | `toBool` |
+| Mongo field | PG column   | Transform                        |
+| ----------- | ----------- | -------------------------------- |
+| `_id`       | `id`        | map                              |
+| `type`      | `type`      | `cleanText`                      |
+| `master_id` | `master_id` | `mapId(userMap)`，缺失则 skip    |
+| `author_id` | `author_id` | `mapId(userMap)`，缺失则 skip    |
+| `topic_id`  | `topic_id`  | `mapId(topicMap)`                |
+| `reply_id`  | `reply_id`  | `mapId(replyMap)`                |
+| `has_read`  | `has_read`  | `toBool`                         |
 | `create_at` | `create_at` | `toDate`, fallback `new Date(0)` |
 
 ### topic_collects
 
-| Mongo field | PG column | Transform |
-| ----------- | --------- | --------- |
-| `user_id` | `user_id` | `mapId(userMap)`，缺失则 skip |
-| `topic_id` | `topic_id` | `mapId(topicMap)`，缺失则 skip |
+| Mongo field | PG column   | Transform                        |
+| ----------- | ----------- | -------------------------------- |
+| `user_id`   | `user_id`   | `mapId(userMap)`，缺失则 skip    |
+| `topic_id`  | `topic_id`  | `mapId(topicMap)`，缺失则 skip   |
 | `create_at` | `create_at` | `toDate`, fallback `new Date(0)` |
 
 Collection name 自动探测：`firstCollectionName(["topiccollects", "topic_collects"])`。
 
 ## Skip Logic
 
-| Skip key | Condition | Effect |
-| -------- | --------- | ------ |
-| `topicsMissingAuthor` | `author_id` 在 userMap 中找不到 | 跳过该 topic |
-| `repliesMissingTopic` | `topic_id` 找不到 | 跳过 reply + 其所有 ups |
-| `repliesMissingAuthor` | `author_id` 找不到 | 跳过 reply + 其所有 ups |
-| `messagesMissingMaster` | `master_id` 找不到 | 跳过 message |
-| `messagesMissingAuthor` | `author_id` 找不到 | 跳过 message |
-| `replyUpsMissingUser` | `ups[]` 中的 user 找不到 | 跳过该 up，保留 reply |
-| `topicCollectsMissingUser` | `user_id` 找不到 | 跳过 collect |
-| `topicCollectsMissingTopic` | `topic_id` 找不到 | 跳过 collect |
+| Skip key                    | Condition                       | Effect                  |
+| --------------------------- | ------------------------------- | ----------------------- |
+| `topicsMissingAuthor`       | `author_id` 在 userMap 中找不到 | 跳过该 topic            |
+| `repliesMissingTopic`       | `topic_id` 找不到               | 跳过 reply + 其所有 ups |
+| `repliesMissingAuthor`      | `author_id` 找不到              | 跳过 reply + 其所有 ups |
+| `messagesMissingMaster`     | `master_id` 找不到              | 跳过 message            |
+| `messagesMissingAuthor`     | `author_id` 找不到              | 跳过 message            |
+| `replyUpsMissingUser`       | `ups[]` 中的 user 找不到        | 跳过该 up，保留 reply   |
+| `topicCollectsMissingUser`  | `user_id` 找不到                | 跳过 collect            |
+| `topicCollectsMissingTopic` | `topic_id` 找不到               | 跳过 collect            |
 
 每个 skip 记录 count 和最多 20 个 sample ObjectId。
 
@@ -188,14 +188,14 @@ Report 写入 `MIGRATION_REPORT_PATH`（默认 `/app/migration-report.json`）�
 
 ## Transform Functions
 
-| Function | Behavior |
-| -------- | -------- |
-| `toDate(value)` | Date passthrough, `new Date(string)` fallback, NaN → null |
-| `toBool(value)` | `true \|\| 1 \|\| "1"` → true, else false |
-| `cleanText(value, fallback)` | `String(value ?? fallback)`, 移除 `\0` |
-| `oid(value)` | ObjectId → hex string, else `String(value)` |
-| `mapId(map, value)` | oid → lookup in map → integer or null |
-| `uniqueValue(value, seen, suffix)` | dedupe with `__legacy_{suffix}` suffix |
+| Function                           | Behavior                                                  |
+| ---------------------------------- | --------------------------------------------------------- |
+| `toDate(value)`                    | Date passthrough, `new Date(string)` fallback, NaN → null |
+| `toBool(value)`                    | `true \|\| 1 \|\| "1"` → true, else false                 |
+| `cleanText(value, fallback)`       | `String(value ?? fallback)`, 移除 `\0`                    |
+| `oid(value)`                       | ObjectId → hex string, else `String(value)`               |
+| `mapId(map, value)`                | oid → lookup in map → integer or null                     |
+| `uniqueValue(value, seen, suffix)` | dedupe with `__legacy_{suffix}` suffix                    |
 
 ## Inferences
 

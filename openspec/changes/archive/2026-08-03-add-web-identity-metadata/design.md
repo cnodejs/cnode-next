@@ -41,18 +41,18 @@ flowchart LR
 
 公开资源使用以下稳定路径：
 
-| 路径 | 用途 |
-| --- | --- |
-| `/cnode/logo.svg` | 完整深色 CNode 字标 |
-| `/cnode/logo-light.svg` | 完整浅色 CNode 字标 |
-| `/cnode/icon.svg` | 小尺寸 CNode 图标源文件 |
-| `/cnode/favicon.svg` | SVG favicon |
-| `/cnode/favicon.png` | PNG favicon，至少 48x48 |
-| `/cnode/favicon.ico` | 兼容浏览器默认探测 |
-| `/cnode/apple-touch-icon.png` | iOS bookmark 图标 |
-| `/cnode/icon-192.png` | manifest icon |
-| `/cnode/icon-512.png` | manifest icon |
-| `/cnode/og.png` | 默认社交分享图 |
+| 路径                          | 用途                    |
+| ----------------------------- | ----------------------- |
+| `/cnode/logo.svg`             | 完整深色 CNode 字标     |
+| `/cnode/logo-light.svg`       | 完整浅色 CNode 字标     |
+| `/cnode/icon.svg`             | 小尺寸 CNode 图标源文件 |
+| `/cnode/favicon.svg`          | SVG favicon             |
+| `/cnode/favicon.png`          | PNG favicon，至少 48x48 |
+| `/cnode/favicon.ico`          | 兼容浏览器默认探测      |
+| `/cnode/apple-touch-icon.png` | iOS bookmark 图标       |
+| `/cnode/icon-192.png`         | manifest icon           |
+| `/cnode/icon-512.png`         | manifest icon           |
+| `/cnode/og.png`               | 默认社交分享图          |
 
 根路径 `/favicon.ico`、`/favicon.png`、`/apple-touch-icon.png` 和 `/manifest.json` 继续存在，作为浏览器默认探测和旧链接兼容入口。
 

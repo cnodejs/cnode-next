@@ -19,12 +19,12 @@ flowchart LR
   Verify --> PR[PR notes]
 ```
 
-| Step | Contributor task |
-| ---- | ---------------- |
-| Scope | Decide whether OpenSpec is required and identify affected systems, docs, wiki, and high-risk categories. |
-| Patch | Keep changes focused and update docs/tests with behavior. |
-| Verify | Run the full gate when feasible. |
-| PR | Include validation notes, documentation impact, and risk areas. |
+| Step   | Contributor task                                                                                         |
+| ------ | -------------------------------------------------------------------------------------------------------- |
+| Scope  | Decide whether OpenSpec is required and identify affected systems, docs, wiki, and high-risk categories. |
+| Patch  | Keep changes focused and update docs/tests with behavior.                                                |
+| Verify | Run the full gate when feasible.                                                                         |
+| PR     | Include validation notes, documentation impact, and risk areas.                                          |
 
 ## Local Validation
 

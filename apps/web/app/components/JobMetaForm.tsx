@@ -68,7 +68,10 @@ export function JobMetaForm({ value, onChange }: JobMetaFormProps) {
 
   function removeTag(tag: string) {
     const tags = value.tech_tags || [];
-    update("tech_tags", tags.filter((t) => t !== tag));
+    update(
+      "tech_tags",
+      tags.filter((t) => t !== tag),
+    );
   }
 
   return (
@@ -140,8 +143,16 @@ export function JobMetaForm({ value, onChange }: JobMetaFormProps) {
               )}
             </Button>
           </div>
-          {uploadError && <p role="alert" className="text-xs text-destructive">{uploadError}</p>}
-          {uploadSuccess && <p role="status" className="text-xs text-muted-foreground">公司 Logo 上传成功</p>}
+          {uploadError && (
+            <p role="alert" className="text-xs text-destructive">
+              {uploadError}
+            </p>
+          )}
+          {uploadSuccess && (
+            <p role="status" className="text-xs text-muted-foreground">
+              公司 Logo 上传成功
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col gap-2">
@@ -159,10 +170,10 @@ export function JobMetaForm({ value, onChange }: JobMetaFormProps) {
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-2">
             <Label htmlFor="location">地点 *</Label>
-              <Input
-                id="location"
-                name="location"
-                autoComplete="address-level2"
+            <Input
+              id="location"
+              name="location"
+              autoComplete="address-level2"
               value={value.location}
               onChange={(e) => update("location", e.target.value)}
               placeholder="如：上海"

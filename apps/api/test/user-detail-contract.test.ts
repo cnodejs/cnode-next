@@ -1,4 +1,4 @@
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, expect, test, vi } from "vite-plus/test";
 import { userDetailSchema } from "@cnode/shared";
 import app from "../src/app";
 import { replyQueries, roleQueries, topicQueries, userQueries } from "../src/lib/db";
@@ -81,6 +81,13 @@ test("GET /api/v1/user/:loginname normalizes blank public fields and keeps gover
   const response = await app.request("/api/v1/user/bob");
   const body = await response.json();
 
-  expect(body.data).toMatchObject({ location: null, url: null, signature: null, identities: [], is_block: true, is_muted: false });
+  expect(body.data).toMatchObject({
+    location: null,
+    url: null,
+    signature: null,
+    identities: [],
+    is_block: true,
+    is_muted: false,
+  });
   expect(userDetailSchema.safeParse(body.data).success).toBe(true);
 });

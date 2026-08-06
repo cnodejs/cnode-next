@@ -51,9 +51,7 @@ export default function AdminZones({ loaderData }: { loaderData: any }) {
   }, [initialZones]);
 
   function updateField(id: number, field: keyof ZoneRow, value: any) {
-    setZones((prev) =>
-      prev.map((z) => (z.id === id ? { ...z, [field]: value } : z)),
-    );
+    setZones((prev) => prev.map((z) => (z.id === id ? { ...z, [field]: value } : z)));
   }
 
   async function saveZone(id: number) {
@@ -90,81 +88,81 @@ export default function AdminZones({ loaderData }: { loaderData: any }) {
       <AdminPage archetype="data-list">
         <AdminPageHeader title="专区管理" description="控制专区在导航栏的可见性与排序。" />
         <AdminPanel title="专区列表" description={`共 ${zones.length} 个专区`} flush>
-            <Table className="min-w-[820px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-24">Slug</TableHead>
-                  <TableHead className="min-w-32">名称</TableHead>
-                  <TableHead className="min-w-40">描述</TableHead>
-                  <TableHead className="w-32">图标</TableHead>
-                  <TableHead className="w-28">可见状态</TableHead>
-                  <TableHead className="w-20">排序</TableHead>
-                  <TableHead className="w-24 text-right">操作</TableHead>
+          <Table className="min-w-[820px]">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-24">Slug</TableHead>
+                <TableHead className="min-w-32">名称</TableHead>
+                <TableHead className="min-w-40">描述</TableHead>
+                <TableHead className="w-32">图标</TableHead>
+                <TableHead className="w-28">可见状态</TableHead>
+                <TableHead className="w-20">排序</TableHead>
+                <TableHead className="w-24 text-right">操作</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {zones.map((zone) => (
+                <TableRow key={zone.id}>
+                  <TableCell className="font-mono text-xs">{zone.slug}</TableCell>
+                  <TableCell>
+                    <Input
+                      aria-label={`${zone.slug} 名称`}
+                      value={zone.name}
+                      onChange={(e) => updateField(zone.id, "name", e.target.value)}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      aria-label={`${zone.slug} 描述`}
+                      value={zone.description || ""}
+                      onChange={(e) => updateField(zone.id, "description", e.target.value)}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      aria-label={`${zone.slug} 图标`}
+                      value={zone.icon || ""}
+                      onChange={(e) => updateField(zone.id, "icon", e.target.value)}
+                      placeholder="lucide icon"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={zone.visible ? "secondary" : "ghost"}
+                      aria-pressed={zone.visible}
+                      aria-label={`${zone.slug} 当前${zone.visible ? "可见" : "隐藏"}，点击切换`}
+                      className="min-w-20 justify-start"
+                      onClick={() => updateField(zone.id, "visible", !zone.visible)}
+                    >
+                      {zone.visible ? <Eye /> : <EyeOff />}
+                      {zone.visible ? "显示" : "隐藏"}
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      aria-label={`${zone.slug} 排序`}
+                      type="number"
+                      value={zone.sort_order}
+                      onChange={(e) => updateField(zone.id, "sort_order", Number(e.target.value))}
+                      className="w-20"
+                    />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => saveZone(zone.id)}
+                      disabled={saving === zone.id}
+                    >
+                      {saving === zone.id ? "保存中…" : "保存"}
+                    </Button>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {zones.map((zone) => (
-                  <TableRow key={zone.id}>
-                    <TableCell className="font-mono text-xs">{zone.slug}</TableCell>
-                    <TableCell>
-                      <Input
-                        aria-label={`${zone.slug} 名称`}
-                        value={zone.name}
-                        onChange={(e) => updateField(zone.id, "name", e.target.value)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        aria-label={`${zone.slug} 描述`}
-                        value={zone.description || ""}
-                        onChange={(e) => updateField(zone.id, "description", e.target.value)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        aria-label={`${zone.slug} 图标`}
-                        value={zone.icon || ""}
-                        onChange={(e) => updateField(zone.id, "icon", e.target.value)}
-                        placeholder="lucide icon"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant={zone.visible ? "secondary" : "ghost"}
-                        aria-pressed={zone.visible}
-                        aria-label={`${zone.slug} 当前${zone.visible ? "可见" : "隐藏"}，点击切换`}
-                        className="min-w-20 justify-start"
-                        onClick={() => updateField(zone.id, "visible", !zone.visible)}
-                      >
-                        {zone.visible ? <Eye /> : <EyeOff />}
-                        {zone.visible ? "显示" : "隐藏"}
-                      </Button>
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        aria-label={`${zone.slug} 排序`}
-                        type="number"
-                        value={zone.sort_order}
-                        onChange={(e) => updateField(zone.id, "sort_order", Number(e.target.value))}
-                        className="w-20"
-                      />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => saveZone(zone.id)}
-                        disabled={saving === zone.id}
-                      >
-                        {saving === zone.id ? "保存中…" : "保存"}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+              ))}
+            </TableBody>
+          </Table>
         </AdminPanel>
       </AdminPage>
     </AdminLayout>

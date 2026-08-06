@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { useNavigate, useRouteLoaderData } from "react-router";
-import {
-  FileText,
-  Info,
-  LayoutDashboard,
-  MessageSquare,
-  Pencil,
-  X,
-} from "lucide-react";
+import { FileText, Info, LayoutDashboard, MessageSquare, Pencil, X } from "lucide-react";
 import { Button } from "./ui/button";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
 import {
   Command,
   CommandEmpty,
@@ -39,7 +39,9 @@ export function CommandPalette({
   const fallbackFinalFocusRef = useRef<HTMLElement | null>(null);
   const finalFocusRef = finalFocus ?? fallbackFinalFocusRef;
   const navigate = useNavigate();
-  const rootData = useRouteLoaderData("root") as { user?: { is_admin?: boolean; is_mod?: boolean } } | undefined;
+  const rootData = useRouteLoaderData("root") as
+    | { user?: { is_admin?: boolean; is_mod?: boolean } }
+    | undefined;
   const managementAction = rootData?.user?.is_admin
     ? { label: "管理后台", to: "/admin", icon: LayoutDashboard }
     : rootData?.user?.is_mod
@@ -102,7 +104,14 @@ export function CommandPalette({
               />
             </form>
             <DialogClose
-              render={<Button type="button" variant="ghost" size="icon-sm" className="size-11 shrink-0 sm:size-8" />}
+              render={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="size-11 shrink-0 sm:size-8"
+                />
+              }
               aria-label="关闭搜索面板"
             >
               <X />
@@ -122,7 +131,9 @@ export function CommandPalette({
             </CommandGroup>
           </CommandList>
           <div className="bg-muted p-2 text-xs text-muted-foreground">
-            {query.trim() ? `按 Enter 搜索“${query.trim()}”` : "使用方向键选择，Enter 打开，Escape 关闭"}
+            {query.trim()
+              ? `按 Enter 搜索“${query.trim()}”`
+              : "使用方向键选择，Enter 打开，Escape 关闭"}
           </div>
         </Command>
       </DialogContent>

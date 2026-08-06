@@ -4,12 +4,12 @@ This guide gets a local cnode-next workspace running. It is not a production dep
 
 ## Requirements
 
-| Requirement | Version or rule |
-| ----------- | --------------- |
-| Node.js | `>= 24.0.0` |
-| pnpm | Managed by `packageManager` and Corepack. |
-| PostgreSQL | Required. SQLite is not supported. |
-| Redis | Required for sessions, cache, rate limits, and worker paths. |
+| Requirement | Version or rule                                              |
+| ----------- | ------------------------------------------------------------ |
+| Node.js     | `>= 24.0.0`                                                  |
+| pnpm        | Managed by `packageManager` and Corepack.                    |
+| PostgreSQL  | Required. SQLite is not supported.                           |
+| Redis       | Required for sessions, cache, rate limits, and worker paths. |
 
 ## Environment
 
@@ -72,10 +72,10 @@ pnpm dev
 
 Local endpoints:
 
-| Service | URL |
-| ------- | --- |
-| Web | `http://localhost:5173` |
-| API | `http://localhost:3001` |
+| Service | URL                     |
+| ------- | ----------------------- |
+| Web     | `http://localhost:5173` |
+| API     | `http://localhost:3001` |
 
 Quick smoke:
 
@@ -86,35 +86,35 @@ curl -fsS 'http://localhost:5173/'
 
 ## Common Commands
 
-| Command | Use |
-| ------- | --- |
-| `pnpm dev` | Start Web and API locally. |
-| `pnpm lint` | Run oxlint. |
-| `pnpm typecheck` | Run TypeScript checks across the workspace. |
-| `pnpm test` | Run package tests. |
-| `pnpm build` | Build all apps/packages. |
-| `pnpm db:push:pg` | Create or update the PostgreSQL schema. |
-| `pnpm db:seed` | Seed development data. |
-| `pnpm migrate:mongo-to-pg` | Run explicit Mongo-to-PostgreSQL migration tooling. |
-| `pnpm migrate:reconcile` | Reconcile migrated data. |
-| `pnpm verify` | Full validation gate. Run before release or PR validation when feasible. |
+| Command                    | Use                                                                      |
+| -------------------------- | ------------------------------------------------------------------------ |
+| `pnpm dev`                 | Start Web and API locally.                                               |
+| `pnpm lint`                | Run oxlint.                                                              |
+| `pnpm typecheck`           | Run TypeScript checks across the workspace.                              |
+| `pnpm test`                | Run package tests.                                                       |
+| `pnpm build`               | Build all apps/packages.                                                 |
+| `pnpm db:push:pg`          | Create or update the PostgreSQL schema.                                  |
+| `pnpm db:seed`             | Seed development data.                                                   |
+| `pnpm migrate:mongo-to-pg` | Run explicit Mongo-to-PostgreSQL migration tooling.                      |
+| `pnpm migrate:reconcile`   | Reconcile migrated data.                                                 |
+| `pnpm verify`              | Full validation gate. Run before release or PR validation when feasible. |
 
 ## Environment Loading Matrix
 
 Runtime commands keep their default command shape and load root `.env` from their natural config or script entrypoints. Explicit profiles override root `.env` values with `CNODE_ENV_FILE`, while shell/CI/compose-provided variables remain authoritative.
 
-| Command | Local env behavior |
-| ------- | ------------------ |
-| `pnpm dev` | Keeps existing Web/API scripts; Web loads root `.env` from `apps/web/vite.config.ts`, API from `apps/api/src/load-env.ts`. |
-| `pnpm --filter @cnode/web dev` | Keeps `react-router dev`; Vite config loads root `.env`. |
-| `pnpm --filter @cnode/web build` | Keeps `react-router build`; Vite config loads root `.env`. |
-| `pnpm --filter @cnode/web typecheck` | Keeps `react-router typegen && tsc --noEmit`; Vite config loads root `.env` for React Router typegen. |
-| `pnpm --filter @cnode/api dev` | Keeps `tsx watch src/index.ts`; API runtime loader loads root `.env`. |
-| `pnpm --filter @cnode/api worker:moderation` | Keeps worker command; API worker imports the runtime loader. |
-| `pnpm db:push:pg`, `pnpm db:generate` | Keep `drizzle-kit` commands; Drizzle config loads root `.env`. |
-| `pnpm db:migrate`, `pnpm db:seed` | Keep `tsx src/*` commands; DB scripts load root `.env`. |
-| `pnpm migrate:mongo-to-pg`, `pnpm migrate:reconcile` | Keep root `tsx scripts/*` commands; scripts load root `.env`; non-default profiles require explicit `CNODE_ENV_FILE`. |
-| `pnpm lint`, `pnpm format`, `pnpm secrets:scan` | Do not load local dotenv files. |
+| Command                                              | Local env behavior                                                                                                         |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                                           | Keeps existing Web/API scripts; Web loads root `.env` from `apps/web/vite.config.ts`, API from `apps/api/src/load-env.ts`. |
+| `pnpm --filter @cnode/web dev`                       | Keeps `react-router dev`; Vite config loads root `.env`.                                                                   |
+| `pnpm --filter @cnode/web build`                     | Keeps `react-router build`; Vite config loads root `.env`.                                                                 |
+| `pnpm --filter @cnode/web typecheck`                 | Keeps `react-router typegen && tsc --noEmit`; Vite config loads root `.env` for React Router typegen.                      |
+| `pnpm --filter @cnode/api dev`                       | Keeps `tsx watch src/index.ts`; API runtime loader loads root `.env`.                                                      |
+| `pnpm --filter @cnode/api worker:moderation`         | Keeps worker command; API worker imports the runtime loader.                                                               |
+| `pnpm db:push:pg`, `pnpm db:generate`                | Keep `drizzle-kit` commands; Drizzle config loads root `.env`.                                                             |
+| `pnpm db:migrate`, `pnpm db:seed`                    | Keep `tsx src/*` commands; DB scripts load root `.env`.                                                                    |
+| `pnpm migrate:mongo-to-pg`, `pnpm migrate:reconcile` | Keep root `tsx scripts/*` commands; scripts load root `.env`; non-default profiles require explicit `CNODE_ENV_FILE`.      |
+| `pnpm lint`, `pnpm format`, `pnpm secrets:scan`      | Do not load local dotenv files.                                                                                            |
 
 Example explicit rehearsal profile:
 

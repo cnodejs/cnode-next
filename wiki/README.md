@@ -4,13 +4,13 @@ The wiki is the business knowledge base for CNode. It stores sourced background 
 
 ## Pages
 
-| Page | Content |
-| ---- | ------- |
-| [writing-guidelines.md](writing-guidelines.md) | Required wiki writing standard and template. |
-| [business-rules.md](business-rules.md) | Scoring, topic/reply/collection/message rules, rate limiting, user status. |
+| Page                                               | Content                                                                       |
+| -------------------------------------------------- | ----------------------------------------------------------------------------- |
+| [writing-guidelines.md](writing-guidelines.md)     | Required wiki writing standard and template.                                  |
+| [business-rules.md](business-rules.md)             | Scoring, topic/reply/collection/message rules, rate limiting, user status.    |
 | [migration-background.md](migration-background.md) | Mongo-to-PostgreSQL field mapping, ID strategy, skip logic, report structure. |
-| [legacy-behavior.md](legacy-behavior.md) | Legacy behavior notes that inform compatibility decisions. |
-| [community-rules.md](community-rules.md) | Content moderation rules, sensitive words, scan jobs, reports, audit. |
+| [legacy-behavior.md](legacy-behavior.md)           | Legacy behavior notes that inform compatibility decisions.                    |
+| [community-rules.md](community-rules.md)           | Content moderation rules, sensitive words, scan jobs, reports, audit.         |
 
 ## Boundary
 

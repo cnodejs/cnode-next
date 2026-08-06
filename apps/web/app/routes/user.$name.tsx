@@ -64,7 +64,12 @@ export default function UserProfile({ loaderData }: Route.ComponentProps) {
   if (!user)
     return (
       <Layout>
-        <Empty><EmptyHeader><EmptyTitle>用户不存在</EmptyTitle><EmptyDescription>请检查用户名后重试。</EmptyDescription></EmptyHeader></Empty>
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>用户不存在</EmptyTitle>
+            <EmptyDescription>请检查用户名后重试。</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       </Layout>
     );
 
@@ -111,46 +116,55 @@ function UserHero({ user, currentUser }: { user: any; currentUser?: any }) {
   const websiteUrl = safeExternalUrl(user.url);
   const githubUrl = githubProfileUrl(user.githubUsername);
 
-  const actionConfig = actionTarget === "block"
-    ? {
-        title: user.is_block ? "恢复用户内容可见" : "屏蔽用户内容",
-        description: user.is_block
-          ? `恢复 ${user.loginname} 的历史内容可见性。若该用户仍被禁言，仍不能新增发帖或回复。`
-          : `屏蔽 ${user.loginname} 创建的话题和相关回复聚合。该操作不等同于禁言。`,
-        confirm: user.is_block ? "确认恢复可见" : "确认隐藏内容",
-        variant: user.is_block ? "default" : "destructive",
-      }
-    : actionTarget === "mute"
+  const actionConfig =
+    actionTarget === "block"
       ? {
-          title: user.is_muted ? "解除用户禁言" : "禁言用户",
-          description: user.is_muted
-            ? `解除 ${user.loginname} 的禁言后，该用户可恢复新增发帖和回复能力，除非仍受其他限制。`
-            : `禁言 ${user.loginname} 后，该用户不能新增发帖或回复；历史内容不会因此隐藏。`,
-          confirm: user.is_muted ? "确认解除禁言" : "确认禁言",
-          variant: user.is_muted ? "default" : "destructive",
+          title: user.is_block ? "恢复用户内容可见" : "屏蔽用户内容",
+          description: user.is_block
+            ? `恢复 ${user.loginname} 的历史内容可见性。若该用户仍被禁言，仍不能新增发帖或回复。`
+            : `屏蔽 ${user.loginname} 创建的话题和相关回复聚合。该操作不等同于禁言。`,
+          confirm: user.is_block ? "确认恢复可见" : "确认隐藏内容",
+          variant: user.is_block ? "default" : "destructive",
         }
-      : actionTarget === "delete_all"
+      : actionTarget === "mute"
         ? {
-            title: "删除用户所有发言",
-            description: `将删除 ${user.loginname} 的所有话题和回复，并写入审计日志。此操作不会删除用户账号。`,
-            confirm: "确认删除所有发言",
-            variant: "destructive",
+            title: user.is_muted ? "解除用户禁言" : "禁言用户",
+            description: user.is_muted
+              ? `解除 ${user.loginname} 的禁言后，该用户可恢复新增发帖和回复能力，除非仍受其他限制。`
+              : `禁言 ${user.loginname} 后，该用户不能新增发帖或回复；历史内容不会因此隐藏。`,
+            confirm: user.is_muted ? "确认解除禁言" : "确认禁言",
+            variant: user.is_muted ? "default" : "destructive",
           }
-        : null;
+        : actionTarget === "delete_all"
+          ? {
+              title: "删除用户所有发言",
+              description: `将删除 ${user.loginname} 的所有话题和回复，并写入审计日志。此操作不会删除用户账号。`,
+              confirm: "确认删除所有发言",
+              variant: "destructive",
+            }
+          : null;
 
   const { run: runUserAction, pending: submitting } = useAsyncAction(
     async () => {
       if (!canManage || !actionTarget) return { success: false, error_msg: "操作失败" };
-      const action = actionTarget === "block"
-        ? user.is_block ? "unblock" : "block"
-        : actionTarget === "mute"
-          ? user.is_muted ? "unmute" : "mute"
-          : "delete_all";
+      const action =
+        actionTarget === "block"
+          ? user.is_block
+            ? "unblock"
+            : "block"
+          : actionTarget === "mute"
+            ? user.is_muted
+              ? "unmute"
+              : "mute"
+            : "delete_all";
       const fallback = actionTarget === "delete_all" ? "删除失败" : "操作失败";
-      return apiFetch<{ success: boolean; message?: string; error_msg?: string }>(`/api/v1/user/${user.loginname}/${action}`, {
-        method: "POST",
-        body: JSON.stringify({}),
-      }).catch(() => ({ success: false, error_msg: fallback }));
+      return apiFetch<{ success: boolean; message?: string; error_msg?: string }>(
+        `/api/v1/user/${user.loginname}/${action}`,
+        {
+          method: "POST",
+          body: JSON.stringify({}),
+        },
+      ).catch(() => ({ success: false, error_msg: fallback }));
     },
     {
       onSuccess: (res) => {
@@ -167,7 +181,11 @@ function UserHero({ user, currentUser }: { user: any; currentUser?: any }) {
 
   return (
     <section className="flex flex-col gap-6">
-      <PageHeader breadcrumbs={[{ label: "首页", to: "/" }, { label: "用户" }]} title={user.loginname} description={user.signature || "CNode 社区成员"} />
+      <PageHeader
+        breadcrumbs={[{ label: "首页", to: "/" }, { label: "用户" }]}
+        title={user.loginname}
+        description={user.signature || "CNode 社区成员"}
+      />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
         <div className="flex min-w-0 flex-col gap-5 sm:flex-row">
           <Avatar className="size-20 shrink-0">
@@ -177,18 +195,36 @@ function UserHero({ user, currentUser }: { user: any; currentUser?: any }) {
           <div className="flex min-w-0 flex-col gap-3">
             <UserIdentityBadges identities={(user.identities || []) as PublicIdentity[]} />
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-              <span>注册于 <TimeAgo date={user.create_at} /></span>
-              {user.location && <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{user.location}</span>}
+              <span>
+                注册于 <TimeAgo date={user.create_at} />
+              </span>
+              {user.location && (
+                <span className="inline-flex items-center gap-1">
+                  <MapPin className="h-4 w-4" />
+                  {user.location}
+                </span>
+              )}
             </div>
             {(websiteUrl || githubUrl) && (
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
                 {websiteUrl && (
-                  <a className="inline-flex items-center gap-1 text-primary hover:underline" href={websiteUrl} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="h-4 w-4" />{externalUrlLabel(websiteUrl)}
+                  <a
+                    className="inline-flex items-center gap-1 text-primary hover:underline"
+                    href={websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    {externalUrlLabel(websiteUrl)}
                   </a>
                 )}
                 {githubUrl && (
-                  <a className="inline-flex items-center gap-1 text-primary hover:underline" href={githubUrl} target="_blank" rel="noopener noreferrer">
+                  <a
+                    className="inline-flex items-center gap-1 text-primary hover:underline"
+                    href={githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <Code className="h-4 w-4" />@{user.githubUsername}
                   </a>
                 )}
@@ -200,46 +236,58 @@ function UserHero({ user, currentUser }: { user: any; currentUser?: any }) {
           <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
             {user.is_block && <Badge variant="destructive">内容已屏蔽</Badge>}
             {user.is_muted && <Badge variant="destructive">已禁言</Badge>}
-          {canManage && !isSelf && (
-            <>
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  render={<Button ref={managementTriggerRef} type="button" variant="outline" size="sm" disabled={submitting} />}
-                >
-                  <MoreHorizontal className="h-4 w-4" />管理
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52">
-                  <DropdownMenuGroup>
-                    <DropdownMenuLabel>用户治理</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => setActionTarget("block")}>
-                      {user.is_block ? "恢复用户内容" : "屏蔽用户内容"}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setActionTarget("mute")}>
-                      {user.is_muted ? "解除禁言" : "禁言用户"}
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuGroup>
-                    <DropdownMenuLabel>危险操作</DropdownMenuLabel>
-                    <DropdownMenuItem variant="destructive" onClick={() => setActionTarget("delete_all")}>
-                      删除所有发言
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <ConfirmationDialog
-                open={!!actionTarget}
-                onOpenChange={(open) => !open && setActionTarget(null)}
-                title={actionConfig?.title || "确认用户治理操作"}
-                description={actionConfig?.description || "请确认目标用户和操作影响。"}
-                confirmLabel={actionConfig?.confirm || "确认"}
-                pending={submitting}
-                destructive={actionConfig?.variant === "destructive"}
-                finalFocus={managementTriggerRef}
-                onConfirm={runUserAction}
-              />
-            </>
-          )}
+            {canManage && !isSelf && (
+              <>
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <Button
+                        ref={managementTriggerRef}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={submitting}
+                      />
+                    }
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
+                    管理
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-52">
+                    <DropdownMenuGroup>
+                      <DropdownMenuLabel>用户治理</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => setActionTarget("block")}>
+                        {user.is_block ? "恢复用户内容" : "屏蔽用户内容"}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setActionTarget("mute")}>
+                        {user.is_muted ? "解除禁言" : "禁言用户"}
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuGroup>
+                      <DropdownMenuLabel>危险操作</DropdownMenuLabel>
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={() => setActionTarget("delete_all")}
+                      >
+                        删除所有发言
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <ConfirmationDialog
+                  open={!!actionTarget}
+                  onOpenChange={(open) => !open && setActionTarget(null)}
+                  title={actionConfig?.title || "确认用户治理操作"}
+                  description={actionConfig?.description || "请确认目标用户和操作影响。"}
+                  confirmLabel={actionConfig?.confirm || "确认"}
+                  pending={submitting}
+                  destructive={actionConfig?.variant === "destructive"}
+                  finalFocus={managementTriggerRef}
+                  onConfirm={runUserAction}
+                />
+              </>
+            )}
           </div>
           <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-2">
             {[
@@ -260,7 +308,13 @@ function UserHero({ user, currentUser }: { user: any; currentUser?: any }) {
   );
 }
 
-function UserTabs({ loginname, active }: { loginname: string; active: "home" | "topics" | "replies" | "collections" }) {
+function UserTabs({
+  loginname,
+  active,
+}: {
+  loginname: string;
+  active: "home" | "topics" | "replies" | "collections";
+}) {
   const items = [
     ["home", "主页", `/user/${loginname}`],
     ["topics", "话题", `/user/${loginname}/topics`],
@@ -269,20 +323,20 @@ function UserTabs({ loginname, active }: { loginname: string; active: "home" | "
   ] as const;
   return (
     <nav aria-label="用户内容" className="flex gap-1 overflow-x-auto">
-        {items.map(([key, label, to]) => (
-          <Link
-            key={key}
-            to={to}
-            aria-current={active === key ? "page" : undefined}
-            className={
-              active === key
-                ? "rounded-lg bg-accent px-3 py-1.5 text-sm text-accent-foreground"
-                : "rounded-lg px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-            }
-          >
-            {label}
-          </Link>
-        ))}
+      {items.map(([key, label, to]) => (
+        <Link
+          key={key}
+          to={to}
+          aria-current={active === key ? "page" : undefined}
+          className={
+            active === key
+              ? "rounded-lg bg-accent px-3 py-1.5 text-sm text-accent-foreground"
+              : "rounded-lg px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          }
+        >
+          {label}
+        </Link>
+      ))}
     </nav>
   );
 }

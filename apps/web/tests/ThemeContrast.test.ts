@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 type Pair = [name: string, foreground: string, background: string, minimum: number];
 
@@ -40,7 +40,10 @@ function contrast(foreground: string, background: string) {
 }
 
 describe("theme token contrast", () => {
-  it.each([...lightPairs, ...darkPairs])("keeps %s above WCAG minimum", (_name, foreground, background, minimum) => {
-    expect(contrast(foreground, background)).toBeGreaterThanOrEqual(minimum);
-  });
+  it.each([...lightPairs, ...darkPairs])(
+    "keeps %s above WCAG minimum",
+    (_name, foreground, background, minimum) => {
+      expect(contrast(foreground, background)).toBeGreaterThanOrEqual(minimum);
+    },
+  );
 });

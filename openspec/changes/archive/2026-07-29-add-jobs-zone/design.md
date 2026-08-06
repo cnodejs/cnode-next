@@ -7,6 +7,7 @@ cnode-next 现有内容模型：`topics` 表（`packages/db/src/schema/topic.ts:
 ## Goals / Non-Goals
 
 **Goals:**
+
 - 落地"topics 基础表 + 专用 meta 侧表"的专区扩展模式，验证其为后续专区（gallery/event）的模板
 - 招聘信息结构化：公司/职位/地点/远程/薪资/经验/技术栈/联系方式/logo 上传
 - 专区列表卡片化 + 顶条 facet 筛选，移动端适配
@@ -17,6 +18,7 @@ cnode-next 现有内容模型：`topics` 表（`packages/db/src/schema/topic.ts:
 - 管理后台新增专区管理、Tab 管理两个页面
 
 **Non-Goals:**
+
 - 不新建独立 `jobs` 内容类型表
 - 不做通用 facet 框架（每专区定制筛选器）
 - 不改变首页社区流形态（`TopicList` + `FeedGrid` 不动）
@@ -32,6 +34,7 @@ cnode-next 现有内容模型：`topics` 表（`packages/db/src/schema/topic.ts:
 **决策**：招聘不新建独立内容类型，复用 `topics` 表（`tab='job'`）+ 新增 `job_meta` 侧表（1:1 FK → `topics.id` ON DELETE CASCADE）。评论区复用现有 `reply` 表。
 
 **被否决的方案**：
+
 - **A. topics + JSON meta 列**：在 topics 加 `meta jsonb` 列。否决理由：字段类型安全弱（运行时 Zod 校验，无 Drizzle 强类型），跨专区查询会混入非该专区行。
 - **C. 独立 `jobs` 表**：完全独立内容类型 + 独立全栈代码。否决理由：公共字段（author_id/visit_count/status/create_at...）重复，评论区需 polymorphic reply（改 reply 表加 `target_type` 列，影响现有 reply 系统）。虽支持"每专区定制筛选器"，但互动复用要求与"独立表"天然冲突 —— 用户明确选择保留评论并复用 reply，B 方案使评论区零改动。
 
@@ -74,6 +77,7 @@ erDiagram
 ```
 
 **字段说明**：
+
 - `topic_id`：PK 同时是 FK → `topics.id`，`ON DELETE CASCADE`
 - `remote`：枚举值 `on-site` / `hybrid` / `remote`，用 text 存储（避免 enum 迁移复杂度，Zod 校验）
 - `salary_min/max`：整数（单位 K），便于范围筛选；`null` 表示面议
@@ -82,6 +86,7 @@ erDiagram
 - `company_logo`：OSS URL，复用 `uploadPrefix()` 前缀
 
 **被否决的方案**：
+
 - `salary_range` 用 range 类型：PG range 查询语法重，前端传参不便，拆成 min/max 更直观
 - `tech_tags` 关联表：标签数量有限（每帖 3-8 个），数组足够，避免 join 开销
 - `contact` 脱敏存储：v1 不做，保持简单，后续如需可在展示层脱敏
@@ -104,10 +109,12 @@ sequenceDiagram
 ```
 
 **校验规则**（在 Zod 层用 superRefine 实现）：
+
 - `tab !== "job"` 时 `job_meta` 必须为 `undefined`（传了报错）
 - `tab === "job"` 时 `job_meta` 必填且字段必填（company/position/location/contact 不可空，salary/experience 可选）
 
 **被否决的方案**：
+
 - 拆两次 API 调用（先建 topic 再补 meta）：否决理由：失败时需补偿事务回滚，复杂度高；用户明确选择单次提交
 - job_meta 独立 CRUD 端点：否决理由：job_meta 无独立生命周期，随 topic 走，独立端点制造"meta 可独立修改"的错误心智模型
 
@@ -124,6 +131,7 @@ flowchart LR
 ```
 
 **筛选维度与 facet 来源**：
+
 - `location`：从 `job_meta.location` 聚合 distinct 值
 - `remote`：固定枚举 on-site/hybrid/remote
 - `salary_min`：用户传入下限，`job_meta.salary_max >= :salary_min` 筛选
@@ -134,6 +142,7 @@ flowchart LR
 **移动端适配**：`JobFilterBar` 在 `<md` 折叠为"筛选"按钮触发的 Sheet（复用 `ui/sheet`），`JobCardGrid` 改为单列。
 
 **被否决的方案**：
+
 - 侧栏筛选面板（复用 `FeedGrid` 骨架）：否决理由：移动端需变抽屉，桌面端挤占卡片空间；用户明确选择顶条
 - 通用 facet 框架（schema 驱动）：否决理由：用户明确选择每专区定制筛选器，避免提前抽象
 
@@ -156,6 +165,7 @@ flowchart LR
 ```
 
 **被否决的方案**：
+
 - meta 卡片放 content 下方：否决理由：用户点进卡片主要看公司/薪资/投递方式，放下方要求先扫完 JD，效率低；用户明确选择上方
 - meta 信息嵌入 markdown 渲染：否决理由：侵入 MarkdownView 渲染器，复杂度高，且 meta 与 content 耦合不可控
 
@@ -163,10 +173,10 @@ flowchart LR
 
 **决策**：`contact` 字段值按形态分发 CTA 行为，v1 实施时按以下规则：
 
-| contact 形态 | CTA 行为 |
-|---|---|
-| 邮箱（含 @） | `mailto:` 链接 |
-| URL（http/https） | 跳转新窗口 |
+| contact 形态         | CTA 行为                             |
+| -------------------- | ------------------------------------ |
+| 邮箱（含 @）         | `mailto:` 链接                       |
+| URL（http/https）    | 跳转新窗口                           |
 | 其他（微信/QQ/电话） | 弹出 Sheet 显示联系方式 + "复制"按钮 |
 
 此决策标为"实施时最终确认"，提案不锁定具体组件。
@@ -189,17 +199,19 @@ flowchart TD
 
 **三层独立控制模型**：
 
-| 层 | 控制项 | 数据源 | 行为 |
-|---|---|---|---|
-| API 行为层 | `topic.ts:82` `excludeTabs: ["job"]` | 硬编码 | tab=job 永远不在首页列表 API 返回 |
-| UI tab 层 | 首页 tab 按钮可见性 | `tabs.visible` | 控制按钮渲染，不影响 API 返回 |
-| 导航层 | 专区入口可见性 | `zones.visible` | 控制导航栏专区下拉是否出现该专区 |
+| 层         | 控制项                               | 数据源          | 行为                              |
+| ---------- | ------------------------------------ | --------------- | --------------------------------- |
+| API 行为层 | `topic.ts:82` `excludeTabs: ["job"]` | 硬编码          | tab=job 永远不在首页列表 API 返回 |
+| UI tab 层  | 首页 tab 按钮可见性                  | `tabs.visible`  | 控制按钮渲染，不影响 API 返回     |
+| 导航层     | 专区入口可见性                       | `zones.visible` | 控制导航栏专区下拉是否出现该专区  |
 
 **migration/bootstrap 默认值**：
+
 - `tabs`：share/ask/job/good 全部 `visible=true`（保持现状）
 - `zones`：jobs `visible=false`（内测能力，暂不开放，需管理员主动开启）
 
 **数据库发布边界**：
+
 - 非临时数据库的 schema 变更 SHALL 通过 Drizzle migration 文件执行，不使用 `drizzle-kit push` 直接改当前连接库。
 - `tabs` 与 `zones` 的生产必需默认行 SHALL 作为 migration/bootstrap 数据幂等初始化，不能依赖 `pnpm db:seed`。
 - `pnpm db:seed` 只允许用于空库初始化或本地开发测试数据，MUST NOT 删除 `users` / `topics` / `replies` / `messages` / `topic_collects` 等业务表。
@@ -208,6 +220,7 @@ flowchart TD
 **指引合并形态**：v1 采用"单页 + 锚点"，`/help` 渲染合并后的内容，原有 `/getstart` `/about` `/faq` 路由保留（避免外链 404），但导航栏不再直接暴露。`/api` 因含 SwaggerUI 组件体量大，v1 保留独立路由 `/api`，在 `/help` 页面提供链接而非内嵌。
 
 **被否决的方案**：
+
 - 4 页全合并为单页内嵌 API 文档：否决理由：SwaggerUI 重，内嵌影响 `/help` 页性能
 - 删除原有路由强制迁移：否决理由：外链/书签 404 成本高，保留路由做软合并
 - 复用 `site_settings` KV 表存 tab/zone 配置：否决理由：site_settings 是扁平 KV，不支持排序字段、结构化配置；专用表更清晰
@@ -241,12 +254,14 @@ erDiagram
 ```
 
 **字段说明**：
+
 - `tabs.key`：与 `topics.tab` 字段值对应，UNIQUE 约束
 - `tabs.visible`：控制首页 tab 按钮渲染；`visible=false` 时首页不展示该按钮，但 `?tab=xxx` 直接访问仍可见（向后兼容）
 - `zones.slug`：与专区路由 `/zone/:slug` 对应，UNIQUE 约束
 - `zones.visible`：控制导航栏专区下拉是否展示该专区；`visible=false` 时专区路由仍可直接访问
 
 **被否决的方案**：
+
 - 合并为一张 `navigation_items` 通用表：否决理由：tab 与 zone 字段集不同（tab 有 key 对应 topics.tab，zone 有 slug 对应路由），强行合并会产生冗余字段
 - 复用 `site_settings` KV：否决理由：不支持 sort_order，结构化配置差
 
@@ -272,6 +287,7 @@ flowchart LR
 **管理后台 UI 形态**：列表表格 + 行内编辑，每行包含可见性 Checkbox 和排序输入，保存调用 PATCH 端点。不新增/删除 tab/zone（v1 只管理现有 migration/bootstrap 行的可见性与排序），加新区或新 tab 通过 migration/bootstrap 完成。
 
 **被否决的方案**：
+
 - 在现有 `admin/settings.tsx` 加 Tab：否决理由：settings 是系统级配置（注册/限流），tab/zone 是内容运营配置，职责不同
 - 完整 CRUD（新增/删除 tab/zone）：否决理由：tab/zone 与代码逻辑（专区组件、tab 枚举）强绑定，运行时新增无对应代码的 tab/zone 会产生悬空配置；v1 只做可见性与排序管理
 

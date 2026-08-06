@@ -20,7 +20,9 @@ export function AuthShell({
           <div>
             <p className="text-sm font-semibold tracking-[0.2em] text-brand-accent">{eyebrow}</p>
             <div className="mt-4 max-w-md text-4xl font-bold tracking-tight">{title}</div>
-            <p className="mt-4 max-w-md text-sm leading-6 text-brand-foreground/70">{description}</p>
+            <p className="mt-4 max-w-md text-sm leading-6 text-brand-foreground/70">
+              {description}
+            </p>
           </div>
         </div>
         <div className="relative grid gap-3 text-sm text-brand-foreground/80">
@@ -43,7 +45,9 @@ export function AuthShell({
         </div>
         <div className="mb-6 lg:hidden">
           <p className="text-xs font-semibold tracking-[0.2em] text-primary">{eyebrow}</p>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground lg:sr-only">{title}</h1>
+          <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground lg:sr-only">
+            {title}
+          </h1>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
         </div>
         <div className="rounded-xl bg-card p-5 shadow-sm sm:p-6">{children}</div>

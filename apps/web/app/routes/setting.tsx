@@ -163,12 +163,14 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
     }
   };
 
-
-
   return (
     <Layout>
       <AccountPage className="max-w-6xl">
-        <PageHeader breadcrumbs={[{ label: "首页", to: "/" }, { label: "用户设置" }]} title="用户设置" description="维护个人资料、通知偏好、密码和 API Token。" />
+        <PageHeader
+          breadcrumbs={[{ label: "首页", to: "/" }, { label: "用户设置" }]}
+          title="用户设置"
+          description="维护个人资料、通知偏好、密码和 API Token。"
+        />
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <div className="flex min-w-0 flex-col gap-6">
@@ -231,7 +233,12 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       解除绑定
                     </Button>
                   ) : (
-                    <Button render={<Link to="/auth/github?intent=bind" />} variant="outline" size="sm" className="self-start sm:self-auto">
+                    <Button
+                      render={<Link to="/auth/github?intent=bind" />}
+                      variant="outline"
+                      size="sm"
+                      className="self-start sm:self-auto"
+                    >
                       绑定 GitHub
                     </Button>
                   )}
@@ -255,7 +262,17 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>个人网站</FormLabel>
-                          <FormControl render={<Input type="url" autoComplete="url" spellCheck={false} placeholder="https://" {...field} />} />
+                          <FormControl
+                            render={
+                              <Input
+                                type="url"
+                                autoComplete="url"
+                                spellCheck={false}
+                                placeholder="https://"
+                                {...field}
+                              />
+                            }
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -266,7 +283,9 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>所在地</FormLabel>
-                          <FormControl render={<Input autoComplete="address-level2" {...field} />} />
+                          <FormControl
+                            render={<Input autoComplete="address-level2" {...field} />}
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -278,7 +297,9 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                         <FormItem>
                           <FormLabel>签名</FormLabel>
                           <FormControl
-                            render={<Textarea rows={2} autoComplete="off" spellCheck={true} {...field} />}
+                            render={
+                              <Textarea rows={2} autoComplete="off" spellCheck={true} {...field} />
+                            }
                           />
                           <FormMessage />
                         </FormItem>
@@ -290,7 +311,17 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>微博</FormLabel>
-                          <FormControl render={<Input type="url" autoComplete="url" spellCheck={false} placeholder="https://weibo.com/xxx" {...field} />} />
+                          <FormControl
+                            render={
+                              <Input
+                                type="url"
+                                autoComplete="url"
+                                spellCheck={false}
+                                placeholder="https://weibo.com/xxx"
+                                {...field}
+                              />
+                            }
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -300,7 +331,11 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       name="receive_reply_mail"
                       render={({ field }) => (
                         <FormItem orientation="horizontal">
-                          <FormControl render={<Checkbox checked={field.value} onCheckedChange={field.onChange} />} />
+                          <FormControl
+                            render={
+                              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                            }
+                          />
                           <FormLabel className="font-normal text-muted-foreground">
                             有人回复我的话题时邮件通知
                           </FormLabel>
@@ -312,7 +347,11 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       name="receive_at_mail"
                       render={({ field }) => (
                         <FormItem orientation="horizontal">
-                          <FormControl render={<Checkbox checked={field.value} onCheckedChange={field.onChange} />} />
+                          <FormControl
+                            render={
+                              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                            }
+                          />
                           <FormLabel className="font-normal text-muted-foreground">
                             有人 @我 时邮件通知
                           </FormLabel>
@@ -322,7 +361,11 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                     <Button type="submit" disabled={profileForm.formState.isSubmitting}>
                       {profileForm.formState.isSubmitting ? "保存中..." : "保存"}
                     </Button>
-                    {profileForm.formState.isSubmitting && <p role="status" className="text-sm text-muted-foreground">正在保存个人资料</p>}
+                    {profileForm.formState.isSubmitting && (
+                      <p role="status" className="text-sm text-muted-foreground">
+                        正在保存个人资料
+                      </p>
+                    )}
                   </form>
                 </Form>
               </CardContent>
@@ -345,7 +388,17 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>当前密码</FormLabel>
-                          <FormControl render={<Input type="password" autoComplete="current-password" spellCheck={false} placeholder="当前密码" {...field} />} />
+                          <FormControl
+                            render={
+                              <Input
+                                type="password"
+                                autoComplete="current-password"
+                                spellCheck={false}
+                                placeholder="当前密码"
+                                {...field}
+                              />
+                            }
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -356,7 +409,17 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>新密码</FormLabel>
-                          <FormControl render={<Input type="password" autoComplete="new-password" spellCheck={false} placeholder="至少8位,含字母和数字" {...field} />} />
+                          <FormControl
+                            render={
+                              <Input
+                                type="password"
+                                autoComplete="new-password"
+                                spellCheck={false}
+                                placeholder="至少8位,含字母和数字"
+                                {...field}
+                              />
+                            }
+                          />
                           <FormDescription>密码需至少 8 位,包含字母和数字</FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -365,7 +428,11 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
                     <Button type="submit" disabled={passForm.formState.isSubmitting}>
                       {passForm.formState.isSubmitting ? "修改中..." : "修改密码"}
                     </Button>
-                    {passForm.formState.isSubmitting && <p role="status" className="text-sm text-muted-foreground">正在修改密码</p>}
+                    {passForm.formState.isSubmitting && (
+                      <p role="status" className="text-sm text-muted-foreground">
+                        正在修改密码
+                      </p>
+                    )}
                   </form>
                 </Form>
               </CardContent>
@@ -416,14 +483,19 @@ export default function Setting({ loaderData }: Route.ComponentProps) {
             </DialogDescription>
           </DialogHeader>
           <Form {...unbindForm}>
-            <form onSubmit={unbindForm.handleSubmit(onUnbindSubmit)} className="flex flex-col gap-5">
+            <form
+              onSubmit={unbindForm.handleSubmit(onUnbindSubmit)}
+              className="flex flex-col gap-5"
+            >
               <FormField
                 control={unbindForm.control}
                 name="password"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>当前密码</FormLabel>
-                    <FormControl render={<Input type="password" autoComplete="current-password" {...field} />} />
+                    <FormControl
+                      render={<Input type="password" autoComplete="current-password" {...field} />}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}

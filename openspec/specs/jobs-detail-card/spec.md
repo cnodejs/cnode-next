@@ -1,8 +1,11 @@
 # jobs-detail-card Specification
 
 ## Purpose
+
 TBD - created by archiving change add-jobs-zone. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: JobMetaCard 位置在 content 上方
 
 详情页 `topic.$tid.tsx` 的 content `<Card>` 内部 SHALL 在 `<MarkdownView>` 上方插入 `<JobMetaCard>`，仅在 `tab='job'` 且 `job_meta` 非空时渲染。

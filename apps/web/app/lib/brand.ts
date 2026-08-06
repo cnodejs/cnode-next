@@ -25,7 +25,10 @@ const DEFAULT_TAB_LABELS: Record<string, string> = {
   good: "精华",
 };
 
-export function getTabLabel(tab?: string | null, tabs?: Array<{ key: string; label: string }>): string {
+export function getTabLabel(
+  tab?: string | null,
+  tabs?: Array<{ key: string; label: string }>,
+): string {
   if (tabs && tab) {
     const found = tabs.find((t) => t.key === tab);
     if (found) return found.label;

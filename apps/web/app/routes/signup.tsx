@@ -41,7 +41,9 @@ export function meta() {
 
 export async function loader({ request }: { request: Request }) {
   await redirectIfAuthenticated(request);
-  const res = await apiFetch<{ success: boolean; data?: { allow_signup: boolean } }>("/api/v1/auth/config");
+  const res = await apiFetch<{ success: boolean; data?: { allow_signup: boolean } }>(
+    "/api/v1/auth/config",
+  );
   return { allowSignup: res.success ? res.data?.allow_signup !== false : true };
 }
 
@@ -85,109 +87,122 @@ export default function Signup({ loaderData }: any) {
   return (
     <Layout>
       <AccountPage className="max-w-none">
-      <AuthShell
-        eyebrow="JOIN CNODE"
-        title="创建社区账号"
-        description="加入后可以发布问题、分享项目、参与讨论，并保存对你有价值的话题。"
-      >
+        <AuthShell
+          eyebrow="JOIN CNODE"
+          title="创建社区账号"
+          description="加入后可以发布问题、分享项目、参与讨论，并保存对你有价值的话题。"
+        >
           <h2 className="mb-6 text-lg font-semibold tracking-tight">注册</h2>
           <div>
             {allowSignup ? (
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} aria-busy={loading} className="flex flex-col gap-4">
-                <FormField
-                  control={form.control}
-                  name="loginname"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>用户名</FormLabel>
-                      <FormControl
-                        render={
-                          <Input
-                            autoComplete="username"
-                            spellCheck={false}
-                            placeholder="字母/数字/_/-"
-                            {...field}
-                          />
-                        }
-                      />
-                      <FormMessage />
-                    </FormItem>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  aria-busy={loading}
+                  className="flex flex-col gap-4"
+                >
+                  <FormField
+                    control={form.control}
+                    name="loginname"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>用户名</FormLabel>
+                        <FormControl
+                          render={
+                            <Input
+                              autoComplete="username"
+                              spellCheck={false}
+                              placeholder="字母/数字/_/-"
+                              {...field}
+                            />
+                          }
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="pass"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>密码</FormLabel>
+                        <FormControl
+                          render={
+                            <Input
+                              type="password"
+                              autoComplete="new-password"
+                              spellCheck={false}
+                              placeholder="至少8位,含字母和数字"
+                              {...field}
+                            />
+                          }
+                        />
+                        <FormDescription>密码需至少 8 位,包含字母和数字</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="confirmPass"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>确认密码</FormLabel>
+                        <FormControl
+                          render={
+                            <Input
+                              type="password"
+                              autoComplete="new-password"
+                              spellCheck={false}
+                              placeholder="再次输入密码"
+                              {...field}
+                            />
+                          }
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>邮箱</FormLabel>
+                        <FormControl
+                          render={
+                            <Input
+                              type="email"
+                              autoComplete="email"
+                              spellCheck={false}
+                              placeholder="your@email.com"
+                              {...field}
+                            />
+                          }
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <TurnstileWidget />
+                  <Button type="submit" disabled={loading} className="w-full">
+                    {loading ? "注册中..." : "注册"}
+                  </Button>
+                  {loading && (
+                    <p role="status" className="text-center text-sm text-muted-foreground">
+                      正在注册账号
+                    </p>
                   )}
-                />
-                <FormField
-                  control={form.control}
-                  name="pass"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>密码</FormLabel>
-                      <FormControl
-                        render={
-                          <Input
-                            type="password"
-                            autoComplete="new-password"
-                            spellCheck={false}
-                            placeholder="至少8位,含字母和数字"
-                            {...field}
-                          />
-                        }
-                      />
-                      <FormDescription>密码需至少 8 位,包含字母和数字</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="confirmPass"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>确认密码</FormLabel>
-                      <FormControl
-                        render={
-                          <Input
-                            type="password"
-                            autoComplete="new-password"
-                            spellCheck={false}
-                            placeholder="再次输入密码"
-                            {...field}
-                          />
-                        }
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>邮箱</FormLabel>
-                      <FormControl
-                        render={
-                          <Input
-                            type="email"
-                            autoComplete="email"
-                            spellCheck={false}
-                            placeholder="your@email.com"
-                            {...field}
-                          />
-                        }
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <TurnstileWidget />
-                <Button type="submit" disabled={loading} className="w-full">
-                  {loading ? "注册中..." : "注册"}
-                </Button>
-                {loading && <p role="status" className="text-center text-sm text-muted-foreground">正在注册账号</p>}
-              </form>
-            </Form>
+                </form>
+              </Form>
             ) : (
-              <Empty><EmptyHeader><EmptyTitle>暂不开放注册</EmptyTitle><EmptyDescription>当前暂不开放注册。</EmptyDescription></EmptyHeader></Empty>
+              <Empty>
+                <EmptyHeader>
+                  <EmptyTitle>暂不开放注册</EmptyTitle>
+                  <EmptyDescription>当前暂不开放注册。</EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             )}
             <div className="mt-4 text-sm text-muted-foreground text-center">
               <Link to="/signin" className="text-primary hover:underline">
@@ -197,9 +212,9 @@ export default function Signup({ loaderData }: any) {
               <Link to="/auth/github" className="text-primary hover:underline">
                 GitHub 登录
               </Link>
-              </div>
+            </div>
           </div>
-      </AuthShell>
+        </AuthShell>
       </AccountPage>
     </Layout>
   );

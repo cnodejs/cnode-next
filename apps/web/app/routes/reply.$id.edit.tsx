@@ -36,13 +36,10 @@ export default function ReplyEdit({ loaderData }: Route.ComponentProps) {
 
   const { run: submitReply, pending: saving } = useAsyncAction(
     async () => {
-      return apiFetch<{ success: boolean; error_msg?: string }>(
-        `/api/v1/reply/${reply?.id}/edit`,
-        {
-          method: "POST",
-          body: JSON.stringify({ content }),
-        },
-      );
+      return apiFetch<{ success: boolean; error_msg?: string }>(`/api/v1/reply/${reply?.id}/edit`, {
+        method: "POST",
+        body: JSON.stringify({ content }),
+      });
     },
     {
       onSuccess: (res) => {
@@ -67,7 +64,12 @@ export default function ReplyEdit({ loaderData }: Route.ComponentProps) {
   if (!reply) {
     return (
       <Layout>
-        <Empty><EmptyHeader><EmptyTitle>回复不存在</EmptyTitle><EmptyDescription>该回复可能已被删除。</EmptyDescription></EmptyHeader></Empty>
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>回复不存在</EmptyTitle>
+            <EmptyDescription>该回复可能已被删除。</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       </Layout>
     );
   }
@@ -75,28 +77,36 @@ export default function ReplyEdit({ loaderData }: Route.ComponentProps) {
   return (
     <Layout>
       <ComposePage>
-        <PageHeader breadcrumbs={[{ label: "首页", to: "/" }, { label: "编辑回复" }]} title="编辑回复" description="调整回复内容，保持讨论上下文清晰。" />
+        <PageHeader
+          breadcrumbs={[{ label: "首页", to: "/" }, { label: "编辑回复" }]}
+          title="编辑回复"
+          description="调整回复内容，保持讨论上下文清晰。"
+        />
         <Card>
           <CardHeader>
             <CardTitle>回复内容</CardTitle>
           </CardHeader>
           <CardContent>
-        <form onSubmit={handleSubmit}>
-          <FieldGroup>
-          <Field>
-          <FieldLabel>回复内容</FieldLabel>
-          <MarkdownEditor value={content} onChange={setContent} placeholder="支持 Markdown 格式" />
-          </Field>
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => navigate(-1)}>
-              取消
-            </Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? "保存中..." : "保存"}
-            </Button>
-          </div>
-          </FieldGroup>
-        </form>
+            <form onSubmit={handleSubmit}>
+              <FieldGroup>
+                <Field>
+                  <FieldLabel>回复内容</FieldLabel>
+                  <MarkdownEditor
+                    value={content}
+                    onChange={setContent}
+                    placeholder="支持 Markdown 格式"
+                  />
+                </Field>
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => navigate(-1)}>
+                    取消
+                  </Button>
+                  <Button type="submit" disabled={saving}>
+                    {saving ? "保存中..." : "保存"}
+                  </Button>
+                </div>
+              </FieldGroup>
+            </form>
           </CardContent>
         </Card>
       </ComposePage>

@@ -13,9 +13,11 @@
 ## Capabilities
 
 ### New Capabilities
+
 - `admin-list-pagination`: 后台管理列表统一分页契约和 Web 分页体验。
 
 ### Modified Capabilities
+
 - `admin-dashboard`: 后台管理页中承载数据列表的页面需要提供分页访问，不再只显示固定数量结果。
 
 ## Non-goals

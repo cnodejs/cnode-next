@@ -17,7 +17,14 @@ import { Button } from "~/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { EmptyState } from "~/components/EmptyState";
 import { useAsyncAction } from "~/hooks/use-async-action";
-import { Item, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "~/components/ui/item";
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemMedia,
+  ItemTitle,
+} from "~/components/ui/item";
 
 export function meta() {
   return [{ title: "消息 · CNode" }];
@@ -75,12 +82,18 @@ export default function Messages({ loaderData }: Route.ComponentProps) {
 
   const { run: markAllRead, pending: markingAll } = useAsyncAction(
     async () => {
-      return apiFetch<{ success: boolean }>("/api/v1/message/mark_all", { method: "POST", body: JSON.stringify({}) });
+      return apiFetch<{ success: boolean }>("/api/v1/message/mark_all", {
+        method: "POST",
+        body: JSON.stringify({}),
+      });
     },
     {
       onSuccess: (res) => {
         if (!res.success) return;
-        setReadMsgs((items) => [...unreadMsgs.map((msg) => ({ ...msg, has_read: true })), ...items]);
+        setReadMsgs((items) => [
+          ...unreadMsgs.map((msg) => ({ ...msg, has_read: true })),
+          ...items,
+        ]);
         setUnreadMsgs([]);
         setUnreadCount(0);
         toast.success("已全部标记已读");
@@ -93,19 +106,41 @@ export default function Messages({ loaderData }: Route.ComponentProps) {
   return (
     <Layout>
       <DirectoryPage>
-        <PageHeader breadcrumbs={[{ label: "首页", to: "/" }, { label: "消息中心" }]} title="消息中心" description="查看回复、定向回复和 @ 提及通知。" action={
+        <PageHeader
+          breadcrumbs={[{ label: "首页", to: "/" }, { label: "消息中心" }]}
+          title="消息中心"
+          description="查看回复、定向回复和 @ 提及通知。"
+          action={
             <div className="flex items-center gap-2">
               <Badge variant={unreadMsgs.length > 0 ? "default" : "secondary"}>
                 {unreadMsgs.length} 条新消息
               </Badge>
-              <Button size="sm" variant="secondary" onClick={() => markAllRead()} disabled={unreadMsgs.length === 0 || markingAll}>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => markAllRead()}
+                disabled={unreadMsgs.length === 0 || markingAll}
+              >
                 <CheckCheck data-icon="inline-start" /> {markingAll ? "处理中" : "全部已读"}
               </Button>
             </div>
-        } />
+          }
+        />
 
-        <MessageGroup title="新消息" icon={<Bell />} messages={unreadMsgs} onMarkRead={markOneRead} pending={markingOne} />
-        <MessageGroup title="过往消息" icon={<Inbox />} messages={readMsgs} onMarkRead={markOneRead} pending={markingOne} />
+        <MessageGroup
+          title="新消息"
+          icon={<Bell />}
+          messages={unreadMsgs}
+          onMarkRead={markOneRead}
+          pending={markingOne}
+        />
+        <MessageGroup
+          title="过往消息"
+          icon={<Inbox />}
+          messages={readMsgs}
+          onMarkRead={markOneRead}
+          pending={markingOne}
+        />
       </DirectoryPage>
     </Layout>
   );
@@ -132,7 +167,9 @@ function MessageGroup({
           {title}
           <span className="text-sm font-normal text-muted-foreground">({messages.length})</span>
         </CardTitle>
-        <CardAction><Badge variant="secondary">{messages.length}</Badge></CardAction>
+        <CardAction>
+          <Badge variant="secondary">{messages.length}</Badge>
+        </CardAction>
       </CardHeader>
       <CardContent>
         {messages.length > 0 ? (
@@ -149,24 +186,38 @@ function MessageGroup({
   );
 }
 
-function MessageItem({ msg, onMarkRead, pending }: { msg: any; onMarkRead: (id: string) => void; pending: boolean }) {
+function MessageItem({
+  msg,
+  onMarkRead,
+  pending,
+}: {
+  msg: any;
+  onMarkRead: (id: string) => void;
+  pending: boolean;
+}) {
   const typeText =
     msg.type === "reply"
       ? "回复了你的话题"
       : msg.type === "reply2"
         ? "在话题中回复了你"
         : "在话题中 @ 了你";
-  const topicHref = msg.topic ? `/topic/${msg.topic.id}${msg.reply?.id ? `#${msg.reply.id}` : ""}` : "#";
+  const topicHref = msg.topic
+    ? `/topic/${msg.topic.id}${msg.reply?.id ? `#${msg.reply.id}` : ""}`
+    : "#";
   const summary = messageContentSummary(msg.reply?.content);
 
   return (
     <Item>
       <ItemMedia>
         <Link to={`/user/${msg.author?.loginname}`}>
-        <Avatar>
-          <AvatarImage src={getAvatarUrl(msg.author?.avatar_url, 40)} alt={msg.author?.loginname || "CNode"} />
-          <AvatarFallback>{getAvatarFallback(msg.author?.loginname)}</AvatarFallback>
-        </Avatar></Link>
+          <Avatar>
+            <AvatarImage
+              src={getAvatarUrl(msg.author?.avatar_url, 40)}
+              alt={msg.author?.loginname || "CNode"}
+            />
+            <AvatarFallback>{getAvatarFallback(msg.author?.loginname)}</AvatarFallback>
+          </Avatar>
+        </Link>
       </ItemMedia>
       <ItemContent>
         <ItemTitle>
@@ -181,11 +232,7 @@ function MessageItem({ msg, onMarkRead, pending }: { msg: any; onMarkRead: (id: 
             {msg.topic.title}
           </Link>
         )}
-        {summary && (
-          <ItemDescription>
-            {summary}
-          </ItemDescription>
-        )}
+        {summary && <ItemDescription>{summary}</ItemDescription>}
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <TimeAgo date={msg.create_at} />
           {!msg.has_read && (
