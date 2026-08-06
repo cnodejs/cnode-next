@@ -95,6 +95,16 @@ export function formatBytes(bytes: number | undefined) {
   return `${value.toFixed(decimals)} ${units[Math.min(index, units.length - 1)]}`;
 }
 
+export function safeExternalUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    const { protocol } = new URL(url);
+    return protocol === "https:" || protocol === "http:" ? url : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function formatCompactNumber(value: number | undefined) {
   if (value === undefined || Number.isNaN(value)) return "-";
   const compact = (scale: number, suffix: string) => {

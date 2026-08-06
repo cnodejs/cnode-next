@@ -9,7 +9,7 @@ import {
 } from "~/components/ui/select";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
-import { sortVersions, getVersionTags, repoUrl, type PkgTab } from "~/lib/registry/parse";
+import { sortVersions, getVersionTags, repoUrl, safeExternalUrl, type PkgTab } from "~/lib/registry/parse";
 import type { RegistryManifest } from "~/lib/registry/types";
 import { PkgTabs } from "./PkgTabs";
 
@@ -80,9 +80,9 @@ export function PkgHeader({
                   <GitFork className="size-3.5" /> 源码
                 </a>
               )}
-              {manifest.homepage && (
+              {safeExternalUrl(manifest.homepage) && (
                 <a
-                  href={manifest.homepage}
+                  href={safeExternalUrl(manifest.homepage)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-primary"

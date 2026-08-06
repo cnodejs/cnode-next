@@ -5,6 +5,7 @@ import {
   normalizeVersionSpec,
   parsePkgPath,
   repoUrl,
+  safeExternalUrl,
   sortVersions,
 } from "./parse";
 import type { RegistryVersion } from "./types";
@@ -107,5 +108,23 @@ describe("repoUrl", () => {
     expect(repoUrl(undefined)).toBeUndefined();
     expect(repoUrl("")).toBeUndefined();
     expect(repoUrl("svn://example.com/foo")).toBeUndefined();
+  });
+});
+
+describe("safeExternalUrl", () => {
+  it("允许 https 和 http 地址", () => {
+    expect(safeExternalUrl("https://example.com")).toBe("https://example.com");
+    expect(safeExternalUrl("http://example.com")).toBe("http://example.com");
+  });
+
+  it("拒绝非 http(s) 协议", () => {
+    expect(safeExternalUrl("javascript:alert(1)")).toBeUndefined();
+    expect(safeExternalUrl("data:text/html,<h1>x</h1>")).toBeUndefined();
+    expect(safeExternalUrl("ftp://example.com")).toBeUndefined();
+  });
+
+  it("无效或空地址返回 undefined", () => {
+    expect(safeExternalUrl(undefined)).toBeUndefined();
+    expect(safeExternalUrl("not-a-url")).toBeUndefined();
   });
 });

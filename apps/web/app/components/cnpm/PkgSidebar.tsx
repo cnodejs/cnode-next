@@ -2,7 +2,7 @@ import { Download, ExternalLink, GitFork, Globe, Package as PackageIcon } from "
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { DownloadCard } from "./DownloadCard";
 import { MaintainersCard } from "./MaintainersCard";
-import { formatBytes, repoUrl } from "~/lib/registry/parse";
+import { formatBytes, repoUrl, safeExternalUrl } from "~/lib/registry/parse";
 import type { RegistryManifest } from "~/lib/registry/types";
 
 export function PkgSidebar({ manifest, version }: { manifest: RegistryManifest; version: string }) {
@@ -10,13 +10,13 @@ export function PkgSidebar({ manifest, version }: { manifest: RegistryManifest; 
   const dist = manifest.versions?.[version]?.dist;
   const links: Array<{ label: string; href?: string; icon: React.ReactNode } | null> = [
     { label: "仓库", href: repo, icon: <GitFork className="size-4 shrink-0" /> },
-    { label: "主页", href: manifest.homepage, icon: <Globe className="size-4 shrink-0" /> },
+    { label: "主页", href: safeExternalUrl(manifest.homepage), icon: <Globe className="size-4 shrink-0" /> },
     { label: "npmjs.com", href: `https://www.npmjs.com/package/${manifest.name}`, icon: <PackageIcon className="size-4 shrink-0" /> },
     { label: "unpkg", href: `https://unpkg.com/${manifest.name}@${version}`, icon: <ExternalLink className="size-4 shrink-0" /> },
     dist?.tarball
       ? {
           label: `tarball${dist.size !== undefined ? ` · ${formatBytes(dist.size)}` : ""}`,
-          href: dist.tarball,
+          href: safeExternalUrl(dist.tarball),
           icon: <Download className="size-4 shrink-0" />,
         }
       : null,
