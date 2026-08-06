@@ -35,3 +35,4 @@ pnpm migrate:reconcile    # explicit migration reconcile
 - Use OpenSpec for scoped product or behavior changes.
 - Run `pnpm verify` before release or PR validation when feasible.
 - Never print, commit, or document real `.env` values, tokens, private keys, user data, database URLs, or production host secrets.
+- Copilot PR review loop: when iterating on Copilot review comments, do not re-request the review more than **5 rounds** per PR. Once 5 rounds have been addressed and pushed, stop re-requesting; a PR with only suppressed/skipped suggestions after the cap may be considered review-complete at the reviewer's or maintainer's discretion.
