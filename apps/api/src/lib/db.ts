@@ -1,4 +1,4 @@
-import { createDb, type DB } from "@cnode/db";
+import { createDb, type Database, type DB } from "@cnode/db";
 import {
   users,
   topics,
@@ -21,7 +21,7 @@ import { boolEq, boolValue } from "./db-compat";
 import { deleteReplyWithStore, type ReplyDeletionStore } from "./reply-deletion";
 import { createReplyWithStore, type ReplyCreationStore } from "./reply-creation";
 
-let dbInstance: DB = null;
+let dbInstance: DB | null = null;
 const INTERNAL_TABS = ["dev", "test"];
 
 function getDb(): DB {
@@ -121,7 +121,7 @@ export const userQueries = {
 
   async clearGithubInfo(userId: number, githubId: string) {
     const db = getDb();
-    return db.transaction(async (tx: DB) => {
+    return db.transaction(async (tx) => {
       const [updated] = await tx
         .update(users)
         .set({ githubId: null, githubUsername: null, githubAccessToken: null })
@@ -379,7 +379,7 @@ export const topicQueries = {
   },
 };
 
-export function buildTopicsByQuery(db: DB, where: any, opt?: any) {
+export function buildTopicsByQuery(db: Database, where: any, opt?: any) {
   let q = db.select().from(topics).$dynamic();
   const conditions = topicConditions(where);
   if (conditions.length > 0) {
@@ -424,7 +424,7 @@ export const replyQueries = {
     const db = getDb();
     const store: ReplyCreationStore = {
       transaction: (callback) =>
-        db.transaction(async (tx: DB) =>
+        db.transaction(async (tx) =>
           callback({
             async lockTopic(id) {
               const rows = await tx
@@ -441,7 +441,12 @@ export const replyQueries = {
                 .insert(replies)
                 .values({ ...input, createAt: now, updateAt: now })
                 .returning();
-              return reply;
+              return {
+                id: reply.id,
+                topicId: reply.topicId,
+                authorId: reply.authorId,
+                createAt: reply.createAt ?? now,
+              };
             },
             async incrementAuthor(id) {
               await tx
@@ -501,7 +506,7 @@ export const replyQueries = {
     const db = getDb();
     const store: ReplyDeletionStore = {
       transaction: (callback) =>
-        db.transaction(async (tx: DB) =>
+        db.transaction(async (tx) =>
           callback({
             async lockReply(id) {
               const rows = await tx
@@ -591,7 +596,7 @@ export const replyQueries = {
   },
 };
 
-export function buildRepliesByTopicQuery(db: DB, topicId: number) {
+export function buildRepliesByTopicQuery(db: Database, topicId: number) {
   return db
     .select()
     .from(replies)

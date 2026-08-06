@@ -61,45 +61,40 @@ message.openapi(listMessagesRoute, async (c) => {
     getReadMessagesByUserId(currentUser.id),
     getUnreadMessagesByUserId(currentUser.id),
   ]);
-  const formatMessage = async (msg: any) => {
+  const formatMessage = async (msg: (typeof readMsgs)[number]) => {
     const relations = await getMessageRelations(msg);
+    if (!relations.author?.loginname || !relations.topic) return null;
+    const { author, topic } = relations;
     return {
       id: String(relations.id),
-      type: relations.type,
+      // Legacy rows migrated from Mongo may carry other type values; they pass
+      // through on the wire unchanged, matching the previous behavior.
+      type: relations.type as "at" | "reply" | "reply2",
       has_read: !!relations.hasRead,
-      create_at: relations.createAt,
-      author: relations.author
-        ? { loginname: relations.author.loginname, avatar_url: relations.author.avatar }
-        : { loginname: "", avatar_url: "" },
-      topic: relations.topic
-        ? {
-            id: String(relations.topic.id),
-            author: relations.topic.author
-              ? {
-                  loginname: relations.topic.author.loginname,
-                  avatar_url: relations.topic.author.avatar,
-                }
-              : { loginname: "", avatar_url: "" },
-            title: relations.topic.title,
-            last_reply_at: relations.topic.lastReplyAt,
-          }
-        : null,
+      create_at: relations.createAt?.toISOString() ?? "",
+      author: { loginname: author.loginname, avatar_url: author.avatar ?? "" },
+      topic: {
+        id: String(topic.id),
+        author: { loginname: "", avatar_url: "" },
+        title: topic.title ?? "",
+        last_reply_at: topic.lastReplyAt ? topic.lastReplyAt.toISOString() : null,
+      },
       reply: relations.reply
         ? {
             id: String(relations.reply.id),
             content: renderMarkdown(relations.reply.content, mdrender),
             ups: [],
-            create_at: relations.reply.createAt,
+            create_at: relations.reply.createAt?.toISOString() ?? "",
           }
-        : {},
+        : { id: "", content: "", ups: [], create_at: "" },
     };
   };
   const [hasReadRaw, hasUnreadRaw] = await Promise.all([
     Promise.all(readMsgs.map(formatMessage)),
     Promise.all(unreadMsgs.map(formatMessage)),
   ]);
-  const hasRead = hasReadRaw.filter((msg: any) => msg.author?.loginname && msg.topic);
-  const hasUnread = hasUnreadRaw.filter((msg: any) => msg.author?.loginname && msg.topic);
+  const hasRead = hasReadRaw.filter((msg) => msg !== null);
+  const hasUnread = hasUnreadRaw.filter((msg) => msg !== null);
   return c.json(
     {
       success: true as const,

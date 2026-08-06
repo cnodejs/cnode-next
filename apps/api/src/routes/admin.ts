@@ -399,7 +399,7 @@ async function getReportTargetSummary(targetType: string, targetId: number) {
       target_id: String(reply.id),
       topic_id: String(topic.id),
       title: topic.title,
-      summary: reply.content.slice(0, 160),
+      summary: (reply.content ?? "").slice(0, 160),
     };
   }
   return null;
@@ -693,7 +693,7 @@ admin.post("/admin/topics/permanent-delete", adminRequired(), async (c) => {
     if (!result) continue;
     results.push({
       topic_id: id,
-      title: result.topic.title,
+      title: result.topic.title ?? "",
       deleted_replies: result.deletedReplies,
     });
   }
@@ -763,7 +763,7 @@ admin.post("/topic/:tid/top", modRequired(), async (c) => {
     user.id,
     user.loginname,
     topic.top ? "untop" : "top",
-    { type: "topic", id: String(tid), name: topic.title },
+    { type: "topic", id: String(tid), name: topic.title ?? undefined },
     "success",
   );
   return c.json({ success: true, message: topic.top ? "已取消置顶" : "已置顶" });
@@ -783,7 +783,7 @@ admin.post("/topic/:tid/good", modRequired(), async (c) => {
     user.id,
     user.loginname,
     topic.good ? "ungood" : "good",
-    { type: "topic", id: String(tid), name: topic.title },
+    { type: "topic", id: String(tid), name: topic.title ?? undefined },
     "success",
   );
   return c.json({ success: true, message: topic.good ? "已取消加精" : "已加精" });
@@ -803,7 +803,7 @@ admin.post("/topic/:tid/lock", modRequired(), async (c) => {
     user.id,
     user.loginname,
     topic.lock ? "unlock" : "lock",
-    { type: "topic", id: String(tid), name: topic.title },
+    { type: "topic", id: String(tid), name: topic.title ?? undefined },
     "success",
   );
   return c.json({ success: true, message: topic.lock ? "已解锁" : "已锁定" });
@@ -830,7 +830,7 @@ admin.post("/topic/:tid/delete", async (c) => {
     user.id,
     user.loginname,
     "delete_topic",
-    { type: "topic", id: String(tid), name: topic.title },
+    { type: "topic", id: String(tid), name: topic.title ?? undefined },
     "success",
   );
   return c.json({ success: true, message: "话题已删除" });
@@ -1361,7 +1361,7 @@ admin.openapi(createReportRoute, async (c) => {
       user.id,
       user.loginname,
       "report_auto_hide",
-      { type: targetType, id: String(tid), name: summary.title },
+      { type: targetType, id: String(tid), name: summary.title ?? undefined },
       "success",
       JSON.stringify({ reporter_count: Number(reporterCount), threshold }),
     );

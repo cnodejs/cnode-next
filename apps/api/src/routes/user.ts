@@ -70,7 +70,7 @@ async function formatTopic(t: any) {
     visit_count: t.visitCount,
     create_at: t.createAt,
     author: author
-      ? { loginname: author.loginname, avatar_url: author.avatar }
+      ? { loginname: author.loginname, avatar_url: author.avatar ?? "" }
       : { loginname: "", avatar_url: "" },
   };
 }
@@ -374,7 +374,7 @@ user.openapi(userDetailRoute, async (c) => {
   }
   const fmtTopic = (t: any) => ({
     id: String(t.id),
-    author: { loginname: userData.loginname, avatar_url: userData.avatar },
+    author: { loginname: userData.loginname, avatar_url: userData.avatar ?? "" },
     title: t.title,
     last_reply_at: t.lastReplyAt,
   });
@@ -384,13 +384,13 @@ user.openapi(userDetailRoute, async (c) => {
       success: true as const,
       data: {
         loginname: userData.loginname,
-        avatar_url: userData.avatar,
+        avatar_url: userData.avatar ?? "",
         githubUsername: userData.githubUsername?.trim() || "",
         location: userData.location?.trim() || null,
         url: userData.url?.trim() || null,
         signature: userData.signature?.trim() || null,
         identities,
-        create_at: userData.createAt,
+        create_at: userData.createAt?.toISOString() ?? "",
         score: userData.score || 0,
         topic_count: userData.topicCount || 0,
         reply_count: userData.replyCount || 0,
@@ -450,7 +450,7 @@ user.openapi(accessTokenRoute, async (c) => {
     {
       success: true as const,
       loginname: userData.loginname,
-      avatar_url: userData.avatar,
+      avatar_url: userData.avatar ?? "",
       id: String(userData.id),
       is_block: !!userData.isBlock,
       is_muted: !!userData.isMuted || !!userData.isBlock,

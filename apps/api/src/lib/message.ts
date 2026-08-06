@@ -100,7 +100,6 @@ export async function getMessageRelations(msg: typeof messages.$inferSelect) {
     msg.topicId ? topicQueries.getById(msg.topicId) : null,
     msg.replyId ? replyQueries.getById(msg.replyId) : null,
   ]);
-
   return {
     ...msg,
     author,
