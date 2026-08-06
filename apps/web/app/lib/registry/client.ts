@@ -72,8 +72,8 @@ export function getDownloads(pkg: string, range = 7) {
 }
 
 export function getDir(pkg: string, spec: string, path: string) {
-  const dirPath =
-    path && path !== "/" ? `${encodeFilePath(ensureLeadingSlash(path))}/` : "/";
+  const trimmed = path.replace(/\/+$/, "");
+  const dirPath = trimmed && trimmed !== "/" ? `${encodeFilePath(ensureLeadingSlash(trimmed))}/` : "/";
   return registryJson<RegistryFilesResponse>(
     `/${pkgPath(pkg)}/${encodeURIComponent(spec)}/files${dirPath}?meta`,
   );
