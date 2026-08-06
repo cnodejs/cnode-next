@@ -53,6 +53,22 @@ function CnpmPkgInner({ rest }: { rest?: string }) {
     if (name) addRecent(name);
   }, [name, addRecent]);
 
+  const requestedVersion = params.get("version") || "";
+  const fallbackVersion = sortVersions(manifest?.versions || {})[0]?.version;
+  const version =
+    requestedVersion && manifest?.versions?.[requestedVersion]
+      ? requestedVersion
+      : manifest?.["dist-tags"]?.latest || fallbackVersion;
+
+  useEffect(() => {
+    if (!manifest?.name) return;
+    if (requestedVersion && requestedVersion !== version) {
+      const nextParams = new URLSearchParams(params);
+      nextParams.set("version", version);
+      setParams(nextParams, { replace: true });
+    }
+  }, [manifest, requestedVersion, version, params, setParams]);
+
   if (!name) {
     return (
       <Layout>
@@ -114,13 +130,6 @@ function CnpmPkgInner({ rest }: { rest?: string }) {
       </Layout>
     );
   }
-
-  const requestedVersion = params.get("version") || "";
-  const fallbackVersion = sortVersions(manifest.versions)[0]?.version;
-  const version =
-    requestedVersion && manifest.versions[requestedVersion]
-      ? requestedVersion
-      : manifest["dist-tags"]?.latest || fallbackVersion;
 
   const handleVersionChange = (next: string) => {
     const nextParams = new URLSearchParams(params);
