@@ -61,10 +61,10 @@ export function getRegistryStats() {
 export function getDownloads(pkg: string, range = 7) {
   const end = new Date();
   const start = new Date();
-  start.setDate(end.getDate() - (Math.max(1, range) - 1));
+  start.setUTCDate(end.getUTCDate() - (Math.max(1, range) - 1));
   const fmt = (d: Date) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-      d.getDate(),
+    `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(
+      d.getUTCDate(),
     ).padStart(2, "0")}`;
   return registryJson<DownloadsResponse>(
     `/downloads/range/${fmt(start)}:${fmt(end)}/${pkgPath(pkg)}`,
