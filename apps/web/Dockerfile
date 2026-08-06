@@ -9,6 +9,10 @@ WORKDIR /app
 FROM base AS deps
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY apps/web/package.json apps/web/package.json
+COPY apps/web/app apps/web/app
+COPY apps/web/react-router.config.ts apps/web/react-router.config.ts
+COPY apps/web/vite.config.ts apps/web/vite.config.ts
+COPY scripts scripts
 COPY packages/db/package.json packages/db/package.json
 COPY packages/shared/package.json packages/shared/package.json
 RUN pnpm install --store-dir=$PNPM_STORE_DIR --frozen-lockfile --config.verify-store-integrity=false
