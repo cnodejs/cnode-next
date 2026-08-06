@@ -40,7 +40,7 @@ export function NpmSearchForm({
       onSubmit={(event) => {
         event.preventDefault();
         const keyword = value.trim();
-        if (keyword) navigate(`/cnpm/search?q=${encodeURIComponent(keyword)}`);
+        if (keyword) void navigate(`/cnpm/search?q=${encodeURIComponent(keyword)}`);
       }}
     >
       <InputGroup className={cn("bg-transparent", large ? "h-12 rounded-xl" : "h-9 rounded-lg")}>

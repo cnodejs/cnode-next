@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { REGISTRY } from "~/lib/registry/client";
 import CnpmLanding from "~/routes/cnpm";
 import CnpmSearch from "~/routes/cnpm.search";
@@ -59,7 +59,7 @@ describe("cnpm landing", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input: RequestInfo | URL) => {
-        const url = String(input);
+        const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
         if (url === `${REGISTRY}/`) return jsonResponse(stats);
         return jsonResponse({ error: "not found" });
       }),
@@ -97,7 +97,7 @@ describe("cnpm search", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input: RequestInfo | URL) => {
-        const url = String(input);
+        const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
         if (url.includes("/-/v1/search")) return jsonResponse(searchResponse);
         return jsonResponse({ error: "not found" });
       }),
@@ -140,7 +140,7 @@ describe("cnpm package page", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input: RequestInfo | URL) => {
-        const url = String(input);
+        const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
         if (url === `${REGISTRY}/react`) return jsonResponse(manifest);
         if (url.includes("/downloads/range/")) return jsonResponse(downloads);
         return jsonResponse({ error: "not found" });

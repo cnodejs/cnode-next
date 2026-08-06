@@ -24,7 +24,7 @@ export function PkgTabs({
 
   const handleChange = (value: string | number) => {
     const tab = String(value) as PkgTab;
-    navigate(
+    void navigate(
       tab === "home"
         ? `/cnpm/pkg/${name}${versionQuery}`
         : `/cnpm/pkg/${name}/${tab}${versionQuery}`,
