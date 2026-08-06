@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Search as SearchIcon } from "lucide-react";
 import {
   InputGroup,
@@ -22,11 +22,16 @@ export function NpmSearchForm({
 }) {
   const navigate = useNavigate();
   const [value, setValue] = useState(initialValue);
+  const inputRef = useRef<HTMLInputElement>(null);
   const large = size === "lg";
 
   useEffect(() => {
     setValue(initialValue);
   }, [initialValue]);
+
+  useEffect(() => {
+    if (autoFocus) inputRef.current?.focus();
+  }, [autoFocus]);
 
   return (
     <form
@@ -43,11 +48,11 @@ export function NpmSearchForm({
           <SearchIcon className={large ? "size-5" : "size-4"} />
         </InputGroupAddon>
         <InputGroupInput
+          ref={inputRef}
           type="search"
           name="q"
           autoComplete="off"
           value={value}
-          autoFocus={autoFocus}
           onChange={(event) => setValue(event.target.value)}
           placeholder="搜索 npm 包，如 react、@babel/core…"
           aria-label="搜索 npm 包"

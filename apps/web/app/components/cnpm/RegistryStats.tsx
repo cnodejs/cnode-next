@@ -15,7 +15,10 @@ export function RegistryStats() {
     );
   }
 
-  if (!data || !data.doc_count) {
+  if (!data) {
+    return null;
+  }
+  if (typeof data.doc_count !== "number") {
     return null;
   }
 

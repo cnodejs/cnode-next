@@ -13,7 +13,10 @@ export function MaintainersCard({ maintainers }: { maintainers: Maintainer[] }) 
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         {maintainers.map((maintainer) => (
-          <MaintainerRow key={maintainer.name} maintainer={maintainer} />
+          <MaintainerRow
+            key={maintainer.email ? `${maintainer.name}:${maintainer.email}` : maintainer.name}
+            maintainer={maintainer}
+          />
         ))}
       </CardContent>
     </Card>

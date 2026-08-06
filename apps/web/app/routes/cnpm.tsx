@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { Layout } from "~/components/Layout";
 import { PageContainer } from "~/components/PageShell";
@@ -18,6 +19,14 @@ const POPULAR_PACKAGES = [
   "koa",
 ];
 
+function useDesktopAutoFocus() {
+  const [focused, setFocused] = useState(false);
+  useEffect(() => {
+    if (window.matchMedia("(pointer: fine)").matches) setFocused(true);
+  }, []);
+  return focused;
+}
+
 export function meta() {
   return seoMeta({
     title: "CNPM 镜像 · CNode",
@@ -27,6 +36,7 @@ export function meta() {
 }
 
 export default function CnpmLanding() {
+  const autoFocus = useDesktopAutoFocus();
   return (
     <Layout>
       <PageContainer size="reading" className="flex flex-col gap-14 py-16">
@@ -37,7 +47,7 @@ export default function CnpmLanding() {
           <p className="max-w-lg text-sm leading-relaxed text-muted-foreground sm:text-base">
             搜索并浏览 npm 包信息，配合 npmmirror 国内镜像加速安装。
           </p>
-          <NpmSearchForm autoFocus size="lg" />
+          <NpmSearchForm autoFocus={autoFocus} size="lg" />
         </div>
 
         <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-8">
