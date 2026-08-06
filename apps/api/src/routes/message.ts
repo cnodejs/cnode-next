@@ -75,7 +75,9 @@ message.openapi(listMessagesRoute, async (c) => {
       author: { loginname: author.loginname, avatar_url: author.avatar ?? "" },
       topic: {
         id: String(topic.id),
-        author: { loginname: "", avatar_url: "" },
+        author: topic.author
+          ? { loginname: topic.author.loginname, avatar_url: topic.author.avatar ?? "" }
+          : { loginname: "", avatar_url: "" },
         title: topic.title ?? "",
         last_reply_at: topic.lastReplyAt ? topic.lastReplyAt.toISOString() : null,
       },

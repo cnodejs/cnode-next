@@ -100,10 +100,12 @@ export async function getMessageRelations(msg: typeof messages.$inferSelect) {
     msg.topicId ? topicQueries.getById(msg.topicId) : null,
     msg.replyId ? replyQueries.getById(msg.replyId) : null,
   ]);
+  const topicAuthor = topic ? await userQueries.getById(topic.authorId) : null;
+
   return {
     ...msg,
     author,
-    topic,
+    topic: topic ? { ...topic, author: topicAuthor } : null,
     reply,
     isInvalid: !author || !topic,
   };
