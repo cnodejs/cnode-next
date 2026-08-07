@@ -112,7 +112,7 @@ Production Compose MUST use `env_file` to inject the unified runtime configurati
 
 #### Scenario: Tracked templates are migrated
 
-- **WHEN** 实施者更新 `.env.example` 或 `deployment/.env.production.example`
+- **WHEN** 实施者更新 `.env.example` 或 `docs/deployment/env.production.example`
 - **THEN** 只能写入新变量及非敏感占位值
 - **AND** 不得根据真实 dotenv 内容生成模板
 

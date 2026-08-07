@@ -1,0 +1,139 @@
+# Repository baseline for production Compose configuration.
+# Keep environment-specific services, secrets, and paths outside this file.
+services:
+  api:
+    image: ${CNODE_API_IMAGE:?CNODE_API_IMAGE is required}
+    env_file: ${CNODE_ENV_FILE:-.env}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "fetch(''http://localhost:3001/health'').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    ports:
+      - "3001:3001"
+    networks:
+      - cnode-internal
+      - legacy-cnode
+    restart: unless-stopped
+
+  web:
+    image: ${CNODE_WEB_IMAGE:?CNODE_WEB_IMAGE is required}
+    env_file: ${CNODE_ENV_FILE:-.env}
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - cnode-internal
+      - legacy-cnode
+    restart: unless-stopped
+
+  worker:
+    image: ${CNODE_API_IMAGE:?CNODE_API_IMAGE is required}
+    env_file: ${CNODE_ENV_FILE:-.env}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["pnpm", "--filter", "@cnode/api", "worker:moderation"]
+    networks:
+      - cnode-internal
+    restart: unless-stopped
+
+  migrate-schema:
+    image: ${CNODE_API_IMAGE:?CNODE_API_IMAGE is required}
+    env_file: ${CNODE_ENV_FILE:-.env}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["pnpm", "db:migrate"]
+    profiles:
+      - migrate
+    networks:
+      - cnode-internal
+      - legacy-cnode
+
+  migrate-data:
+    image: ${CNODE_API_IMAGE:?CNODE_API_IMAGE is required}
+    env_file: ${CNODE_ENV_FILE:-.env}
+    environment:
+      MIGRATION_TARGET: rehearsal
+      MIGRATION_REPORT_PATH: /app/migration-reports/migration-report.json
+    volumes:
+      - ${MIGRATION_REPORT_DIR:?MIGRATION_REPORT_DIR is required}:/app/migration-reports
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["pnpm", "migrate:mongo-to-pg"]
+    profiles:
+      - migrate
+    networks:
+      - cnode-internal
+      - legacy-cnode
+
+  reconcile:
+    image: ${CNODE_API_IMAGE:?CNODE_API_IMAGE is required}
+    env_file: ${CNODE_ENV_FILE:-.env}
+    environment:
+      MIGRATION_REPORT_PATH: /app/migration-reports/migration-report.json
+    volumes:
+      - ${MIGRATION_REPORT_DIR:?MIGRATION_REPORT_DIR is required}:/app/migration-reports
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["pnpm", "migrate:reconcile"]
+    profiles:
+      - migrate
+    networks:
+      - cnode-internal
+      - legacy-cnode
+
+  postgres:
+    image: postgres:18-bookworm
+    env_file: ${CNODE_ENV_FILE:-.env}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cnode-internal
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-bookworm
+    env_file: ${CNODE_ENV_FILE:-.env}
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cnode-internal
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  redis-data:
+
+networks:
+  cnode-internal:
+    driver: bridge
+  legacy-cnode:
+    name: ${LEGACY_DOCKER_NETWORK:-cnode}
+    external: true

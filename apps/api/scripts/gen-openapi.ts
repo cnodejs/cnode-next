@@ -16,10 +16,6 @@ const doc = apiRoutes.getOpenAPIDocument({
   ],
 });
 
-const outPath = resolve(process.cwd(), "../../api/openapi.json");
-writeFileSync(outPath, JSON.stringify(doc, null, 2) + "\n", "utf8");
-console.log(`✓ Wrote ${outPath}`);
-
 const webPath = resolve(process.cwd(), "../../apps/web/public/openapi.json");
 writeFileSync(webPath, JSON.stringify(doc, null, 2) + "\n", "utf8");
 console.log(`✓ Wrote ${webPath}`);

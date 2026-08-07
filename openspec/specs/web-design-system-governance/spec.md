@@ -56,13 +56,13 @@ Web UI SHALL 在原子组件与 route 之间提供可复用 application blocks�
 
 ### Requirement: 设计系统具备稳定文档和防漂移门禁
 
-仓库 SHALL 提供稳定设计系统文档和可自动执行的治理检查，覆盖 primitive 基线、semantic theme、组件选择、spacing、页面原型、responsive、Markdown 和验收矩阵。
+仓库 SHALL 在 `docs/arch/design-system.md` 提供稳定设计决策，在项目级 `cnode-web-design` Skill 提供 Agent 执行方法，并使用自动化治理检查覆盖可机器判断的漂移。
 
 #### Scenario: 新 UI 变更进入 review
 
 - **WHEN** PR 修改 primitive、theme、application block 或 route composition
 - **THEN** CI 或本地 release gate MUST 检查配置基线、禁止的 primitive 视觉覆写和原始品牌色使用
-- **AND** reviewer MUST 能从 `docs/design-system.md` 找到对应规则与验收页面原型。
+- **AND** reviewer MUST 能从 `docs/arch/design-system.md` 与 `cnode-web-design` Skill 分别找到设计依据和执行方法。
 
 #### Scenario: 上游组件升级
 

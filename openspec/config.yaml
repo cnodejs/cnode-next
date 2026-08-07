@@ -1,45 +1,53 @@
 schema: spec-driven
 
 context: |
-  Project: cnode-next — a full rewrite of the legacy CNode (nodeclub) forum.
-  Legacy code lives in ./nodeclub (Express + MongoDB + EJS, running in production
-  but low traffic) and ./egg-cnode (an incomplete Egg.js migration, never deployed,
-  used only as a business-logic reference).
+  Project: cnode-next, the TypeScript successor to the legacy CNode forum.
+  ../nodeclub and ./egg-cnode are reference-only legacy code. Do not edit, build,
+  test, or ship them.
 
-  New stack:
-    - Monorepo: pnpm workspace (no turborepo)
-    - Frontend (apps/web): React Router v8 in SSR mode, deployed to Cloudflare Workers via @cloudflare/vite-plugin, TailwindCSS + shadcn/ui
-    - Backend (apps/api): Hono on Node.js, deployed on a self-owned overseas server
-    - Database layer (packages/db): Drizzle ORM, PostgreSQL-first for development and production
-    - Shared (packages/shared): API contract types, Zod schemas, constants, pure utils
-    - Cache/Session/Rate-limit: Redis (backend)
-    - Image storage: Alibaba Cloud OSS with mirror pull from Qiniu (progressive migration)
-    - Email: self-hosted SMTP (nodemailer), no third-party API
-    - Auth: cookie-based session (cross-subdomain .cnodejs.org) + GitHub OAuth + local accounts (bcryptjs, verify legacy hashes)
-    - Data migration: MongoDB → PostgreSQL one-time script, ObjectId → BIGINT (old links 404 acceptable)
+  Stable architecture boundaries:
+    - cnode-next is an ESM, strict TypeScript pnpm workspace.
+    - apps/web owns React Router SSR presentation; apps/api owns Hono HTTP behavior and workers.
+    - packages/db owns Drizzle schema and migrations. PostgreSQL is the only runtime database.
+    - packages/shared owns shared Zod contracts, types, constants, and pure helpers.
+    - Redis is coordination state for sessions, cache, rate limits, and workers, not durable application data.
+
+  Source precedence:
+    - AGENTS.md defines hard boundaries, Skill triggers, and verification commands.
+    - Source code and tests define current behavior; route zod-openapi declarations define the API contract; Drizzle schema and reviewed migrations define database shape.
+    - docs/arch defines durable architecture decisions, docs/biz defines durable business and legacy knowledge, and docs/deployment defines deployment examples.
+    - apps/*/README.md and workspace package.json files define current application entry points and commands.
+    - Do not infer versions, providers, topology, or behavior from this config when an authoritative source differs.
 
   语言：中文（简体）
   所有 OpenSpec proposal、design、tasks、spec delta 必须使用简体中文撰写。
   技术名词、代码路径、API 路由、环境变量、命令可以保留英文原文。
-  需求描述必须明确对应 legacy nodeclub 线上行为，避免使用模糊的“优化”“完善”“增强”。
-  若有功能不再迁移，必须在 Non-goals 或设计决策中写明废弃原因和线上兼容策略。
+  需求描述必须使用可验证的具体行为，避免使用模糊的“优化”“完善”“增强”。
+  只有在迁移、替换或兼容 legacy 行为时，才必须引用对应 legacy 路径并说明保留、改变或废弃的行为；新能力不得被强行解释为 legacy parity。
 
 rules:
   proposal:
     - "Keep proposals under 800 words"
     - 'Always include a "Non-goals" section'
     - "Always define the change scope: in-scope areas, out-of-scope areas, affected systems, and high-risk categories"
-    - 'Always include a "Documentation Impact" section covering docs/ and wiki/ updates, deferrals, or why they are not required'
+    - 'Always include a "Documentation Impact" section covering applicable docs/arch, docs/biz, docs/deployment, root governance files, app READMEs, and generated Web API reference assets'
+    - "For Web UI changes, identify the affected route archetype, shared components or primitives, responsive behavior, accessibility behavior, and design-system impact"
+    - "Do not restate project Skill rules; identify the applicable Skill and the concrete files or decisions affected"
     - "Reference the legacy nodeclub/egg-cnode code by path when explaining what is being replaced"
   tasks:
     - Group tasks into phases (MVP first, then feature-complete)
     - Each task should be completable in under 2 hours
     - Include verification steps where possible
-    - Include docs/wiki synchronization tasks when Documentation Impact requires updates
+    - Include documentation synchronization tasks when Documentation Impact requires updates
+    - "For documentation work, include checks for the authoritative owner, obsolete paths, unsafe example data, and cnode-docs validation requirements"
+    - "For Web UI work, include targeted tests plus responsive, light/dark theme, keyboard, focus, empty/error/pending, and design-system governance verification as applicable"
     - Include diagram consistency and archive-readiness checks for design-heavy changes
     - Include database audit verification tasks for database changes
   design:
     - Record not just the decision but the alternatives that were rejected and why
-    - Use Mermaid diagrams (not ASCII art) for architecture flows and data flows
+    - Use Mermaid diagrams (not ASCII art) for architecture flows and data flows; diagrams must explain relationships or flow rather than decorate or repeat prose
     - Use Mermaid diagrams or concise matrices for data models, state transitions, permissions, and migration/release ordering when those areas are affected
+    - "For Web UI changes, apply cnode-web-design: reuse the established route archetype, shared page shells, Base UI/shadcn primitives, and semantic theme roles before proposing new abstractions or route-specific styling"
+    - "For Web UI changes, describe responsive and accessibility behavior when it affects composition, interaction, focus, overflow, forms, overlays, or Markdown"
+    - "For documentation changes, apply cnode-docs: choose one authoritative owner, keep only durable knowledge, and classify replaced content as keep, compress, merge, or delete"
     - Include a "Database Change Audit" for any PostgreSQL schema, Drizzle migration, seed/bootstrap, index, constraint, backfill, data repair, data cleanup, data retention, or field semantics change

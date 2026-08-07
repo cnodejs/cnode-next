@@ -2,7 +2,4 @@ blank_issues_enabled: false
 contact_links:
   - name: Security report
     url: https://github.com/cnodejs/cnode-next/security/advisories/new
-    about: Report security vulnerabilities privately. Do not paste secrets, tokens, cookies, private keys, database URLs, or user data into public issues.
-  - name: OpenSpec changes
-    url: https://github.com/cnodejs/cnode-next/tree/main/openspec
-    about: Behavior, product, API, migration, release, or architecture changes should be proposed through OpenSpec.
+    about: Report security vulnerabilities privately.

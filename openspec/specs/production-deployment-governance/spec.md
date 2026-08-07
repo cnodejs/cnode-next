@@ -55,44 +55,38 @@ Define production deployment runbook, deploy asset organization, audit, CI gates
 
 ### Requirement: 生产部署资产必须集中管理
 
-生产部署 runbook、部署编排、部署模板、部署 SQL、启动脚本、dotenv 示例和部署辅助文件 SHALL 收敛到专门的 `deployment/` 部署域，避免仓库根目录或 `docs/` 堆放生产实现细节。
+生产部署 runbook、示例编排、示例配置、启动或部署辅助脚本 SHALL 收敛到 `docs/deployment/`；这些文件 MUST 使用安全占位值并明确其示例性质，仓库不得保留并列的顶层 `deployment/` 域。
 
-#### Scenario: 生产 compose 文件位置
+#### Scenario: 生产 Compose 示例位置
 
-- **WHEN** 仓库提供生产 Docker Compose 编排
-- **THEN** 该文件 MUST 位于 `deployment/` 或等价部署目录
-- **AND** 根目录 MUST NOT 直接放置生产 `docker-compose.yml` 编排文件
+- **WHEN** 仓库提供生产 Docker Compose 示例
+- **THEN** 文件 MUST 位于 `docs/deployment/docker-compose.yml`
+- **AND** 根目录与顶层 `deployment/` MUST NOT 放置另一份生产 Compose
 
-#### Scenario: deployment 与 docs/wiki 同级
+#### Scenario: 部署说明位置
 
-- **WHEN** 仓库包含生产部署 runbook 或部署资产
-- **THEN** `deployment/` MUST 作为与 `docs/`、`wiki/` 同级的顶层目录存在
-- **AND** `deployment/` MUST 包含 README 或等价规范说明生产部署步骤和部署资产职责边界
+- **WHEN** 维护者查找部署步骤
+- **THEN** 项目 MUST 提供 `docs/deployment/deployment.md`
+- **AND** `docs/deployment/` MUST NOT 使用 README 或 index 文件作为入口
 
 #### Scenario: 部署资产分类
 
-- **WHEN** 部署资产包含 compose、SQL、启动脚本或配置模板
-- **THEN** 这些文件 MUST 在 `deployment/` 内按用途清晰命名或分目录组织
-- **AND** `deployment/` 规范 MUST 说明 docker-compose 文件、SQL 文件、启动脚本和 dotenv 模板各自用途
-
-#### Scenario: 部署命令引用新路径
-
-- **WHEN** 文档、脚本或运维 runbook 引用生产 compose 文件
-- **THEN** 它们 MUST 使用部署目录路径，例如 `deployment/docker-compose.yml`
-- **AND** 旧路径 MUST 不再作为推荐命令出现
+- **WHEN** 部署示例包含 Compose、dotenv、启动脚本或辅助脚本
+- **THEN** 这些文件 MUST 在 `docs/deployment/` 内按用途清晰命名或分目录组织
+- **AND** 根 package scripts、文档和 workflow MUST 使用迁移后的路径
 
 #### Scenario: dotenv 示例按配置域分组
 
 - **WHEN** 仓库提供部署 dotenv 示例或模板
 - **THEN** 模板 MUST 使用注释或等价结构按配置域分组
 - **AND** 分组 SHOULD 覆盖应用 URL、数据库、Redis、认证、对象存储、Turnstile、邮件、观测/日志和迁移/运维开关
-- **AND** 模板 MUST 使用占位值，不得包含真实 secret、token、私有连接串或生产用户数据
+- **AND** 模板 MUST 使用占位值，不得包含真实 secret、token、私有连接串、生产主机或用户数据
 
-#### Scenario: 启动脚本和 SQL 可追溯
+#### Scenario: 部署辅助脚本可追溯
 
-- **WHEN** `deployment/` 包含启动脚本或 SQL 文件
-- **THEN** 文件名或相邻说明 MUST 表达执行时机和用途
-- **AND** 文档 MUST 说明这些资产是否可重复执行、是否会修改数据、以及执行前需要的环境变量
+- **WHEN** `docs/deployment/scripts/` 包含可执行辅助脚本
+- **THEN** 文件名或相邻部署说明 MUST 表达用途、执行时机和所需环境变量
+- **AND** 运行输出 MUST 写入忽略或外部路径，不得作为长期文档提交
 
 ### Requirement: CI 必须避免一次性文件文本验收脚本
 
@@ -114,7 +108,7 @@ CI 和 `pnpm verify` SHALL 使用长期可维护的通用质量门禁，避免�
 #### Scenario: 文档结构由规范约束
 
 - **WHEN** 文档结构、目录职责或 README 信息架构需要约束
-- **THEN** 约束 SHOULD 写入 `docs/conventions.md`、OpenSpec 或 review checklist
+- **THEN** 约束 SHOULD 写入 `AGENTS.md`、项目级 `cnode-docs` Skill、OpenSpec 或 review checklist
 - **AND** CI MUST NOT 通过硬编码文档必须包含某几句固定文字来代替人工 review
 
 ### Requirement: GitHub Actions 必须按职责拆分
@@ -145,17 +139,17 @@ GitHub Actions workflow SHALL 按 CI、镜像构建发布和生产部署入口�
 
 - **WHEN** 项目选择人工执行部署 runbook
 - **THEN** GitHub Actions MUST 只构建并发布镜像
-- **AND** 部署命令 MUST 保留在 `deployment/README.md` 或等价部署域说明中
+- **AND** 部署命令 MUST 保留在 `docs/deployment/deployment.md`
 ### Requirement: 版本化部署资产必须保持通用
-仓库中的部署资产 SHALL 使用稳定的相对路径和占位配置，不得记录环境特定路径、连接方式、基础设施拓扑、凭据位置或运行数据。
+仓库中的部署示例 SHALL 使用稳定的仓库相对路径、变量和占位配置，不得记录环境特定路径、连接方式、私有基础设施拓扑、凭据位置或运行数据。
 
 #### Scenario: 引用 Compose 编排
 - **WHEN** 文档、规格或脚本引用版本化 Compose 编排
-- **THEN** 引用 MUST 使用 `deployment/docker-compose.yml`
+- **THEN** 引用 MUST 使用 `docs/deployment/docker-compose.yml`
 - **AND** 旧文件名 MUST 不再作为当前推荐命令出现
 
 #### Scenario: 编写部署说明
-- **WHEN** 维护者更新 `deployment/README.md` 或部署模板
+- **WHEN** 维护者更新 `docs/deployment/deployment.md` 或部署示例
 - **THEN** 内容 MUST 使用仓库相对路径、变量和占位值
 - **AND** 内容 MUST NOT 包含仅适用于某个运行环境的信息
 

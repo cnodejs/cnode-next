@@ -1,52 +1,18 @@
 name: Feature request
-description: Suggest a new feature or improvement
+description: Suggest an improvement
 labels: ["feature"]
 body:
-  - type: markdown
-    attributes:
-      value: |
-        Thanks for the suggestion! Please check existing issues and OpenSpec changes first to avoid duplicates.
   - type: textarea
     id: problem
     attributes:
       label: Problem
-      description: What problem does this feature solve?
-      placeholder: I'm always frustrated when ...
+      description: What problem should be solved?
     validations:
       required: true
   - type: textarea
-    id: solution
+    id: proposal
     attributes:
-      label: Proposed solution
-      description: What you would expect to happen instead.
+      label: Proposal
+      description: Describe the desired behavior and any alternatives considered.
     validations:
       required: true
-  - type: textarea
-    id: alternatives
-    attributes:
-      label: Alternatives considered
-      description: Any workaround or alternative approach you have considered.
-    validations:
-      required: false
-  - type: dropdown
-    id: area
-    attributes:
-      label: Affected area
-      options:
-        - Web (apps/web)
-        - API (apps/api)
-        - Database (packages/db)
-        - Shared contracts (packages/shared)
-        - Documentation
-        - Deployment / CI
-        - Other
-    validations:
-      required: true
-  - type: checkboxes
-    id: openspec
-    attributes:
-      label: OpenSpec
-      description: Behavior or product changes should use OpenSpec.
-      options:
-        - label: I am willing to open an OpenSpec change for this feature.
-          required: false

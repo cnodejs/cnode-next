@@ -45,7 +45,7 @@ Define the API test infrastructure expectations for automatic Vitest discovery, 
 #### Scenario: 文档说明测试运行器
 
 - **WHEN** Vitest 测试基础设施实现完成
-- **THEN** `docs/conventions.md` MUST 说明 `apps/api` 使用 Vitest 和自动测试发现
+- **THEN** `apps/api/README.md` MUST 说明 API 测试命令和自动测试发现
 - **AND** 文档 MUST 删除或替换手动枚举 API 测试文件的旧约定
 
 #### Scenario: 文档说明无真实数据库约束

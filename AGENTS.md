@@ -1,37 +1,42 @@
 # AGENTS.md
 
-## Execution Facts
+## Project
 
-- Project: cnode-next, a CNode rewrite with legacy behavior referenced from `../nodeclub/` and `egg-cnode/`.
-- Legacy boundary: `../nodeclub/` is outside this repository and must not be linted, tested, built, edited, or treated as shipped source.
-- Runtime database: PostgreSQL only. Do not add SQLite, dialect fallback, or local database compatibility paths.
-- Package manager: pnpm workspace, ESM, TypeScript strict.
+- cnode-next is a pnpm workspace using ESM and strict TypeScript.
+- Web: `apps/web`, React Router SSR, Tailwind CSS v4, shadcn/ui on Base UI.
+- API: `apps/api`, Hono on Node.js; worker entrypoints live with API code.
+- Data: `packages/db`, Drizzle and PostgreSQL. PostgreSQL is the only runtime database.
+- Shared contracts: `packages/shared`, including Zod schemas, types, constants, and pure helpers.
+- `../nodeclub/` and `egg-cnode/` are reference-only legacy code. Do not edit, lint, test, build, or ship them.
 
-## Stack
+## Hard Boundaries
 
-- Web: `apps/web`, React Router v7 SSR, Tailwind CSS v4, shadcn/ui.
-- API: `apps/api`, Hono on Node.js, worker entrypoints live with API code.
-- Database: `packages/db`, Drizzle PostgreSQL schema and migrations.
-- Shared contracts: `packages/shared`, types, Zod schemas, constants and pure functions.
+- Do not add SQLite, dialect fallbacks, or local database compatibility paths.
+- Never print, commit, or document real dotenv values, credentials, private keys, tokens, database URLs, private hosts, user data, or production configuration.
+- Use OpenSpec for scoped product, behavior, API, architecture, database, migration, security, permission, deployment, or data-repair changes.
+- Keep long-lived documentation under `docs/arch/`, `docs/biz/`, or `docs/deployment/`. Do not create documentation README/index pages.
+- Keep root governance files and `apps/*/README.md` concise; do not duplicate an authoritative rule across documents.
+
+## Project Skills
+
+- Load `cnode-docs` before creating, editing, moving, reviewing, or deleting documentation, root governance files, app READMEs, generated OpenAPI output, deployment examples, or GitHub templates.
+- Load `cnode-web-design` before changing Web layouts, route composition, UI components, themes, responsive behavior, Markdown presentation, or design-system source.
+- Follow project Skills before generic framework guidance. Keep hard boundaries here and detailed execution methods in Skills.
 
 ## Commands
 
 ```bash
-pnpm dev                  # local web + api
-pnpm lint                 # ESLint
-pnpm typecheck            # TypeScript
-pnpm test                 # tests
-pnpm build                # all packages/apps
-pnpm verify               # release gate: lint/typecheck/test/build/OpenSpec/secrets
-pnpm db:push:pg           # create/update PostgreSQL schema
-pnpm db:migrate           # apply reviewed Drizzle migrations
-pnpm db:seed              # seed test data
-pnpm migrate:mongo-to-pg  # explicit Mongo to PostgreSQL migration
-pnpm migrate:reconcile    # explicit migration reconcile
+pnpm dev
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+pnpm verify
+pnpm db:push:pg
+pnpm db:migrate
+pnpm db:seed
+pnpm migrate:mongo-to-pg
+pnpm migrate:reconcile
 ```
 
-## Change Rules
-
-- Use OpenSpec for scoped product or behavior changes.
-- Run `pnpm verify` before release or PR validation when feasible.
-- Never print, commit, or document real `.env` values, tokens, private keys, user data, database URLs, or production host secrets.
+Run targeted checks while editing and `pnpm verify` before release or PR validation when feasible. Deployment preflight may validate Compose separately; ordinary repository verification must not run Docker Compose.

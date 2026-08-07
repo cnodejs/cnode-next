@@ -22,22 +22,28 @@ OpenSpec change proposals for behavior, product, API, migration, release, archit
 
 ### Requirement: Documentation Impact Assessment
 
-Every OpenSpec change proposal SHALL include a documentation impact assessment covering both `docs/` and `wiki/`. The assessment MUST list target files when updates are required, explain why updates are not required, or identify the follow-up task/change when updates are deferred.
+Every OpenSpec change proposal SHALL include a documentation impact assessment covering applicable `docs/arch/`, `docs/biz/`, `docs/deployment/`, root governance files, app READMEs, and generated Web API reference assets. The assessment MUST list target files when updates are required, explain why updates are not required, or identify the follow-up task/change when updates are deferred.
 
-#### Scenario: Stable documentation must change
+#### Scenario: Architecture or deployment documentation must change
 
-- **WHEN** a change modifies current development workflow, architecture, database behavior, API usage, security rules, deployment steps, or content moderation operation
-- **THEN** the proposal SHALL identify the affected `docs/` files to update
+- **WHEN** a change modifies runtime architecture, data design, design-system decisions, deployment steps, or deployment examples
+- **THEN** the proposal SHALL identify the affected `docs/arch/` or `docs/deployment/` files
 
-#### Scenario: Knowledge base must change
+#### Scenario: Business knowledge must change
 
 - **WHEN** a change modifies business rules, legacy compatibility understanding, migration background, community rules, or sourced historical context
-- **THEN** the proposal SHALL identify the affected `wiki/` files to update and preserve uncertainty using the wiki writing guidelines
+- **THEN** the proposal SHALL identify the affected `docs/biz/` files
+- **AND** uncertain claims SHALL be marked `To Confirm` or omitted
+
+#### Scenario: API contract documentation must change
+
+- **WHEN** a change modifies the public API contract
+- **THEN** the proposal SHALL identify route zod-openapi declarations and regenerated `apps/web/public/openapi.json`
 
 #### Scenario: Documentation not required
 
-- **WHEN** a change does not require updates to `docs/` or `wiki/`
-- **THEN** the proposal SHALL explicitly state why long-lived documentation is not affected
+- **WHEN** a change does not require long-lived documentation updates
+- **THEN** the proposal SHALL explicitly state why documentation is not affected
 
 ### Requirement: Diagram And Explanation Requirements
 
@@ -65,7 +71,7 @@ OpenSpec design documents for database-related changes MUST include a `Database 
 #### Scenario: Database change audit covers impact
 
 - **WHEN** a change affects PostgreSQL schema, data, migrations, or field semantics
-- **THEN** the design MUST identify affected tables, affected columns, expected existing-row impact, user-visible behavior impact, and related `docs/` or `wiki/` updates
+- **THEN** the design MUST identify affected tables, affected columns, expected existing-row impact, user-visible behavior impact, and related documentation updates
 
 #### Scenario: Database change audit covers compatibility
 
@@ -83,8 +89,9 @@ OpenSpec task lists SHALL include explicit tasks for documentation synchronizati
 
 #### Scenario: Documentation tasks follow impact assessment
 
-- **WHEN** the proposal declares required `docs/` or `wiki/` updates
-- **THEN** `tasks.md` SHALL include checklist items to update those files and verify they describe current behavior rather than one-time implementation notes
+- **WHEN** the proposal declares required documentation updates
+- **THEN** `tasks.md` SHALL include checklist items to update the named files
+- **AND** the tasks SHALL verify that content follows the project documentation Skill, describes durable behavior, and does not retain obsolete paths or one-time implementation notes
 
 #### Scenario: Database tasks follow audit
 

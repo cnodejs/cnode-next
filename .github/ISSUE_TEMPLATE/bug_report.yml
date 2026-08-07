@@ -1,56 +1,23 @@
 name: Bug report
-description: Report something that is not working as expected
+description: Report unexpected behavior
 labels: ["bug"]
 body:
-  - type: markdown
-    attributes:
-      value: |
-        Thanks for taking the time to file a bug report! Before submitting, please search existing issues to avoid duplicates.
   - type: textarea
-    id: what-happened
+    id: description
     attributes:
-      label: What happened?
-      description: A clear description of the observed behavior.
-      placeholder: When I ..., I expected ..., but instead ...
+      label: Description
+      description: What happened, and what did you expect?
     validations:
       required: true
   - type: textarea
-    id: reproduce
+    id: reproduction
     attributes:
-      label: Steps to reproduce
-      description: Minimal reproduction steps.
-      placeholder: |
-        1.
-        2.
-        3.
-    validations:
-      required: true
-  - type: input
-    id: env
-    attributes:
-      label: Environment
-      description: OS, Node.js version, pnpm version, browser, or deployment context.
-      placeholder: "Node.js 24, pnpm 11, macOS, Chrome 130"
-    validations:
-      required: false
-  - type: dropdown
-    id: area
-    attributes:
-      label: Affected area
-      options:
-        - Web (apps/web)
-        - API (apps/api)
-        - Database (packages/db)
-        - Shared contracts (packages/shared)
-        - Documentation
-        - Deployment / CI
-        - Other
+      label: Reproduction
+      description: Provide minimal steps or a reproducible example.
     validations:
       required: true
   - type: textarea
-    id: logs
+    id: additional
     attributes:
-      label: Relevant logs or screenshots
-      description: Paste redacted logs or screenshots. Do not paste real tokens, cookies, database URLs, or user data.
-    validations:
-      required: false
+      label: Additional context
+      description: Add environment details, screenshots, or redacted logs. Never include credentials or user data.

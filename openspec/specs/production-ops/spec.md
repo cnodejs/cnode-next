@@ -41,7 +41,7 @@
 
 - **WHEN** 运维执行生产部署验收
 - **THEN** `api`、`web` 和 `worker` MUST 运行来自 `ghcr.io/cnodejs/*` 的 SHA tag 或 digest 镜像
-- **AND** `deployment/docker-compose.yml` MUST NOT 为生产服务定义 `build:`
+- **AND** `docs/deployment/docker-compose.yml` MUST NOT 为生产服务定义 `build:`
 - **AND** 部署命令 MUST 使用 `docker compose pull` 和 `docker compose up -d --no-build`
 - **AND** 部署记录 MUST 能从运行镜像反查 Git commit
 
@@ -116,7 +116,7 @@
 项目 SHALL 以可重复验证的镜像、migration、健康检查和回滚约束描述生产运维，不得将单次发布观察或环境拓扑作为长期规范。
 
 #### Scenario: 验证部署资产
-- **WHEN** 维护者审查 `deployment/docker-compose.yml`
+- **WHEN** 维护者审查 `docs/deployment/docker-compose.yml`
 - **THEN** API、Web 和 worker MUST 引用可追溯的已发布镜像
 - **AND** 这些服务 MUST NOT 定义本地镜像构建
 

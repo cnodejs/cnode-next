@@ -36,7 +36,7 @@
 
 #### Scenario: Compose 不包含本地构建定义
 
-- **WHEN** 运维查看 `deployment/docker-compose.yml`
+- **WHEN** 运维查看 `docs/deployment/docker-compose.yml`
 - **THEN** `api`、`web`、`worker`、`migrate-schema`、`migrate-data`、`reconcile` 服务 MUST NOT 包含 `build:` 配置
 - **AND** 这些服务 MUST 使用 `image:` 引用 GHCR 镜像
 
@@ -44,8 +44,8 @@
 
 - **WHEN** 运维部署新版本
 - **THEN** 运维 MUST 设置 `CNODE_API_IMAGE` 和 `CNODE_WEB_IMAGE` 指向 SHA tag 或 digest
-- **AND** 运维 MUST 执行 `docker compose -f deployment/docker-compose.yml pull api web worker`
-- **AND** 运维 MUST 执行 `docker compose -f deployment/docker-compose.yml up -d --no-build --no-deps api worker` 和等价 Web 命令
+- **AND** 运维 MUST 执行 `docker compose -f docs/deployment/docker-compose.yml pull api web worker`
+- **AND** 运维 MUST 执行 `docker compose -f docs/deployment/docker-compose.yml up -d --no-build --no-deps api worker` 和等价 Web 命令
 - **AND** 该流程 MUST NOT 执行 Docker build
 
 #### Scenario: Migration 任务使用 API 镜像
@@ -76,16 +76,16 @@ Web 镜像 MUST 不依赖构建时 API base URL。SSR 侧和浏览器侧 API 请
 - **THEN** 浏览器侧 API base MUST 随该环境的 `.env` 变化
 - **AND** 不得要求为不同 API 域名重新构建 Web 镜像
 ### Requirement: 镜像部署命令必须使用统一编排入口
-项目 SHALL 通过 `deployment/docker-compose.yml` 引用已发布的不可变镜像，并在部署过程中禁止本地镜像构建。
+项目 SHALL 通过 `docs/deployment/docker-compose.yml` 引用已发布的不可变镜像，并在部署过程中禁止本地镜像构建。
 
 #### Scenario: 拉取待部署镜像
 - **WHEN** 维护者准备部署指定版本
 - **THEN** `CNODE_API_IMAGE` 和 `CNODE_WEB_IMAGE` MUST 使用 SHA tag 或 digest
-- **AND** 拉取命令 MUST 使用 `docker compose -f deployment/docker-compose.yml pull`
+- **AND** 拉取命令 MUST 使用 `docker compose -f docs/deployment/docker-compose.yml pull`
 
 #### Scenario: 启动应用服务
 - **WHEN** 已发布镜像完成拉取
-- **THEN** 启动命令 MUST 使用 `docker compose -f deployment/docker-compose.yml up -d --no-build`
+- **THEN** 启动命令 MUST 使用 `docker compose -f docs/deployment/docker-compose.yml up -d --no-build`
 - **AND** Compose 中的应用服务 MUST NOT 包含 `build:` 配置
 
 #### Scenario: 执行 reviewed migration

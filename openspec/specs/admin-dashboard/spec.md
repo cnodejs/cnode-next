@@ -406,19 +406,19 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 
 ### Requirement: 内容治理文档同步
 
-后台内容治理行为变更 SHALL 同步到对应 `docs/` 和 `wiki/` 文档，避免管理员误解软删除、巡检确认删除和真实删除的差异。
+后台内容治理行为变更 SHALL 同步到 `docs/biz/`，避免管理员误解软删除、巡检确认删除和真实删除的差异。
 
 #### Scenario: 巡检治理文档同步
 
 - **WHEN** 巡检结果按任务查看和任务级批量确认删除实现完成
-- **THEN** `docs/content-moderation.md` MUST 说明按任务查看巡检命中和任务级批量确认删除流程
+- **THEN** `docs/biz/community-rules.md` MUST 说明按任务查看巡检命中和任务级批量确认删除流程
 - **AND** 文档 MUST 明确任务级批量确认删除会删除原始话题或回复，但仍沿用软删除生命周期
 
 #### Scenario: 真实删除业务规则同步
 
 - **WHEN** 后台话题真实删除实现完成
-- **THEN** `wiki/business-rules.md` MUST 记录真实删除是 admin-only 独立危险操作
-- **AND** wiki MUST 区分现有软删除、巡检确认删除和数据库物理删除
+- **THEN** `docs/biz/business-rules.md` MUST 记录真实删除是 admin-only 独立危险操作
+- **AND** 文档 MUST 区分现有软删除、巡检确认删除和数据库物理删除
 
 ### Requirement: 封禁管理必须区分禁言和内容屏蔽
 
