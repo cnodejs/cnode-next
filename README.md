@@ -22,11 +22,11 @@ pnpm dev
 
 Web runs at `http://localhost:5173`; API runs at `http://localhost:3001`. Root `.env` is the default local environment source and must never be committed.
 
-See [apps/web/README.md](apps/web/README.md) and [apps/api/README.md](apps/api/README.md) for app-specific commands. Architecture is documented in [docs/arch/architecture.md](docs/arch/architecture.md), the Web app renders the generated API reference at `/api`, and the deployment example is in [docs/deployment/deployment.md](docs/deployment/deployment.md).
+See the [Web development guide](apps/web/README.md) and [API development guide](apps/api/README.md) for app-specific commands. The [architecture overview](docs/arch/architecture.md) documents system boundaries, the Web app renders the generated API reference at `/api`, and the [deployment guide](docs/deployment/deployment.md) provides the public deployment example.
 
 ## Contributing
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Community participation follows the [Code of Conduct](CODE_OF_CONDUCT.md). Report vulnerabilities according to [SECURITY.md](SECURITY.md).
+Read the [contribution guide](CONTRIBUTING.md) before opening a pull request. Community participation follows the [Code of Conduct](CODE_OF_CONDUCT.md). Report vulnerabilities according to the [security policy](SECURITY.md).
 
 ## License
 
