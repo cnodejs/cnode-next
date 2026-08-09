@@ -82,4 +82,28 @@ describe("home Sidebar", () => {
       ),
     ).toEqual(["社区合作", "最新回复", "积分榜", "无人回复的话题", "生态资源"]);
   });
+
+  it("replaces cooperation with the selected topic explanation", async () => {
+    render(
+      <MemoryRouter>
+        <Sidebar tab="tech" />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("技术")).toBeInTheDocument();
+    expect(screen.getByText(/讨论 Node.js、JavaScript 框架/)).toBeInTheDocument();
+    expect(screen.queryByText("社区合作")).not.toBeInTheDocument();
+    expect(await screen.findByText("最新回复")).toBeInTheDocument();
+  });
+
+  it("keeps cooperation on the good view", () => {
+    render(
+      <MemoryRouter>
+        <Sidebar tab="good" />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("社区合作")).toBeInTheDocument();
+    expect(screen.queryByText(/由社区管理团队选出/)).not.toBeInTheDocument();
+  });
 });

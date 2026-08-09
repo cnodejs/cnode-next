@@ -1,3 +1,5 @@
+import { getDefaultTopicTabLabel } from "./topic-tab-presentation";
+
 export const CNODE_LOGO_LIGHT = "/cnodejs_light.svg";
 export const CNODE_LOGO_DARK = "/cnodejs.svg";
 
@@ -17,14 +19,6 @@ export function getAvatarFallback(name?: string | null) {
   return value.slice(0, 1).toUpperCase();
 }
 
-const DEFAULT_TAB_LABELS: Record<string, string> = {
-  all: "全部",
-  share: "分享",
-  ask: "问答",
-  job: "招聘",
-  good: "精华",
-};
-
 export function getTabLabel(
   tab?: string | null,
   tabs?: Array<{ key: string; label: string }>,
@@ -33,5 +27,5 @@ export function getTabLabel(
     const found = tabs.find((t) => t.key === tab);
     if (found) return found.label;
   }
-  return DEFAULT_TAB_LABELS[tab || ""] || tab || "社区";
+  return getDefaultTopicTabLabel(tab);
 }

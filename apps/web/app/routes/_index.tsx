@@ -12,6 +12,35 @@ import { Button } from "~/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { seoMeta } from "~/lib/seo";
 import { getAvatarUrl } from "~/lib/brand";
+import { TopicTabSummary } from "~/components/TopicTabInfo";
+import { topicTabKeys } from "@cnode/shared";
+
+type HomeTab = {
+  key: string;
+  label: string;
+  visible?: boolean;
+  sort_order?: number;
+  scope?: "public" | "admin";
+};
+
+export function buildHomeTabs(allTabs: HomeTab[], isAdmin: boolean) {
+  const supported = new Set<string>(topicTabKeys);
+  const visible = allTabs.filter(
+    (item) =>
+      supported.has(item.key) && item.visible && ((item.scope || "public") === "public" || isAdmin),
+  );
+  const middle = visible
+    .filter((item) => item.key !== "dev" && item.key !== "good")
+    .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+  const dev = isAdmin ? visible.find((item) => item.key === "dev") : undefined;
+  const good = visible.find((item) => item.key === "good");
+  return [
+    { key: "all", label: "全部" },
+    ...middle.map(({ key, label }) => ({ key, label })),
+    ...(dev ? [{ key: dev.key, label: dev.label }] : []),
+    ...(good ? [{ key: good.key, label: good.label }] : []),
+  ];
+}
 
 function normalizeTopicAvatars(topics: any[]) {
   return topics.map((topic) => ({
@@ -69,13 +98,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   const rootData = useRouteLoaderData("root") as { tabs?: any[]; user?: any } | undefined;
   const allTabs = rootData?.tabs || [];
   const isAdmin = !!rootData?.user?.is_admin;
-  const visibleTabs = allTabs
-    .filter((t: any) => t.visible && ((t.scope || "public") === "public" || isAdmin))
-    .sort((a: any, b: any) => a.sort_order - b.sort_order);
-  const tabs = [
-    { key: "all", label: "全部" },
-    ...visibleTabs.map((t: any) => ({ key: t.key, label: t.label })),
-  ];
+  const tabs = buildHomeTabs(allTabs, isAdmin);
 
   return (
     <Layout>
@@ -96,6 +119,9 @@ export default function Index({ loaderData }: Route.ComponentProps) {
         />
         <FeedGrid className="items-start">
           <div className="min-w-0">
+            {tab !== "all" && tab !== "good" ? (
+              <TopicTabSummary tab={tab} className="mb-4 lg:hidden" />
+            ) : null}
             <Tabs
               value={tab}
               onValueChange={(value) => {
@@ -112,7 +138,11 @@ export default function Index({ loaderData }: Route.ComponentProps) {
                   >
                     {tabs.map((t) => {
                       return (
-                        <TabsTrigger key={t.key} value={t.key} className="flex-none">
+                        <TabsTrigger
+                          key={t.key}
+                          value={t.key}
+                          className="min-w-15 flex-none"
+                        >
                           {t.label}
                         </TabsTrigger>
                       );
@@ -138,7 +168,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
           </div>
 
           <div className="min-w-0 lg:sticky lg:top-24">
-            <Sidebar />
+            <Sidebar tab={tab} tabs={allTabs} />
           </div>
         </FeedGrid>
       </FeedPage>

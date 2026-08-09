@@ -1,17 +1,15 @@
-const TABS: Record<string, string> = {
-  share: "分享",
-  ask: "问答",
-  job: "招聘",
-  good: "精华",
-};
+import { useRouteLoaderData } from "react-router";
+import { getTabLabel } from "~/lib/brand";
+import { Badge } from "./ui/badge";
 
 export function TagBadge({ tab }: { tab: string }) {
-  const label = TABS[tab] || tab;
+  const rootData = useRouteLoaderData("root") as
+    | { tabs?: Array<{ key: string; label: string }> }
+    | undefined;
+  const label = getTabLabel(tab, rootData?.tabs);
   if (!label) return null;
   return <Badge variant="secondary">{label}</Badge>;
 }
-
-import { Badge } from "./ui/badge";
 
 export function StatusBadge({ type }: { type: "top" | "good" | "lock" | "muted" | "archived" }) {
   const config = {

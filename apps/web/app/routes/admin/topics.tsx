@@ -16,6 +16,7 @@ import { AdminPage, AdminPageHeader, AdminPanel, AdminToolbar } from "~/componen
 import { Pagination } from "~/components/Pagination";
 import { ConfirmationDialog } from "~/components/ConfirmationDialog";
 import { previousPageAfterRemoval } from "~/lib/post-mutation-navigation";
+import { topicTabDefinitions } from "@cnode/shared";
 import {
   Table,
   TableBody,
@@ -241,11 +242,13 @@ export default function AdminTopics({ loaderData }: any) {
               <Input name="q" defaultValue={q} placeholder="搜索话题标题" />
               <NativeSelect name="tab" defaultValue={tab || "all"} size="sm" aria-label="Tab 筛选">
                 <option value="all">全部 Tab</option>
-                <option value="share">分享</option>
-                <option value="ask">问答</option>
-                <option value="job">招聘</option>
-                <option value="dev">dev</option>
-                <option value="test">test</option>
+                {topicTabDefinitions
+                  .filter(({ key }) => key !== "good")
+                  .map(({ key, label }) => (
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
+                  ))}
               </NativeSelect>
               <NativeSelect
                 name="visibility"
