@@ -11,13 +11,14 @@ build/
 
 # Local dev
 .local/
+.cnode-ops.md
 *.db
 *.db-journal
 
 # Environment
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 
 # Editor
 .vscode/
@@ -44,6 +45,7 @@ yarn-error.log*
 # Deployment runtime output
 deployment/migration-reports/*
 !deployment/migration-reports/.gitignore
+*.dump
 
 # Generated API docs
 api/_generated/
