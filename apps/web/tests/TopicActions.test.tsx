@@ -65,9 +65,15 @@ describe("话题动作层级", () => {
       "overscroll-contain",
       "pb-[max(0.25rem,env(safe-area-inset-bottom))]",
     );
-    expect(screen.getByLabelText("更多话题操作").parentElement).toHaveClass(
-      "flex-col",
-      "sm:flex-row",
+    const primaryActions = screen.getByLabelText("主要话题操作");
+    const moreActions = screen.getByLabelText("更多话题操作");
+    expect(primaryActions.parentElement).toHaveClass(
+      "grid",
+      "grid-cols-[minmax(0,1fr)_auto]",
+    );
+    expect(moreActions).toHaveClass("justify-end");
+    expect(primaryActions.compareDocumentPosition(moreActions)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
     );
     expect(screen.getByRole("menuitem", { name: "置顶帖子" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "高亮帖子" })).toBeInTheDocument();

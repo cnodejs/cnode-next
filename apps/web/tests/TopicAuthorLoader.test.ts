@@ -72,4 +72,44 @@ describe("话题详情作者资料 loader", () => {
     expect(result.topic.id).toBe("1");
     expect(result.authorProfile).toBeNull();
   });
+
+  it("derives newest-first replies without mutating a cached canonical timeline", async () => {
+    const cachedTopic = {
+      id: "1",
+      author: null,
+      replies: [{ id: "101" }, { id: "102" }],
+    };
+    mocks.kvGet.mockResolvedValueOnce(cachedTopic);
+
+    const newest = await loader({
+      params: { tid: "1" },
+      request: new Request("http://localhost/topic/1?reply_sort=unexpected"),
+      context: { cloudflare: { env: { KV: {} } } },
+    } as any);
+
+    expect(newest.replySort).toBe("newest");
+    expect(
+      newest.replies.map(({ reply, floor }: { reply: any; floor: number }) => [reply.id, floor]),
+    ).toEqual([
+      ["102", 2],
+      ["101", 1],
+    ]);
+    expect(cachedTopic.replies.map((reply) => reply.id)).toEqual(["101", "102"]);
+
+    mocks.kvGet.mockResolvedValueOnce(cachedTopic);
+    const oldest = await loader({
+      params: { tid: "1" },
+      request: new Request("http://localhost/topic/1?reply_sort=oldest"),
+      context: { cloudflare: { env: { KV: {} } } },
+    } as any);
+
+    expect(oldest.replySort).toBe("oldest");
+    expect(
+      oldest.replies.map(({ reply, floor }: { reply: any; floor: number }) => [reply.id, floor]),
+    ).toEqual([
+      ["101", 1],
+      ["102", 2],
+    ]);
+    expect(cachedTopic.replies.map((reply) => reply.id)).toEqual(["101", "102"]);
+  });
 });

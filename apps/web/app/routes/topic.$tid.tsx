@@ -1,7 +1,7 @@
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { PublicIdentity } from "@cnode/shared";
 import type { Route } from "../../.react-router/types/app/routes/+types/topic.$tid";
-import { Link, useRevalidator } from "react-router";
+import { Link, useLocation, useNavigate, useRevalidator } from "react-router";
 import { toast } from "sonner";
 import {
   CalendarDays,
@@ -28,6 +28,14 @@ import { ReadingGrid, ReadingPage } from "~/components/PageShell";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import { NativeSelect } from "~/components/ui/native-select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import { Textarea } from "~/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import {
@@ -81,8 +89,45 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 
+export type ReplySort = "newest" | "oldest";
+
+const REPLY_SORT_ITEMS: Array<{ value: ReplySort; label: string }> = [
+  { value: "newest", label: "最新优先" },
+  { value: "oldest", label: "最早优先" },
+];
+
+export interface ReplyWithFloor<T> {
+  reply: T;
+  floor: number;
+}
+
+export function resolveReplySort(value: string | null): ReplySort {
+  return value === "oldest" ? "oldest" : "newest";
+}
+
+export function orderRepliesForDisplay<T>(
+  replies: readonly T[],
+  sort: ReplySort,
+): ReplyWithFloor<T>[] {
+  const withFloors = replies.map((reply, index) => ({ reply, floor: index + 1 }));
+  return sort === "newest" ? [...withFloors].reverse() : withFloors;
+}
+
+export function focusReplyElement(replyId: string) {
+  const target = document.getElementById(replyId);
+  if (!target) return false;
+
+  target.scrollIntoView({
+    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    block: "start",
+  });
+  target.focus({ preventScroll: true });
+  return true;
+}
+
 export async function loader({ params, request, context }: Route.LoaderArgs) {
   const tid = params.tid!;
+  const replySort = resolveReplySort(new URL(request.url).searchParams.get("reply_sort"));
   const cacheKey = `topic:${tid}`;
   const kv = (context as any)?.cloudflare?.env?.KV;
   const currentUser = await getCurrentUser(request);
@@ -97,7 +142,8 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
         headers: { cookie },
       },
     );
-    if (!res.success) return { topic: null, authorProfile: null, kv, currentUser };
+    if (!res.success)
+      return { topic: null, authorProfile: null, kv, currentUser, replies: [], replySort };
     topic = res.data;
     if (!currentUser) await kvSet(kv, cacheKey, topic, 60);
   }
@@ -118,7 +164,8 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
     }
   }
 
-  return { topic, authorProfile, kv, currentUser };
+  const replies = orderRepliesForDisplay(topic.replies || [], replySort);
+  return { topic, authorProfile, kv, currentUser, replies, replySort };
 }
 
 export function meta({ data }: Route.MetaArgs) {
@@ -134,7 +181,7 @@ export function meta({ data }: Route.MetaArgs) {
 }
 
 export default function TopicDetail({ loaderData }: Route.ComponentProps) {
-  const { topic, authorProfile, currentUser } = loaderData as any;
+  const { topic, authorProfile, currentUser, replies, replySort } = loaderData as any;
   if (!topic) {
     return (
       <Layout>
@@ -168,7 +215,8 @@ export default function TopicDetail({ loaderData }: Route.ComponentProps) {
             <div className="flex flex-col gap-5">
               <TopicActions topic={topic} currentUser={currentUser} />
               <ReplySection
-                replies={topic.replies || []}
+                replies={replies}
+                replySort={replySort}
                 topicId={topic.id}
                 currentUser={currentUser}
               />
@@ -526,26 +574,26 @@ export function TopicActions({ topic, currentUser }: { topic: any; currentUser: 
   );
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-wrap gap-2">
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-1 sm:items-center sm:gap-3">
+      <div className="flex min-w-0 flex-wrap gap-1.5 sm:gap-2" aria-label="主要话题操作">
         <Button
           variant={topic.is_collect ? "default" : "outline"}
           size="sm"
           onClick={() => toggleCollect()}
           disabled={collecting}
         >
-          <Star className="h-4 w-4" />{" "}
+          <Star className="hidden sm:block" />{" "}
           {collecting ? "处理中" : topic.is_collect ? "取消收藏" : "收藏话题"}
         </Button>
         <Button render={<a href="#replies" />} variant="ghost" size="sm">
-          <MessageSquare className="h-4 w-4" /> 查看回复
+          <MessageSquare className="hidden sm:block" /> 查看回复
         </Button>
       </div>
       {(presentation.showDirectEdit || presentation.showReport || presentation.showManagement) && (
-        <div className="flex flex-wrap gap-2" aria-label="更多话题操作">
+        <div className="flex flex-wrap justify-end gap-1.5 sm:gap-2" aria-label="更多话题操作">
           {presentation.showDirectEdit && (
             <Button render={<Link to={`/topic/${topic.id}/edit`} />} variant="outline" size="sm">
-              <Edit3 className="h-4 w-4" /> 编辑话题
+              <Edit3 className="hidden sm:block" /> 编辑话题
             </Button>
           )}
           {presentation.showReport && <ReportButton targetType="topic" targetId={topic.id} />}
@@ -563,7 +611,7 @@ export function TopicActions({ topic, currentUser }: { topic: any; currentUser: 
                     />
                   }
                 >
-                  <MoreHorizontal className="h-4 w-4" /> 管理
+                  <MoreHorizontal className="hidden sm:block" /> 管理
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
@@ -651,19 +699,42 @@ export function canEditTopic(topic: any, currentUser: any) {
   );
 }
 
-function ReplySection({
+export function ReplySection({
   replies,
+  replySort,
   topicId,
   currentUser,
 }: {
-  replies: any[];
+  replies: ReplyWithFloor<any>[];
+  replySort: ReplySort;
   topicId: string;
   currentUser: any;
 }) {
   const [targetReply, setTargetReply] = useState<TopicReplyDTO | null>(null);
   const [content, setContent] = useState("");
+  const [createdReplyId, setCreatedReplyId] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const { revalidate } = useRevalidator();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!createdReplyId || !replies.some(({ reply }) => reply.id === createdReplyId)) return;
+
+    const replyId = createdReplyId;
+    setCreatedReplyId(null);
+    void navigate(
+      {
+        pathname: location.pathname,
+        search: location.search,
+        hash: `#${replyId}`,
+      },
+      { replace: true, preventScrollReset: true },
+    );
+    window.requestAnimationFrame(() => {
+      focusReplyElement(replyId);
+    });
+  }, [createdReplyId, location.pathname, location.search, navigate, replies]);
 
   function focusReplyEditor() {
     window.setTimeout(() => {
@@ -681,9 +752,24 @@ function ReplySection({
     focusReplyEditor();
   }
 
+  function changeReplySort(value: ReplySort) {
+    const searchParams = new URLSearchParams(location.search);
+    if (value === "oldest") searchParams.set("reply_sort", "oldest");
+    else searchParams.delete("reply_sort");
+
+    void navigate(
+      {
+        pathname: location.pathname,
+        search: searchParams.size > 0 ? `?${searchParams.toString()}` : "",
+        hash: location.hash,
+      },
+      { preventScrollReset: true },
+    );
+  }
+
   const { run: submitReply, pending: submitting } = useAsyncAction(
     async () => {
-      return apiFetch<{ success: boolean; error_msg?: string }>(
+      return apiFetch<{ success: boolean; reply_id?: string; error_msg?: string }>(
         `/api/v1/topic/${topicId}/replies`,
         {
           method: "POST",
@@ -701,7 +787,9 @@ function ReplySection({
           toast.success("回复成功");
           setContent("");
           setTargetReply(null);
-          void revalidate();
+          void revalidate().then(() => {
+            if (res.reply_id) setCreatedReplyId(res.reply_id);
+          });
         } else {
           toast.error(res.error_msg || "回复失败");
         }
@@ -717,13 +805,33 @@ function ReplySection({
 
   return (
     <section id="replies" className="flex scroll-mt-24 flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-semibold">回复 ({replies.length})</h2>
-        {currentUser && (
-          <Button variant="outline" size="sm" onClick={() => startReply()}>
-            添加回复
-          </Button>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <Select
+            items={REPLY_SORT_ITEMS}
+            value={replySort}
+            onValueChange={(value) => changeReplySort(resolveReplySort(value))}
+          >
+            <SelectTrigger size="sm" aria-label="回复排序方式">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent align="end">
+              <SelectGroup>
+                {REPLY_SORT_ITEMS.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          {currentUser && (
+            <Button variant="outline" size="sm" onClick={() => startReply()}>
+              添加回复
+            </Button>
+          )}
+        </div>
       </div>
 
       {replies.length === 0 ? (
@@ -736,11 +844,11 @@ function ReplySection({
         </Card>
       ) : (
         <div className="flex flex-col gap-3">
-          {replies.map((reply, index) => (
+          {replies.map(({ reply, floor }) => (
             <ReplyItem
               key={reply.id}
               reply={reply}
-              floor={index + 1}
+              floor={floor}
               currentUser={currentUser}
               onReply={() => startReply(reply)}
             />
@@ -873,7 +981,7 @@ function ReplyItem({
   const canDelete =
     currentUser && (currentUser.is_mod || currentUser.loginname === author?.loginname);
   return (
-    <Card id={reply.id} className="scroll-mt-24">
+    <Card id={reply.id} data-reply-id={reply.id} tabIndex={-1} className="scroll-mt-24">
       <CardHeader>
         <div className="flex min-w-0 items-center gap-3">
           <Avatar className="size-8">

@@ -179,7 +179,7 @@ Topic 详情 SHALL 为 loading、not-found、deleted、locked、no-reply 和 una
 
 ### Requirement: Topic action surface 分层
 
-话题详情正文后的 action surface SHALL 将主互动、页内导航和更多/管理动作分层展示，避免收藏、查看回复、编辑、举报和管理操作以同级按钮零散平铺。收藏/取消收藏、查看回复和举报 MUST 保持普通动作语义；作者编辑自己的话题 MUST 直接可见；admin 编辑他人话题 MUST 位于单一“管理”菜单；有既有权限的 mod 或 admin 执行置顶、高亮和删除时，这些动作 MUST 收纳在同一“管理”菜单中。该分层 MUST NOT 改变任何角色原有的动作权限。
+话题详情正文后的 action surface SHALL 将主互动、页内导航和更多/管理动作分层展示，避免收藏、查看回复、编辑、举报和管理操作以同级按钮零散平铺。收藏/取消收藏、查看回复和举报 MUST 保持普通动作语义；作者编辑自己的话题 MUST 直接可见；admin 编辑他人话题 MUST 位于单一“管理”菜单；有既有权限的 mod 或 admin 执行置顶、高亮和删除时，这些动作 MUST 收纳在同一“管理”菜单中。小屏 SHALL 将主互动和页内导航保持在左侧动作组，将编辑、举报或管理等权限动作保持在右侧动作组。该分层 MUST NOT 改变任何角色原有的动作权限。
 
 #### Scenario: 主互动和页内导航分离
 
@@ -237,10 +237,10 @@ Topic 详情 SHALL 为 loading、not-found、deleted、locked、no-reply 和 una
 #### Scenario: 移动端 action surface 可用
 
 - **WHEN** 话题详情页在移动端渲染
-- **THEN** 主互动和查看回复仍可直接触达
-- **THEN** 收藏/取消收藏、查看回复和作者直接编辑 MUST 保持可触达
-- **AND** 低频或管理动作可以折叠，但不得消失或变成不可发现的死控件
-- **AND** 举报和“管理”菜单 MAY 按普通动作与管理动作层级折叠，但不得消失或变成不可发现的死控件
+- **THEN** 左侧动作组 SHALL 直接展示收藏/取消收藏和“查看回复”
+- **AND** 右侧动作组 SHALL 展示当前角色可用的作者直接编辑、举报或“管理”入口
+- **AND** 两组内部可以换行但 MUST NOT 产生横向页面溢出
+- **AND** 低频管理动作可以收纳在菜单中，但不得消失或变成不可发现的死控件
 - **AND** 菜单内容 MUST 可滚动且不得被底部 safe area 遮挡。
 
 ### Requirement: 参与讨论提示指向合并后的规范
