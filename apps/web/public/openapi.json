@@ -52,6 +52,20 @@
           {
             "schema": {
               "type": "string",
+              "enum": [
+                "all",
+                "share",
+                "ask",
+                "tech",
+                "ai",
+                "ideas",
+                "career",
+                "life",
+                "event",
+                "job",
+                "dev",
+                "good"
+              ],
               "default": "all"
             },
             "required": false,
@@ -252,6 +266,12 @@
                     "enum": [
                       "share",
                       "ask",
+                      "tech",
+                      "ai",
+                      "ideas",
+                      "career",
+                      "life",
+                      "event",
                       "job"
                     ]
                   },
@@ -810,6 +830,12 @@
                     "enum": [
                       "share",
                       "ask",
+                      "tech",
+                      "ai",
+                      "ideas",
+                      "career",
+                      "life",
+                      "event",
                       "job"
                     ]
                   },

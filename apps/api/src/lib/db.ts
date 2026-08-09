@@ -20,9 +20,11 @@ import { v4 as uuidv4 } from "uuid";
 import { boolEq, boolValue } from "./db-compat";
 import { deleteReplyWithStore, type ReplyDeletionStore } from "./reply-deletion";
 import { createReplyWithStore, type ReplyCreationStore } from "./reply-creation";
+import { nonPublicTopicTabKeys, topicTabKeys } from "@cnode/shared";
 
 let dbInstance: DB | null = null;
-const INTERNAL_TABS = ["dev", "test"];
+const INTERNAL_TABS = nonPublicTopicTabKeys;
+const TOPIC_TAB_KEYS = [...topicTabKeys];
 
 function getDb(): DB {
   if (!dbInstance) {
@@ -903,12 +905,16 @@ export const jobMetaQueries = {
 export const tabQueries = {
   async listAll() {
     const db = getDb();
-    return db.select().from(tabs).orderBy(tabs.sortOrder);
+    return db.select().from(tabs).where(inArray(tabs.key, TOPIC_TAB_KEYS)).orderBy(tabs.sortOrder);
   },
 
   async listVisible() {
     const db = getDb();
-    return db.select().from(tabs).where(boolEq(tabs.visible, true)).orderBy(tabs.sortOrder);
+    return db
+      .select()
+      .from(tabs)
+      .where(and(boolEq(tabs.visible, true), inArray(tabs.key, TOPIC_TAB_KEYS)))
+      .orderBy(tabs.sortOrder);
   },
 
   async updateById(id: number, data: { label?: string; visible?: boolean; sortOrder?: number }) {

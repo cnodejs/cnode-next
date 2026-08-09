@@ -9,18 +9,16 @@ test("public all topic list excludes internal tabs for admins too", () => {
 
 test("internal tabs are only available when explicitly selected by admins", () => {
   expect(shouldIncludeInternalTabsInTopicList("dev", true)).toBe(true);
-  expect(shouldIncludeInternalTabsInTopicList("test", true)).toBe(true);
+  expect(shouldIncludeInternalTabsInTopicList("test", true)).toBe(false);
   expect(shouldIncludeInternalTabsInTopicList("dev", false)).toBe(false);
 });
 
 test("topic list query keeps all and normal tab filters outside internal tabs", () => {
   expect(buildTopicListQuery(undefined, false)).toMatchObject({
-    excludeTabs: ["job"],
     publicVisible: true,
     includeInternalTabs: false,
   });
   expect(buildTopicListQuery("all", true)).toMatchObject({
-    excludeTabs: ["job"],
     publicVisible: true,
     includeInternalTabs: false,
   });
@@ -34,6 +32,16 @@ test("topic list query keeps all and normal tab filters outside internal tabs", 
     publicVisible: true,
     includeInternalTabs: false,
   });
+  expect(buildTopicListQuery("event", false)).toMatchObject({
+    tab: "event",
+    publicVisible: true,
+    includeInternalTabs: false,
+  });
+  expect(buildTopicListQuery("job", false)).toMatchObject({
+    tab: "job",
+    publicVisible: true,
+    includeInternalTabs: false,
+  });
   expect(buildTopicListQuery("good", true)).toMatchObject({
     good: 1,
     publicVisible: true,
@@ -44,13 +52,9 @@ test("topic list query keeps all and normal tab filters outside internal tabs", 
 test("topic list query only allows explicit internal tabs for admins", () => {
   expect(buildTopicListQuery("dev", false)).toBeNull();
   expect(buildTopicListQuery("test", false)).toBeNull();
+  expect(buildTopicListQuery("test", true)).toBeNull();
   expect(buildTopicListQuery("dev", true)).toMatchObject({
     tab: "dev",
-    publicVisible: true,
-    includeInternalTabs: true,
-  });
-  expect(buildTopicListQuery("test", true)).toMatchObject({
-    tab: "test",
     publicVisible: true,
     includeInternalTabs: true,
   });

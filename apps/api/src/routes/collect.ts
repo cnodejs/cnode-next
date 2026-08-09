@@ -12,11 +12,12 @@ import {
   collectLoginNameParamSchema,
   topicDTOSchema,
   errorResponseSchema,
+  nonPublicTopicTabKeys,
 } from "@cnode/shared";
 
 const collect = new OpenAPIHono<{ Variables: AuthVars }>();
 
-const INTERNAL_TABS = new Set(["dev", "test"]);
+const INTERNAL_TABS = new Set<string>(nonPublicTopicTabKeys);
 
 async function isPublicTopic(topicData: any) {
   if (

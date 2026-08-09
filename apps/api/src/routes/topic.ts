@@ -25,6 +25,8 @@ import {
   createTopicBodySchema,
   updateTopicBodySchema,
   errorResponseSchema,
+  nonPublicTopicTabKeys,
+  topicListTabKeys,
 } from "@cnode/shared";
 import { z } from "zod";
 
@@ -34,7 +36,8 @@ const topic = new OpenAPIHono<{
 
 const CREATE_TOPIC_SCORE = 5;
 const CREATE_TOPIC_PER_DAY = 1000;
-const INTERNAL_TABS = new Set(["dev", "test"]);
+const INTERNAL_TABS = new Set<string>(nonPublicTopicTabKeys);
+const LIST_TABS = new Set<string>(topicListTabKeys);
 
 async function assertNewUserCanCreateTopic(user: any) {
   const minHours = Math.max(0, Number(await settingQueries.get("new_user_min_hours", "24")) || 24);
@@ -74,13 +77,12 @@ export function shouldIncludeInternalTabsInTopicList(tab: string | undefined, is
 }
 
 export function buildTopicListQuery(tab: string | undefined, isAdmin: boolean) {
+  if (tab && !LIST_TABS.has(tab)) return null;
   if (tab && INTERNAL_TABS.has(tab) && !isAdmin) return null;
   const query: any = { publicVisible: true };
-  if (!tab || tab === "all") {
-    query.excludeTabs = ["job"];
-  } else if (tab === "good") {
+  if (tab === "good") {
     query.good = 1;
-  } else {
+  } else if (tab && tab !== "all") {
     query.tab = tab;
   }
   query.includeInternalTabs = shouldIncludeInternalTabsInTopicList(tab, isAdmin);

@@ -1840,7 +1840,7 @@ admin.get("/search", async (c) => {
           sql`(${topics.title} LIKE ${`%${q}%`} OR ${topics.content} LIKE ${`%${q}%`})`,
           boolEq(topics.deleted, false),
           sql`${topics.status} != 'deleted'`,
-          sql`${topics.tab} NOT IN ('dev', 'test')`,
+          sql`${topics.tab} <> 'dev'`,
         ),
       )
       .orderBy(desc(topics.lastReplyAt))

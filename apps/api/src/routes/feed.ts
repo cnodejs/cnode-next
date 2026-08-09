@@ -5,12 +5,13 @@ import { getDb } from "../lib/db";
 import { boolEq } from "../lib/db-compat";
 import { renderMarkdown } from "../lib/markdown";
 import type { AuthVars } from "../middleware/auth";
+import { nonPublicTopicTabKeys } from "@cnode/shared";
 
 const feed = new OpenAPIHono<{
   Variables: AuthVars;
 }>();
 
-const INTERNAL_TABS = ["dev", "test"];
+const INTERNAL_TABS = nonPublicTopicTabKeys;
 const RSS_LIMIT = 50;
 
 function webBaseUrl() {

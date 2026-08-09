@@ -15,11 +15,12 @@ import {
   paginationQuerySchema,
   errorResponseSchema,
   type PublicUserDTO,
+  nonPublicTopicTabKeys,
 } from "@cnode/shared";
 
 const user = new OpenAPIHono<{ Variables: AuthVars }>();
 
-const INTERNAL_TABS = ["dev", "test"];
+const INTERNAL_TABS: readonly string[] = nonPublicTopicTabKeys;
 
 function publicTopicWhere(extra?: any) {
   return and(

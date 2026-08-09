@@ -5,10 +5,10 @@ import { replies, topics, users } from "@cnode/db";
 import { getDb, userQueries, topicQueries } from "../lib/db";
 import { excerptMarkdown, userSummary } from "../lib/format";
 import { boolEq } from "../lib/db-compat";
-import { sidebarHomeResponseSchema } from "@cnode/shared";
+import { nonPublicTopicTabKeys, sidebarHomeResponseSchema } from "@cnode/shared";
 
 const community = new OpenAPIHono();
-const INTERNAL_TABS = ["dev", "test"];
+const INTERNAL_TABS = nonPublicTopicTabKeys;
 
 function publicTopicSql(topicId: any = topics.id) {
   return sql`${boolEq(topics.deleted, false)} and coalesce(${topics.status}, 'published') <> 'deleted' and (${topics.tab} is null or ${topics.tab} not in (${sql.join(
