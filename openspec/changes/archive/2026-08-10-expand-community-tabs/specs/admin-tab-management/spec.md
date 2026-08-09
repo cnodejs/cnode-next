@@ -1,10 +1,4 @@
-# admin-tab-management Specification
-
-## Purpose
-
-TBD - created by archiving change add-jobs-zone. Update Purpose after archive.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: tabs 注册表
 
@@ -55,24 +49,9 @@ TBD - created by archiving change add-jobs-zone. Update Purpose after archive.
 
 #### Scenario: Tab 隐藏后直接访问
 
-- **WHEN** 管理员将某个 public tab 的 `visible` 设为 `false`
+- **WHEN** 管理员将某个 public tab 的 visible 设为 false
 - **THEN** 首页不展示该 tab 按钮
-- **AND** 直接访问对应 `?tab=` 仍按 API 层 tab 权限和公开规则处理
-
-### Requirement: getTabLabel 从 DB 加载
-
-`getTabLabel`（`apps/web/app/lib/brand.ts:17`）SHALL 改为从 root loader data 的 `tabs` 读取 label，替代硬编码 map。SSR 上下文无 loader data 时 SHALL fallback 到硬编码默认值。
-
-#### Scenario: getTabLabel 从配置读取
-
-- **WHEN** 组件调用 `getTabLabel('job')` 且 root loader data 可用
-- **THEN** 从 `tabs` 配置返回 `key='job'` 对应的 `label`
-- **AND** 不依赖硬编码 map
-
-#### Scenario: SSR fallback
-
-- **WHEN** SSR 上下文无 loader data（如独立 API 调用场景）
-- **THEN** `getTabLabel` fallback 到硬编码默认值（share→分享, ask→问答, job→招聘, good→精华）
+- **AND** 直接访问对应 `?tab=` 仍按 API 合法 key、权限和公开规则处理
 
 ### Requirement: 管理后台 Tab 管理页面
 
@@ -85,12 +64,11 @@ TBD - created by archiving change add-jobs-zone. Update Purpose after archive.
 - **AND** `dev` 标记为管理员可见
 - **AND** 不显示 `test`
 
-#### Scenario: 切换 tab 可见性
+#### Scenario: 切换 Tab 可见性
 
-- **WHEN** 管理员在 Tab 管理页取消勾选 `job` 的可见性
-- **THEN** 调用 `PATCH /api/v1/admin/tabs/:id` 更新 `visible=false`
-- **AND** 首页不再展示"招聘"tab 按钮
-- **AND** `/zone/jobs` 可见性仍由 zones 独立控制
+- **WHEN** 管理员更新某个 public tab 的 visible
+- **THEN** 首页按钮可见性随配置变化
+- **AND** API 对合法 key 的处理不因按钮隐藏而改变
 
 #### Scenario: dev 不可改为 public
 
@@ -103,52 +81,3 @@ TBD - created by archiving change add-jobs-zone. Update Purpose after archive.
 - **WHEN** 管理员编辑 `dev` 或 `good` 的 sort order
 - **THEN** 首页仍将 `dev` 放在普通项之后
 - **AND** 首页仍将可见 `good` 放在最右侧
-
-### Requirement: 管理后台 Tab API
-
-系统 SHALL 新增 Tab 管理 API：`GET /api/v1/admin/tabs` 列表、`PATCH /api/v1/admin/tabs/:id` 更新。API SHALL 要求 admin 权限。
-
-#### Scenario: 获取 Tab 列表
-
-- **WHEN** 管理员请求 `GET /api/v1/admin/tabs`
-- **THEN** 返回所有 tabs 行（含 `visible=false` 和 `scope='admin'`）
-- **AND** 按 `sort_order` 升序排列
-
-#### Scenario: 更新 Tab 配置
-
-- **WHEN** 管理员请求 `PATCH /api/v1/admin/tabs/:id` 并提供 `visible` / `sort_order` / `label` 字段
-- **THEN** 更新对应 tabs 行
-- **AND** 写入审计日志
-- **AND** 返回更新后的完整行
-
-#### Scenario: 不支持修改 key 字段
-
-- **WHEN** 管理员请求 `PATCH /api/v1/admin/tabs/:id` 并提供 `key` 字段
-- **THEN** `key` 字段被忽略（不可修改）
-- **AND** 返回成功但不更新 `key`
-
-#### Scenario: 不支持新增或删除 tab
-
-- **WHEN** 管理员访问 Tab 管理 API
-- **THEN** API 不提供创建或删除 tab 的公开操作
-- **AND** 加新 tab 需通过代码变更和 migration/bootstrap 完成
-
-### Requirement: root loader 加载 tabs 配置
-
-`root.tsx` loader SHALL 加载 `tabs` 表中所有行，注入全局 route loader data，供首页 tab 渲染和 `getTabLabel` 查询。
-
-#### Scenario: root loader 返回 tabs
-
-- **WHEN** 任意页面通过 `useRouteLoaderData("root")` 读取数据
-- **THEN** 数据包含 `tabs` 数组（所有行，含 `visible=false`）
-- **AND** 前端按 `visible` 过滤展示
-
-### Requirement: v1 不支持运行时新增 tab
-
-管理后台 v1 SHALL 只支持编辑现有 tabs 行的标签、可见性、排序，SHALL NOT 支持运行时新增或删除 tab 行。
-
-#### Scenario: 管理后台无新增按钮
-
-- **WHEN** 管理员访问 `/admin/tabs`
-- **THEN** 页面不展示"新增 Tab"按钮
-- **AND** 加新 tab 需通过 migration/bootstrap 完成

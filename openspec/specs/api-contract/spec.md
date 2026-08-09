@@ -6,6 +6,27 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 
 ## Requirements
 
+### Requirement: Topic 写入支持扩展 Tab 集合
+
+Topic 创建和编辑合约 SHALL 保留 `share`、`ask`、`job`，并接受 `tech`、`ai`、`ideas`、`career`、`life`、`event`。`all`、`good` 和已退役的 `test` SHALL NOT 作为可写 topic tab；`dev` 保持现有受限语义，不因本变更扩大写入权限。
+
+#### Scenario: 创建新增公开 Tab 话题
+
+- **WHEN** 合格用户提交合法 title、content 和 `tab='tech'`、`ai`、`ideas`、`career`、`life` 或 `event`
+- **THEN** API 创建对应 tab 的 topic
+- **AND** 返回成功 topic id
+
+#### Scenario: 拒绝合成或退役 key
+
+- **WHEN** 客户端创建或编辑 topic 时提交 `tab='all'`、`good` 或 `test`
+- **THEN** API MUST 返回验证错误
+- **AND** 不得写入 topic
+
+#### Scenario: 招聘约束保持不变
+
+- **WHEN** 客户端提交 `tab='job'`
+- **THEN** API 继续要求招聘权限和合法 `job_meta`
+
 ### Requirement: API 响应格式对齐
 
 API 端点 `/api/v1/*` 的核心响应结构 MUST 与 `../nodeclub/api_router_v1.js` 保持兼容。CNode Next MAY 为用户详情增加文档化的 additive 公开资料字段，但 MUST NOT 扩充被话题、回复和消息复用的轻量 `author` 摘要。
@@ -131,25 +152,30 @@ API 端点返回 topic、reply、message 中的 content 时，SHALL 按 nodeclub
 
 ### Requirement: 公共 API 必须过滤不可公开话题
 
-`/api/v1/*` 中面向公开客户端的话题列表、用户聚合和收藏查询 SHALL 排除不可公开话题。不可公开话题包括 `deleted=true`、`status='deleted'`、`tab` 为 `dev` 或 `test`、以及作者处于 block 状态的话题。mute 状态只限制写入，不影响已有内容公开可见性。
+`/api/v1/*` 中面向公开客户端的话题列表、用户聚合和收藏查询 SHALL 排除不可公开话题。不可公开话题包括 `deleted=true`、`status='deleted'`、`tab='dev'`，以及作者处于 block 状态的话题。mute 状态只限制写入，不影响已有内容公开可见性。`test` SHALL 作为无数据的退役 key 被列表参数拒绝或返回空结果，而不是继续作为有效 Tab。
 
-#### Scenario: 获取公开话题列表排除内部和受限内容
+#### Scenario: all 返回全部公开 Tab
 
 - **WHEN** 调用 `GET /api/v1/topics?page=1&limit=20&tab=all`
-- **THEN** 返回的话题 MUST 不包含 `tab=dev` 或 `tab=test` 的话题
-- **AND** MUST 不包含已删除话题
-- **AND** MUST 不包含作者已被 block 的话题
+- **THEN** 返回结果可以包含 `share/ask/tech/ai/ideas/career/life/event/job/good` 对应的公开 topic
+- **AND** MUST 不包含 `tab=dev`、已删除 topic 或 block 作者 topic
 
-#### Scenario: 获取公开话题列表按指定 tab 查询
+#### Scenario: 指定公开 Tab 查询
 
 - **WHEN** 调用 `GET /api/v1/topics?tab=share` 或其他公开 tab
-- **THEN** 返回的话题 MUST 仍然排除已删除话题和作者已被 block 的话题
-- **AND** 当请求 `tab=dev` 或 `tab=test` 时，公共 API MUST 返回空列表或权限错误，而不是公开内部内容
+- **THEN** 返回话题匹配指定 tab 或 `good` 的精选语义
+- **AND** 仍排除已删除 topic 和 block 作者 topic
+
+#### Scenario: 请求开发或退役 Tab
+
+- **WHEN** 普通客户端请求 `tab=dev` 或 `tab=test`
+- **THEN** API MUST 返回空列表、权限错误或合法参数错误
+- **AND** 不得公开开发内容或把 `test` 当作有效 Tab
 
 #### Scenario: 收藏 API 排除不可公开话题
 
 - **WHEN** 调用 `GET /api/v1/topic_collect/:loginname`
-- **THEN** 返回的话题 MUST 不包含已删除、内部 tab 或作者已被 block 的话题
+- **THEN** 返回的话题 MUST 不包含已删除、`dev` 或 block 作者话题
 
 #### Scenario: 用户聚合 API 排除不可公开话题
 

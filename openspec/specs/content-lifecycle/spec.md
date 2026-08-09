@@ -219,7 +219,7 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 
 ### Requirement: 公共查询必须遵循内容可见性
 
-公共查询 SHALL 使用统一内容可见性规则：隐藏已删除话题、内部 tab 话题、被 block 用户创建的话题，以及所属话题不可见的回复聚合。mute 用户只受写入限制，不因 mute 自动隐藏历史内容。
+公共查询 SHALL 使用统一内容可见性规则：隐藏已删除话题、`tab=dev` 的开发使用话题、被 block 用户创建的话题，以及所属话题不可见的回复聚合。mute 用户只受写入限制，不因 mute 自动隐藏历史内容。`test` 不再是有效 Tab，退役 migration 必须在零 topic 引用时才可删除注册行。
 
 #### Scenario: 已删除话题不可公开
 
@@ -227,10 +227,16 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 - **THEN** 该话题 MUST 不出现在任何公共列表、sidebar、用户聚合或收藏结果中
 - **AND** 普通用户访问详情 MUST 得到不存在或不可见响应
 
-#### Scenario: 内部 tab 话题不可公开
+#### Scenario: 开发使用话题不可公开
 
-- **WHEN** 话题 `tab=dev` 或 `tab=test`
+- **WHEN** 话题 `tab=dev`
 - **THEN** 该话题 MUST 不出现在首页 feed、最新回复、无人回复、用户话题、用户参与或用户收藏中
+
+#### Scenario: test 退役不得删除内容
+
+- **WHEN** 数据库仍存在规范化后 `tab=test` 的 topic
+- **THEN** 退役 migration MUST 失败并回滚
+- **AND** 系统不得自动删除或重分类该 topic
 
 #### Scenario: 被 block 用户创建的话题不可公开
 
@@ -247,7 +253,7 @@ TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after ar
 #### Scenario: 管理后台不受公共过滤影响
 
 - **WHEN** 管理员访问后台话题、用户、巡检或审计页面
-- **THEN** 系统 MAY 展示 dev/test、已删除或 block 用户内容用于运营处理
+- **THEN** 系统 MAY 展示 `dev`、已删除或 block 用户内容用于运营处理
 - **AND** 这些后台入口 MUST 继续由后端权限校验保护
 
 ### Requirement: moderator 角色具备受限内容治理能力
