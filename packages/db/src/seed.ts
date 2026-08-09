@@ -4,6 +4,7 @@ import { sql } from "drizzle-orm";
 import bcryptjs from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import { loadRootEnv } from "./load-env";
+import { topicTabDefinitions } from "@cnode/shared";
 
 loadRootEnv();
 
@@ -96,14 +97,15 @@ async function seed() {
 
   await db
     .insert(tabs)
-    .values([
-      { key: "share", label: "分享", visible: true, sortOrder: 1 },
-      { key: "ask", label: "问答", visible: true, sortOrder: 2 },
-      { key: "job", label: "招聘", visible: true, sortOrder: 3 },
-      { key: "good", label: "精华", visible: true, sortOrder: 4 },
-      { key: "dev", label: "开发", visible: true, sortOrder: 90, scope: "admin" },
-      { key: "test", label: "测试", visible: true, sortOrder: 91, scope: "admin" },
-    ])
+    .values(
+      topicTabDefinitions.map((tab) => ({
+        key: tab.key,
+        label: tab.label,
+        visible: true,
+        sortOrder: tab.sortOrder,
+        scope: tab.scope,
+      })),
+    )
     .onConflictDoUpdate({
       target: tabs.key,
       set: {

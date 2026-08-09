@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { topicListTabSchema } from "./tab";
 
 export const successEnvelopeSchema = z.object({
   success: z.literal(true),
@@ -42,5 +43,5 @@ export function withErrorResponse(status: number, description: string) {
 }
 
 export const topicListQuerySchema = paginationQuerySchema.extend({
-  tab: z.string().optional().default("all"),
+  tab: topicListTabSchema.optional().default("all"),
 });

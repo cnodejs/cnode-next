@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { writableTopicTabSchema } from "./tab";
 
 export const authorSchema = z.object({
   loginname: z.string(),
@@ -64,7 +65,7 @@ export const createTopicBodySchema = z
   .object({
     accesstoken: z.string().optional(),
     title: z.string().min(5).max(100),
-    tab: z.enum(["share", "ask", "job"]),
+    tab: writableTopicTabSchema,
     content: z.string().min(1),
     turnstileToken: z.string().optional(),
     job_meta: jobMetaSchema.optional(),
@@ -94,7 +95,7 @@ export const updateTopicBodySchema = z
     accesstoken: z.string().optional(),
     topic_id: z.string().min(1),
     title: z.string().min(5).max(100),
-    tab: z.enum(["share", "ask", "job"]),
+    tab: writableTopicTabSchema,
     content: z.string().min(1),
     job_meta: jobMetaSchema.optional(),
   })
