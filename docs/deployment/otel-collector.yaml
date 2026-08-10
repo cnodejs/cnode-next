@@ -1,0 +1,69 @@
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 256
+    spike_limit_mib: 64
+  transform/sanitize:
+    error_mode: ignore
+    trace_statements:
+      - context: span
+        statements:
+          - delete_key(attributes, "http.request.header.authorization")
+          - delete_key(attributes, "http.request.header.cookie")
+          - delete_key(attributes, "http.response.header.set-cookie")
+          - delete_key(attributes, "url.full")
+          - delete_key(attributes, "url.query")
+          - delete_key(attributes, "http.url")
+          - delete_key(attributes, "session.token")
+          - delete_key(attributes, "request.body")
+          - delete_key(attributes, "response.body")
+          - delete_key(attributes, "mail.body")
+          - delete_key(attributes, "user.content")
+          - delete_key(attributes, "moderation.content.preview")
+          - delete_key(attributes, "db.statement")
+          - delete_key(attributes, "db.query.text")
+          - delete_key(attributes, "db.query.parameters")
+          - delete_key(attributes, "db.connection_string")
+          - delete_key(attributes, "db.user")
+      - context: spanevent
+        statements:
+          - delete_key(attributes, "exception.message")
+          - delete_key(attributes, "exception.stacktrace")
+          - delete_key(attributes, "request.body")
+          - delete_key(attributes, "response.body")
+  batch:
+    send_batch_size: 512
+    timeout: 5s
+
+exporters:
+  otlphttp/openobserve:
+    endpoint: ${env:OPENOBSERVE_OTLP_ENDPOINT}
+    headers:
+      Authorization: Basic ${env:OPENOBSERVE_AUTH_TOKEN}
+      stream-name: default
+    timeout: 5s
+    sending_queue:
+      enabled: true
+      num_consumers: 2
+      queue_size: 512
+    retry_on_failure:
+      enabled: true
+      initial_interval: 1s
+      max_interval: 10s
+      max_elapsed_time: 60s
+
+service:
+  telemetry:
+    logs:
+      level: warn
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, transform/sanitize, batch]
+      exporters: [otlphttp/openobserve]

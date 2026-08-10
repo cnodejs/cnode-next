@@ -3,12 +3,14 @@
 services:
   api:
     image: ${CNODE_API_IMAGE:?CNODE_API_IMAGE is required}
-    env_file: ${CNODE_ENV_FILE:-../../.env}
+    env_file: ${CNODE_ENV_FILE:-.env}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      otel-collector:
+        condition: service_started
     healthcheck:
       test:
         [
@@ -27,7 +29,7 @@ services:
 
   web:
     image: ${CNODE_WEB_IMAGE:?CNODE_WEB_IMAGE is required}
-    env_file: ${CNODE_ENV_FILE:-../../.env}
+    env_file: ${CNODE_ENV_FILE:-.env}
     depends_on:
       api:
         condition: service_healthy
@@ -37,12 +39,14 @@ services:
 
   worker:
     image: ${CNODE_API_IMAGE:?CNODE_API_IMAGE is required}
-    env_file: ${CNODE_ENV_FILE:-../../.env}
+    env_file: ${CNODE_ENV_FILE:-.env}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      otel-collector:
+        condition: service_started
     command: ["pnpm", "--filter", "@cnode/api", "worker:moderation"]
     networks:
       - cnode-internal
@@ -70,7 +74,7 @@ services:
 
   openobserve:
     image: public.ecr.aws/zinclabs/openobserve:latest
-    env_file: ${CNODE_ENV_FILE:-../../.env}
+    env_file: ${CNODE_ENV_FILE:-.env}
     volumes:
       - openobserve-data:/data
     healthcheck:
@@ -83,9 +87,22 @@ services:
       - cnode-internal
     restart: unless-stopped
 
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.135.0
+    env_file: ${CNODE_ENV_FILE:-.env}
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ./otel-collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+    depends_on:
+      openobserve:
+        condition: service_healthy
+    networks:
+      - cnode-internal
+    restart: unless-stopped
+
   postgres:
     image: postgres:18-bookworm
-    env_file: ${CNODE_ENV_FILE:-../../.env}
+    env_file: ${CNODE_ENV_FILE:-.env}
     volumes:
       - postgres-data:/var/lib/postgresql
     healthcheck:
@@ -99,7 +116,7 @@ services:
 
   redis:
     image: redis:7-bookworm
-    env_file: ${CNODE_ENV_FILE:-../../.env}
+    env_file: ${CNODE_ENV_FILE:-.env}
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis-data:/data

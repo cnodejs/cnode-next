@@ -5,10 +5,11 @@ import packageJson from "../package.json";
 import { errorHandler } from "./middleware/error";
 import { authMiddleware, type AuthVars } from "./middleware/auth";
 import { ipBanMiddleware } from "./middleware/ip-ban";
+import { telemetryMiddleware, type TelemetryVariables } from "./middleware/telemetry";
 import { apiRoutes } from "./routes/index";
 
 const app = new Hono<{
-  Variables: AuthVars;
+  Variables: AuthVars & TelemetryVariables;
 }>();
 
 function allowedCorsOrigin(origin: string | undefined) {
@@ -24,6 +25,7 @@ function allowedCorsOrigin(origin: string | undefined) {
   return origin && allowed.has(origin) ? origin : webBaseUrl;
 }
 
+app.use("*", telemetryMiddleware());
 app.use("*", logger());
 app.use(
   "*",

@@ -12,6 +12,7 @@ allowBuilds:
   core-js-pure: false
   esbuild: true
   msw: true
+  protobufjs: false
   sharp: true
   tree-sitter: false
   tree-sitter-json: false

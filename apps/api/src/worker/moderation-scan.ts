@@ -1,4 +1,4 @@
-import "../load-env";
+import { SpanStatusCode, trace } from "@opentelemetry/api";
 import {
   acquireScanWorkerLock,
   createScheduledScanJobIfNeeded,
@@ -19,16 +19,24 @@ function scheduleIntervalMs() {
 }
 
 async function tick() {
-  const owner = await acquireScanWorkerLock();
-  if (!owner) return;
-  try {
-    if (scheduledEnabled()) {
-      await createScheduledScanJobIfNeeded();
+  return trace.getTracer("cnode-moderation-worker").startActiveSpan("moderation.scan.tick", async (span) => {
+    let owner: string | null = null;
+    try {
+      owner = await acquireScanWorkerLock();
+      if (!owner) return;
+      if (scheduledEnabled()) {
+        await createScheduledScanJobIfNeeded();
+      }
+      await drainScanQueue(owner);
+    } catch (error) {
+      span.setStatus({ code: SpanStatusCode.ERROR });
+      span.setAttribute("error.type", error instanceof Error ? error.name : "unknown");
+      throw error;
+    } finally {
+      if (owner) await releaseScanWorkerLock(owner);
+      span.end();
     }
-    await drainScanQueue(owner);
-  } finally {
-    await releaseScanWorkerLock(owner);
-  }
+  });
 }
 
 async function main() {

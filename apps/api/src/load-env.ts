@@ -1,6 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
 import { isAbsolute, resolve } from "node:path";
-import { setGlobalDispatcher, ProxyAgent } from "undici";
 
 function findWorkspaceRoot(cwd: string) {
   let current = resolve(cwd);
@@ -69,8 +68,10 @@ function loadRootEnv() {
 
 loadRootEnv();
 
-const proxy = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
-if (proxy) {
+export async function configureProxy() {
+  const proxy = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+  if (!proxy) return;
+  const { setGlobalDispatcher, ProxyAgent } = await import("undici");
   setGlobalDispatcher(new ProxyAgent(proxy));
-  console.log("[proxy] set global dispatcher:", proxy);
+  console.log("[proxy] configured");
 }

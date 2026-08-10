@@ -42,4 +42,4 @@ COPY --from=build /app/packages/db /app/packages/db
 COPY --from=build /app/packages/shared /app/packages/shared
 COPY --from=build /app/scripts /app/scripts
 EXPOSE 3001
-CMD ["pnpm", "--filter", "@cnode/api", "exec", "tsx", "src/index.ts"]
+CMD ["pnpm", "--filter", "@cnode/api", "exec", "tsx", "src/bootstrap.ts", "api"]
