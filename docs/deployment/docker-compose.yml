@@ -3,7 +3,7 @@
 services:
   api:
     image: ${CNODE_API_IMAGE:?CNODE_API_IMAGE is required}
-    env_file: ${CNODE_ENV_FILE:-.env}
+    env_file: ${CNODE_ENV_FILE:-../../.env}
     depends_on:
       postgres:
         condition: service_healthy
@@ -23,23 +23,21 @@ services:
       - "3001:3001"
     networks:
       - cnode-internal
-      - legacy-cnode
     restart: unless-stopped
 
   web:
     image: ${CNODE_WEB_IMAGE:?CNODE_WEB_IMAGE is required}
-    env_file: ${CNODE_ENV_FILE:-.env}
+    env_file: ${CNODE_ENV_FILE:-../../.env}
     depends_on:
       api:
         condition: service_healthy
     networks:
       - cnode-internal
-      - legacy-cnode
     restart: unless-stopped
 
   worker:
     image: ${CNODE_API_IMAGE:?CNODE_API_IMAGE is required}
-    env_file: ${CNODE_ENV_FILE:-.env}
+    env_file: ${CNODE_ENV_FILE:-../../.env}
     depends_on:
       postgres:
         condition: service_healthy
@@ -50,57 +48,44 @@ services:
       - cnode-internal
     restart: unless-stopped
 
-  migrate-schema:
-    image: ${CNODE_API_IMAGE:?CNODE_API_IMAGE is required}
-    env_file: ${CNODE_ENV_FILE:-.env}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    command: ["pnpm", "db:migrate"]
-    profiles:
-      - migrate
-    networks:
-      - cnode-internal
-      - legacy-cnode
-
-  migrate-data:
-    image: ${CNODE_API_IMAGE:?CNODE_API_IMAGE is required}
-    env_file: ${CNODE_ENV_FILE:-.env}
+  adminer:
+    image: adminer:5.4.2
     environment:
-      MIGRATION_TARGET: rehearsal
-      MIGRATION_REPORT_PATH: /app/migration-reports/migration-report.json
-    volumes:
-      - ${MIGRATION_REPORT_DIR:?MIGRATION_REPORT_DIR is required}:/app/migration-reports
+      ADMINER_DEFAULT_SERVER: postgres
     depends_on:
       postgres:
         condition: service_healthy
-    command: ["pnpm", "migrate:mongo-to-pg"]
+    ports:
+      - "${ADMINER_PORT:-8080}:8080"
     profiles:
-      - migrate
+      - adminer
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - cnode-internal
-      - legacy-cnode
 
-  reconcile:
-    image: ${CNODE_API_IMAGE:?CNODE_API_IMAGE is required}
-    env_file: ${CNODE_ENV_FILE:-.env}
-    environment:
-      MIGRATION_REPORT_PATH: /app/migration-reports/migration-report.json
+  openobserve:
+    image: public.ecr.aws/zinclabs/openobserve:latest
+    env_file: ${CNODE_ENV_FILE:-../../.env}
     volumes:
-      - ${MIGRATION_REPORT_DIR:?MIGRATION_REPORT_DIR is required}:/app/migration-reports
-    depends_on:
-      postgres:
-        condition: service_healthy
-    command: ["pnpm", "migrate:reconcile"]
-    profiles:
-      - migrate
+      - openobserve-data:/data
+    healthcheck:
+      test: ["CMD", "/openobserve", "node", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
     networks:
       - cnode-internal
-      - legacy-cnode
+    restart: unless-stopped
 
   postgres:
     image: postgres:18-bookworm
-    env_file: ${CNODE_ENV_FILE:-.env}
+    env_file: ${CNODE_ENV_FILE:-../../.env}
     volumes:
       - postgres-data:/var/lib/postgresql
     healthcheck:
@@ -114,7 +99,7 @@ services:
 
   redis:
     image: redis:7-bookworm
-    env_file: ${CNODE_ENV_FILE:-.env}
+    env_file: ${CNODE_ENV_FILE:-../../.env}
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis-data:/data
@@ -130,10 +115,9 @@ services:
 volumes:
   postgres-data:
   redis-data:
+  openobserve-data:
+    name: openobserve-data
 
 networks:
   cnode-internal:
     driver: bridge
-  legacy-cnode:
-    name: ${LEGACY_DOCKER_NETWORK:-cnode}
-    external: true

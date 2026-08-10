@@ -43,8 +43,6 @@ yarn-debug.log*
 yarn-error.log*
 
 # Deployment runtime output
-deployment/migration-reports/*
-!deployment/migration-reports/.gitignore
 *.dump
 
 # Generated API docs
