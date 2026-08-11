@@ -5,6 +5,8 @@ import {
   drainScanQueue,
   releaseScanWorkerLock,
 } from "../lib/moderation-scan";
+import { appLog, errorType } from "../telemetry/logger";
+import { recordWorkerTick, type WorkerTickOutcome } from "../telemetry/metrics";
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -19,36 +21,63 @@ function scheduleIntervalMs() {
 }
 
 async function tick() {
-  return trace.getTracer("cnode-moderation-worker").startActiveSpan("moderation.scan.tick", async (span) => {
-    let owner: string | null = null;
-    try {
-      owner = await acquireScanWorkerLock();
-      if (!owner) return;
-      if (scheduledEnabled()) {
-        await createScheduledScanJobIfNeeded();
+  return trace
+    .getTracer("cnode-moderation-worker")
+    .startActiveSpan("moderation.scan.tick", async (span) => {
+      const startedAt = Date.now();
+      let owner: string | null = null;
+      let jobsProcessed = 0;
+      let outcome: WorkerTickOutcome = "completed";
+      let releaseError: unknown;
+      try {
+        owner = await acquireScanWorkerLock();
+        if (!owner) {
+          outcome = "lock_unavailable";
+          return;
+        }
+        if (scheduledEnabled()) {
+          await createScheduledScanJobIfNeeded();
+        }
+        jobsProcessed = await drainScanQueue(owner);
+      } catch (error) {
+        outcome = "failed";
+        span.setStatus({ code: SpanStatusCode.ERROR });
+        span.setAttribute("error.type", errorType(error));
+        throw error;
+      } finally {
+        if (owner) {
+          try {
+            await releaseScanWorkerLock(owner);
+          } catch (error) {
+            outcome = "failed";
+            releaseError = error;
+            span.setStatus({ code: SpanStatusCode.ERROR });
+            span.setAttribute("error.type", errorType(error));
+          }
+        }
+        const durationMs = Math.max(0, Date.now() - startedAt);
+        recordWorkerTick(durationMs, outcome, jobsProcessed);
+        appLog("moderation.scan.tick.completed", outcome === "failed" ? "ERROR" : "INFO", {
+          "moderation.scan.outcome": outcome,
+          "moderation.scan.jobs_processed": jobsProcessed,
+          duration_ms: durationMs,
+          ...(releaseError ? { "error.type": errorType(releaseError) } : {}),
+        });
+        span.end();
       }
-      await drainScanQueue(owner);
-    } catch (error) {
-      span.setStatus({ code: SpanStatusCode.ERROR });
-      span.setAttribute("error.type", error instanceof Error ? error.name : "unknown");
-      throw error;
-    } finally {
-      if (owner) await releaseScanWorkerLock(owner);
-      span.end();
-    }
-  });
+    });
 }
 
 async function main() {
   const intervalMs = scheduleIntervalMs();
-  console.log(`moderation scan worker running, interval=${intervalMs}ms`);
+  appLog("application.started", "INFO", { "worker.interval_ms": intervalMs });
   while (true) {
-    await tick().catch((error) => console.error("[moderation worker]", error));
+    await tick().catch(() => undefined);
     await sleep(intervalMs);
   }
 }
 
 main().catch((error) => {
-  console.error(error);
+  appLog("application.startup.failed", "ERROR", { "error.type": errorType(error) });
   process.exit(1);
 });

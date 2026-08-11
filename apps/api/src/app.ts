@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { logger } from "hono/logger";
 import { cors } from "hono/cors";
 import packageJson from "../package.json";
 import { errorHandler } from "./middleware/error";
@@ -26,7 +25,6 @@ function allowedCorsOrigin(origin: string | undefined) {
 }
 
 app.use("*", telemetryMiddleware());
-app.use("*", logger());
 app.use(
   "*",
   cors({
@@ -34,7 +32,7 @@ app.use(
     credentials: true,
   }),
 );
-app.use("*", errorHandler());
+app.onError(errorHandler());
 
 app.get("/health", (c) =>
   c.json({

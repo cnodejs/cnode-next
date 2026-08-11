@@ -1,9 +1,11 @@
+import { appLog } from "../telemetry/logger";
+
 export async function verifyTurnstile(token: string | undefined, remoteIp?: string) {
   if (process.env.CNODE_ENV === "development") return true;
 
   const secret = process.env.TURNSTILE_SECRET_KEY;
   if (!secret) {
-    console.error("[turnstile] TURNSTILE_SECRET_KEY not set");
+    appLog("turnstile.configuration.missing", "ERROR");
     return false;
   }
   if (!token) return false;

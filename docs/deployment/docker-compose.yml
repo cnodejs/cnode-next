@@ -4,6 +4,10 @@ services:
   api:
     image: ${CNODE_API_IMAGE:?CNODE_API_IMAGE is required}
     env_file: ${CNODE_ENV_FILE:-.env}
+    environment:
+      CNODE_OTEL_LOGS_ENABLED: ${CNODE_OTEL_LOGS_ENABLED:-1}
+      CNODE_OTEL_METRICS_ENABLED: ${CNODE_OTEL_METRICS_ENABLED:-1}
+      CNODE_OTEL_TRACES_ENABLED: ${CNODE_OTEL_TRACES_ENABLED:-1}
     depends_on:
       postgres:
         condition: service_healthy
@@ -40,6 +44,10 @@ services:
   worker:
     image: ${CNODE_API_IMAGE:?CNODE_API_IMAGE is required}
     env_file: ${CNODE_ENV_FILE:-.env}
+    environment:
+      CNODE_OTEL_LOGS_ENABLED: ${CNODE_OTEL_LOGS_ENABLED:-1}
+      CNODE_OTEL_METRICS_ENABLED: ${CNODE_OTEL_METRICS_ENABLED:-1}
+      CNODE_OTEL_TRACES_ENABLED: ${CNODE_OTEL_TRACES_ENABLED:-1}
     depends_on:
       postgres:
         condition: service_healthy

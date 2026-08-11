@@ -1,10 +1,8 @@
 import { pathToFileURL } from "node:url";
 import { configureProxy } from "./load-env";
-import {
-  initializeTelemetry,
-  type TelemetryRuntime,
-} from "./telemetry/index";
+import { initializeTelemetry, type TelemetryRuntime } from "./telemetry/index";
 import type { TelemetryRole } from "./telemetry/config";
+import { appLog, errorType } from "./telemetry/logger";
 
 interface BootstrapDependencies {
   initialize?: (role: TelemetryRole) => Promise<TelemetryRuntime>;
@@ -27,6 +25,7 @@ function registerShutdown(runtime: TelemetryRuntime) {
   const stop = async () => {
     if (stopping) return;
     stopping = true;
+    appLog("application.stopping", "INFO");
     await runtime.shutdown();
     process.exit(0);
   };
@@ -51,7 +50,7 @@ export async function runBootstrap(role: TelemetryRole, dependencies: BootstrapD
 const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (isMain) {
   runBootstrap(parseRole(process.argv[2])).catch((error) => {
-    console.error("[bootstrap] application startup failed", error);
+    appLog("application.startup.failed", "ERROR", { "error.type": errorType(error) });
     process.exit(1);
   });
 }

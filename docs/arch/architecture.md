@@ -14,25 +14,25 @@ graph TB
   API --> Redis[(Redis)]
   Worker[Moderation worker] --> PG
   Worker --> Redis
-  API -. OTLP traces .-> Collector[OpenTelemetry Collector]
-  Worker -. OTLP traces .-> Collector
+  API -. OTLP telemetry .-> Collector[OpenTelemetry Collector]
+  Worker -. OTLP telemetry .-> Collector
   Collector -. authenticated ingestion .-> OpenObserve[OpenObserve]
 ```
 
-| Component | Owns |
-| --- | --- |
-| `apps/web` | SSR pages, browser interactions, runtime public configuration |
-| `apps/api` | HTTP routes, authentication, administration, workers |
-| `packages/db` | Drizzle PostgreSQL schema, migrations, database helpers |
-| `packages/shared` | Zod schemas, types, constants, pure helpers |
-| PostgreSQL | Durable application data; the only runtime database |
-| Redis | Sessions, cache, rate limits, and worker coordination |
+| Component         | Owns                                                          |
+| ----------------- | ------------------------------------------------------------- |
+| `apps/web`        | SSR pages, browser interactions, runtime public configuration |
+| `apps/api`        | HTTP routes, authentication, administration, workers          |
+| `packages/db`     | Drizzle PostgreSQL schema, migrations, database helpers       |
+| `packages/shared` | Zod schemas, types, constants, pure helpers                   |
+| PostgreSQL        | Durable application data; the only runtime database           |
+| Redis             | Sessions, cache, rate limits, and worker coordination         |
 
 SSR loaders call the internal API base. Browser requests use runtime public configuration so image builds do not bake in a public API URL. The API signs uploads; browsers upload directly to object storage.
 
-## Tracing
+## Observability
 
-The API and moderation worker use one explicit bootstrap so environment loading and OpenTelemetry registration finish before Hono, Undici, PostgreSQL, or their clients load. The API uses `service.name=cnode-api`; the worker uses `service.name=cnode-moderation-worker`. Stable resources also include package version, commit revision, and deployment environment. Request IDs, user IDs, and other per-request values are not resources.
+The API and moderation worker use one explicit bootstrap so environment loading and OpenTelemetry registration finish before Hono, Undici, PostgreSQL, or their clients load. Traces, logs, and metrics share stable resource attributes. The API uses `service.name=cnode-api`; the worker uses `service.name=cnode-moderation-worker`. Resources also include package version, commit revision, and deployment environment. Request IDs, trace IDs, user IDs, and other per-request values are not resources or metric attributes.
 
 ```mermaid
 flowchart LR
@@ -40,18 +40,22 @@ flowchart LR
   Root --> Hono[Hono route span]
   Hono --> HTTP[HTTP / Undici spans]
   Hono --> PG[PostgreSQL spans]
-  API[API] -->|OTLP/HTTP| Collector[Collector]
-  Worker[Worker] -->|OTLP/HTTP| Collector
+  API[API] -->|traces + logs + metrics| Collector[Collector]
+  Worker[Worker] -->|traces + logs + metrics| Collector
+  API -->|structured JSON| APIOut[stdout]
+  Worker -->|structured JSON| WorkerOut[stdout]
   Collector -->|memory limit → sanitize → batch| OpenObserve[OpenObserve]
 ```
 
 The public API does not trust inbound `traceparent`; each request starts a server-owned 128-bit trace ID so callers cannot control trace identity or force sampling. Child spans inherit the local parent decision. Root traces use a parent-based trace-ID ratio sampler configured by `CNODE_OTEL_TRACE_SAMPLE_RATIO`.
 
-Hono separately creates a UUID Request ID before any middleware can return. Every response includes `X-Request-ID`; sampled request spans include `cnode.request.id`. Request ID identifies one API request, while trace ID identifies its sampled call chain. The API ignores inbound `X-Request-ID` and does not promise an `X-Trace-ID` response header.
+Hono separately creates a UUID Request ID before any middleware can return. Every response includes `X-Request-ID`; sampled request spans and every completion access log include `cnode.request.id`. Request ID identifies one API request, while trace ID identifies its sampled call chain. Access logs include the active trace ID, span ID, and sampled state when available; an unsampled trace ID is not guaranteed to be searchable. The API ignores inbound `X-Request-ID` and does not promise an `X-Trace-ID` response header.
 
-Applications send traces only to the internal Collector. Headers and bodies are not captured. Application and Collector sanitizers delete authentication/session values, user or mail content, exception messages/stacks, connection credentials, SQL text, and query parameters. PostgreSQL spans retain only low-cardinality operation/system metadata. Export queues, retries, and shutdown waits are bounded; tracing remains disabled or fail-open when configuration or backends fail.
+Applications send all three signals only to the internal Collector and keep structured JSON logs on stdout. Every API request, including `/health`, produces one completion access log. HTTP metrics aggregate all requests independently of trace sampling; worker metrics use tick outcomes and the processed count already returned by queue draining. Both roles export CPU, memory, event-loop, and GC runtime metrics.
 
-This baseline does not include browser/Web SSR tracing, Redis spans, metrics, dashboards, alerts, or broad structured-log migration. Adding `trace_id` and `span_id` to a limited structured logging boundary remains follow-up work.
+Logs accept only fixed scalar fields. Application and Collector sanitizers exclude authentication/session values, user identity or content, mail address/subject/body, exception messages/stacks, connection credentials, SQL text, query parameters, request/response bodies, IP, and User-Agent. Metric attributes are limited to route templates and finite HTTP/worker outcomes. Export queues, retries, and shutdown waits are bounded; each signal can be disabled or fail independently without changing business results.
+
+This baseline does not include Web telemetry, Redis telemetry, PostgreSQL metrics, Docker or host telemetry, Collector/OpenObserve self-monitoring, dashboards, alerts, or tail sampling.
 
 ## Boundaries
 

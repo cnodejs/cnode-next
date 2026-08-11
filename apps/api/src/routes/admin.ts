@@ -46,6 +46,7 @@ import { boolEq, boolValue } from "../lib/db-compat";
 import { isValidIpRule } from "../middleware/ip-ban";
 import { applyProgressivePenalty } from "../lib/penalty";
 import { userSummary } from "../lib/format";
+import { appLog, errorType } from "../telemetry/logger";
 import {
   canRunJobBulkModerationAction,
   canRunPermanentTopicDelete,
@@ -68,6 +69,12 @@ const admin = new OpenAPIHono<{
 
 const ADMIN_DEFAULT_LIMIT = 50;
 const ADMIN_MAX_LIMIT = 100;
+
+function triggerModerationScanDrain() {
+  void triggerScanDrain().catch((error) =>
+    appLog("moderation.scan.trigger.failed", "ERROR", { "error.type": errorType(error) }),
+  );
+}
 const auditCategoryValues = new Set([
   "content",
   "user",
@@ -1687,7 +1694,7 @@ admin.post("/admin/moderation/jobs", adminRequired(), async (c) => {
     { type: "scan_job", id: String(job.id) },
     "created",
   );
-  void triggerScanDrain().catch((error) => console.error("[moderation scan trigger]", error));
+  triggerModerationScanDrain();
   return c.json({ success: true, data: job });
 });
 
@@ -1698,13 +1705,13 @@ admin.post("/admin/moderation/jobs/:id/:action", adminRequired(), async (c) => {
   if (action === "pause") await pauseScanJob(id);
   else if (action === "resume") {
     await resumeScanJob(id);
-    void triggerScanDrain().catch((error) => console.error("[moderation scan trigger]", error));
+    triggerModerationScanDrain();
   } else if (action === "run") {
     const job = await runScanJobNow(id);
     if (!job) return c.json({ success: false, error_msg: "任务不存在" }, 404);
     if (["done", "failed", "cancelled"].includes(job.status))
       return c.json({ success: false, error_msg: "任务已结束，不能立即执行" }, 422);
-    void triggerScanDrain().catch((error) => console.error("[moderation scan trigger]", error));
+    triggerModerationScanDrain();
   } else if (action === "cancel") {
     const job = await cancelScanJob(id);
     if (!job) return c.json({ success: false, error_msg: "任务不存在" }, 404);

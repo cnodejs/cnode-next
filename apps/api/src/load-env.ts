@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { isAbsolute, resolve } from "node:path";
+import { appLog } from "./telemetry/logger";
 
 function findWorkspaceRoot(cwd: string) {
   let current = resolve(cwd);
@@ -73,5 +74,5 @@ export async function configureProxy() {
   if (!proxy) return;
   const { setGlobalDispatcher, ProxyAgent } = await import("undici");
   setGlobalDispatcher(new ProxyAgent(proxy));
-  console.log("[proxy] configured");
+  appLog("proxy.configured", "INFO");
 }

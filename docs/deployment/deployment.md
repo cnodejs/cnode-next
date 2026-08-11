@@ -51,11 +51,11 @@ docker compose up -d --no-build openobserve
 
 OpenObserve uses `latest`. Before pulling an update, create and verify a restorable `openobserve-data` backup and record the current image ID. Its internal address is `http://openobserve:5080`; Compose does not publish that port.
 
-## Configure Tracing
+## Configure Application Telemetry
 
-In OpenObserve, create a dedicated ingestion-only identity for the Collector; do not reuse the root account. Put its OTLP base URL in `OPENOBSERVE_OTLP_ENDPOINT` and the base64 credential portion of the Basic authorization value in `OPENOBSERVE_AUTH_TOKEN`. The Collector sends `Authorization: Basic <token>` and `stream-name: default`; application telemetry configuration references only `http://otel-collector:4318/v1/traces` and does not consume OpenObserve credentials.
+In OpenObserve, create a dedicated ingestion-only identity for the Collector; do not reuse the root account. Put its OTLP base URL in `OPENOBSERVE_OTLP_ENDPOINT` and the base64 credential portion of the Basic authorization value in `OPENOBSERVE_AUTH_TOKEN`. The Collector sends `Authorization: Basic <token>` and `stream-name: default`; application telemetry configuration references only the internal base `http://otel-collector:4318` and does not consume OpenObserve credentials.
 
-The Collector image is pinned to `otel/opentelemetry-collector-contrib:0.135.0`; this reviewed Contrib release includes the OTLP receiver/exporter and transform processor used by `otel-collector.yaml`. OpenObserve remains `latest`, so before each pull record its current image ID and verify the configured Collector target and OTLP ingestion after the update:
+The Collector image is pinned to `otel/opentelemetry-collector-contrib:0.135.0`; this reviewed Contrib release includes the OTLP receiver/exporter and transform processor used by `otel-collector.yaml`. Its traces, logs, and metrics pipelines use bounded memory, batches, queues, timeouts, and retries; traces and logs also pass through signal-specific sanitization. OpenObserve remains `latest`, so before each pull record its current image ID and verify all three OTLP signals after the update:
 
 ```bash
 docker image inspect public.ecr.aws/zinclabs/openobserve:latest --format '{{.Id}}'
@@ -64,7 +64,9 @@ docker compose up -d --no-build openobserve otel-collector
 docker compose ps openobserve otel-collector
 ```
 
-Enable application tracing with `CNODE_OTEL_ENABLED=1`. `CNODE_OTEL_TRACE_SAMPLE_RATIO=0.1` samples ten percent of local root traces; `0` and `1` are valid deterministic limits. Invalid configuration disables tracing without blocking application startup and diagnostics name only the invalid variable.
+Enable application telemetry with `CNODE_OTEL_ENABLED=1`. `CNODE_OTEL_TRACES_ENABLED`, `CNODE_OTEL_LOGS_ENABLED`, and `CNODE_OTEL_METRICS_ENABLED` independently control each signal. `CNODE_OTEL_TRACE_SAMPLE_RATIO=0.1` samples ten percent of local root traces; logs and metrics are not sampled with traces. `0` and `1` are valid deterministic trace limits. Invalid signal configuration disables only that signal without blocking application startup, and diagnostics name only the invalid variable.
+
+API and worker logs remain as structured JSON on stdout when OTLP logs are disabled or unavailable. Each API request creates one completion access log. Logs exclude request bodies, query values, user and mail data, SQL, credentials, and raw error details; metrics use route templates and finite outcomes rather than request or business identifiers.
 
 ## Deploy A Release
 
@@ -97,9 +99,9 @@ docker compose ps api web worker postgres redis openobserve otel-collector
 curl -fsS http://127.0.0.1:3001/health
 ```
 
-Run the public URL, API contract, authentication, and write smoke checks applicable to the release. Confirm API and worker traces appear under `cnode-api` and `cnode-moderation-worker`, and that an `X-Request-ID` from a sampled response locates its request span. Record only the commit, image identifiers, migration result, health result, and redacted smoke result.
+Run the public URL, API contract, authentication, and write smoke checks applicable to the release. Under `cnode-api`, confirm request traces, one completion access log for a test request, HTTP request/duration metrics, and Node.js runtime metrics. Under `cnode-moderation-worker`, confirm tick traces, completion logs, worker metrics, and runtime metrics. An `X-Request-ID` must locate its access log; only a sampled request is guaranteed to have a stored trace. Record only the commit, image identifiers, migration result, health result, and redacted smoke result.
 
-If traces are absent, first confirm the three service names and internal endpoints in the rendered Compose configuration, then inspect redacted API/worker and Collector status. Collector or OpenObserve failure must not change API responses or stop the worker; bounded queues may drop traces during a long outage. Do not print container environments or authentication headers while troubleshooting.
+If a signal is absent, confirm its signal switch, the two application service names, and the internal Collector base endpoint in the rendered Compose configuration, then inspect redacted API/worker and Collector status. Collector or OpenObserve failure must not change API responses or stop the worker; bounded queues may drop telemetry during a long outage. Do not print container environments or authentication headers while troubleshooting.
 
 ## Use Adminer
 
@@ -118,7 +120,14 @@ docker compose --profile adminer rm -sf adminer
 
 ## Roll Back
 
-To roll back tracing without changing the application image, set `CNODE_OTEL_ENABLED=0` in `.env`, restart API and worker, then stop the Collector:
+To stop logs or metrics ingestion independently, set its signal switch to `0` and restart API and worker. Other signals continue, and structured stdout logs remain available:
+
+```bash
+docker compose up -d --no-build --no-deps api worker
+curl -fsS http://127.0.0.1:3001/health
+```
+
+To roll back all OTLP telemetry without changing the application image, set `CNODE_OTEL_ENABLED=0` in `.env`, restart API and worker, then stop the Collector:
 
 ```bash
 docker compose up -d --no-build --no-deps api worker

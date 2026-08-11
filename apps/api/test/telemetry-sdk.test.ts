@@ -6,10 +6,7 @@ import {
   TraceIdRatioBasedSampler,
 } from "@opentelemetry/sdk-trace-base";
 import { describe, expect, test, vi } from "vite-plus/test";
-import {
-  initializeTelemetry,
-  OutboundOnlyTraceContextPropagator,
-} from "../src/telemetry/index";
+import { initializeTelemetry, OutboundOnlyTraceContextPropagator } from "../src/telemetry/index";
 
 describe("telemetry SDK configuration", () => {
   test("builds stable role resources without request-scoped values", async () => {
@@ -20,7 +17,7 @@ describe("telemetry SDK configuration", () => {
       "moderation-worker",
       {
         CNODE_OTEL_ENABLED: "1",
-        CNODE_OTEL_EXPORTER_OTLP_ENDPOINT: "http://collector:4318/v1/traces",
+        CNODE_OTEL_EXPORTER_OTLP_BASE_ENDPOINT: "http://collector:4318",
         CNODE_OTEL_TRACE_SAMPLE_RATIO: "1",
         CNODE_ENV: "test",
         CNODE_GIT_SHA: "abc123",
@@ -35,6 +32,7 @@ describe("telemetry SDK configuration", () => {
     );
 
     expect(runtime.enabled).toBe(true);
+    expect(runtime.signals).toEqual({ traces: true, logs: true, metrics: true });
     expect(start).toHaveBeenCalledOnce();
     expect(configuration.resource.attributes).toMatchObject({
       "service.name": "cnode-moderation-worker",
@@ -43,6 +41,13 @@ describe("telemetry SDK configuration", () => {
       "deployment.environment.name": "test",
     });
     expect(configuration.resource.attributes).not.toHaveProperty("cnode.request.id");
+    expect(configuration.logRecordProcessors).toHaveLength(1);
+    expect(configuration.metricReaders).toHaveLength(1);
+    expect(
+      configuration.instrumentations.some(
+        (item: object) => item.constructor.name === "RuntimeNodeInstrumentation",
+      ),
+    ).toBe(true);
     await runtime.shutdown();
     expect(shutdown).toHaveBeenCalledOnce();
   });
@@ -90,11 +95,11 @@ describe("telemetry SDK configuration", () => {
 
     expect(sample(sampledParent).decision).toBe(SamplingDecision.RECORD_AND_SAMPLED);
     expect(sample(unsampledParent).decision).toBe(SamplingDecision.NOT_RECORD);
-    expect(
-      new TraceIdRatioBasedSampler(0).shouldSample(context.active(), traceId).decision,
-    ).toBe(SamplingDecision.NOT_RECORD);
-    expect(
-      new TraceIdRatioBasedSampler(1).shouldSample(context.active(), traceId).decision,
-    ).toBe(SamplingDecision.RECORD_AND_SAMPLED);
+    expect(new TraceIdRatioBasedSampler(0).shouldSample(context.active(), traceId).decision).toBe(
+      SamplingDecision.NOT_RECORD,
+    );
+    expect(new TraceIdRatioBasedSampler(1).shouldSample(context.active(), traceId).decision).toBe(
+      SamplingDecision.RECORD_AND_SAMPLED,
+    );
   });
 });

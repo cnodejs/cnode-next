@@ -37,6 +37,26 @@ processors:
           - delete_key(attributes, "exception.stacktrace")
           - delete_key(attributes, "request.body")
           - delete_key(attributes, "response.body")
+    log_statements:
+      - context: log
+        statements:
+          - delete_key(attributes, "authorization")
+          - delete_key(attributes, "cookie")
+          - delete_key(attributes, "session.token")
+          - delete_key(attributes, "request.body")
+          - delete_key(attributes, "response.body")
+          - delete_key(attributes, "mail.body")
+          - delete_key(attributes, "mail.recipient")
+          - delete_key(attributes, "mail.subject")
+          - delete_key(attributes, "user.id")
+          - delete_key(attributes, "user.content")
+          - delete_key(attributes, "url.full")
+          - delete_key(attributes, "url.query")
+          - delete_key(attributes, "db.statement")
+          - delete_key(attributes, "db.query.text")
+          - delete_key(attributes, "db.query.parameters")
+          - delete_key(attributes, "exception.message")
+          - delete_key(attributes, "exception.stacktrace")
   batch:
     send_batch_size: 512
     timeout: 5s
@@ -66,4 +86,12 @@ service:
     traces:
       receivers: [otlp]
       processors: [memory_limiter, transform/sanitize, batch]
+      exporters: [otlphttp/openobserve]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, transform/sanitize, batch]
+      exporters: [otlphttp/openobserve]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
       exporters: [otlphttp/openobserve]

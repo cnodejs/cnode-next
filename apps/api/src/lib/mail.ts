@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
+import { appLog, errorType } from "../telemetry/logger";
 import {
   buildActiveMail,
   buildAtNotifyMail,
@@ -16,7 +17,7 @@ function getTransporter(): Transporter | null {
   if (!host) {
     const message = "[mail] SMTP_HOST not set";
     if (process.env.CNODE_ENV === "development") {
-      console.log(`${message}, skipping email in development`);
+      appLog("mail.skipped", "INFO", { outcome: "skipped" });
       return null;
     }
     throw new Error(message);
@@ -55,10 +56,14 @@ export async function sendMail(data: MailData) {
   for (let i = 1; i <= 5; i++) {
     try {
       await t.sendMail({ ...data, from: fromHeader });
-      console.log(`[mail] sent to ${data.to}, subject: ${data.subject}`);
+      appLog("mail.sent", "INFO", { outcome: "sent", attempt: i });
       return;
     } catch (err) {
-      console.error(`[mail] send error attempt ${i}/5:`, err);
+      appLog("mail.send.failed", "ERROR", {
+        outcome: "failed",
+        attempt: i,
+        "error.type": errorType(err),
+      });
       if (i === 5) throw err;
     }
   }
