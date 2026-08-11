@@ -49,7 +49,7 @@ docker rm openobserve
 docker compose up -d --no-build openobserve
 ```
 
-OpenObserve uses `latest`. Before pulling an update, create and verify a restorable `openobserve-data` backup and record the current image ID. Its internal address is `http://openobserve:5080`; Compose does not publish that port.
+OpenObserve uses `latest`. Before pulling an update, create and verify a restorable `openobserve-data` backup and record the current image ID. Its internal address is `http://openobserve:5080`; Compose does not publish that port. `ZO_COMPACT_DATA_RETENTION_DAYS=30` applies one global 30-day retention period to logs, metrics, and traces. OpenObserve's compactor removes older data asynchronously, so disk usage does not drop immediately after restart. Never delete files directly from `openobserve-data`; increasing the retention value later cannot restore data already deleted by the compactor.
 
 ## Configure Application Telemetry
 

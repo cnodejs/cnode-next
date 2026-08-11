@@ -83,6 +83,8 @@ services:
   openobserve:
     image: public.ecr.aws/zinclabs/openobserve:latest
     env_file: ${CNODE_ENV_FILE:-.env}
+    environment:
+      ZO_COMPACT_DATA_RETENTION_DAYS: "${ZO_COMPACT_DATA_RETENTION_DAYS:-30}"
     volumes:
       - openobserve-data:/data
     healthcheck:

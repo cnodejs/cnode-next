@@ -38,6 +38,14 @@ describe("telemetry deployment configuration", () => {
     expect(collector).toContain("level: warn");
   });
 
+  test("retains OpenObserve telemetry for 30 days by default", () => {
+    const service = compose.split("\n  openobserve:")[1]?.split("\n  otel-collector:")[0] || "";
+    expect(service).toContain(
+      'ZO_COMPACT_DATA_RETENTION_DAYS: "${ZO_COMPACT_DATA_RETENTION_DAYS:-30}"',
+    );
+    expect(productionEnv).toContain("ZO_COMPACT_DATA_RETENTION_DAYS=30");
+  });
+
   test("routes applications only to the Collector", () => {
     expect(productionEnv).toContain(
       "CNODE_OTEL_EXPORTER_OTLP_BASE_ENDPOINT=http://otel-collector:4318",
