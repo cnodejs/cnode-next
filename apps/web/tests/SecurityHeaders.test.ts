@@ -96,7 +96,9 @@ describe("Web document security headers", () => {
     const policy = buildContentSecurityPolicy("nonce", {
       CNODE_API_BASE_URL: "https://api.example.com/v1",
     });
-    expect(policy).toContain("connect-src 'self' https://challenges.cloudflare.com https://api.example.com");
+    expect(policy).toContain(
+      "connect-src 'self' https://challenges.cloudflare.com https://cloudflareinsights.com https://api.example.com",
+    );
     expect(policy).toContain("frame-src https://challenges.cloudflare.com");
     expect(policy).toContain("img-src 'self' data: blob: https:");
     expect(policy).toContain("report-uri /__csp-report");

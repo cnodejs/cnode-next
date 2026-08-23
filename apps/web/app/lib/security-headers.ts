@@ -61,7 +61,11 @@ export function buildContentSecurityPolicy(
   env: RuntimeEnv = process.env,
 ): string {
   const apiOrigin = origin(env.CNODE_API_BASE_URL || "https://api.cnodejs.org");
-  const connectSources = ["'self'", "https://challenges.cloudflare.com"];
+  const connectSources = [
+    "'self'",
+    "https://challenges.cloudflare.com",
+    "https://cloudflareinsights.com",
+  ];
   if (apiOrigin && !connectSources.includes(apiOrigin)) connectSources.push(apiOrigin);
 
   // Arbitrary HTTPS images are existing user-content behavior; scripts remain nonce-restricted.
