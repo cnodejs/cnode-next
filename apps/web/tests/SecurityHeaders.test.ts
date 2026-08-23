@@ -119,7 +119,9 @@ describe("Web document security headers", () => {
     expect(entrySource).toMatch(/renderToPipeableStream\([\s\S]*\{\s*nonce,/);
     expect(rootSource).toContain("<ScrollRestoration nonce={nonce} />");
     expect(rootSource).toContain("<Scripts nonce={nonce} />");
-    expect(rootSource.match(/<script\s+nonce=\{nonce\}/g)).toHaveLength(2);
+    expect(rootSource.match(/<script\s+nonce=\{nonce\}/g)).toHaveLength(3);
+    expect(rootSource).toContain('src="https://static.cloudflareinsights.com/beacon.min.js"');
+    expect(rootSource).toContain('CNODE_WEB_RUM_TOKEN');
 
     const topicSource = readFileSync(resolve(import.meta.dirname, "../app/routes/topic.$tid.tsx"), "utf8");
     expect(topicSource).toContain('<script\n        nonce={nonce}\n        type="application/ld+json"');

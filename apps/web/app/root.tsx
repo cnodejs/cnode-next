@@ -42,6 +42,7 @@ export async function loader({ request }: { request: Request }) {
     publicConfig: {
       apiBaseUrl: process.env.CNODE_API_BASE_URL || "https://api.cnodejs.org",
       turnstileSiteKey: process.env.TURNSTILE_SITE_KEY || "",
+      rumToken: process.env.CNODE_WEB_RUM_TOKEN || "",
       build: {
         service: "cnode-web",
         version: packageJson.version,
@@ -60,6 +61,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         publicConfig?: {
           apiBaseUrl?: string;
           turnstileSiteKey?: string;
+          rumToken?: string;
           build?: Record<string, string>;
         };
       }
@@ -95,6 +97,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
             __html: `window.__CNODE_CONFIG__=${JSON.stringify(publicConfig).replace(/</g, "\\u003c")};`,
           }}
         />
+        {publicConfig.rumToken && (
+          <script
+            nonce={nonce}
+            type="module"
+            src="https://static.cloudflareinsights.com/beacon.min.js"
+            data-cf-beacon={JSON.stringify({ token: publicConfig.rumToken })}
+          />
+        )}
         <Scripts nonce={nonce} />
         <Toaster />
       </body>
