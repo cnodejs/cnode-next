@@ -65,6 +65,7 @@ import { UserIdentityBadges } from "~/components/UserIdentityBadges";
 import { externalUrlLabel, githubProfileUrl, safeExternalUrl } from "~/lib/public-profile";
 import { getTopicActionPresentation } from "~/lib/topic-action-presentation";
 import type { TopicReplyDTO } from "~/lib/api-types";
+import { useCspNonce } from "~/lib/csp-nonce";
 import {
   Empty,
   EmptyContent,
@@ -201,10 +202,12 @@ export default function TopicDetail({ loaderData }: Route.ComponentProps) {
   const headings = extractMarkdownHeadings(topic.content || "").slice(0, 12);
   const toc = headings.length >= 4 ? <TopicToc headings={headings} /> : null;
   const jsonLd = discussionForumPostingJsonLd(topic);
+  const nonce = useCspNonce();
 
   return (
     <Layout>
       <script
+        nonce={nonce}
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />

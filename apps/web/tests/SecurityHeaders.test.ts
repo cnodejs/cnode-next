@@ -120,5 +120,8 @@ describe("Web document security headers", () => {
     expect(rootSource).toContain("<ScrollRestoration nonce={nonce} />");
     expect(rootSource).toContain("<Scripts nonce={nonce} />");
     expect(rootSource.match(/<script\s+nonce=\{nonce\}/g)).toHaveLength(2);
+
+    const topicSource = readFileSync(resolve(import.meta.dirname, "../app/routes/topic.$tid.tsx"), "utf8");
+    expect(topicSource).toContain('<script\n        nonce={nonce}\n        type="application/ld+json"');
   });
 });
