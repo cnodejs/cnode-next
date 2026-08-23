@@ -20,6 +20,7 @@
     "migrate:reconcile": "tsx scripts/reconcile-migration.ts",
     "repair:topic-replies": "tsx scripts/repair-topic-reply-aggregates.ts",
     "smoke:api-contract": "tsx docs/deployment/scripts/smoke-api-contract.ts",
+    "smoke:web-security": "tsx docs/deployment/scripts/smoke-web-security.ts",
     "gen:openapi": "pnpm --filter @cnode/api gen:openapi",
     "preflight:github-ids": "tsx docs/deployment/scripts/preflight-github-id-uniqueness.ts",
     "format": "vp fmt .",

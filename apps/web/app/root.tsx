@@ -5,6 +5,7 @@ import { useAuthStore } from "~/lib/stores/auth-store";
 import { getCurrentUser, apiFetch } from "~/lib/api-client";
 import { kvGet, kvSet } from "~/lib/kv-cache";
 import { useEffect } from "react";
+import { useCspNonce } from "~/lib/csp-nonce";
 import packageJson from "../package.json";
 import "~/styles/global.css";
 
@@ -53,6 +54,7 @@ export async function loader({ request }: { request: Request }) {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const nonce = useCspNonce();
   const data = useRouteLoaderData("root") as
     | {
         publicConfig?: {
@@ -75,6 +77,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var raw=localStorage.getItem('theme');var t='system';if(raw){try{var parsed=JSON.parse(raw);t=parsed&&parsed.state&&parsed.state.theme||raw}catch(e){t=raw}}var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);var e=document.documentElement;e.classList.toggle('dark',d);e.style.colorScheme=d?'dark':'light';e.dataset.theme=d?'dark':'light';var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',d?'#071207':'#fbfdf7')}catch(e){}})()`,
           }}
@@ -84,14 +87,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
-        <ScrollRestoration />
+        <ScrollRestoration nonce={nonce} />
         <NavProgress />
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `window.__CNODE_CONFIG__=${JSON.stringify(publicConfig).replace(/</g, "\\u003c")};`,
           }}
         />
-        <Scripts />
+        <Scripts nonce={nonce} />
         <Toaster />
       </body>
     </html>

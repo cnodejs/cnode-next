@@ -19,4 +19,8 @@ describe("Web route surface", () => {
       "alice",
     );
   });
+
+  it("exposes the internal CSP report resource route", () => {
+    expect(matchRoutes(routes as any, "/__csp-report")).not.toBeNull();
+  });
 });
