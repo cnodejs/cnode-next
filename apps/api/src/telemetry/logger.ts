@@ -9,6 +9,7 @@ export interface AppLogAttributes {
   "http.request.method"?: string;
   "http.response.status_code"?: number;
   "http.route"?: string;
+  "mail.stage"?: "template" | "smtp";
   "moderation.scan.jobs_processed"?: number;
   "moderation.scan.outcome"?: "completed" | "failed" | "lock_unavailable";
   "server.port"?: number;
@@ -36,6 +37,7 @@ const allowedAttributeKeys = new Set<keyof AppLogAttributes>([
   "http.request.method",
   "http.response.status_code",
   "http.route",
+  "mail.stage",
   "moderation.scan.jobs_processed",
   "moderation.scan.outcome",
   "server.port",

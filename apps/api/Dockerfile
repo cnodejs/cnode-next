@@ -37,9 +37,12 @@ COPY --from=deps /app/packages/db/node_modules /app/packages/db/node_modules
 COPY --from=deps /app/packages/shared/node_modules /app/packages/shared/node_modules
 COPY --from=build /app/package.json /app/pnpm-workspace.yaml /app/tsconfig.base.json ./
 COPY --from=build /app/apps/api/package.json /app/apps/api/package.json
+COPY --from=build /app/apps/api/tsconfig.json /app/apps/api/tsconfig.json
+COPY --from=build /app/apps/api/scripts /app/apps/api/scripts
 COPY --from=build /app/apps/api/src /app/apps/api/src
 COPY --from=build /app/packages/db /app/packages/db
 COPY --from=build /app/packages/shared /app/packages/shared
 COPY --from=build /app/scripts /app/scripts
+RUN CNODE_ENV=production pnpm --filter @cnode/api exec tsx scripts/mail-template-smoke.ts
 EXPOSE 3001
 CMD ["pnpm", "--filter", "@cnode/api", "exec", "tsx", "src/bootstrap.ts", "api"]

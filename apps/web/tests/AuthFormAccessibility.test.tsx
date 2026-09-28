@@ -6,6 +6,7 @@ import ResetPass from "~/routes/reset_pass";
 import SearchPass from "~/routes/search_pass";
 import Signin from "~/routes/signin";
 import Signup from "~/routes/signup";
+import ResendActivation from "~/routes/resend_activation";
 
 vi.mock("~/components/Layout", () => ({
   Layout: ({ children }: { children: React.ReactNode }) => children,
@@ -53,6 +54,11 @@ describe("认证表单字段语义", () => {
     expect(email).toHaveAttribute("name", "email");
     expect(email).toHaveAttribute("type", "email");
     expect(email).toHaveAttribute("autocomplete", "email");
+
+    unmount();
+    renderRoute(<ResendActivation />, "/resend_activation");
+    expect(screen.getByLabelText("用户名 / 邮箱")).toHaveAttribute("autocomplete", "username");
+    expect(screen.getByLabelText("密码")).toHaveAttribute("autocomplete", "current-password");
   });
 
   it("labels reset credentials as a new password", () => {

@@ -6,6 +6,7 @@ const root = resolve(import.meta.dirname, "../../..");
 const compose = readFileSync(resolve(root, "docs/deployment/docker-compose.yml"), "utf8");
 const collector = readFileSync(resolve(root, "docs/deployment/otel-collector.yaml"), "utf8");
 const productionEnv = readFileSync(resolve(root, "docs/deployment/env.production.example"), "utf8");
+const apiDockerfile = readFileSync(resolve(root, "apps/api/Dockerfile"), "utf8");
 
 describe("telemetry deployment configuration", () => {
   test("pins an internal-only Collector using the shared deployment env file", () => {
@@ -55,5 +56,10 @@ describe("telemetry deployment configuration", () => {
     expect(productionEnv).toContain("CNODE_OTEL_METRICS_ENABLED=1");
     expect(compose).toContain("CNODE_OTEL_LOGS_ENABLED: ${CNODE_OTEL_LOGS_ENABLED:-1}");
     expect(productionEnv).not.toContain("metrics.cnodejs.org");
+  });
+
+  test("keeps API JSX config and validates mail templates in the final image", () => {
+    expect(apiDockerfile).toContain("apps/api/tsconfig.json /app/apps/api/tsconfig.json");
+    expect(apiDockerfile).toContain("tsx scripts/mail-template-smoke.ts");
   });
 });

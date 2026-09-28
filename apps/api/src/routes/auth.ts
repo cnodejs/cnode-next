@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 import {
   signinBodySchema,
   signupBodySchema,
+  resendActivationBodySchema,
   searchPassBodySchema,
   resetPassBodySchema,
   githubCreateBodySchema,
@@ -22,7 +23,7 @@ import {
   authMiddleware,
   type AuthVars,
 } from "../middleware/auth";
-import { perIpPerDay, perUserPerDay } from "../middleware/rate-limit";
+import { perAccountPerDay, perIpPerDay, perUserPerDay } from "../middleware/rate-limit";
 import { requestIp, verifyTurnstile } from "../lib/turnstile";
 import {
   decideGithubBind,
@@ -30,11 +31,19 @@ import {
   isGithubIdUniqueViolation,
   revokeGithubToken,
 } from "../lib/github-account-linking";
+import { userUniqueConflict } from "../lib/user-registration";
+import {
+  activeAccount,
+  createPendingAccount,
+  resendAccountActivation,
+} from "../lib/account-activation";
 
 const auth = new OpenAPIHono<{ Variables: AuthVars }>();
 auth.use("*", authMiddleware());
 
 const CREATE_USER_PER_IP = 1000;
+const RESEND_ACTIVATION_PER_IP = 20;
+const RESEND_ACTIVATION_PER_ACCOUNT = 5;
 const RETRIEVE_KEY_TTL = 24 * 60 * 60 * 1000;
 const GITHUB_PENDING_COOKIE = "github_profile";
 const GITHUB_OAUTH_COOKIE = "github_oauth_state";
@@ -203,7 +212,15 @@ auth.openapi(loginRoute, async (c) => {
   if (!user) return c.json({ success: false as const, error_msg: "用户名或密码错误" }, 403);
   const equal = user.pass ? await bcryptjs.compare(pass, user.pass) : false;
   if (!equal) return c.json({ success: false as const, error_msg: "用户名或密码错误" }, 403);
-  if (!user.active) return c.json({ success: false as const, error_msg: "账号未激活" }, 403);
+  if (!user.active)
+    return c.json(
+      {
+        success: false as const,
+        error_code: "account_inactive",
+        error_msg: "账号未激活",
+      },
+      403,
+    );
   setSessionCookie(c, user.id);
   return c.json({ success: true as const }, 200);
 });
@@ -256,6 +273,10 @@ const signupRoute = createRoute({
       description: "用户名或邮箱已存在",
       content: { "application/json": { schema: errorResponseSchema } },
     },
+    503: {
+      description: "账号已创建但激活邮件发送失败",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
   },
 });
 auth.openapi(signupRoute, async (c) => {
@@ -269,16 +290,112 @@ auth.openapi(signupRoute, async (c) => {
   if (await userQueries.getByEmail(email))
     return c.json({ success: false as const, error_msg: "邮箱已被使用" }, 422);
   const passhash = await bcryptjs.hash(pass, 10);
-  const retrieveKey = uuidv4();
-  const user = await userQueries.newAndSave({
-    loginname: loginname.toLowerCase(),
-    pass: passhash,
-    email,
-    active: false,
-  });
-  await userQueries.updateRetrieveKey(user.id, retrieveKey, Date.now());
-  if (process.env.CNODE_ENV !== "development") await sendActiveMail(email, retrieveKey);
+  let result: Awaited<ReturnType<typeof createPendingAccount>>;
+  try {
+    result = await createPendingAccount(
+      {
+        loginname: loginname.toLowerCase(),
+        passhash,
+        email,
+      },
+      {
+        createKey: uuidv4,
+        now: Date.now,
+        createUser: (input) => userQueries.newAndSave(input),
+        sendActivation: async (target, key) => {
+          if (process.env.CNODE_ENV !== "development") await sendActiveMail(target, key);
+        },
+      },
+    );
+  } catch (error) {
+    const conflict = userUniqueConflict(error);
+    if (conflict)
+      return c.json(
+        {
+          success: false as const,
+          error_msg: conflict === "loginname" ? "用户名已被使用" : "邮箱已被使用",
+        },
+        422,
+      );
+    throw error;
+  }
+  if (result.status === "email_failed")
+    return c.json(
+      {
+        success: false as const,
+        error_code: "account_created_email_failed",
+        error_msg: "账号已创建，但激活邮件发送失败，请重新发送激活邮件",
+      },
+      503,
+    );
   return c.json({ success: true as const, message: "注册成功,请查收邮件激活账号" }, 200);
+});
+
+// --- POST /auth/local/resend_activation ---
+const resendActivationRoute = createRoute({
+  method: "post",
+  path: "/auth/local/resend_activation",
+  tags: ["auth"],
+  summary: "重新发送账号激活邮件",
+  middleware: [
+    perIpPerDay("resend_activation", RESEND_ACTIVATION_PER_IP, true),
+    perAccountPerDay("resend_activation", RESEND_ACTIVATION_PER_ACCOUNT, true),
+  ],
+  request: {
+    body: { content: { "application/json": { schema: resendActivationBodySchema } } },
+  },
+  responses: {
+    200: {
+      description: "请求已处理",
+      content: {
+        "application/json": { schema: z.object({ success: z.literal(true), message: z.string() }) },
+      },
+    },
+    403: {
+      description: "人机验证失败或请求超过限制",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+    503: {
+      description: "激活邮件发送失败",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
+  },
+});
+auth.openapi(resendActivationRoute, async (c) => {
+  const { name, pass, turnstileToken } = c.req.valid("json");
+  if (!(await verifyTurnstile(turnstileToken, requestIp(c))))
+    return c.json({ success: false as const, error_msg: "人机验证失败" }, 403);
+
+  const genericResponse = {
+    success: true as const,
+    message: "如果账号存在且尚未激活，系统将发送新的激活邮件",
+  };
+  const result = await resendAccountActivation(
+    { name: name.trim(), pass },
+    {
+      createKey: uuidv4,
+      now: Date.now,
+      findUser: async (identity) =>
+        identity.includes("@")
+          ? userQueries.getByEmail(identity)
+          : userQueries.getByLoginName(identity.toLowerCase()),
+      verifyPassword: (password, hash) => bcryptjs.compare(password, hash),
+      updateKey: (userId, key, time) => userQueries.updateRetrieveKey(userId, key, time),
+      sendActivation: async (target, key) => {
+        if (process.env.CNODE_ENV !== "development") await sendActiveMail(target, key);
+      },
+    },
+  );
+  if (result.status === "email_failed")
+    return c.json(
+      {
+        success: false as const,
+        error_code: "activation_email_failed",
+        error_msg: "激活邮件发送失败，请稍后重试",
+      },
+      503,
+    );
+  return c.json(genericResponse, 200);
 });
 
 // --- GET /auth/local/active_account ---
@@ -333,6 +450,10 @@ const searchPassRoute = createRoute({
       description: "邮箱不存在",
       content: { "application/json": { schema: errorResponseSchema } },
     },
+    503: {
+      description: "重置密码邮件发送失败",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
   },
 });
 auth.openapi(searchPassRoute, async (c) => {
@@ -343,7 +464,20 @@ auth.openapi(searchPassRoute, async (c) => {
   if (!user) return c.json({ success: false as const, error_msg: "邮箱不存在" }, 404);
   const key = uuidv4();
   await userQueries.updateRetrieveKey(user.id, key, Date.now());
-  if (process.env.CNODE_ENV !== "development") await sendResetPassMail(email, key);
+  if (process.env.CNODE_ENV !== "development") {
+    try {
+      await sendResetPassMail(email, key);
+    } catch {
+      return c.json(
+        {
+          success: false as const,
+          error_code: "password_reset_email_failed",
+          error_msg: "重置密码邮件发送失败，请稍后重试",
+        },
+        503,
+      );
+    }
+  }
   return c.json({ success: true as const, message: "重置密码邮件已发送" }, 200);
 });
 
@@ -417,7 +551,8 @@ auth.get("/auth/github/callback", async (c) => {
       email = Array.isArray(emails) ? emails.find((e: any) => e.primary)?.email : null;
     }
     if (!email) return c.redirect(`${webBaseUrl()}/auth/github/no-email`);
-    const user = await userQueries.getByGithubId(String(profile.id));
+    const githubUser = await userQueries.getByGithubId(String(profile.id));
+    const user = activeAccount(githubUser);
     if (oauthState.intent === "bind") {
       const currentUser = c.get("user");
       if (!currentUser) {
@@ -427,7 +562,7 @@ auth.get("/auth/github/callback", async (c) => {
       const decision = decideGithubBind(
         currentUser.githubId,
         String(profile.id),
-        user?.id ?? null,
+        githubUser?.id ?? null,
         currentUser.id,
       );
       if (decision === "reject-different" || decision === "reject-occupied")
@@ -465,7 +600,11 @@ auth.get("/auth/github/callback", async (c) => {
       });
       return c.redirect(`${webBaseUrl()}/setting?github=bound`);
     }
-    if (user) {
+    if (githubUser) {
+      if (!user) {
+        await revokeGithubToken(ghAccessToken);
+        return c.redirect(`${webBaseUrl()}/resend_activation?error=account_inactive`);
+      }
       await userQueries.updateGithubInfo(user.id, {
         githubId: String(profile.id),
         githubUsername: profile.login,
@@ -614,6 +753,18 @@ auth.openapi(githubCreateRoute, async (c) => {
       return c.json({ success: false as const, error_msg: "账号名或密码错误" }, 403);
     if (!(await bcryptjs.compare(pass, user.pass)))
       return c.json({ success: false as const, error_msg: "账号名或密码错误" }, 403);
+    if (!user.active) {
+      await revokeGithubToken(profile.accessToken);
+      clearPendingGithubProfile(c);
+      return c.json(
+        {
+          success: false as const,
+          error_code: "account_inactive",
+          error_msg: "账号未激活，请先完成邮箱激活",
+        },
+        403,
+      );
+    }
     const occupyingUser = await userQueries.getByGithubId(profile.id);
     const decision = decideGithubBind(
       user.githubId,

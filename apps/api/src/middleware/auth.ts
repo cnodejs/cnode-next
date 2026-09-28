@@ -2,6 +2,7 @@ import { createMiddleware } from "hono/factory";
 import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import { roleQueries, userQueries } from "../lib/db";
 import { resolveUserAccess } from "../lib/user-access";
+import { activeAccount } from "../lib/account-activation";
 
 export interface AuthVars {
   user: Awaited<ReturnType<typeof userQueries.getById>> | null;
@@ -49,7 +50,7 @@ export const authMiddleware = () =>
       if (userId) {
         const id = Number(userId);
         if (id > 0 && !Number.isNaN(id)) {
-          user = await userQueries.getById(id);
+          user = activeAccount(await userQueries.getById(id));
         }
       }
     }

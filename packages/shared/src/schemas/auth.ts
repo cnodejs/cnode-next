@@ -20,6 +20,19 @@ export const signupBodySchema = z.object({
   turnstileToken: z.string().optional(),
 });
 
+export const authErrorCodeSchema = z.enum([
+  "account_created_email_failed",
+  "account_inactive",
+  "activation_email_failed",
+  "password_reset_email_failed",
+]);
+
+export const resendActivationBodySchema = z.object({
+  name: z.string().trim().min(1),
+  pass: z.string().min(1),
+  turnstileToken: z.string().optional(),
+});
+
 export const searchPassBodySchema = z.object({
   email: z.string().email(),
   turnstileToken: z.string().optional(),
@@ -47,3 +60,5 @@ export const githubUnbindSchema = z
   .strict();
 
 export type GithubUnbindInput = z.infer<typeof githubUnbindSchema>;
+export type AuthErrorCode = z.infer<typeof authErrorCodeSchema>;
+export type ResendActivationInput = z.infer<typeof resendActivationBodySchema>;

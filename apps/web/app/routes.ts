@@ -21,6 +21,7 @@ export default [
   route("auth/github/new", "routes/auth.github.new.tsx"),
   route("auth/github/no-email", "routes/auth.github.no-email.tsx"),
   route("active_account", "routes/active_account.tsx"),
+  route("resend_activation", "routes/resend_activation.tsx"),
   route("search_pass", "routes/search_pass.tsx"),
   route("reset_pass", "routes/reset_pass.tsx"),
   route("my/messages", "routes/my.messages.tsx"),

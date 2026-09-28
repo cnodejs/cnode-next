@@ -1,4 +1,5 @@
 import { createMiddleware } from "hono/factory";
+import { createHash } from "node:crypto";
 import { getCache } from "../lib/cache";
 import { settingQueries, userQueries } from "../lib/db";
 
@@ -91,6 +92,21 @@ export function perIpPerDay(name: string, limitCount: number, showJson = true) {
         throw new Error("should provide x-real-ip header");
       }
       return realIP || "dev";
+    },
+    limitCount,
+    showJson,
+  });
+}
+
+export function perAccountPerDay(name: string, limitCount: number, showJson = true) {
+  return makePerDayLimiter({
+    identityName: "peraccountperday",
+    name,
+    identityFn: (c) => {
+      const identity = String(c.req.valid?.("json")?.name || "")
+        .trim()
+        .toLowerCase();
+      return createHash("sha256").update(identity).digest("hex");
     },
     limitCount,
     showJson,

@@ -33,6 +33,14 @@ function getDb(): DB {
   return dbInstance;
 }
 
+export function buildUserByTokenQuery(db: Database, token: string) {
+  return db
+    .select()
+    .from(users)
+    .where(and(eq(users.accessToken, token), boolEq(users.active, true)))
+    .limit(1);
+}
+
 export const userQueries = {
   async getByLoginName(loginname: string) {
     const db = getDb();
@@ -60,7 +68,7 @@ export const userQueries = {
 
   async getByToken(token: string) {
     const db = getDb();
-    const result = await db.select().from(users).where(eq(users.accessToken, token)).limit(1);
+    const result = await buildUserByTokenQuery(db, token);
     return result[0] || null;
   },
 
@@ -89,6 +97,8 @@ export const userQueries = {
     githubId?: string;
     githubUsername?: string;
     githubAccessToken?: string;
+    retrieveKey?: string;
+    retrieveTime?: number;
   }) {
     const db = getDb();
     const [user] = await db
@@ -103,6 +113,8 @@ export const userQueries = {
         githubId: params.githubId,
         githubUsername: params.githubUsername,
         githubAccessToken: params.githubAccessToken,
+        retrieveKey: params.retrieveKey,
+        retrieveTime: params.retrieveTime,
       })
       .returning();
     return user;

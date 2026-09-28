@@ -389,6 +389,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -416,6 +419,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -442,6 +448,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -756,6 +765,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -782,6 +794,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -951,6 +966,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -977,6 +995,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -1005,6 +1026,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -1031,6 +1055,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -1132,6 +1159,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -1158,6 +1188,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -1186,6 +1219,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -1212,6 +1248,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -1319,6 +1358,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -1346,6 +1388,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -1372,6 +1417,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -1467,6 +1515,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -1493,6 +1544,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -1521,6 +1575,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -1547,6 +1604,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -1635,6 +1695,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -1661,6 +1724,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -1689,6 +1755,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -1715,6 +1784,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -1807,6 +1879,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -1834,6 +1909,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -1860,6 +1938,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -2285,6 +2366,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -2552,6 +2636,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -2821,6 +2908,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -3044,6 +3134,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -3139,6 +3232,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -3165,6 +3261,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -3227,6 +3326,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -3537,6 +3639,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -3608,6 +3713,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -3696,6 +3804,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -3781,6 +3892,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -3981,6 +4095,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -4060,6 +4177,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -4087,6 +4207,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -4113,6 +4236,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -4193,6 +4319,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -4219,6 +4348,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -4300,6 +4432,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -4440,6 +4575,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -4466,6 +4604,160 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
+                    },
+                    "error_msg": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "账号已创建但激活邮件发送失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ]
+                    },
+                    "error_code": {
+                      "type": "string"
+                    },
+                    "error_msg": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/local/resend_activation": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "重新发送账号激活邮件",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "pass": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "turnstileToken": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "pass"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求已处理",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "人机验证失败或请求超过限制",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ]
+                    },
+                    "error_code": {
+                      "type": "string"
+                    },
+                    "error_msg": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "激活邮件发送失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -4538,6 +4830,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -4622,6 +4917,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -4648,6 +4946,39 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
+                    },
+                    "error_msg": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "重置密码邮件发送失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -4735,6 +5066,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -4816,6 +5150,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -4894,6 +5231,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -4920,6 +5260,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -4948,6 +5291,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -4974,6 +5320,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -5052,6 +5401,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -5078,6 +5430,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -5106,6 +5461,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -5132,6 +5490,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -5285,6 +5646,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -5364,6 +5728,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -5391,6 +5758,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -5417,6 +5787,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -5519,6 +5892,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -5545,6 +5921,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"
@@ -5640,6 +6019,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -5667,6 +6049,9 @@
                         false
                       ]
                     },
+                    "error_code": {
+                      "type": "string"
+                    },
                     "error_msg": {
                       "type": "string"
                     },
@@ -5693,6 +6078,9 @@
                       "enum": [
                         false
                       ]
+                    },
+                    "error_code": {
+                      "type": "string"
                     },
                     "error_msg": {
                       "type": "string"

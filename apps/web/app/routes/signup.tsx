@@ -58,18 +58,20 @@ export default function Signup({ loaderData }: any) {
 
   const { run: onSubmit, pending: loading } = useAsyncAction(
     async (values: SignupValues) => {
-      return apiFetch<{ success: boolean; error_msg?: string; message?: string }>(
-        "/api/v1/auth/local/signup",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            loginname: values.loginname,
-            pass: values.pass,
-            email: values.email,
-            turnstileToken: getTurnstileToken(),
-          }),
-        },
-      );
+      return apiFetch<{
+        success: boolean;
+        error_code?: string;
+        error_msg?: string;
+        message?: string;
+      }>("/api/v1/auth/local/signup", {
+        method: "POST",
+        body: JSON.stringify({
+          loginname: values.loginname,
+          pass: values.pass,
+          email: values.email,
+          turnstileToken: getTurnstileToken(),
+        }),
+      });
     },
     {
       errorMessage: "网络错误",
@@ -78,6 +80,13 @@ export default function Signup({ loaderData }: any) {
           toast.success(res.message || "注册成功,请查收邮件激活账号");
           setTimeout(() => navigate("/signin"), 3000);
         } else {
+          if (res.error_code === "account_created_email_failed") {
+            toast.error(res.error_msg || "账号已创建，但激活邮件发送失败");
+            void navigate(
+              `/resend_activation?name=${encodeURIComponent(form.getValues("loginname"))}`,
+            );
+            return;
+          }
           toast.error(res.error_msg || "注册失败");
         }
       },

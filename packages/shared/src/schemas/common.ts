@@ -7,6 +7,7 @@ export const successEnvelopeSchema = z.object({
 
 export const errorEnvelopeSchema = z.object({
   success: z.literal(false),
+  error_code: z.string().optional(),
   error_msg: z.string().optional(),
   message: z.string().optional(),
 });
@@ -29,6 +30,7 @@ export const mdrenderQuerySchema = z.object({
 
 export const errorResponseSchema = z.object({
   success: z.literal(false),
+  error_code: z.string().optional(),
   error_msg: z.string().optional(),
   message: z.string().optional(),
 });

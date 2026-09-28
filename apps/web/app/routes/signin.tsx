@@ -47,10 +47,13 @@ export default function Signin() {
 
   const { run: onSubmit, pending: loading } = useAsyncAction(
     async (values: SigninValues) => {
-      return apiFetch<{ success: boolean; error_msg?: string }>("/api/v1/auth/local/login", {
-        method: "POST",
-        body: JSON.stringify(values),
-      });
+      return apiFetch<{ success: boolean; error_code?: string; error_msg?: string }>(
+        "/api/v1/auth/local/login",
+        {
+          method: "POST",
+          body: JSON.stringify(values),
+        },
+      );
     },
     {
       errorMessage: "网络错误,请稍后重试",
@@ -59,6 +62,10 @@ export default function Signin() {
           toast.success("登录成功");
           void navigate("/");
         } else {
+          if (res.error_code === "account_inactive") {
+            void navigate(`/resend_activation?name=${encodeURIComponent(form.getValues("name"))}`);
+            return;
+          }
           toast.error(res.error_msg || "登录失败");
         }
       },
@@ -149,6 +156,10 @@ export default function Signin() {
               <span className="mx-2">·</span>
               <Link to="/auth/github" className="text-primary hover:underline">
                 GitHub 登录
+              </Link>
+              <span className="mx-2">·</span>
+              <Link to="/resend_activation" className="text-primary hover:underline">
+                重新激活
               </Link>
             </div>
           </div>

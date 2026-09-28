@@ -45,8 +45,30 @@ interface MailData {
   text?: string;
 }
 
+export type MailFailureStage = "template" | "smtp";
+
+export class MailDeliveryError extends Error {
+  constructor(
+    readonly stage: MailFailureStage,
+    options?: ErrorOptions,
+  ) {
+    super(`Mail ${stage} failed`, options);
+    this.name = "MailDeliveryError";
+  }
+}
+
 export async function sendMail(data: MailData) {
-  const t = getTransporter();
+  let t: Transporter | null;
+  try {
+    t = getTransporter();
+  } catch (error) {
+    appLog("mail.send.failed", "ERROR", {
+      outcome: "failed",
+      "mail.stage": "smtp",
+      "error.type": errorType(error),
+    });
+    throw new MailDeliveryError("smtp", { cause: error });
+  }
   if (!t) return;
 
   const from = process.env.SMTP_FROM || data.from;
@@ -62,27 +84,35 @@ export async function sendMail(data: MailData) {
       appLog("mail.send.failed", "ERROR", {
         outcome: "failed",
         attempt: i,
+        "mail.stage": "smtp",
         "error.type": errorType(err),
       });
-      if (i === 5) throw err;
+      if (i === 5) throw new MailDeliveryError("smtp", { cause: err });
     }
   }
 }
 
+async function buildAndSend(to: string, build: () => Promise<Omit<MailData, "from" | "to">>) {
+  let content: Omit<MailData, "from" | "to">;
+  try {
+    content = await build();
+  } catch (error) {
+    appLog("mail.template.failed", "ERROR", {
+      outcome: "failed",
+      "mail.stage": "template",
+      "error.type": errorType(error),
+    });
+    throw new MailDeliveryError("template", { cause: error });
+  }
+  await sendMail({ from: "cnode@localhost", to, ...content });
+}
+
 export async function sendActiveMail(email: string, key: string) {
-  await sendMail({
-    from: "cnode@localhost",
-    to: email,
-    ...(await buildActiveMail(key)),
-  });
+  await buildAndSend(email, () => buildActiveMail(key));
 }
 
 export async function sendResetPassMail(email: string, key: string) {
-  await sendMail({
-    from: "cnode@localhost",
-    to: email,
-    ...(await buildResetPassMail(key)),
-  });
+  await buildAndSend(email, () => buildResetPassMail(key));
 }
 
 export async function sendReplyNotifyMail(
@@ -91,11 +121,7 @@ export async function sendReplyNotifyMail(
   replyContent: string,
   topicUrl: string,
 ) {
-  await sendMail({
-    from: "cnode@localhost",
-    to: email,
-    ...(await buildReplyNotifyMail(topicTitle, replyContent, topicUrl)),
-  });
+  await buildAndSend(email, () => buildReplyNotifyMail(topicTitle, replyContent, topicUrl));
 }
 
 export async function sendAtNotifyMail(
@@ -104,9 +130,5 @@ export async function sendAtNotifyMail(
   replyContent: string,
   topicUrl: string,
 ) {
-  await sendMail({
-    from: "cnode@localhost",
-    to: email,
-    ...(await buildAtNotifyMail(topicTitle, replyContent, topicUrl)),
-  });
+  await buildAndSend(email, () => buildAtNotifyMail(topicTitle, replyContent, topicUrl));
 }

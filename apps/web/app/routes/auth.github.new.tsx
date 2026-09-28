@@ -39,10 +39,13 @@ export default function GithubNew({ loaderData }: Route.ComponentProps) {
 
   const { run: submit, pending: loading } = useAsyncAction(
     async () => {
-      return apiFetch<{ success: boolean; error_msg?: string }>("/api/v1/auth/github/create", {
-        method: "POST",
-        body: JSON.stringify({ isnew: mode === "new", name, pass }),
-      }).catch(() => ({ success: false, error_msg: "GitHub 登录失败" }));
+      return apiFetch<{ success: boolean; error_code?: string; error_msg?: string }>(
+        "/api/v1/auth/github/create",
+        {
+          method: "POST",
+          body: JSON.stringify({ isnew: mode === "new", name, pass }),
+        },
+      ).catch(() => ({ success: false, error_code: undefined, error_msg: "GitHub 登录失败" }));
     },
     {
       onSuccess: (res) => {
@@ -50,6 +53,10 @@ export default function GithubNew({ loaderData }: Route.ComponentProps) {
           toast.success("GitHub 登录成功");
           void navigate("/");
         } else {
+          if (res.error_code === "account_inactive") {
+            void navigate(`/resend_activation?name=${encodeURIComponent(name)}`);
+            return;
+          }
           toast.error(res.error_msg || "GitHub 登录失败");
         }
       },
