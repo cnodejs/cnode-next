@@ -3,9 +3,7 @@
 ## Purpose
 
 定义 cnode-next 作为 nodeclub 线上行为完全替代品之前必须通过的 URL、API、写入副作用、生产 smoke、不可变镜像和发布准入验收矩阵。
-
 ## Requirements
-
 ### Requirement: nodeclub 线上替代验收矩阵
 
 系统 SHALL 在切换线上流量前通过 nodeclub online replacement 验收矩阵，证明公开 URL、API 契约、业务副作用、生产周边行为和容器运行方式均可替代旧站。生产验收 MUST 确认部署过程不会执行镜像构建，并且 API、Web 和 worker 必须来自已通过 release verification gate 的不可变镜像发布物。
@@ -70,7 +68,7 @@
 
 ### Requirement: 生产邮件路径不得假成功
 
-生产环境中的账号激活、密码找回、回复通知和 @ 通知邮件 SHALL 在 SMTP 缺失或发送失败时可观测，并且关键账号邮件不得返回误导性的成功响应。
+生产环境中的账号激活、密码找回、回复通知和 @ 通知邮件 SHALL 在模板渲染、SMTP 配置或发送失败时可观测，并且关键账号邮件不得返回误导性的成功响应。可观测数据 MUST 能区分模板渲染失败和 SMTP 发送失败，但 MUST NOT 包含收件地址、邮件正文、密码、retrieve key 或凭据。
 
 #### Scenario: 生产缺少 SMTP 配置
 
@@ -79,10 +77,18 @@
 - **AND** 系统 MUST 记录可观测错误日志
 - **AND** 用户不得看到“邮件已发送”的假成功提示
 
+#### Scenario: 邮件模板渲染失败
+
+- **WHEN** 账号激活或密码找回邮件在 SMTP 调用前因模板或 JSX runtime 错误而无法构建
+- **THEN** API MUST 返回明确的邮件处理失败响应
+- **AND** 日志 MUST 将失败阶段标记为模板渲染
+- **AND** 用户资料和 retrieve key 状态 MUST 保持可重试或明确可恢复
+
 #### Scenario: SMTP 发送失败
 
 - **WHEN** SMTP 已配置但发送账号激活或密码找回邮件最终失败
 - **THEN** API MUST 返回失败响应
+- **AND** 日志 MUST 将失败阶段标记为 SMTP 发送并记录安全的错误分类
 - **AND** 用户资料和 retrieve key 状态 MUST 保持可重试或明确可恢复
 
 #### Scenario: development 允许跳过邮件
@@ -112,6 +118,7 @@
 - **WHEN** 非 development 环境缺少 Turnstile 必需配置
 - **THEN** 系统 MUST 拒绝依赖 Turnstile 的请求或在启动/健康检查中明确失败
 - **AND** 不得绕过人机验证继续接受高风险请求
+
 ### Requirement: 长期运维约束不得依赖单次运行记录
 项目 SHALL 以可重复验证的镜像、migration、健康检查和回滚约束描述生产运维，不得将单次发布观察或环境拓扑作为长期规范。
 
