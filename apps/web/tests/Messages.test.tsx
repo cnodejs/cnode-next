@@ -36,10 +36,15 @@ function makeMessage(id: string, content: string, hasRead = false) {
 function renderMessages(readMsgs: unknown[], unreadMsgs: unknown[]) {
   const routeProps = { loaderData: { readMsgs, unreadMsgs }, params: {}, matches: [] } as any;
   const router = createMemoryRouter(
-    [{ path: "/my/messages", element: <Messages {...routeProps} /> }],
+    [
+      { path: "/my/messages", element: <Messages {...routeProps} /> },
+      { path: "/topic/:topicId", element: <div>话题详情</div> },
+      { path: "/user/:loginname", element: <div>用户详情</div> },
+    ],
     { initialEntries: ["/my/messages"] },
   );
-  return render(<RouterProvider router={router} />);
+  const result = render(<RouterProvider router={router} />);
+  return { ...result, router };
 }
 
 function messageGroup(title: string) {
@@ -108,5 +113,40 @@ describe("messages page", () => {
     );
     expect(messageGroup("过往消息").getByText("不错哦")).toBeInTheDocument();
     expect(screen.queryByText(/<p>|<\/p>/)).not.toBeInTheDocument();
+  });
+
+  it("marks an unread message as read while opening its topic", async () => {
+    mocks.apiFetch.mockResolvedValue({ success: true });
+    const { router } = renderMessages([], [makeMessage("opening", "新回复")]);
+
+    await userEvent.click(messageGroup("新消息").getByRole("link", { name: "Markdown 摘要" }));
+
+    expect(mocks.apiFetch).toHaveBeenCalledWith("/api/v1/message/mark_one/opening", {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
+    expect(router.state.location.pathname).toBe("/topic/2");
+    expect(router.state.location.hash).toBe("#3");
+    expect(screen.getByText("话题详情")).toBeInTheDocument();
+  });
+
+  it("does not mark an unread message as read when opening its author", async () => {
+    const { router } = renderMessages([], [makeMessage("author", "新回复")]);
+
+    await userEvent.click(messageGroup("新消息").getByRole("link", { name: "alice" }));
+
+    expect(mocks.apiFetch).not.toHaveBeenCalled();
+    expect(router.state.location.pathname).toBe("/user/alice");
+    expect(screen.getByText("用户详情")).toBeInTheDocument();
+  });
+
+  it("does not mark an already-read message again when opening its topic", async () => {
+    const { router } = renderMessages([makeMessage("read", "旧回复", true)], []);
+
+    await userEvent.click(messageGroup("过往消息").getByRole("link", { name: "Markdown 摘要" }));
+
+    expect(mocks.apiFetch).not.toHaveBeenCalled();
+    expect(router.state.location.pathname).toBe("/topic/2");
+    expect(router.state.location.hash).toBe("#3");
   });
 });

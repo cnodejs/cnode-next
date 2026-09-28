@@ -3,7 +3,7 @@
 - [x] 1.1 调整 `apps/api/Dockerfile`，让最终源码运行镜像携带 `apps/api/tsconfig.json` 及其基础配置，并确认 `tsx` 使用 `react-jsx` runtime
 - [x] 1.2 增加最终 API 镜像内的无网络邮件模板 smoke，覆盖账号激活、密码重置、回复和 @ 提及四类模板
 - [x] 1.3 增加模板渲染失败与 SMTP 发送失败的阶段化安全日志，确保不记录邮箱、正文、密码、retrieve key 或 SMTP 凭据
-- [ ] 1.4 运行 API 邮件模板测试、typecheck、build 和最终镜像 smoke，验证不再出现 `React is not defined`
+- [x] 1.4 运行 API 邮件模板测试、typecheck、build 和最终镜像 smoke，验证不再出现 `React is not defined`
 
 ## 2. MVP：注册部分成功与安全恢复 API
 
@@ -34,4 +34,4 @@
 - [x] 5.1 从认证路由 zod-openapi 声明重新生成 `apps/web/public/openapi.json`，验证重发接口和结构化错误响应
 - [x] 5.2 按 `cnode-docs` 检查 `docs/deployment/` 的最终镜像 smoke 说明；仅在现有权威部署文档需要同步时更新，并检查无过时路径或不安全示例值
 - [x] 5.3 复核本变更无 PostgreSQL schema、migration、seed、索引、自动 backfill 或数据清理，并确认历史未激活账号仅按请求恢复
-- [ ] 5.4 运行相关 API/Web 测试、lint、typecheck、build、OpenSpec strict validate、secret scan，并核对设计图、规格与实现状态可归档
+- [x] 5.4 运行相关 API/Web 测试、lint、typecheck、build、OpenSpec strict validate、secret scan，并核对设计图、规格与实现状态可归档

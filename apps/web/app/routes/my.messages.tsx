@@ -228,7 +228,13 @@ function MessageItem({
           {!msg.has_read && <span className="h-2 w-2 rounded-full bg-primary" aria-label="未读" />}
         </ItemTitle>
         {msg.topic && (
-          <Link to={topicHref} className="truncate font-medium text-foreground hover:text-primary">
+          <Link
+            to={topicHref}
+            className="truncate font-medium text-foreground hover:text-primary"
+            onClick={() => {
+              if (!msg.has_read) onMarkRead(msg.id);
+            }}
+          >
             {msg.topic.title}
           </Link>
         )}
