@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router";
+import { createMemoryRouter, RouterProvider } from "react-router";
 import { describe, expect, it, vi } from "vite-plus/test";
 import ResetPass from "~/routes/reset_pass";
 import SearchPass from "~/routes/search_pass";
@@ -17,7 +17,8 @@ vi.mock("~/components/TurnstileWidget", () => ({
 }));
 
 function renderRoute(element: React.ReactNode, entry = "/") {
-  return render(<MemoryRouter initialEntries={[entry]}>{element}</MemoryRouter>);
+  const router = createMemoryRouter([{ path: "*", element }], { initialEntries: [entry] });
+  return render(<RouterProvider router={router} />);
 }
 
 describe("认证表单字段语义", () => {

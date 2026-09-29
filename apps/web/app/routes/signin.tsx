@@ -1,5 +1,5 @@
 import { Layout } from "~/components/Layout";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { Link, useNavigate, useRevalidator, useSearchParams } from "react-router";
 import { apiFetch } from "~/lib/api-client";
 import { useAsyncAction } from "~/hooks/use-async-action";
 import { toast } from "sonner";
@@ -28,6 +28,7 @@ export async function loader({ request }: { request: Request }) {
 
 export default function Signin() {
   const navigate = useNavigate();
+  const revalidator = useRevalidator();
   const [params] = useSearchParams();
 
   const errParam = params.get("error");
@@ -47,13 +48,15 @@ export default function Signin() {
 
   const { run: onSubmit, pending: loading } = useAsyncAction(
     async (values: SigninValues) => {
-      return apiFetch<{ success: boolean; error_code?: string; error_msg?: string }>(
+      const res = await apiFetch<{ success: boolean; error_code?: string; error_msg?: string }>(
         "/api/v1/auth/local/login",
         {
           method: "POST",
           body: JSON.stringify(values),
         },
       );
+      if (res.success) await revalidator.revalidate();
+      return res;
     },
     {
       errorMessage: "网络错误,请稍后重试",

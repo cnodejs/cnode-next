@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter, Route, Routes, useLocation } from "react-router";
+import { createMemoryRouter, RouterProvider, useLocation } from "react-router";
 import { beforeEach, describe, expect, test, vi } from "vite-plus/test";
 import GithubNew from "~/routes/auth.github.new";
 import ResendActivation from "~/routes/resend_activation";
@@ -22,22 +22,27 @@ function Location() {
   return <div data-testid="location">{useLocation().pathname + useLocation().search}</div>;
 }
 
-function renderWithRoutes(element: React.ReactNode, entry: string) {
-  return render(
-    <MemoryRouter initialEntries={[entry]}>
-      <Routes>
-        <Route
-          path="*"
-          element={
-            <>
-              {element}
-              <Location />
-            </>
-          }
-        />
-      </Routes>
-    </MemoryRouter>,
+function renderWithRoutes(
+  element: React.ReactNode,
+  entry: string,
+  loader?: (args: { request: Request }) => null,
+) {
+  const router = createMemoryRouter(
+    [
+      {
+        path: "*",
+        loader,
+        element: (
+          <>
+            {element}
+            <Location />
+          </>
+        ),
+      },
+    ],
+    { initialEntries: [entry] },
   );
+  return { ...render(<RouterProvider router={router} />), router };
 }
 
 beforeEach(() => apiFetch.mockReset());
@@ -116,6 +121,25 @@ describe("account activation recovery", () => {
     );
   });
 
+  test("revalidates auth data before returning home after local login", async () => {
+    apiFetch.mockResolvedValueOnce({ success: true });
+    const loadedPaths: string[] = [];
+    const loader = vi.fn(({ request }: { request: Request }) => {
+      loadedPaths.push(new URL(request.url).pathname);
+      return null;
+    });
+    const user = userEvent.setup();
+    renderWithRoutes(<Signin />, "/signin", loader);
+    await waitFor(() => expect(loader).toHaveBeenCalledTimes(1));
+
+    await user.type(screen.getByLabelText("用户名 / 邮箱"), "alice");
+    await user.type(screen.getByLabelText("密码"), "password123");
+    await user.click(screen.getByRole("button", { name: "登录" }));
+
+    await waitFor(() => expect(loadedPaths).toEqual(["/signin", "/signin", "/"]));
+    expect(screen.getByTestId("location")).toHaveTextContent("/");
+  });
+
   test("routes partial signup success to recovery", async () => {
     apiFetch.mockResolvedValueOnce({
       success: false,
@@ -154,5 +178,34 @@ describe("account activation recovery", () => {
     await waitFor(() =>
       expect(screen.getByTestId("location")).toHaveTextContent("/resend_activation?name=alice"),
     );
+  });
+
+  test("revalidates auth data before returning home after GitHub login", async () => {
+    apiFetch.mockResolvedValueOnce({ success: true });
+    const loadedPaths: string[] = [];
+    const loader = vi.fn(({ request }: { request: Request }) => {
+      loadedPaths.push(new URL(request.url).pathname);
+      return null;
+    });
+    const user = userEvent.setup();
+    renderWithRoutes(
+      <GithubNew
+        {...({
+          loaderData: {
+            profile: { loginname: "github-user", email: "alice@example.com", email_exists: false },
+          },
+        } as any)}
+      />,
+      "/auth/github/new",
+      loader,
+    );
+    await waitFor(() => expect(loader).toHaveBeenCalledTimes(1));
+
+    await user.click(await screen.findByRole("button", { name: "注册并登录" }));
+
+    await waitFor(() =>
+      expect(loadedPaths).toEqual(["/auth/github/new", "/auth/github/new", "/"]),
+    );
+    expect(screen.getByTestId("location")).toHaveTextContent("/");
   });
 });

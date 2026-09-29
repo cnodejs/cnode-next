@@ -28,9 +28,10 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   setUser: (user) => set({ user }),
   setUnreadCount: (n) => set({ unreadCount: n }),
   hydrateFromLoader: (user) => {
-    if (get().hydrated) return;
-    set({ user, hydrated: true });
-    if (user) {
+    const current = get();
+    const userChanged = current.user?.loginname !== user?.loginname;
+    set({ user, hydrated: true, ...(user ? {} : { unreadCount: 0 }) });
+    if (user && (!current.hydrated || userChanged)) {
       void get().fetchUnread();
     }
   },

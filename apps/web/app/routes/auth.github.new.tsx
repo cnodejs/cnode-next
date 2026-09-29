@@ -1,6 +1,6 @@
 import type { Route } from "../../.react-router/types/app/routes/+types/auth.github.new";
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { Layout } from "~/components/Layout";
 import { AuthShell } from "~/components/AuthShell";
@@ -33,19 +33,22 @@ export async function loader({ request }: Route.LoaderArgs) {
 export default function GithubNew({ loaderData }: Route.ComponentProps) {
   const { profile, error } = loaderData as any;
   const navigate = useNavigate();
+  const revalidator = useRevalidator();
   const [mode, setMode] = useState<"new" | "bind">(profile?.email_exists ? "bind" : "new");
   const [name, setName] = useState("");
   const [pass, setPass] = useState("");
 
   const { run: submit, pending: loading } = useAsyncAction(
     async () => {
-      return apiFetch<{ success: boolean; error_code?: string; error_msg?: string }>(
+      const res = await apiFetch<{ success: boolean; error_code?: string; error_msg?: string }>(
         "/api/v1/auth/github/create",
         {
           method: "POST",
           body: JSON.stringify({ isnew: mode === "new", name, pass }),
         },
       ).catch(() => ({ success: false, error_code: undefined, error_msg: "GitHub 登录失败" }));
+      if (res.success) await revalidator.revalidate();
+      return res;
     },
     {
       onSuccess: (res) => {
