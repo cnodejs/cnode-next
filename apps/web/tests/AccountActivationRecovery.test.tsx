@@ -132,9 +132,9 @@ describe("account activation recovery", () => {
     renderWithRoutes(<Signin />, "/signin", loader);
     await waitFor(() => expect(loader).toHaveBeenCalledTimes(1));
 
-    await user.type(screen.getByLabelText("用户名 / 邮箱"), "alice");
-    await user.type(screen.getByLabelText("密码"), "password123");
-    await user.click(screen.getByRole("button", { name: "登录" }));
+    await user.type(await screen.findByLabelText("用户名 / 邮箱"), "alice");
+    await user.type(await screen.findByLabelText("密码"), "password123");
+    await user.click(await screen.findByRole("button", { name: "登录" }));
 
     await waitFor(() => expect(loadedPaths).toEqual(["/signin", "/signin", "/"]));
     expect(screen.getByTestId("location")).toHaveTextContent("/");
