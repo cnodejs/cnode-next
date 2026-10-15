@@ -66,18 +66,18 @@ stateDiagram-v2
 
 初始候选策略以以下边界为起点，最终值由 Report-Only 数据收敛：
 
-| 指令 | 初始边界 |
-| --- | --- |
-| `default-src` | `'self'` |
-| `base-uri` | `'self'` |
-| `object-src` | `'none'` |
-| `frame-ancestors` | `'none'` |
-| `form-action` | `'self'` |
-| `script-src` | `'self'` 与每响应 nonce |
-| `connect-src` | `'self'`、生产 API origin，以及已验证的开发连接来源 |
-| `img-src` | `'self'`、`data:`、`blob:` 与 `https:`；现有用户 Markdown 允许任意 HTTPS 图片，因此暂时不能只列举头像 origin |
-| `style-src` | `'self'`；只有观测证明框架确需内联样式时才记录限定例外 |
-| `font-src`、`manifest-src` | `'self'` |
+| 指令                       | 初始边界                                                                                                     |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `default-src`              | `'self'`                                                                                                     |
+| `base-uri`                 | `'self'`                                                                                                     |
+| `object-src`               | `'none'`                                                                                                     |
+| `frame-ancestors`          | `'none'`                                                                                                     |
+| `form-action`              | `'self'`                                                                                                     |
+| `script-src`               | `'self'` 与每响应 nonce                                                                                      |
+| `connect-src`              | `'self'`、生产 API origin，以及已验证的开发连接来源                                                          |
+| `img-src`                  | `'self'`、`data:`、`blob:` 与 `https:`；现有用户 Markdown 允许任意 HTTPS 图片，因此暂时不能只列举头像 origin |
+| `style-src`                | `'self'`；只有观测证明框架确需内联样式时才记录限定例外                                                       |
+| `font-src`、`manifest-src` | `'self'`                                                                                                     |
 
 不采用 `*` 或最终 `script-src 'unsafe-inline'`。除维持现有用户 Markdown 图片行为所需的 `img-src https:` 外，新外部来源必须按资源类型加入并由测试覆盖；图片代理与来源收窄属于后续独立变更。
 
@@ -103,12 +103,12 @@ stateDiagram-v2
 
 ## Migration Plan
 
-| 阶段 | 行为 | 晋级条件 | 回退 |
-| --- | --- | --- | --- |
-| 0 基线 | 增加测试、报告入口和通用安全头，CSP 为 `off` | 测试和类型检查通过 | 移除运行时开关或关闭安全头发布 |
+| 阶段   | 行为                                                   | 晋级条件                                                             | 回退                                      |
+| ------ | ------------------------------------------------------ | -------------------------------------------------------------------- | ----------------------------------------- |
+| 0 基线 | 增加测试、报告入口和通用安全头，CSP 为 `off`           | 测试和类型检查通过                                                   | 移除运行时开关或关闭安全头发布            |
 | 1 观测 | 发布 `Content-Security-Policy-Report-Only` 与短期 HSTS | 关键页面测试通过；约定观测窗口无未解释第一方违规；最终响应无重复策略 | CSP 切回 `off`，HSTS `max-age` 调低或关闭 |
-| 2 强制 | 切换为 `Content-Security-Policy` | 发布后首页及交互页面 smoke test 通过 | CSP 立即切回 `report-only` |
-| 3 稳定 | 延长 HSTS `max-age`，清理临时策略例外 | 至少一个稳定发布周期 | 恢复上一档 `max-age` |
+| 2 强制 | 切换为 `Content-Security-Policy`                       | 发布后首页及交互页面 smoke test 通过                                 | CSP 立即切回 `report-only`                |
+| 3 稳定 | 延长 HSTS `max-age`，清理临时策略例外                  | 至少一个稳定发布周期                                                 | 恢复上一档 `max-age`                      |
 
 发布验证同时检查 2xx 和 HTML 4xx 响应，不输出 Cookie、环境变量或报告原文。
 

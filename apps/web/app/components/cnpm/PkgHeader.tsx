@@ -9,7 +9,13 @@ import {
 } from "~/components/ui/select";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
-import { sortVersions, getVersionTags, repoUrl, safeExternalUrl, type PkgTab } from "~/lib/registry/parse";
+import {
+  sortVersions,
+  getVersionTags,
+  repoUrl,
+  safeExternalUrl,
+  type PkgTab,
+} from "~/lib/registry/parse";
 import type { RegistryManifest } from "~/lib/registry/types";
 import { PkgTabs } from "./PkgTabs";
 
@@ -67,9 +73,7 @@ export function PkgHeader({
               <p className="max-w-2xl text-sm text-muted-foreground">{manifest.description}</p>
             )}
             <div className="flex flex-wrap items-center gap-2">
-              {manifest.license && (
-                <Badge variant="outline">{manifest.license}</Badge>
-              )}
+              {manifest.license && <Badge variant="outline">{manifest.license}</Badge>}
               {repo && (
                 <a
                   href={repo}
@@ -112,11 +116,7 @@ export function PkgHeader({
             </SelectContent>
           </Select>
           <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={copy}>
-            {copied ? (
-              <Check data-icon="inline-start" />
-            ) : (
-              <Copy data-icon="inline-start" />
-            )}
+            {copied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}
             {copied ? "已复制" : installCommand}
           </Button>
         </div>

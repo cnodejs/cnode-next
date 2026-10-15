@@ -94,9 +94,7 @@ export default function CnpmSearch() {
                 <Empty>
                   <EmptyHeader>
                     <EmptyTitle>未找到相关包</EmptyTitle>
-                    <EmptyDescription>
-                      没有与「{q}」匹配的 npm 包，换个关键词试试
-                    </EmptyDescription>
+                    <EmptyDescription>没有与「{q}」匹配的 npm 包，换个关键词试试</EmptyDescription>
                   </EmptyHeader>
                 </Empty>
               )}
@@ -151,9 +149,7 @@ function SearchResultItem({
             </span>
           )}
         </div>
-        {description && (
-          <p className="line-clamp-2 text-sm text-muted-foreground">{description}</p>
-        )}
+        {description && <p className="line-clamp-2 text-sm text-muted-foreground">{description}</p>}
         {keywords && keywords.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {keywords.slice(0, 6).map((keyword) => (

@@ -162,9 +162,7 @@ describe("inactive account authentication policy", () => {
     );
 
     expect(response.status).toBe(302);
-    expect(response.headers.get("location")).toContain(
-      "/resend_activation?error=account_inactive",
-    );
+    expect(response.headers.get("location")).toContain("/resend_activation?error=account_inactive");
     expect(response.headers.get("set-cookie")).toContain("github_oauth_state=");
     expect(updateGithubInfo).not.toHaveBeenCalled();
     expect(response.headers.get("set-cookie")).not.toContain("node_club=");

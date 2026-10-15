@@ -203,9 +203,7 @@ describe("account activation recovery", () => {
 
     await user.click(await screen.findByRole("button", { name: "注册并登录" }));
 
-    await waitFor(() =>
-      expect(loadedPaths).toEqual(["/auth/github/new", "/auth/github/new", "/"]),
-    );
+    await waitFor(() => expect(loadedPaths).toEqual(["/auth/github/new", "/auth/github/new", "/"]));
     expect(screen.getByTestId("location")).toHaveTextContent("/");
   });
 });

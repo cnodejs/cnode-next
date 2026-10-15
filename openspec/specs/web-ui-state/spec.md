@@ -3,7 +3,9 @@
 ## Purpose
 
 定义 Web 前端全局客户端状态、主题状态、UI 开关、路由数据刷新和首屏数据归属要求，确保 React Router loader 与 zustand store 的职责边界清晰。
+
 ## Requirements
+
 ### Requirement: zustand 作为全局状态库
 
 `apps/web/app/lib/stores/` SHALL 包含两个 zustand store：`auth-store.ts`、`theme-store.ts`。`ui-store.ts` SHALL 被删除。store MUST 是无 Provider 的全局单例，直接 `import { useXStore } from "~/lib/stores/x-store"` 使用。

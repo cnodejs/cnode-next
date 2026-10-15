@@ -94,8 +94,8 @@ class existed; the open styling was previously data-[state=open]).
 - Drop the radix `position` prop entirely; expose `alignItemWithTrigger`
   (default true) picked from Positioner.Props, `sideOffset = 4`.
 - Item anatomy: `ItemText` FIRST with `cn-select-item-text shrink-0
-whitespace-nowrap`, then `ItemIndicator render={<span
-className="cn-select-item-indicator" />}`.
+  whitespace-nowrap`, then `ItemIndicator render={<span
+  className="cn-select-item-indicator" />}`.
 - Scroll arrows get `top-0 w-full` / `bottom-0 w-full`; List has no classes.
 
 ## Accordion animation placement

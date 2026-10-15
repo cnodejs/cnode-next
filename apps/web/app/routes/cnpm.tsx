@@ -8,16 +8,7 @@ import { RecentVisited } from "~/components/cnpm/RecentVisited";
 import { RegistryGuide } from "~/components/cnpm/RegistryGuide";
 import { seoMeta } from "~/lib/seo";
 
-const POPULAR_PACKAGES = [
-  "react",
-  "vue",
-  "next",
-  "nuxt",
-  "vite",
-  "typescript",
-  "express",
-  "koa",
-];
+const POPULAR_PACKAGES = ["react", "vue", "next", "nuxt", "vite", "typescript", "express", "koa"];
 
 function useDesktopAutoFocus() {
   const [focused, setFocused] = useState(false);

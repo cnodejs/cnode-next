@@ -9,17 +9,17 @@ Keep repository documentation concise, current, safe, and owned by one source.
 
 ## Choose The Owner
 
-| Content | Location |
-| --- | --- |
-| Generated API reference asset | `apps/web/public/openapi.json` |
-| Runtime, data, and design-system architecture | `docs/arch/` |
-| Business rules, community governance, and legacy knowledge | `docs/biz/` |
-| Deployment guide, example configuration, Compose, and operator helpers | `docs/deployment/` |
-| Project overview | `README.md` |
-| Agent boundaries and skill triggers | `AGENTS.md` |
-| Contributor workflow | `CONTRIBUTING.md` |
-| Vulnerability reporting | `SECURITY.md` |
-| App-specific setup and commands | `apps/*/README.md` |
+| Content                                                                | Location                       |
+| ---------------------------------------------------------------------- | ------------------------------ |
+| Generated API reference asset                                          | `apps/web/public/openapi.json` |
+| Runtime, data, and design-system architecture                          | `docs/arch/`                   |
+| Business rules, community governance, and legacy knowledge             | `docs/biz/`                    |
+| Deployment guide, example configuration, Compose, and operator helpers | `docs/deployment/`             |
+| Project overview                                                       | `README.md`                    |
+| Agent boundaries and skill triggers                                    | `AGENTS.md`                    |
+| Contributor workflow                                                   | `CONTRIBUTING.md`              |
+| Vulnerability reporting                                                | `SECURITY.md`                  |
+| App-specific setup and commands                                        | `apps/*/README.md`             |
 
 Do not create `README.md` or `index.md` inside `docs/`. Do not recreate top-level `wiki/`, `api/`, or `deployment/` documentation domains.
 

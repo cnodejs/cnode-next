@@ -73,7 +73,8 @@ export function getDownloads(pkg: string, range = 7) {
 
 export function getDir(pkg: string, spec: string, path: string) {
   const trimmed = path.replace(/\/+$/, "");
-  const dirPath = trimmed && trimmed !== "/" ? `${encodeFilePath(ensureLeadingSlash(trimmed))}/` : "/";
+  const dirPath =
+    trimmed && trimmed !== "/" ? `${encodeFilePath(ensureLeadingSlash(trimmed))}/` : "/";
   return registryJson<RegistryFilesResponse>(
     `/${pkgPath(pkg)}/${encodeURIComponent(spec)}/files${dirPath}?meta`,
   );
@@ -92,11 +93,7 @@ export async function getFileContent(pkg: string, spec: string, path: string) {
   return res.text();
 }
 
-export function useRegistryQuery<T>(
-  fetcher: () => Promise<T>,
-  deps: unknown[],
-  enabled = true,
-) {
+export function useRegistryQuery<T>(fetcher: () => Promise<T>, deps: unknown[], enabled = true) {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<RegistryError | null>(null);
   const [loading, setLoading] = useState(!enabled ? false : true);

@@ -13,16 +13,16 @@ Consumers use standard component props and limit classes to layout and responsiv
 
 ## Page Model
 
-| Archetype | Typical content |
-| --- | --- |
-| feed | filters, feed, optional rail, pagination |
-| reading | topic content, context, replies |
-| compose | editor or structured form and actions |
-| account | identity and settings forms |
-| directory | people or resource records |
-| dashboard | summaries and recent records |
-| data-list | filters, comparison records, pagination |
-| workflow | moderation and other actionable queues |
+| Archetype | Typical content                          |
+| --------- | ---------------------------------------- |
+| feed      | filters, feed, optional rail, pagination |
+| reading   | topic content, context, replies          |
+| compose   | editor or structured form and actions    |
+| account   | identity and settings forms              |
+| directory | people or resource records               |
+| dashboard | summaries and recent records             |
+| data-list | filters, comparison records, pagination  |
+| workflow  | moderation and other actionable queues   |
 
 Same-archetype routes share width, header hierarchy, spacing, and responsive composition. Tables are for real column comparison; task records use responsive Item composition.
 

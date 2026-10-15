@@ -91,9 +91,7 @@ describe("CSP report resource route", () => {
 
   it("rejects unsupported, malformed, and oversized input without logging it", async () => {
     const log = vi.spyOn(console, "info").mockImplementation(() => undefined);
-    expect(
-      (await action({ request: reportRequest("{}", "application/json") })).status,
-    ).toBe(415);
+    expect((await action({ request: reportRequest("{}", "application/json") })).status).toBe(415);
     expect((await action({ request: reportRequest("not-json") })).status).toBe(400);
     expect(
       (

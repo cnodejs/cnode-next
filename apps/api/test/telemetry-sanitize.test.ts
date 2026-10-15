@@ -5,10 +5,7 @@ import {
   SimpleSpanProcessor,
 } from "@opentelemetry/sdk-trace-base";
 import { describe, expect, test } from "vite-plus/test";
-import {
-  isBlockedTelemetryAttribute,
-  SanitizingSpanProcessor,
-} from "../src/telemetry/sanitize";
+import { isBlockedTelemetryAttribute, SanitizingSpanProcessor } from "../src/telemetry/sanitize";
 
 describe("telemetry span sanitization", () => {
   test.each([
@@ -48,9 +45,7 @@ describe("telemetry span sanitization", () => {
   test("removes sensitive span, event, and link values before export", async () => {
     const exporter = new InMemorySpanExporter();
     const provider = new BasicTracerProvider({
-      spanProcessors: [
-        new SanitizingSpanProcessor(new SimpleSpanProcessor(exporter)),
-      ],
+      spanProcessors: [new SanitizingSpanProcessor(new SimpleSpanProcessor(exporter))],
     });
     const tracer = provider.getTracer("sanitize-test");
     const sensitive = "fixture-private-value";
@@ -60,26 +55,29 @@ describe("telemetry span sanitization", () => {
       traceFlags: 1,
     });
 
-    tracer.startSpan("safe-operation", {
-      attributes: {
-        "http.request.method": "POST",
-        "http.request.header.authorization": sensitive,
-        "request.body": sensitive,
-        "db.statement": `select '${sensitive}'`,
-        "db.query.parameters": sensitive,
-        "url.full": `https://example.com/path?token=${sensitive}`,
-      },
-      links: [
-        {
-          context: trace.getSpanContext(linkedContext)!,
-          attributes: { "session.token": sensitive },
+    tracer
+      .startSpan("safe-operation", {
+        attributes: {
+          "http.request.method": "POST",
+          "http.request.header.authorization": sensitive,
+          "request.body": sensitive,
+          "db.statement": `select '${sensitive}'`,
+          "db.query.parameters": sensitive,
+          "url.full": `https://example.com/path?token=${sensitive}`,
         },
-      ],
-    }).addEvent("failure", {
-      "exception.type": "Error",
-      "exception.message": sensitive,
-      "exception.stacktrace": sensitive,
-    }).end();
+        links: [
+          {
+            context: trace.getSpanContext(linkedContext)!,
+            attributes: { "session.token": sensitive },
+          },
+        ],
+      })
+      .addEvent("failure", {
+        "exception.type": "Error",
+        "exception.message": sensitive,
+        "exception.stacktrace": sensitive,
+      })
+      .end();
     await provider.forceFlush();
 
     const finishedSpan = exporter.getFinishedSpans()[0]!;

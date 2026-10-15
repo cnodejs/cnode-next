@@ -1,8 +1,10 @@
 export {};
 
-const runtime = (globalThis as unknown as {
-  process: { env: Record<string, string | undefined>; exitCode?: number };
-}).process;
+const runtime = (
+  globalThis as unknown as {
+    process: { env: Record<string, string | undefined>; exitCode?: number };
+  }
+).process;
 const webBase = (runtime.env.CNODE_WEB_BASE_URL || "http://localhost:3000").replace(/\/+$/, "");
 const expectedMode = runtime.env.CNODE_WEB_CSP_MODE || "report-only";
 const expectedHstsMaxAge = runtime.env.CNODE_WEB_HSTS_MAX_AGE || "300";
@@ -32,7 +34,8 @@ function cspHeader(response: Response) {
 async function verifyPath(path: string) {
   const response = await fetch(`${webBase}${path}`, { redirect: "manual" });
   if (path === "/__web-security-missing") {
-    if (response.status !== 404) throw new Error(`${path} returned ${response.status}, expected 404`);
+    if (response.status !== 404)
+      throw new Error(`${path} returned ${response.status}, expected 404`);
   } else if (!response.ok) {
     throw new Error(`${path} returned ${response.status}`);
   }

@@ -10,7 +10,7 @@
     "test": "vp test run",
     "worker:moderation": "tsx src/bootstrap.ts moderation-worker",
     "typecheck": "tsc --noEmit",
-    "gen:openapi": "tsx scripts/gen-openapi.ts"
+    "gen:openapi": "tsx scripts/gen-openapi.ts && vp -C ../.. fmt apps/web/public/openapi.json"
   },
   "dependencies": {
     "@cnode/db": "workspace:*",

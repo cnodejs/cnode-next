@@ -7,9 +7,7 @@ export function gravatarHash(email: string | undefined) {
 }
 
 export function gravatarUrl(hash: string | null, size = 64) {
-  return hash
-    ? `https://www.gravatar.com/avatar/${hash}?s=${size}&d=retro`
-    : undefined;
+  return hash ? `https://www.gravatar.com/avatar/${hash}?s=${size}&d=retro` : undefined;
 }
 
 export function initials(name: string | undefined) {

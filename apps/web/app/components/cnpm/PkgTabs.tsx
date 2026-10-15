@@ -33,10 +33,7 @@ export function PkgTabs({
 
   return (
     <Tabs value={active} onValueChange={handleChange}>
-      <TabsList
-        className="w-full max-w-full justify-start overflow-x-auto"
-        aria-label="包信息分类"
-      >
+      <TabsList className="w-full max-w-full justify-start overflow-x-auto" aria-label="包信息分类">
         {TABS.map((tab) => (
           <TabsTrigger key={tab.key} value={tab.key} className="flex-none">
             {tab.label}

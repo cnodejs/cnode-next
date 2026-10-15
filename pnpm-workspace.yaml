@@ -3,8 +3,7 @@ packages:
   - "packages/*"
 overrides:
   "shadcn>zod": "3.25.76"
-  vite: "catalog:"
-  vitest: "catalog:"
+  vite@*: "catalog:"
 allowBuilds:
   "@fission-ai/openspec": true
   "@scarf/scarf": false
@@ -44,14 +43,11 @@ catalog:
   tsx: "^4.23.1"
   typescript: "^7.0.0"
   uuid: "^11.0.0"
-  vite: npm:@voidzero-dev/vite-plus-core@0.2.8
-  vite-plus: 0.2.8
-  vitest: 4.1.10
+  vite: npm:@voidzero-dev/vite-plus-core@1.2.0
+  vite-plus: 1.2.0
   zod: "^4.4.3"
 peerDependencyRules:
   allowAny:
     - vite
-    - vitest
   allowedVersions:
     vite: "*"
-    vitest: "*"

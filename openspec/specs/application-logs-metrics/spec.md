@@ -1,8 +1,11 @@
 # application-logs-metrics Specification
 
 ## Purpose
+
 TBD - created by syncing change add-api-logs-metrics. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: API 必须为每个 HTTP 请求记录一条结构化 access log
 
 API SHALL 为包括 `/health` 在内的每个完成的 HTTP 请求生成且仅生成一条结构化 completion access log。记录 MUST 包含稳定事件名、HTTP method、匹配的路由模板、response status、请求耗时和服务端生成的 Request ID，并在有效 active span context 存在时包含 trace ID、span ID 与 sampled 状态。

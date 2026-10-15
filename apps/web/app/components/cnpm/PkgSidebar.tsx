@@ -10,9 +10,21 @@ export function PkgSidebar({ manifest, version }: { manifest: RegistryManifest; 
   const dist = manifest.versions?.[version]?.dist;
   const links: Array<{ label: string; href?: string; icon: React.ReactNode } | null> = [
     { label: "仓库", href: repo, icon: <GitFork className="size-4 shrink-0" /> },
-    { label: "主页", href: safeExternalUrl(manifest.homepage), icon: <Globe className="size-4 shrink-0" /> },
-    { label: "npmjs.com", href: `https://www.npmjs.com/package/${manifest.name}`, icon: <PackageIcon className="size-4 shrink-0" /> },
-    { label: "unpkg", href: `https://unpkg.com/${manifest.name}@${version}`, icon: <ExternalLink className="size-4 shrink-0" /> },
+    {
+      label: "主页",
+      href: safeExternalUrl(manifest.homepage),
+      icon: <Globe className="size-4 shrink-0" />,
+    },
+    {
+      label: "npmjs.com",
+      href: `https://www.npmjs.com/package/${manifest.name}`,
+      icon: <PackageIcon className="size-4 shrink-0" />,
+    },
+    {
+      label: "unpkg",
+      href: `https://unpkg.com/${manifest.name}@${version}`,
+      icon: <ExternalLink className="size-4 shrink-0" />,
+    },
     dist?.tarball
       ? {
           label: `tarball${dist.size !== undefined ? ` · ${formatBytes(dist.size)}` : ""}`,
@@ -22,7 +34,8 @@ export function PkgSidebar({ manifest, version }: { manifest: RegistryManifest; 
       : null,
   ];
   const visibleLinks = links.filter(
-    (link): link is { label: string; href: string; icon: React.ReactNode } => Boolean(link && link.href),
+    (link): link is { label: string; href: string; icon: React.ReactNode } =>
+      Boolean(link && link.href),
   );
 
   return (

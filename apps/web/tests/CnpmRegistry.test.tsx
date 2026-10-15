@@ -59,7 +59,8 @@ describe("cnpm landing", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input: RequestInfo | URL) => {
-        const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
         if (url === `${REGISTRY}/`) return jsonResponse(stats);
         return jsonResponse({ error: "not found" });
       }),
@@ -97,7 +98,8 @@ describe("cnpm search", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input: RequestInfo | URL) => {
-        const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
         if (url.includes("/-/v1/search")) return jsonResponse(searchResponse);
         return jsonResponse({ error: "not found" });
       }),
@@ -140,7 +142,8 @@ describe("cnpm package page", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input: RequestInfo | URL) => {
-        const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
         if (url === `${REGISTRY}/react`) return jsonResponse(manifest);
         if (url.includes("/downloads/range/")) return jsonResponse(downloads);
         return jsonResponse({ error: "not found" });
@@ -153,7 +156,9 @@ describe("cnpm package page", () => {
     renderRoute(<CnpmPkg />, "/cnpm/pkg/react", "cnpm/pkg/*");
 
     expect(await screen.findByRole("heading", { name: /react/ })).toBeInTheDocument();
-    expect(screen.getByText("React is a JavaScript library for building user interfaces.")).toBeInTheDocument();
+    expect(
+      screen.getByText("React is a JavaScript library for building user interfaces."),
+    ).toBeInTheDocument();
     expect(await screen.findByText("近 7 天下载")).toBeInTheDocument();
     expect(screen.getByText("Usage example")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /npm install react/ })).toBeInTheDocument();

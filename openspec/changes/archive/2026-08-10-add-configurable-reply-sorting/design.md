@@ -82,13 +82,13 @@ Web 对匿名 topic payload 的 KV key 和内容保持不变。排序只作用�
 
 ## Database Change Audit
 
-| 项目 | 结论 |
-| --- | --- |
-| PostgreSQL schema / Drizzle migration | 不修改 |
-| 字段语义 / constraint | 不修改 |
-| 查询 / index | 保留 `(topic_id, create_at, id)` 有效回复升序查询与现有索引 |
-| seed / bootstrap | 不修改 |
-| backfill / repair / cleanup / retention | 不需要 |
+| 项目                                    | 结论                                                        |
+| --------------------------------------- | ----------------------------------------------------------- |
+| PostgreSQL schema / Drizzle migration   | 不修改                                                      |
+| 字段语义 / constraint                   | 不修改                                                      |
+| 查询 / index                            | 保留 `(topic_id, create_at, id)` 有效回复升序查询与现有索引 |
+| seed / bootstrap                        | 不修改                                                      |
+| backfill / repair / cleanup / retention | 不需要                                                      |
 
 ## Risks / Trade-offs
 

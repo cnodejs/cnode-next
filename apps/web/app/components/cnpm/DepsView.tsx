@@ -58,10 +58,7 @@ export function DepsView({ manifest, version }: { manifest: RegistryManifest; ve
                 {entries.map(([pkg, spec]) => (
                   <TableRow key={pkg}>
                     <TableCell>
-                      <Link
-                        to={`/cnpm/pkg/${pkg}`}
-                        className="text-foreground hover:text-primary"
-                      >
+                      <Link to={`/cnpm/pkg/${pkg}`} className="text-foreground hover:text-primary">
                         {pkg}
                       </Link>
                     </TableCell>

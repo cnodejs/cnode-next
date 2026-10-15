@@ -152,7 +152,11 @@ export function sanitizeCspReport(
   };
 }
 
-export function parseCspReportPayload(value: unknown, request: Request, env: RuntimeEnv = process.env) {
+export function parseCspReportPayload(
+  value: unknown,
+  request: Request,
+  env: RuntimeEnv = process.env,
+) {
   const values = Array.isArray(value) ? value : [value];
   const reports = values
     .map((item) => sanitizeCspReport(item, request, env))
