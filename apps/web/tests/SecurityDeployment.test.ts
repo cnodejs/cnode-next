@@ -6,10 +6,7 @@ const root = resolve(import.meta.dirname, "../../..");
 const envExample = readFileSync(resolve(root, "docs/deployment/env.production.example"), "utf8");
 const deployment = readFileSync(resolve(root, "docs/deployment/deployment.md"), "utf8");
 const packageJson = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8"));
-const smoke = readFileSync(
-  resolve(root, "docs/deployment/scripts/smoke-web-security.ts"),
-  "utf8",
-);
+const smoke = readFileSync(resolve(root, "docs/deployment/scripts/smoke-web-security.ts"), "utf8");
 
 describe("Web security deployment contract", () => {
   it("publishes safe staged runtime defaults", () => {

@@ -62,10 +62,7 @@ export function NpmSearchForm({
           <InputGroupButton
             type="submit"
             variant="default"
-            className={cn(
-              "font-medium",
-              large ? "h-9 gap-1.5 rounded-lg px-4" : "h-6",
-            )}
+            className={cn("font-medium", large ? "h-9 gap-1.5 rounded-lg px-4" : "h-6")}
           >
             {large && <SearchIcon />}
             搜索

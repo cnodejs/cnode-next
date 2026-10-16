@@ -56,10 +56,7 @@ function origin(value: string | undefined) {
   }
 }
 
-export function buildContentSecurityPolicy(
-  nonce: string,
-  env: RuntimeEnv = process.env,
-): string {
+export function buildContentSecurityPolicy(nonce: string, env: RuntimeEnv = process.env): string {
   const apiOrigin = origin(env.CNODE_API_BASE_URL || "https://api.cnodejs.org");
   const connectSources = [
     "'self'",
@@ -75,12 +72,7 @@ export function buildContentSecurityPolicy(
     ["object-src", "'none'"],
     ["frame-ancestors", "'none'"],
     ["form-action", "'self'"],
-    [
-      "script-src",
-      "'self'",
-      `'nonce-${nonce}'`,
-      "https://challenges.cloudflare.com",
-    ],
+    ["script-src", "'self'", `'nonce-${nonce}'`, "https://challenges.cloudflare.com"],
     ["script-src-attr", "'none'"],
     ["style-src", "'self'", "'unsafe-inline'"],
     ["connect-src", ...connectSources],

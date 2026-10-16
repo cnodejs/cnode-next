@@ -3,7 +3,9 @@
 ## Purpose
 
 TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: 本地账号注册流程
 
 系统 MUST 支持本地账号注册,包括密码 hash、激活邮件和密码找回流程。密码 hash MUST 使用 bcryptjs (cost=10),以兼容 nodeclub 迁移过来的老 hash。

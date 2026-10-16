@@ -38,7 +38,9 @@ describe("Web document security headers", () => {
 
     const policy = headers.get("Content-Security-Policy") || "";
     const scriptDirective = policy.split("; ").find((value) => value.startsWith("script-src "));
-    expect(scriptDirective).toBe("script-src 'self' 'nonce-nonce' https://challenges.cloudflare.com");
+    expect(scriptDirective).toBe(
+      "script-src 'self' 'nonce-nonce' https://challenges.cloudflare.com",
+    );
     expect(scriptDirective).not.toContain("'unsafe-inline'");
     expect(headers.get("Content-Security-Policy-Report-Only")).toBeNull();
   });
@@ -117,15 +119,22 @@ describe("Web document security headers", () => {
     const rootSource = readFileSync(root, "utf8");
     const entrySource = readFileSync(entry, "utf8");
 
-    expect(entrySource).toContain("<ServerRouter context={routerContext} url={request.url} nonce={nonce} />");
+    expect(entrySource).toContain(
+      "<ServerRouter context={routerContext} url={request.url} nonce={nonce} />",
+    );
     expect(entrySource).toMatch(/renderToPipeableStream\([\s\S]*\{\s*nonce,/);
     expect(rootSource).toContain("<ScrollRestoration nonce={nonce} />");
     expect(rootSource).toContain("<Scripts nonce={nonce} />");
     expect(rootSource.match(/<script\s+nonce=\{nonce\}/g)).toHaveLength(3);
     expect(rootSource).toContain('src="https://static.cloudflareinsights.com/beacon.min.js"');
-    expect(rootSource).toContain('CNODE_WEB_RUM_TOKEN');
+    expect(rootSource).toContain("CNODE_WEB_RUM_TOKEN");
 
-    const topicSource = readFileSync(resolve(import.meta.dirname, "../app/routes/topic.$tid.tsx"), "utf8");
-    expect(topicSource).toContain('<script\n        nonce={nonce}\n        type="application/ld+json"');
+    const topicSource = readFileSync(
+      resolve(import.meta.dirname, "../app/routes/topic.$tid.tsx"),
+      "utf8",
+    );
+    expect(topicSource).toContain(
+      '<script\n        nonce={nonce}\n        type="application/ld+json"',
+    );
   });
 });

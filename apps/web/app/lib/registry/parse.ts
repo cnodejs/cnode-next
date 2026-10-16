@@ -36,12 +36,14 @@ export function createReadmeUrlResolver(
   const repo = repoUrl(repository);
   const github = repo?.match(GITHUB_REPO);
   const registryBase = `${REGISTRY}/${encodeURIComponent(pkg)}/${encodeURIComponent(version)}/files`;
-  const branchPath = (kind: ReadmeUrlKind) =>
-    kind === "image" ? `raw/HEAD` : `blob/HEAD`;
+  const branchPath = (kind: ReadmeUrlKind) => (kind === "image" ? `raw/HEAD` : `blob/HEAD`);
 
   return (url, kind) => {
     if (!url || /^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i.test(url)) return url;
-    const path = url.replace(/^\.\//, "").replace(/^\.\.\//, "").replace(/^\/+/, "");
+    const path = url
+      .replace(/^\.\//, "")
+      .replace(/^\.\.\//, "")
+      .replace(/^\/+/, "");
     if (github) {
       return `https://github.com/${github[1]}/${github[2]}/${branchPath(kind)}/${path}`;
     }
@@ -50,12 +52,9 @@ export function createReadmeUrlResolver(
 }
 
 const CODE_BLOCK = /(`[^`\n]+`|```[\s\S]*?```)/g;
-const INLINE_URL =
-  /(!?)\[([^\]]*)\]\(\s*(<[^>]+>|[^)\s]+)(?:\s+["'][^"']*["'])?\s*\)/g;
-const HTML_ATTR =
-  /<(img|a)\b([^>]*?)\s(src|href)\s*=\s*(["'])(.*?)\4([^>]*)>/gi;
-const REF_DEF =
-  /^(\s*\[([^\]]+)\]:\s*)(<[^>]+>|[^\s]+)(.*)$/gm;
+const INLINE_URL = /(!?)\[([^\]]*)\]\(\s*(<[^>]+>|[^)\s]+)(?:\s+["'][^"']*["'])?\s*\)/g;
+const HTML_ATTR = /<(img|a)\b([^>]*?)\s(src|href)\s*=\s*(["'])(.*?)\4([^>]*)>/gi;
+const REF_DEF = /^(\s*\[([^\]]+)\]:\s*)(<[^>]+>|[^\s]+)(.*)$/gm;
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -85,7 +84,10 @@ export function rewriteReadmeUrls(
         return `${prefix}${resolve(url, isImageReference(content, label) ? "image" : "link")}${rest}`;
       });
 
-  return content.split(CODE_BLOCK).map((part, index) => (index % 2 === 1 ? part : rewrite(part))).join("");
+  return content
+    .split(CODE_BLOCK)
+    .map((part, index) => (index % 2 === 1 ? part : rewrite(part)))
+    .join("");
 }
 
 export function parsePkgPath(rest: string | undefined): ParsedPkgRoute {
@@ -110,7 +112,8 @@ export function parsePkgPath(rest: string | undefined): ParsedPkgRoute {
     tail = segments.slice(1);
   }
 
-  const tab = tail[0] && (PACKAGE_TABS as readonly string[]).includes(tail[0]) ? (tail[0] as PkgTab) : "home";
+  const tab =
+    tail[0] && (PACKAGE_TABS as readonly string[]).includes(tail[0]) ? (tail[0] as PkgTab) : "home";
   return { name, tab };
 }
 

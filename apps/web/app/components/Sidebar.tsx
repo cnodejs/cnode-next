@@ -5,14 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemMedia,
-  ItemTitle,
-} from "./ui/item";
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "./ui/item";
 import { TimeAgo } from "./TimeAgo";
 import { getAvatarFallback, getAvatarUrl, getTabLabel } from "~/lib/brand";
 import { ArrowUpRight, Handshake, MessageCircle, Trophy } from "lucide-react";
@@ -112,34 +105,34 @@ function LatestReplies({ replies }: { replies: SidebarData["latest_replies"] }) 
       </CardHeader>
       <CardContent>
         <ItemGroup>
-        {replies.map((reply) => {
-          const author = reply.author;
-          return (
-            <Item
-              key={reply.id}
-              render={<Link to={`/topic/${reply.topic_id}#${reply.id}`} />}
-              variant="muted"
-              size="xs"
-            >
-              <ItemMedia>
-                <Avatar className="size-8">
-                  <AvatarImage
-                    src={getAvatarUrl(author?.avatar_url, 32)}
-                    alt={author?.loginname || "CNode"}
-                  />
-                  <AvatarFallback>{getAvatarFallback(author?.loginname)}</AvatarFallback>
-                </Avatar>
-              </ItemMedia>
-              <ItemContent>
-                <ItemTitle className="line-clamp-2 w-full text-xs">{reply.topic_title}</ItemTitle>
-                <ItemDescription>
-                  {author?.loginname || "社区成员"} ·{" "}
-                  {reply.create_at ? <TimeAgo date={reply.create_at} /> : null}
-                </ItemDescription>
-              </ItemContent>
-            </Item>
-          );
-        })}
+          {replies.map((reply) => {
+            const author = reply.author;
+            return (
+              <Item
+                key={reply.id}
+                render={<Link to={`/topic/${reply.topic_id}#${reply.id}`} />}
+                variant="muted"
+                size="xs"
+              >
+                <ItemMedia>
+                  <Avatar className="size-8">
+                    <AvatarImage
+                      src={getAvatarUrl(author?.avatar_url, 32)}
+                      alt={author?.loginname || "CNode"}
+                    />
+                    <AvatarFallback>{getAvatarFallback(author?.loginname)}</AvatarFallback>
+                  </Avatar>
+                </ItemMedia>
+                <ItemContent>
+                  <ItemTitle className="line-clamp-2 w-full text-xs">{reply.topic_title}</ItemTitle>
+                  <ItemDescription>
+                    {author?.loginname || "社区成员"} ·{" "}
+                    {reply.create_at ? <TimeAgo date={reply.create_at} /> : null}
+                  </ItemDescription>
+                </ItemContent>
+              </Item>
+            );
+          })}
         </ItemGroup>
       </CardContent>
     </Card>
@@ -164,8 +157,13 @@ function NoReplyTopics({ topics }: { topics: SidebarData["no_reply_topics"] }) {
               <ItemContent>
                 <ItemTitle className="line-clamp-2 w-full text-xs">{t.title}</ItemTitle>
                 <ItemDescription>
-                <span>{getTabLabel(t.tab)}</span>
-                  {t.create_at ? <> · <TimeAgo date={t.create_at} /></> : null}
+                  <span>{getTabLabel(t.tab)}</span>
+                  {t.create_at ? (
+                    <>
+                      {" "}
+                      · <TimeAgo date={t.create_at} />
+                    </>
+                  ) : null}
                 </ItemDescription>
               </ItemContent>
             </Item>

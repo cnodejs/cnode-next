@@ -3,7 +3,9 @@
 ## Purpose
 
 定义生产容器镜像的 GitHub Actions 构建、验证门禁、GHCR 发布、不可变镜像标识、部署启动和 Web 运行时 API 配置要求。
+
 ## Requirements
+
 ### Requirement: GitHub Actions 构建并推送生产容器镜像
 
 系统 MUST 使用 GitHub Actions 在 GitHub runner 上构建 cnode-next 生产容器镜像，并推送到 GitHub Container Registry。workflow MUST 在 release verification gate 通过后才构建和推送镜像，且不得执行部署。
@@ -76,19 +78,23 @@ Web 镜像 MUST 不依赖构建时 API base URL。SSR 侧和浏览器侧 API 请
 - **AND** 不得要求为不同 API 域名重新构建 Web 镜像
 
 ### Requirement: 镜像部署命令必须使用统一编排入口
+
 项目 SHALL 通过 `docs/deployment/docker-compose.yml` 引用已发布的不可变镜像，并在部署过程中禁止本地镜像构建。
 
 #### Scenario: 拉取待部署镜像
+
 - **WHEN** 维护者准备部署指定版本
 - **THEN** `CNODE_API_IMAGE` 和 `CNODE_WEB_IMAGE` MUST 使用 SHA tag 或 digest
 - **AND** 拉取命令 MUST 使用 `docker compose -f docs/deployment/docker-compose.yml pull`
 
 #### Scenario: 启动应用服务
+
 - **WHEN** 已发布镜像完成拉取
 - **THEN** 启动命令 MUST 使用 `docker compose -f docs/deployment/docker-compose.yml up -d --no-build`
 - **AND** Compose 中的应用服务 MUST NOT 包含 `build:` 配置
 
 #### Scenario: 执行 reviewed migration
+
 - **WHEN** 发布包含已审查的 PostgreSQL migration
 - **THEN** migration MUST 作为显式的一次性任务使用已发布 API 镜像执行
 - **AND** 普通服务启动 MUST NOT 隐式执行 migration

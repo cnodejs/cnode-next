@@ -44,14 +44,14 @@ flowchart TB
 
 ### 2. 内容按权威来源精简，而非原样移动
 
-| 信息 | 权威来源 | 文档保留范围 |
-| --- | --- | --- |
-| API 字段与端点 | route zod-openapi 声明 | 生成到 `apps/web/public/openapi.json` 并由 `/api` 展示 |
-| 数据库字段 | Drizzle schema 与 migration | 只记录架构边界和迁移原则 |
-| 命令 | workspace `package.json` | README 只列完成任务需要的命令 |
-| 当前实现 | 源码与测试 | 不逐函数复述 |
-| 业务语义 | `docs/biz/` 及来源 | 稳定规则、兼容原因、待确认事项 |
-| 架构决策 | `docs/arch/` | 跨模块边界、原则和关键流程 |
+| 信息           | 权威来源                    | 文档保留范围                                           |
+| -------------- | --------------------------- | ------------------------------------------------------ |
+| API 字段与端点 | route zod-openapi 声明      | 生成到 `apps/web/public/openapi.json` 并由 `/api` 展示 |
+| 数据库字段     | Drizzle schema 与 migration | 只记录架构边界和迁移原则                               |
+| 命令           | workspace `package.json`    | README 只列完成任务需要的命令                          |
+| 当前实现       | 源码与测试                  | 不逐函数复述                                           |
+| 业务语义       | `docs/biz/` 及来源          | 稳定规则、兼容原因、待确认事项                         |
+| 架构决策       | `docs/arch/`                | 跨模块边界、原则和关键流程                             |
 
 每份文档必须有单一目的和受众。迁移时逐份执行“保留、压缩、合并、删除”，而不是保留旧结构的全部段落。`docs/biz/` 中的事实引用源码或已接受规格；不确定信息使用 `To Confirm`，不强制填充 `Facts`、`Inferences`、`Review Status` 等模板章节。
 

@@ -19,13 +19,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function DownloadCard({
-  pkgName,
-  range = 7,
-}: {
-  pkgName: string;
-  range?: number;
-}) {
+export function DownloadCard({ pkgName, range = 7 }: { pkgName: string; range?: number }) {
   const { data, error, loading, retry } = useRegistryQuery(
     () => getDownloads(pkgName, range),
     [pkgName, range],

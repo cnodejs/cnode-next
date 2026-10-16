@@ -42,7 +42,7 @@ transforming, and record gaps in the report.
      fetch base variants directly by URL instead
      (`https://ui.shadcn.com/r/styles/base-<style>/<component>.json`).
   3. PRISTINE wrappers, whole-project mode: `shadcn add <component>
---overwrite` delivers the base variant with the project's exact
+     --overwrite` delivers the base variant with the project's exact
      icon/font/preset resolution. Never bulk `--all --overwrite`; go
      component by component, or you drown in unrelated registry version
      drift. PROGRESSIVE mode: never use `--overwrite` (it destroys the

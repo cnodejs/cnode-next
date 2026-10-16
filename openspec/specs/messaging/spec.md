@@ -3,7 +3,9 @@
 ## Purpose
 
 TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: 消息类型
 
 系统 MUST 支持以下消息类型:

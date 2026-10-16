@@ -15,17 +15,18 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "~/components/u
 import { Alert, AlertDescription } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
 import { getManifest, RegistryError, useRegistryQuery } from "~/lib/registry/client";
-import { createReadmeUrlResolver, parsePkgPath, rewriteReadmeUrls, sortVersions } from "~/lib/registry/parse";
+import {
+  createReadmeUrlResolver,
+  parsePkgPath,
+  rewriteReadmeUrls,
+  sortVersions,
+} from "~/lib/registry/parse";
 import { useRecentVisited } from "~/lib/registry/use-recent";
 import { seoMeta } from "~/lib/seo";
 
 export function meta({ params }: { params: { "*"?: string } }) {
   const { name, tab } = parsePkgPath(params["*"]);
-  const path = name
-    ? tab === "home"
-      ? `/cnpm/pkg/${name}`
-      : `/cnpm/pkg/${name}/${tab}`
-    : "/cnpm";
+  const path = name ? (tab === "home" ? `/cnpm/pkg/${name}` : `/cnpm/pkg/${name}/${tab}`) : "/cnpm";
   return seoMeta({
     title: name ? `${name} · CNPM 镜像` : "CNPM 包浏览器",
     description: name ? `查看 npm 包 ${name} 的 README、版本、依赖与文件。` : undefined,
@@ -43,11 +44,12 @@ function CnpmPkgInner({ rest }: { rest?: string }) {
   const { name, tab } = parsePkgPath(rest);
   const { addRecent } = useRecentVisited();
 
-  const { data: manifest, error, loading, retry } = useRegistryQuery(
-    () => getManifest(name!),
-    [name],
-    Boolean(name),
-  );
+  const {
+    data: manifest,
+    error,
+    loading,
+    retry,
+  } = useRegistryQuery(() => getManifest(name!), [name], Boolean(name));
 
   useEffect(() => {
     if (name) addRecent(name);
@@ -149,7 +151,12 @@ function CnpmPkgInner({ rest }: { rest?: string }) {
   return (
     <Layout>
       <PageContainer className="flex flex-col gap-6 py-6">
-        <PkgHeader manifest={manifest} version={version} active={tab} onVersionChange={handleVersionChange} />
+        <PkgHeader
+          manifest={manifest}
+          version={version}
+          active={tab}
+          onVersionChange={handleVersionChange}
+        />
 
         {tab === "home" && (
           <ReadingGrid aside={<PkgSidebar manifest={manifest} version={version} />}>

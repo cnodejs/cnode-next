@@ -225,10 +225,12 @@ function FileNode({
 }
 
 function FileViewer({ pkgName, spec, path }: { pkgName: string; spec: string; path: string }) {
-  const { data: content, error, loading, retry } = useRegistryQuery(
-    () => getFileContent(pkgName, spec, path),
-    [pkgName, spec, path],
-  );
+  const {
+    data: content,
+    error,
+    loading,
+    retry,
+  } = useRegistryQuery(() => getFileContent(pkgName, spec, path), [pkgName, spec, path]);
 
   if (loading) {
     return <Skeleton className="h-96 w-full" />;
@@ -271,10 +273,7 @@ function highlighted(code: string) {
 }
 
 function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 function basename(path: string) {

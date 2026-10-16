@@ -25,7 +25,13 @@ function formatDate(value: number | string | undefined) {
   return dateFormatter.format(date);
 }
 
-export function VersionTable({ manifest, version }: { manifest: RegistryManifest; version: string }) {
+export function VersionTable({
+  manifest,
+  version,
+}: {
+  manifest: RegistryManifest;
+  version: string;
+}) {
   const versions = sortVersions(manifest.versions);
   const tags = getVersionTags(manifest);
 
@@ -41,7 +47,10 @@ export function VersionTable({ manifest, version }: { manifest: RegistryManifest
       </TableHeader>
       <TableBody>
         {versions.map((item) => (
-          <TableRow key={item.version} className={item.version === version ? "bg-muted/40" : undefined}>
+          <TableRow
+            key={item.version}
+            className={item.version === version ? "bg-muted/40" : undefined}
+          >
             <TableCell>
               <Link
                 to={`/cnpm/pkg/${manifest.name}?version=${encodeURIComponent(item.version)}`}

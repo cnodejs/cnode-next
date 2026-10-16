@@ -22,9 +22,7 @@
   "paths": {
     "/topics": {
       "get": {
-        "tags": [
-          "topics"
-        ],
+        "tags": ["topics"],
         "summary": "获取话题列表",
         "description": "支持 page、limit、tab、mdrender 参数。",
         "parameters": [
@@ -92,9 +90,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "data": {
                       "type": "array",
@@ -145,10 +141,7 @@
                                 "type": "string"
                               }
                             },
-                            "required": [
-                              "loginname",
-                              "avatar_url"
-                            ]
+                            "required": ["loginname", "avatar_url"]
                           },
                           "job_meta": {
                             "type": "object",
@@ -172,11 +165,7 @@
                               },
                               "remote": {
                                 "type": "string",
-                                "enum": [
-                                  "on-site",
-                                  "hybrid",
-                                  "remote"
-                                ]
+                                "enum": ["on-site", "hybrid", "remote"]
                               },
                               "salary_min": {
                                 "type": "number",
@@ -201,13 +190,7 @@
                                 "minLength": 1
                               }
                             },
-                            "required": [
-                              "company",
-                              "position",
-                              "location",
-                              "remote",
-                              "contact"
-                            ]
+                            "required": ["company", "position", "location", "remote", "contact"]
                           }
                         },
                         "required": [
@@ -230,11 +213,7 @@
                       "type": "number"
                     }
                   },
-                  "required": [
-                    "success",
-                    "data",
-                    "total"
-                  ]
+                  "required": ["success", "data", "total"]
                 }
               }
             }
@@ -242,9 +221,7 @@
         }
       },
       "post": {
-        "tags": [
-          "topics"
-        ],
+        "tags": ["topics"],
         "summary": "创建话题",
         "description": "需要登录。新用户需通过 Turnstile 人机验证。",
         "requestBody": {
@@ -303,11 +280,7 @@
                       },
                       "remote": {
                         "type": "string",
-                        "enum": [
-                          "on-site",
-                          "hybrid",
-                          "remote"
-                        ]
+                        "enum": ["on-site", "hybrid", "remote"]
                       },
                       "salary_min": {
                         "type": "number",
@@ -332,20 +305,10 @@
                         "minLength": 1
                       }
                     },
-                    "required": [
-                      "company",
-                      "position",
-                      "location",
-                      "remote",
-                      "contact"
-                    ]
+                    "required": ["company", "position", "location", "remote", "contact"]
                   }
                 },
-                "required": [
-                  "title",
-                  "tab",
-                  "content"
-                ]
+                "required": ["title", "tab", "content"]
               }
             }
           }
@@ -360,18 +323,13 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "topic_id": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success",
-                    "topic_id"
-                  ]
+                  "required": ["success", "topic_id"]
                 }
               }
             }
@@ -385,9 +343,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -399,9 +355,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -415,9 +369,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -429,9 +381,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -445,9 +395,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -459,9 +407,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -471,9 +417,7 @@
     },
     "/topic/{topic_id}": {
       "get": {
-        "tags": [
-          "topics"
-        ],
+        "tags": ["topics"],
         "summary": "获取话题详情",
         "description": "包含作者、回复和引用摘要。支持 mdrender 和 accesstoken 参数。",
         "parameters": [
@@ -513,9 +457,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "data": {
                       "type": "object",
@@ -564,10 +506,7 @@
                               "type": "string"
                             }
                           },
-                          "required": [
-                            "loginname",
-                            "avatar_url"
-                          ]
+                          "required": ["loginname", "avatar_url"]
                         },
                         "job_meta": {
                           "type": "object",
@@ -591,11 +530,7 @@
                             },
                             "remote": {
                               "type": "string",
-                              "enum": [
-                                "on-site",
-                                "hybrid",
-                                "remote"
-                              ]
+                              "enum": ["on-site", "hybrid", "remote"]
                             },
                             "salary_min": {
                               "type": "number",
@@ -620,13 +555,7 @@
                               "minLength": 1
                             }
                           },
-                          "required": [
-                            "company",
-                            "position",
-                            "location",
-                            "remote",
-                            "contact"
-                          ]
+                          "required": ["company", "position", "location", "remote", "contact"]
                         },
                         "collect_count": {
                           "type": "number"
@@ -652,10 +581,7 @@
                                     "type": "string"
                                   }
                                 },
-                                "required": [
-                                  "loginname",
-                                  "avatar_url"
-                                ]
+                                "required": ["loginname", "avatar_url"]
                               },
                               "content": {
                                 "type": "string"
@@ -690,10 +616,7 @@
                                         "type": "string"
                                       }
                                     },
-                                    "required": [
-                                      "loginname",
-                                      "avatar_url"
-                                    ]
+                                    "required": ["loginname", "avatar_url"]
                                   },
                                   "content_excerpt": {
                                     "type": "string"
@@ -702,12 +625,7 @@
                                     "type": "boolean"
                                   }
                                 },
-                                "required": [
-                                  "id",
-                                  "author",
-                                  "content_excerpt",
-                                  "deleted"
-                                ]
+                                "required": ["id", "author", "content_excerpt", "deleted"]
                               },
                               "is_uped": {
                                 "type": "boolean"
@@ -744,10 +662,7 @@
                       ]
                     }
                   },
-                  "required": [
-                    "success",
-                    "data"
-                  ]
+                  "required": ["success", "data"]
                 }
               }
             }
@@ -761,9 +676,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -775,9 +688,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -791,9 +702,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -805,9 +714,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -817,9 +724,7 @@
     },
     "/topics/update": {
       "post": {
-        "tags": [
-          "topics"
-        ],
+        "tags": ["topics"],
         "summary": "编辑话题",
         "description": "作者或管理员可编辑。锁定的话题仅管理员可编辑。",
         "requestBody": {
@@ -879,11 +784,7 @@
                       },
                       "remote": {
                         "type": "string",
-                        "enum": [
-                          "on-site",
-                          "hybrid",
-                          "remote"
-                        ]
+                        "enum": ["on-site", "hybrid", "remote"]
                       },
                       "salary_min": {
                         "type": "number",
@@ -908,21 +809,10 @@
                         "minLength": 1
                       }
                     },
-                    "required": [
-                      "company",
-                      "position",
-                      "location",
-                      "remote",
-                      "contact"
-                    ]
+                    "required": ["company", "position", "location", "remote", "contact"]
                   }
                 },
-                "required": [
-                  "topic_id",
-                  "title",
-                  "tab",
-                  "content"
-                ]
+                "required": ["topic_id", "title", "tab", "content"]
               }
             }
           }
@@ -937,18 +827,13 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "topic_id": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success",
-                    "topic_id"
-                  ]
+                  "required": ["success", "topic_id"]
                 }
               }
             }
@@ -962,9 +847,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -976,9 +859,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -992,9 +873,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -1006,9 +885,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1022,9 +899,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -1036,9 +911,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1052,9 +925,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -1066,9 +937,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1078,9 +947,7 @@
     },
     "/topic/{topic_id}/replies": {
       "post": {
-        "tags": [
-          "replies"
-        ],
+        "tags": ["replies"],
         "summary": "创建回复",
         "description": "创建线性回复，可传 reply_id 回复另一条回复。需要登录。",
         "parameters": [
@@ -1113,9 +980,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "content"
-                ]
+                "required": ["content"]
               }
             }
           }
@@ -1130,18 +995,13 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "reply_id": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success",
-                    "reply_id"
-                  ]
+                  "required": ["success", "reply_id"]
                 }
               }
             }
@@ -1155,9 +1015,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -1169,9 +1027,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1185,9 +1041,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -1199,9 +1053,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1215,9 +1067,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -1229,9 +1079,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1245,9 +1093,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -1259,9 +1105,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1271,9 +1115,7 @@
     },
     "/reply/{reply_id}": {
       "get": {
-        "tags": [
-          "replies"
-        ],
+        "tags": ["replies"],
         "summary": "获取回复（编辑用）",
         "description": "获取回复详情用于编辑。需要登录且为作者或管理员。",
         "parameters": [
@@ -1304,9 +1146,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "data": {
                       "type": "object",
@@ -1328,19 +1168,10 @@
                           "nullable": true
                         }
                       },
-                      "required": [
-                        "id",
-                        "topic_id",
-                        "content",
-                        "create_at",
-                        "update_at"
-                      ]
+                      "required": ["id", "topic_id", "content", "create_at", "update_at"]
                     }
                   },
-                  "required": [
-                    "success",
-                    "data"
-                  ]
+                  "required": ["success", "data"]
                 }
               }
             }
@@ -1354,9 +1185,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -1368,9 +1197,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1384,9 +1211,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -1398,9 +1223,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1414,9 +1237,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -1428,9 +1249,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1440,9 +1259,7 @@
     },
     "/reply/{reply_id}/edit": {
       "post": {
-        "tags": [
-          "replies"
-        ],
+        "tags": ["replies"],
         "summary": "编辑回复",
         "description": "作者或管理员可编辑。锁定的话题仅管理员可编辑。",
         "parameters": [
@@ -1469,9 +1286,7 @@
                     "minLength": 1
                   }
                 },
-                "required": [
-                  "content"
-                ]
+                "required": ["content"]
               }
             }
           }
@@ -1486,18 +1301,13 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "reply_id": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success",
-                    "reply_id"
-                  ]
+                  "required": ["success", "reply_id"]
                 }
               }
             }
@@ -1511,9 +1321,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -1525,9 +1333,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1541,9 +1347,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -1555,9 +1359,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1571,9 +1373,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -1585,9 +1385,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1601,9 +1399,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -1615,9 +1411,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1627,9 +1421,7 @@
     },
     "/reply/{reply_id}/delete": {
       "post": {
-        "tags": [
-          "replies"
-        ],
+        "tags": ["replies"],
         "summary": "删除回复",
         "description": "作者或管理员可删除。软删除。",
         "parameters": [
@@ -1666,18 +1458,13 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "status": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success",
-                    "status"
-                  ]
+                  "required": ["success", "status"]
                 }
               }
             }
@@ -1691,9 +1478,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -1705,9 +1490,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1721,9 +1504,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -1735,9 +1516,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1751,9 +1530,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -1765,9 +1542,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1781,9 +1556,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -1795,9 +1568,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1807,9 +1578,7 @@
     },
     "/reply/{reply_id}/ups": {
       "post": {
-        "tags": [
-          "replies"
-        ],
+        "tags": ["replies"],
         "summary": "回复点赞/取消点赞",
         "description": "切换点赞状态。不能给自己的回复点赞（非 dev 模式）。",
         "parameters": [
@@ -1846,22 +1615,14 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "action": {
                       "type": "string",
-                      "enum": [
-                        "up",
-                        "down"
-                      ]
+                      "enum": ["up", "down"]
                     }
                   },
-                  "required": [
-                    "success",
-                    "action"
-                  ]
+                  "required": ["success", "action"]
                 }
               }
             }
@@ -1875,9 +1636,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -1889,9 +1648,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1905,9 +1662,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -1919,9 +1674,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1935,9 +1688,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -1949,9 +1700,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1961,9 +1710,7 @@
     },
     "/users/stars": {
       "get": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "获取星标用户",
         "responses": {
           "200": {
@@ -1975,9 +1722,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "data": {
                       "type": "array",
@@ -2026,10 +1771,7 @@
                       }
                     }
                   },
-                  "required": [
-                    "success",
-                    "data"
-                  ]
+                  "required": ["success", "data"]
                 }
               }
             }
@@ -2039,9 +1781,7 @@
     },
     "/users/top100": {
       "get": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "获取积分前 100 用户",
         "responses": {
           "200": {
@@ -2053,9 +1793,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "data": {
                       "type": "array",
@@ -2104,10 +1842,7 @@
                       }
                     }
                   },
-                  "required": [
-                    "success",
-                    "data"
-                  ]
+                  "required": ["success", "data"]
                 }
               }
             }
@@ -2117,9 +1852,7 @@
     },
     "/user/{loginname}/topics": {
       "get": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "用户的话题列表",
         "parameters": [
           {
@@ -2162,9 +1895,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "data": {
                       "type": "array",
@@ -2215,10 +1946,7 @@
                                 "type": "string"
                               }
                             },
-                            "required": [
-                              "loginname",
-                              "avatar_url"
-                            ]
+                            "required": ["loginname", "avatar_url"]
                           },
                           "job_meta": {
                             "type": "object",
@@ -2242,11 +1970,7 @@
                               },
                               "remote": {
                                 "type": "string",
-                                "enum": [
-                                  "on-site",
-                                  "hybrid",
-                                  "remote"
-                                ]
+                                "enum": ["on-site", "hybrid", "remote"]
                               },
                               "salary_min": {
                                 "type": "number",
@@ -2271,13 +1995,7 @@
                                 "minLength": 1
                               }
                             },
-                            "required": [
-                              "company",
-                              "position",
-                              "location",
-                              "remote",
-                              "contact"
-                            ]
+                            "required": ["company", "position", "location", "remote", "contact"]
                           }
                         },
                         "required": [
@@ -2343,12 +2061,7 @@
                       ]
                     }
                   },
-                  "required": [
-                    "success",
-                    "data",
-                    "total",
-                    "user"
-                  ]
+                  "required": ["success", "data", "total", "user"]
                 }
               }
             }
@@ -2362,9 +2075,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -2376,9 +2087,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -2388,9 +2097,7 @@
     },
     "/user/{loginname}/replies": {
       "get": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "用户的回复列表",
         "parameters": [
           {
@@ -2433,9 +2140,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "data": {
                       "type": "array",
@@ -2486,10 +2191,7 @@
                                 "type": "string"
                               }
                             },
-                            "required": [
-                              "loginname",
-                              "avatar_url"
-                            ]
+                            "required": ["loginname", "avatar_url"]
                           },
                           "job_meta": {
                             "type": "object",
@@ -2513,11 +2215,7 @@
                               },
                               "remote": {
                                 "type": "string",
-                                "enum": [
-                                  "on-site",
-                                  "hybrid",
-                                  "remote"
-                                ]
+                                "enum": ["on-site", "hybrid", "remote"]
                               },
                               "salary_min": {
                                 "type": "number",
@@ -2542,13 +2240,7 @@
                                 "minLength": 1
                               }
                             },
-                            "required": [
-                              "company",
-                              "position",
-                              "location",
-                              "remote",
-                              "contact"
-                            ]
+                            "required": ["company", "position", "location", "remote", "contact"]
                           }
                         },
                         "required": [
@@ -2614,12 +2306,7 @@
                       ]
                     }
                   },
-                  "required": [
-                    "success",
-                    "data",
-                    "total",
-                    "user"
-                  ]
+                  "required": ["success", "data", "total", "user"]
                 }
               }
             }
@@ -2633,9 +2320,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -2647,9 +2332,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -2659,9 +2342,7 @@
     },
     "/user/{loginname}/collections": {
       "get": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "用户的收藏列表",
         "parameters": [
           {
@@ -2704,9 +2385,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "data": {
                       "type": "array",
@@ -2757,10 +2436,7 @@
                                 "type": "string"
                               }
                             },
-                            "required": [
-                              "loginname",
-                              "avatar_url"
-                            ]
+                            "required": ["loginname", "avatar_url"]
                           },
                           "job_meta": {
                             "type": "object",
@@ -2784,11 +2460,7 @@
                               },
                               "remote": {
                                 "type": "string",
-                                "enum": [
-                                  "on-site",
-                                  "hybrid",
-                                  "remote"
-                                ]
+                                "enum": ["on-site", "hybrid", "remote"]
                               },
                               "salary_min": {
                                 "type": "number",
@@ -2813,13 +2485,7 @@
                                 "minLength": 1
                               }
                             },
-                            "required": [
-                              "company",
-                              "position",
-                              "location",
-                              "remote",
-                              "contact"
-                            ]
+                            "required": ["company", "position", "location", "remote", "contact"]
                           }
                         },
                         "required": [
@@ -2885,12 +2551,7 @@
                       ]
                     }
                   },
-                  "required": [
-                    "success",
-                    "data",
-                    "total",
-                    "user"
-                  ]
+                  "required": ["success", "data", "total", "user"]
                 }
               }
             }
@@ -2904,9 +2565,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -2918,9 +2577,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -2930,9 +2587,7 @@
     },
     "/user/{loginname}": {
       "get": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "获取用户详情",
         "parameters": [
           {
@@ -2954,9 +2609,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "data": {
                       "type": "object",
@@ -2986,11 +2639,7 @@
                           "type": "array",
                           "items": {
                             "type": "string",
-                            "enum": [
-                              "admin",
-                              "moderator",
-                              "recruiter"
-                            ]
+                            "enum": ["admin", "moderator", "recruiter"]
                           }
                         },
                         "create_at": {
@@ -3032,10 +2681,7 @@
                                     "type": "string"
                                   }
                                 },
-                                "required": [
-                                  "loginname",
-                                  "avatar_url"
-                                ]
+                                "required": ["loginname", "avatar_url"]
                               },
                               "title": {
                                 "type": "string"
@@ -3045,12 +2691,7 @@
                                 "nullable": true
                               }
                             },
-                            "required": [
-                              "id",
-                              "author",
-                              "title",
-                              "last_reply_at"
-                            ]
+                            "required": ["id", "author", "title", "last_reply_at"]
                           }
                         },
                         "recent_replies": {
@@ -3071,10 +2712,7 @@
                                     "type": "string"
                                   }
                                 },
-                                "required": [
-                                  "loginname",
-                                  "avatar_url"
-                                ]
+                                "required": ["loginname", "avatar_url"]
                               },
                               "title": {
                                 "type": "string"
@@ -3084,12 +2722,7 @@
                                 "nullable": true
                               }
                             },
-                            "required": [
-                              "id",
-                              "author",
-                              "title",
-                              "last_reply_at"
-                            ]
+                            "required": ["id", "author", "title", "last_reply_at"]
                           }
                         }
                       },
@@ -3113,10 +2746,7 @@
                       ]
                     }
                   },
-                  "required": [
-                    "success",
-                    "data"
-                  ]
+                  "required": ["success", "data"]
                 }
               }
             }
@@ -3130,9 +2760,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -3144,9 +2772,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -3156,9 +2782,7 @@
     },
     "/accesstoken": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "验证 accessToken",
         "requestBody": {
           "content": {
@@ -3170,9 +2794,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "accesstoken"
-                ]
+                "required": ["accesstoken"]
               }
             }
           }
@@ -3187,9 +2809,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "loginname": {
                       "type": "string"
@@ -3207,14 +2827,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "success",
-                    "loginname",
-                    "avatar_url",
-                    "id",
-                    "is_block",
-                    "is_muted"
-                  ]
+                  "required": ["success", "loginname", "avatar_url", "id", "is_block", "is_muted"]
                 }
               }
             }
@@ -3228,9 +2841,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -3242,9 +2853,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -3258,9 +2867,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -3272,9 +2879,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -3284,9 +2889,7 @@
     },
     "/user/refresh_token": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "刷新 accessToken",
         "responses": {
           "200": {
@@ -3298,18 +2901,13 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "accessToken": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success",
-                    "accessToken"
-                  ]
+                  "required": ["success", "accessToken"]
                 }
               }
             }
@@ -3323,9 +2921,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -3337,9 +2933,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -3349,9 +2943,7 @@
     },
     "/messages": {
       "get": {
-        "tags": [
-          "messages"
-        ],
+        "tags": ["messages"],
         "summary": "获取消息列表",
         "parameters": [
           {
@@ -3382,9 +2974,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "data": {
                       "type": "object",
@@ -3399,11 +2989,7 @@
                               },
                               "type": {
                                 "type": "string",
-                                "enum": [
-                                  "reply",
-                                  "reply2",
-                                  "at"
-                                ]
+                                "enum": ["reply", "reply2", "at"]
                               },
                               "has_read": {
                                 "type": "boolean"
@@ -3421,10 +3007,7 @@
                                     "type": "string"
                                   }
                                 },
-                                "required": [
-                                  "loginname",
-                                  "avatar_url"
-                                ]
+                                "required": ["loginname", "avatar_url"]
                               },
                               "topic": {
                                 "type": "object",
@@ -3442,10 +3025,7 @@
                                         "type": "string"
                                       }
                                     },
-                                    "required": [
-                                      "loginname",
-                                      "avatar_url"
-                                    ]
+                                    "required": ["loginname", "avatar_url"]
                                   },
                                   "title": {
                                     "type": "string"
@@ -3455,12 +3035,7 @@
                                     "nullable": true
                                   }
                                 },
-                                "required": [
-                                  "id",
-                                  "author",
-                                  "title",
-                                  "last_reply_at"
-                                ]
+                                "required": ["id", "author", "title", "last_reply_at"]
                               },
                               "reply": {
                                 "type": "object",
@@ -3481,12 +3056,7 @@
                                     "type": "string"
                                   }
                                 },
-                                "required": [
-                                  "id",
-                                  "content",
-                                  "ups",
-                                  "create_at"
-                                ]
+                                "required": ["id", "content", "ups", "create_at"]
                               }
                             },
                             "required": [
@@ -3510,11 +3080,7 @@
                               },
                               "type": {
                                 "type": "string",
-                                "enum": [
-                                  "reply",
-                                  "reply2",
-                                  "at"
-                                ]
+                                "enum": ["reply", "reply2", "at"]
                               },
                               "has_read": {
                                 "type": "boolean"
@@ -3532,10 +3098,7 @@
                                     "type": "string"
                                   }
                                 },
-                                "required": [
-                                  "loginname",
-                                  "avatar_url"
-                                ]
+                                "required": ["loginname", "avatar_url"]
                               },
                               "topic": {
                                 "type": "object",
@@ -3553,10 +3116,7 @@
                                         "type": "string"
                                       }
                                     },
-                                    "required": [
-                                      "loginname",
-                                      "avatar_url"
-                                    ]
+                                    "required": ["loginname", "avatar_url"]
                                   },
                                   "title": {
                                     "type": "string"
@@ -3566,12 +3126,7 @@
                                     "nullable": true
                                   }
                                 },
-                                "required": [
-                                  "id",
-                                  "author",
-                                  "title",
-                                  "last_reply_at"
-                                ]
+                                "required": ["id", "author", "title", "last_reply_at"]
                               },
                               "reply": {
                                 "type": "object",
@@ -3592,12 +3147,7 @@
                                     "type": "string"
                                   }
                                 },
-                                "required": [
-                                  "id",
-                                  "content",
-                                  "ups",
-                                  "create_at"
-                                ]
+                                "required": ["id", "content", "ups", "create_at"]
                               }
                             },
                             "required": [
@@ -3612,16 +3162,10 @@
                           }
                         }
                       },
-                      "required": [
-                        "has_read_messages",
-                        "hasnot_read_messages"
-                      ]
+                      "required": ["has_read_messages", "hasnot_read_messages"]
                     }
                   },
-                  "required": [
-                    "success",
-                    "data"
-                  ]
+                  "required": ["success", "data"]
                 }
               }
             }
@@ -3635,9 +3179,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -3649,9 +3191,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -3661,9 +3201,7 @@
     },
     "/message/count": {
       "get": {
-        "tags": [
-          "messages"
-        ],
+        "tags": ["messages"],
         "summary": "获取未读消息数",
         "parameters": [
           {
@@ -3685,18 +3223,13 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "data": {
                       "type": "number"
                     }
                   },
-                  "required": [
-                    "success",
-                    "data"
-                  ]
+                  "required": ["success", "data"]
                 }
               }
             }
@@ -3710,9 +3243,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -3724,9 +3255,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -3736,9 +3265,7 @@
     },
     "/message/mark_all": {
       "post": {
-        "tags": [
-          "messages"
-        ],
+        "tags": ["messages"],
         "summary": "标记全部已读",
         "requestBody": {
           "content": {
@@ -3764,9 +3291,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "marked_msgs": {
                       "type": "array",
@@ -3777,16 +3302,11 @@
                             "type": "string"
                           }
                         },
-                        "required": [
-                          "id"
-                        ]
+                        "required": ["id"]
                       }
                     }
                   },
-                  "required": [
-                    "success",
-                    "marked_msgs"
-                  ]
+                  "required": ["success", "marked_msgs"]
                 }
               }
             }
@@ -3800,9 +3320,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -3814,9 +3332,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -3826,9 +3342,7 @@
     },
     "/message/mark_one/{msg_id}": {
       "post": {
-        "tags": [
-          "messages"
-        ],
+        "tags": ["messages"],
         "summary": "标记单条已读",
         "parameters": [
           {
@@ -3864,18 +3378,13 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "marked_msg_id": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success",
-                    "marked_msg_id"
-                  ]
+                  "required": ["success", "marked_msg_id"]
                 }
               }
             }
@@ -3889,9 +3398,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -3903,9 +3410,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -3915,9 +3420,7 @@
     },
     "/topic_collect/{loginname}": {
       "get": {
-        "tags": [
-          "collections"
-        ],
+        "tags": ["collections"],
         "summary": "获取用户收藏列表",
         "parameters": [
           {
@@ -3939,9 +3442,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "data": {
                       "type": "array",
@@ -3992,10 +3493,7 @@
                                 "type": "string"
                               }
                             },
-                            "required": [
-                              "loginname",
-                              "avatar_url"
-                            ]
+                            "required": ["loginname", "avatar_url"]
                           },
                           "job_meta": {
                             "type": "object",
@@ -4019,11 +3517,7 @@
                               },
                               "remote": {
                                 "type": "string",
-                                "enum": [
-                                  "on-site",
-                                  "hybrid",
-                                  "remote"
-                                ]
+                                "enum": ["on-site", "hybrid", "remote"]
                               },
                               "salary_min": {
                                 "type": "number",
@@ -4048,13 +3542,7 @@
                                 "minLength": 1
                               }
                             },
-                            "required": [
-                              "company",
-                              "position",
-                              "location",
-                              "remote",
-                              "contact"
-                            ]
+                            "required": ["company", "position", "location", "remote", "contact"]
                           }
                         },
                         "required": [
@@ -4074,10 +3562,7 @@
                       }
                     }
                   },
-                  "required": [
-                    "success",
-                    "data"
-                  ]
+                  "required": ["success", "data"]
                 }
               }
             }
@@ -4091,9 +3576,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -4105,9 +3588,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -4117,9 +3598,7 @@
     },
     "/topic_collect/collect": {
       "post": {
-        "tags": [
-          "collections"
-        ],
+        "tags": ["collections"],
         "summary": "收藏话题",
         "requestBody": {
           "content": {
@@ -4135,9 +3614,7 @@
                     "minLength": 1
                   }
                 },
-                "required": [
-                  "topic_id"
-                ]
+                "required": ["topic_id"]
               }
             }
           }
@@ -4152,14 +3629,10 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -4173,9 +3646,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -4187,9 +3658,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -4203,9 +3672,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -4217,9 +3684,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -4233,9 +3698,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -4247,9 +3710,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -4259,9 +3720,7 @@
     },
     "/topic_collect/de_collect": {
       "post": {
-        "tags": [
-          "collections"
-        ],
+        "tags": ["collections"],
         "summary": "取消收藏",
         "requestBody": {
           "content": {
@@ -4277,9 +3736,7 @@
                     "minLength": 1
                   }
                 },
-                "required": [
-                  "topic_id"
-                ]
+                "required": ["topic_id"]
               }
             }
           }
@@ -4294,14 +3751,10 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -4315,9 +3768,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -4329,9 +3780,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -4345,9 +3794,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -4359,9 +3806,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -4371,9 +3816,7 @@
     },
     "/auth/local/login": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "本地登录",
         "requestBody": {
           "content": {
@@ -4390,10 +3833,7 @@
                     "minLength": 1
                   }
                 },
-                "required": [
-                  "name",
-                  "pass"
-                ]
+                "required": ["name", "pass"]
               }
             }
           }
@@ -4408,14 +3848,10 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -4429,9 +3865,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -4443,9 +3877,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -4455,9 +3887,7 @@
     },
     "/auth/config": {
       "get": {
-        "tags": [
-          "system config"
-        ],
+        "tags": ["system config"],
         "summary": "获取公开认证配置",
         "responses": {
           "200": {
@@ -4469,9 +3899,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "data": {
                       "type": "object",
@@ -4480,15 +3908,10 @@
                           "type": "boolean"
                         }
                       },
-                      "required": [
-                        "allow_signup"
-                      ]
+                      "required": ["allow_signup"]
                     }
                   },
-                  "required": [
-                    "success",
-                    "data"
-                  ]
+                  "required": ["success", "data"]
                 }
               }
             }
@@ -4498,9 +3921,7 @@
     },
     "/auth/local/signup": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "本地注册",
         "requestBody": {
           "content": {
@@ -4527,11 +3948,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "loginname",
-                  "pass",
-                  "email"
-                ]
+                "required": ["loginname", "pass", "email"]
               }
             }
           }
@@ -4546,18 +3963,13 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success",
-                    "message"
-                  ]
+                  "required": ["success", "message"]
                 }
               }
             }
@@ -4571,9 +3983,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -4585,9 +3995,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -4601,9 +4009,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -4615,9 +4021,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -4631,9 +4035,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -4645,9 +4047,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -4657,9 +4057,7 @@
     },
     "/auth/local/resend_activation": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "重新发送账号激活邮件",
         "requestBody": {
           "content": {
@@ -4679,10 +4077,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "name",
-                  "pass"
-                ]
+                "required": ["name", "pass"]
               }
             }
           }
@@ -4697,18 +4092,13 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success",
-                    "message"
-                  ]
+                  "required": ["success", "message"]
                 }
               }
             }
@@ -4722,9 +4112,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -4736,9 +4124,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -4752,9 +4138,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -4766,9 +4150,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -4778,9 +4160,7 @@
     },
     "/auth/local/active_account": {
       "get": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "激活账号",
         "parameters": [
           {
@@ -4802,18 +4182,13 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success",
-                    "message"
-                  ]
+                  "required": ["success", "message"]
                 }
               }
             }
@@ -4827,9 +4202,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -4841,9 +4214,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -4853,9 +4224,7 @@
     },
     "/auth/local/search_pass": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "找回密码",
         "requestBody": {
           "content": {
@@ -4871,9 +4240,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "email"
-                ]
+                "required": ["email"]
               }
             }
           }
@@ -4888,18 +4255,13 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success",
-                    "message"
-                  ]
+                  "required": ["success", "message"]
                 }
               }
             }
@@ -4913,9 +4275,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -4927,9 +4287,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -4943,9 +4301,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -4957,9 +4313,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -4973,9 +4327,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -4987,9 +4339,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -4999,9 +4349,7 @@
     },
     "/auth/local/reset_pass": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "重置密码",
         "requestBody": {
           "content": {
@@ -5019,10 +4367,7 @@
                     "pattern": "[a-zA-Z]"
                   }
                 },
-                "required": [
-                  "key",
-                  "psw"
-                ]
+                "required": ["key", "psw"]
               }
             }
           }
@@ -5037,18 +4382,13 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success",
-                    "message"
-                  ]
+                  "required": ["success", "message"]
                 }
               }
             }
@@ -5062,9 +4402,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -5076,9 +4414,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -5088,9 +4424,7 @@
     },
     "/auth/github/pending": {
       "get": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "获取 GitHub pending profile",
         "responses": {
           "200": {
@@ -5102,9 +4436,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "data": {
                       "type": "object",
@@ -5122,17 +4454,10 @@
                           "type": "boolean"
                         }
                       },
-                      "required": [
-                        "loginname",
-                        "email",
-                        "email_exists"
-                      ]
+                      "required": ["loginname", "email", "email_exists"]
                     }
                   },
-                  "required": [
-                    "success",
-                    "data"
-                  ]
+                  "required": ["success", "data"]
                 }
               }
             }
@@ -5146,9 +4471,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -5160,9 +4483,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -5172,9 +4493,7 @@
     },
     "/auth/github/create": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "GitHub 注册或关联",
         "requestBody": {
           "content": {
@@ -5206,14 +4525,10 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -5227,9 +4542,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -5241,9 +4554,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -5257,9 +4568,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -5271,9 +4580,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -5287,9 +4594,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -5301,9 +4606,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -5317,9 +4620,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -5331,9 +4632,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -5343,9 +4642,7 @@
     },
     "/auth/github/unbind": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "解绑 GitHub",
         "requestBody": {
           "content": {
@@ -5358,9 +4655,7 @@
                     "minLength": 1
                   }
                 },
-                "required": [
-                  "password"
-                ],
+                "required": ["password"],
                 "additionalProperties": false
               }
             }
@@ -5376,14 +4671,10 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -5397,9 +4688,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -5411,9 +4700,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -5427,9 +4714,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -5441,9 +4726,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -5457,9 +4740,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -5471,9 +4752,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -5487,9 +4766,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -5501,9 +4778,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -5513,9 +4788,7 @@
     },
     "/auth/signout": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "退出登录",
         "responses": {
           "200": {
@@ -5527,14 +4800,10 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -5544,9 +4813,7 @@
     },
     "/auth/me": {
       "get": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "获取当前登录用户",
         "responses": {
           "200": {
@@ -5563,9 +4830,7 @@
                       "nullable": true
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -5575,9 +4840,7 @@
     },
     "/auth/local/setting": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "更新个人资料",
         "requestBody": {
           "content": {
@@ -5621,14 +4884,10 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -5642,9 +4901,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -5656,9 +4913,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -5668,9 +4923,7 @@
     },
     "/auth/local/change_pass": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "修改密码",
         "requestBody": {
           "content": {
@@ -5685,10 +4938,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "oldPass",
-                  "newPass"
-                ]
+                "required": ["oldPass", "newPass"]
               }
             }
           }
@@ -5703,14 +4953,10 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -5724,9 +4970,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -5738,9 +4982,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -5754,9 +4996,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -5768,9 +5008,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -5784,9 +5022,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -5798,9 +5034,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -5810,9 +5044,7 @@
     },
     "/upload/presign": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "获取图片上传预签名 URL",
         "requestBody": {
           "content": {
@@ -5844,9 +5076,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "url": {
                       "type": "string"
@@ -5867,14 +5097,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success",
-                    "url",
-                    "upload_url",
-                    "method",
-                    "headers",
-                    "filename"
-                  ]
+                  "required": ["success", "url", "upload_url", "method", "headers", "filename"]
                 }
               }
             }
@@ -5888,9 +5111,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -5902,9 +5123,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -5918,9 +5137,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -5932,9 +5149,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -5944,9 +5159,7 @@
     },
     "/admin/reports": {
       "post": {
-        "tags": [
-          "admin"
-        ],
+        "tags": ["admin"],
         "summary": "创建举报",
         "requestBody": {
           "content": {
@@ -5956,10 +5169,7 @@
                 "properties": {
                   "targetType": {
                     "type": "string",
-                    "enum": [
-                      "topic",
-                      "reply"
-                    ]
+                    "enum": ["topic", "reply"]
                   },
                   "targetId": {
                     "type": "integer",
@@ -5976,10 +5186,7 @@
                     "maxLength": 1000
                   }
                 },
-                "required": [
-                  "targetType",
-                  "targetId"
-                ]
+                "required": ["targetType", "targetId"]
               }
             }
           }
@@ -5994,14 +5201,10 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -6015,9 +5218,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -6029,9 +5230,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -6045,9 +5244,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -6059,9 +5256,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -6075,9 +5270,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        false
-                      ]
+                      "enum": [false]
                     },
                     "error_code": {
                       "type": "string"
@@ -6089,9 +5282,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -6101,9 +5292,7 @@
     },
     "/sidebar/home": {
       "get": {
-        "tags": [
-          "system config"
-        ],
+        "tags": ["system config"],
         "summary": "首页侧边栏数据",
         "responses": {
           "200": {
@@ -6115,9 +5304,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "data": {
                       "type": "object",
@@ -6146,10 +5333,7 @@
                                     "type": "string"
                                   }
                                 },
-                                "required": [
-                                  "loginname",
-                                  "avatar_url"
-                                ]
+                                "required": ["loginname", "avatar_url"]
                               },
                               "create_at": {
                                 "type": "string"
@@ -6186,12 +5370,7 @@
                                 "type": "string"
                               }
                             },
-                            "required": [
-                              "id",
-                              "title",
-                              "tab",
-                              "create_at"
-                            ]
+                            "required": ["id", "title", "tab", "create_at"]
                           }
                         },
                         "top_users": {
@@ -6212,12 +5391,7 @@
                                 "type": "number"
                               }
                             },
-                            "required": [
-                              "id",
-                              "loginname",
-                              "avatar_url",
-                              "score"
-                            ]
+                            "required": ["id", "loginname", "avatar_url", "score"]
                           }
                         },
                         "partners": {
@@ -6235,11 +5409,7 @@
                                 "type": "string"
                               }
                             },
-                            "required": [
-                              "name",
-                              "url",
-                              "description"
-                            ]
+                            "required": ["name", "url", "description"]
                           }
                         },
                         "resources": {
@@ -6254,10 +5424,7 @@
                                 "type": "string"
                               }
                             },
-                            "required": [
-                              "name",
-                              "url"
-                            ]
+                            "required": ["name", "url"]
                           }
                         }
                       },
@@ -6270,10 +5437,7 @@
                       ]
                     }
                   },
-                  "required": [
-                    "success",
-                    "data"
-                  ]
+                  "required": ["success", "data"]
                 }
               }
             }
@@ -6283,9 +5447,7 @@
     },
     "/zone/jobs": {
       "get": {
-        "tags": [
-          "zones"
-        ],
+        "tags": ["zones"],
         "summary": "招聘专区列表",
         "parameters": [
           {
@@ -6347,9 +5509,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "data": {
                       "type": "array",
@@ -6436,11 +5596,7 @@
                       "type": "number"
                     }
                   },
-                  "required": [
-                    "success",
-                    "data",
-                    "total"
-                  ]
+                  "required": ["success", "data", "total"]
                 }
               }
             }
@@ -6450,9 +5606,7 @@
     },
     "/zone/jobs/facets": {
       "get": {
-        "tags": [
-          "zones"
-        ],
+        "tags": ["zones"],
         "summary": "招聘专区 facet 聚合",
         "responses": {
           "200": {
@@ -6464,9 +5618,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "data": {
                       "type": "object",
@@ -6484,16 +5636,10 @@
                           }
                         }
                       },
-                      "required": [
-                        "locations",
-                        "remote_options"
-                      ]
+                      "required": ["locations", "remote_options"]
                     }
                   },
-                  "required": [
-                    "success",
-                    "data"
-                  ]
+                  "required": ["success", "data"]
                 }
               }
             }
@@ -6503,9 +5649,7 @@
     },
     "/zones": {
       "get": {
-        "tags": [
-          "zones"
-        ],
+        "tags": ["zones"],
         "summary": "公开专区列表（仅 visible）",
         "responses": {
           "200": {
@@ -6517,9 +5661,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "data": {
                       "type": "array",
@@ -6550,20 +5692,11 @@
                             "type": "number"
                           }
                         },
-                        "required": [
-                          "id",
-                          "slug",
-                          "name",
-                          "visible",
-                          "sort_order"
-                        ]
+                        "required": ["id", "slug", "name", "visible", "sort_order"]
                       }
                     }
                   },
-                  "required": [
-                    "success",
-                    "data"
-                  ]
+                  "required": ["success", "data"]
                 }
               }
             }
@@ -6573,9 +5706,7 @@
     },
     "/tabs": {
       "get": {
-        "tags": [
-          "zones"
-        ],
+        "tags": ["zones"],
         "summary": "社区 tab 列表",
         "responses": {
           "200": {
@@ -6587,9 +5718,7 @@
                   "properties": {
                     "success": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     },
                     "data": {
                       "type": "array",
@@ -6613,27 +5742,15 @@
                           },
                           "scope": {
                             "type": "string",
-                            "enum": [
-                              "public",
-                              "admin"
-                            ],
+                            "enum": ["public", "admin"],
                             "default": "public"
                           }
                         },
-                        "required": [
-                          "id",
-                          "key",
-                          "label",
-                          "visible",
-                          "sort_order"
-                        ]
+                        "required": ["id", "key", "label", "visible", "sort_order"]
                       }
                     }
                   },
-                  "required": [
-                    "success",
-                    "data"
-                  ]
+                  "required": ["success", "data"]
                 }
               }
             }

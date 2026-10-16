@@ -138,11 +138,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
                   >
                     {tabs.map((t) => {
                       return (
-                        <TabsTrigger
-                          key={t.key}
-                          value={t.key}
-                          className="min-w-15 flex-none"
-                        >
+                        <TabsTrigger key={t.key} value={t.key} className="min-w-15 flex-none">
                           {t.label}
                         </TabsTrigger>
                       );

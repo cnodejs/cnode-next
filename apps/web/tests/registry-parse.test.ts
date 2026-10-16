@@ -97,13 +97,9 @@ describe("formatCompactNumber", () => {
 describe("repoUrl", () => {
   it("规范化常见仓库地址", () => {
     expect(repoUrl("git+https://github.com/foo/bar.git")).toBe("https://github.com/foo/bar");
-    expect(repoUrl("git+ssh://git@github.com/foo/bar.git")).toBe(
-      "https://github.com/foo/bar",
-    );
+    expect(repoUrl("git+ssh://git@github.com/foo/bar.git")).toBe("https://github.com/foo/bar");
     expect(repoUrl("git://github.com/foo/bar.git")).toBe("https://github.com/foo/bar");
-    expect(repoUrl({ url: "https://github.com/foo/bar" })).toBe(
-      "https://github.com/foo/bar",
-    );
+    expect(repoUrl({ url: "https://github.com/foo/bar" })).toBe("https://github.com/foo/bar");
   });
 
   it("无法识别的地址返回 undefined", () => {
@@ -157,9 +153,7 @@ describe("createReadmeUrlResolver", () => {
   });
 
   it("保留绝对地址与锚点", () => {
-    expect(resolve("https://example.com/image.png", "image")).toBe(
-      "https://example.com/image.png",
-    );
+    expect(resolve("https://example.com/image.png", "image")).toBe("https://example.com/image.png");
     expect(resolve("mailto:hi@example.com", "link")).toBe("mailto:hi@example.com");
     expect(resolve("#backers", "link")).toBe("#backers");
     expect(resolve("", "image")).toBe("");
@@ -182,15 +176,11 @@ describe("rewriteReadmeUrls", () => {
   const resolve = createReadmeUrlResolver(repo, "koa", "3.2.1");
 
   it("重写 Markdown 图片与链接的相对地址", () => {
-    const input = '![logo](/docs/logo.png)\n\n[guide](docs/guide.md)\n\n[home](https://koajs.com)';
+    const input = "![logo](/docs/logo.png)\n\n[guide](docs/guide.md)\n\n[home](https://koajs.com)";
     const output = rewriteReadmeUrls(input, resolve);
 
-    expect(output).toContain(
-      "![logo](https://github.com/koajs/koa/raw/HEAD/docs/logo.png)",
-    );
-    expect(output).toContain(
-      "[guide](https://github.com/koajs/koa/blob/HEAD/docs/guide.md)",
-    );
+    expect(output).toContain("![logo](https://github.com/koajs/koa/raw/HEAD/docs/logo.png)");
+    expect(output).toContain("[guide](https://github.com/koajs/koa/blob/HEAD/docs/guide.md)");
     expect(output).toContain("[home](https://koajs.com)");
   });
 
@@ -207,7 +197,7 @@ describe("rewriteReadmeUrls", () => {
   });
 
   it("不修改代码块内的地址", () => {
-    const input = '```sh\nnpm i -g pnpm\n```\n\n![diagram](https://example.com/a.png)';
+    const input = "```sh\nnpm i -g pnpm\n```\n\n![diagram](https://example.com/a.png)";
     const output = rewriteReadmeUrls(input, resolve);
 
     expect(output).toContain("npm i -g pnpm");

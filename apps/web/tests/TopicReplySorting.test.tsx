@@ -1,11 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import {
-  createMemoryRouter,
-  RouterProvider,
-  useLoaderData,
-  useLocation,
-} from "react-router";
+import { createMemoryRouter, RouterProvider, useLoaderData, useLocation } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const mocks = vi.hoisted(() => ({ apiFetch: vi.fn() }));
@@ -158,14 +153,7 @@ describe("话题回复排序", () => {
       [
         {
           path: "/topic/42",
-          element: (
-            <ReplySection
-              replies={[]}
-              replySort="newest"
-              topicId="42"
-              currentUser={null}
-            />
-          ),
+          element: <ReplySection replies={[]} replySort="newest" topicId="42" currentUser={null} />,
         },
       ],
       { initialEntries: ["/topic/42"] },
@@ -208,57 +196,57 @@ describe("话题回复排序", () => {
   ])(
     "revalidates and locates a newly submitted reply in $label order",
     async ({ initialEntry, expectedSearch, expectedIds }) => {
-    const user = userEvent.setup();
-    let replies = [...canonicalReplies];
-    mocks.apiFetch.mockImplementation(async () => {
-      replies = [
-        ...replies,
-        {
-          id: "103",
-          content: "new reply",
-          create_at: "2026-08-09T12:00:00.000Z",
-          author: { loginname: "alice", avatar_url: "" },
-          ups: [],
-          reply_to: null,
-        },
-      ];
-      return { success: true, reply_id: "103" };
-    });
-    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
-      callback(0);
-      return 1;
-    });
-    const scrollIntoView = vi
-      .spyOn(Element.prototype, "scrollIntoView")
-      .mockImplementation(() => {});
-    const router = createMemoryRouter(
-      [
-        {
-          path: "/topic/42",
-          loader: ({ request }) => {
-            const replySort = resolveReplySort(
-              new URL(request.url).searchParams.get("reply_sort"),
-            );
-            return { replies: orderRepliesForDisplay(replies, replySort), replySort };
+      const user = userEvent.setup();
+      let replies = [...canonicalReplies];
+      mocks.apiFetch.mockImplementation(async () => {
+        replies = [
+          ...replies,
+          {
+            id: "103",
+            content: "new reply",
+            create_at: "2026-08-09T12:00:00.000Z",
+            author: { loginname: "alice", avatar_url: "" },
+            ups: [],
+            reply_to: null,
           },
-          element: <LoadedReplyHarness />,
-        },
-      ],
-      { initialEntries: [initialEntry] },
-    );
-    const { container } = render(<RouterProvider router={router} />);
+        ];
+        return { success: true, reply_id: "103" };
+      });
+      vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
+        callback(0);
+        return 1;
+      });
+      const scrollIntoView = vi
+        .spyOn(Element.prototype, "scrollIntoView")
+        .mockImplementation(() => {});
+      const router = createMemoryRouter(
+        [
+          {
+            path: "/topic/42",
+            loader: ({ request }) => {
+              const replySort = resolveReplySort(
+                new URL(request.url).searchParams.get("reply_sort"),
+              );
+              return { replies: orderRepliesForDisplay(replies, replySort), replySort };
+            },
+            element: <LoadedReplyHarness />,
+          },
+        ],
+        { initialEntries: [initialEntry] },
+      );
+      const { container } = render(<RouterProvider router={router} />);
 
-    fireEvent.change(await screen.findByRole("textbox", { name: "回复内容" }), {
-      target: { value: "new reply" },
-    });
-    await user.click(container.querySelector<HTMLButtonElement>('button[type="submit"]')!);
+      fireEvent.change(await screen.findByRole("textbox", { name: "回复内容" }), {
+        target: { value: "new reply" },
+      });
+      await user.click(container.querySelector<HTMLButtonElement>('button[type="submit"]')!);
 
-    await waitFor(() => expect(router.state.location.hash).toBe("#103"));
-    expect(router.state.location.search).toBe(expectedSearch);
-    expect(renderedReplyIds(container)).toEqual(expectedIds);
-    expect(document.getElementById("103")).toHaveFocus();
-    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
-    expect(screen.getByRole("textbox", { name: "回复内容" })).toHaveValue("");
+      await waitFor(() => expect(router.state.location.hash).toBe("#103"));
+      expect(router.state.location.search).toBe(expectedSearch);
+      expect(renderedReplyIds(container)).toEqual(expectedIds);
+      expect(document.getElementById("103")).toHaveFocus();
+      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
+      expect(screen.getByRole("textbox", { name: "回复内容" })).toHaveValue("");
     },
   );
 });

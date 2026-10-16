@@ -67,10 +67,7 @@ describe("话题动作层级", () => {
     );
     const primaryActions = screen.getByLabelText("主要话题操作");
     const moreActions = screen.getByLabelText("更多话题操作");
-    expect(primaryActions.parentElement).toHaveClass(
-      "grid",
-      "grid-cols-[minmax(0,1fr)_auto]",
-    );
+    expect(primaryActions.parentElement).toHaveClass("grid", "grid-cols-[minmax(0,1fr)_auto]");
     expect(moreActions).toHaveClass("justify-end");
     expect(primaryActions.compareDocumentPosition(moreActions)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,

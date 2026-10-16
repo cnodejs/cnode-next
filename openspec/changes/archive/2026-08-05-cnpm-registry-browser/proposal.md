@@ -17,9 +17,11 @@ CNode 当前是纯社区站，缺少面向 Node.js 生态的"工具"能力。社
 ## Capabilities
 
 ### New Capabilities
+
 - `cnpm-registry-browser`: 在 cnode-next web 应用内提供 npm 包搜索与浏览能力，数据直连 npmmirror registry。
 
 ### Modified Capabilities
+
 <!-- 无现有 spec 需求变更 -->
 
 ## Impact
