@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change reach-production-grade-release-readiness. Update Purpose after archive.
+定义 Web 对 OpenAPI 契约和共享 Zod schema 的消费、同步与核心能力覆盖要求。
 
 ## Requirements
 

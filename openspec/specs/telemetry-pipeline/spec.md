@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change add-opentelemetry-observability. Update Purpose after archive.
+定义应用经 OpenTelemetry Collector 向 OpenObserve 发送 traces、logs 和 metrics 的安全、有界及可回滚链路。
 
 ## Requirements
 

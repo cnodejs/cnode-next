@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after archive.
+定义站内消息类型、邮件通知、未读状态、关联数据、摘要安全和目标导航要求，确保用户收到可追溯通知且消息展示不会泄露原始 HTML 或错误更新状态。
 
 ## Requirements
 

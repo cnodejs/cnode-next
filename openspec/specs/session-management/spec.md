@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after archive.
+定义账号密码强度和用户活跃 Session 的查看与管理要求，确保弱密码在写入前被拒绝且用户能够识别并撤销不再信任的登录会话。
 
 ## Requirements
 

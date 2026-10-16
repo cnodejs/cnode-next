@@ -35,7 +35,7 @@
     "pg": "catalog:"
   },
   "devDependencies": {
-    "@fission-ai/openspec": "1.6.0",
+    "@fission-ai/openspec": "1.14.2",
     "@types/pg": "catalog:",
     "concurrently": "^9.1.0",
     "tsx": "catalog:",

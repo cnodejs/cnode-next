@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after archive.
+定义用户内容中 @提及的解析和识别行为，确保有效用户名能够被稳定识别，同时避免将普通文本或无效片段错误解释为用户提及。
 
 ## Requirements
 

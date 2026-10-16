@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by syncing change add-api-logs-metrics. Update Purpose after archive.
+定义 API 与 worker 的结构化日志、低基数指标、敏感信息保护和独立降级要求，使运维能够观测服务状态而不泄露用户数据或增加业务请求风险。
 
 ## Requirements
 

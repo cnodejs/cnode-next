@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change add-jobs-zone. Update Purpose after archive.
+定义招聘详情卡片的位置、字段展示、投递动作和与列表卡片的职责边界，确保求职者在正文前获得一致的岗位信息并通过安全方式发起联系。
 
 ## Requirements
 

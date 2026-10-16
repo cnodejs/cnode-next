@@ -8,7 +8,13 @@
 
 ### Requirement: 语义 token 单一来源
 
-`apps/web/app/styles/global.css` SHALL 用 Tailwind v4 CSS-first `@theme inline` 声明 Base Nova 所需的完整 core semantic tokens，至少涵盖 `background`/`foreground`、`primary`/`primary-foreground`、`secondary`/`secondary-foreground`、`muted`/`muted-foreground`、`accent`/`accent-foreground`、`destructive`/`destructive-foreground`、`border`、`input`、`ring`、`card`/`card-foreground`、`popover`/`popover-foreground` 和 `radius`，并 SHALL 为 light/dark 分别定义标准 sidebar 与 chart tokens。CNode 颜色 MUST 映射到 `primary`、`accent`、`secondary`、`muted`、`foreground`、`sidebar-*` 和 `chart-*` 等用途；只有 Logo 或品牌展示无法由标准角色表达时 MAY 增加少量 `brand-*` token。
+`apps/web/app/styles/global.css` SHALL 用 Tailwind v4 CSS-first `@theme inline` 声明 Base Nova 所需的完整 core semantic tokens，并 SHALL 为 light/dark 分别定义标准 sidebar 与 chart tokens。CNode 颜色 MUST 映射到标准语义用途；只有 Logo 或品牌展示无法由标准角色表达时 MAY 增加少量 `brand-*` token。
+
+#### Scenario: Core token 集合完整
+
+- **WHEN** 查看 `global.css` 的 `@theme inline` 和 light/dark token 定义
+- **THEN** core tokens MUST 至少涵盖 `background`/`foreground`、`primary`/`primary-foreground`、`secondary`/`secondary-foreground`、`muted`/`muted-foreground`、`accent`/`accent-foreground`、`destructive`/`destructive-foreground`、`border`、`input`、`ring`、`card`/`card-foreground`、`popover`/`popover-foreground` 和 `radius`
+- **AND** CNode 颜色 MUST 映射到 `primary`、`accent`、`secondary`、`muted`、`foreground`、`sidebar-*` 和 `chart-*` 等用途。
 
 #### Scenario: 组件使用语义 class 而非字面量色值
 

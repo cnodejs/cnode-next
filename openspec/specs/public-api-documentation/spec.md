@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change reach-production-grade-release-readiness. Update Purpose after archive.
+定义外部 API 参考、OpenAPI 契约、能力分组、兼容语义和发布验证关联要求，确保开发者可以依据与实际路由同步的机器可读文档集成核心能力。
 
 ## Requirements
 

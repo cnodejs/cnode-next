@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change add-user-roles-and-restricted-jobs. Update Purpose after archive.
+定义用户角色的数据分配、代码控制的能力映射、管理 API、会话暴露和公开身份展示要求，确保授权决策由后端强制执行且公开标识来源可追溯。
 
 ## Requirements
 

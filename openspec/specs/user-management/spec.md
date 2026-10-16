@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after archive.
+定义管理员对用户搜索、密码、封禁、内容可见性和批量治理操作的权限与反馈要求，确保治理动作受后端校验并保留筛选、分页和结果上下文。
 
 ## Requirements
 

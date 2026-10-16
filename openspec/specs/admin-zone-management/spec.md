@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change add-jobs-zone. Update Purpose after archive.
+定义社区专区的注册表、数据库配置、运行时加载以及管理后台维护边界，确保专区路由、展示信息和管理操作共享同一份受控配置。
 
 ## Requirements
 

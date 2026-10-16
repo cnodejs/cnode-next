@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change reach-production-grade-release-readiness. Update Purpose after archive.
+定义生产健康端点、构建版本可追溯性以及进程与依赖健康状态的区分要求，确保编排系统和运维人员能够判断实例可用性并定位当前发布版本。
 
 ## Requirements
 

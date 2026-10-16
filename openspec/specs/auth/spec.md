@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after archive.
+定义本地账号、GitHub OAuth、激活与找回、Session、access token 和账号状态校验要求。
 
 ## Requirements
 

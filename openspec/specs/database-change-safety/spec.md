@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change add-jobs-zone. Update Purpose after archive.
+定义 PostgreSQL schema、migration、bootstrap、seed 以及非临时数据库变更的安全发布边界。
 
 ## Requirements
 

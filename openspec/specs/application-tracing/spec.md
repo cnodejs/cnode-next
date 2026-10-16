@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change add-opentelemetry-observability. Update Purpose after archive.
+定义 API 与 worker 的 OpenTelemetry 初始化、采样、资源属性、Request ID、instrumentation 和 span 脱敏要求。
 
 ## Requirements
 
