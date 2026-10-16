@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by syncing change add-low-impact-moderation-scans. Update Purpose after archive.
+定义内容巡检任务的低资源批处理、定时增量执行、立即运行、取消和状态展示要求，确保巡检可由管理员控制且不会对在线业务造成无界资源竞争。
 
 ## Requirements
 

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change staged-mongo-pg-cutover-runbook. Update Purpose after archive.
+定义 Compose 网络内数据库初始化、可重复迁移和可审查 reconciliation 输出要求。
 
 ## Requirements
 

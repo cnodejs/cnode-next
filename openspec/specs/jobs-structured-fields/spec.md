@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change add-jobs-zone. Update Purpose after archive.
+定义招聘结构化字段的数据模型、校验、事务、API、角色权限和编辑语义要求，确保岗位信息与话题写入保持一致并仅由获准角色创建和维护。
 
 ## Requirements
 

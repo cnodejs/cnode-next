@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after archive.
+定义话题与回复从草稿、发布、编辑到删除和归档的状态、可见性及治理权限要求，确保公开查询、作者操作和管理员治理遵循一致的内容生命周期。
 
 ## Requirements
 

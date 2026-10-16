@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change reach-production-grade-release-readiness. Update Purpose after archive.
+定义生产容器镜像的不可变标识、部署引用和基于已知发布物的回滚要求，确保每次上线可追溯且发生故障时不依赖可变标签恢复服务。
 
 ## Requirements
 

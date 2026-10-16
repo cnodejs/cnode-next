@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after archive.
+定义敏感词过滤、词库维护、内容巡检任务、命中记录和批量治理要求，确保自动发现结果可以按任务追踪并由获准管理员完成复核和处置。
 
 ## Requirements
 

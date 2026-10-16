@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change realign-web-design-system. Update Purpose after archive.
+定义 Base Nova 原子组件基线、页面组合边界、应用区块映射和设计系统防漂移门禁，确保公共与管理路由复用同一视觉语言且不会在消费者层重定义 primitive。
 
 ## Requirements
 

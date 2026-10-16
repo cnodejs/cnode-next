@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change reach-production-grade-release-readiness. Update Purpose after archive.
+定义统一发布验证入口以及失败变更必须阻断发布的门禁要求，确保测试、类型检查、构建、规格和安全检查在产物发布前以一致方式执行。
 
 ## Requirements
 

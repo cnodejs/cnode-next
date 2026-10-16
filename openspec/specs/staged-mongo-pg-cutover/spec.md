@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change staged-mongo-pg-cutover-runbook. Update Purpose after archive.
+定义 MongoDB 到 PostgreSQL 分阶段切换期间的数据权威、写入冻结和 reconciliation 准入要求。
 
 ## Requirements
 

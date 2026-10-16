@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change add-jobs-zone. Update Purpose after archive.
+定义招聘专区的独立布局、筛选、聚合缓存、列表准入、分页和卡片展示要求，确保用户能够按稳定维度浏览具有完整结构化信息的招聘内容。
 
 ## Requirements
 

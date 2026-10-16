@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after archive.
+定义发帖限制、举报、人机验证、用户与 IP 封禁以及反垃圾审计的完整治理闭环，确保高风险写入受控且管理员可以追踪和处理滥用行为。
 
 ## Requirements
 

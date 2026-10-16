@@ -8,7 +8,7 @@
 
 ### Requirement: shadcn/ui 原子组件层
 
-`apps/web/app/components/ui/` SHALL 包含仓库拥有源码的 shadcn `base-nova` 原子组件，并 SHALL 以 Base UI 作为交互 primitive 基础，覆盖 `button`、`input`、`label`、`card`、`badge`、`avatar`、`dropdown-menu`、`dialog`、`sheet`、`tabs`、`table`、`tooltip`、`skeleton`、`sonner`、`form`、`select`、`native-select`、`textarea`、`alert-dialog`、`alert`、`pagination`、`empty`、`command` 和 `radio-group`。组件 MUST 使用 `cn()` 和标准 semantic tokens，且其结构、默认 variant、尺寸、间距、圆角、颜色、focus、disabled 与状态样式 MUST 与项目锁定版本的 Base Nova registry 保持一致；Web 源码和直接依赖 MUST NOT 保留 Radix primitive、Slot 兼容层、legacy `new-york` 样式或 CNode 专属 primitive variant。
+`apps/web/app/components/ui/` SHALL 包含仓库拥有源码的 shadcn `base-nova` 原子组件，并 SHALL 以 Base UI 作为交互 primitive 基础。组件 MUST 使用 `cn()` 和标准 semantic tokens，且其结构、默认 variant、尺寸、间距、圆角、颜色、focus、disabled 与状态样式 MUST 与项目锁定版本的 Base Nova registry 保持一致；Web 源码和直接依赖 MUST NOT 保留 Radix primitive、Slot 兼容层、legacy `new-york` 样式或 CNode 专属 primitive variant。
 
 #### Scenario: 新建页面使用原子组件
 
@@ -20,7 +20,7 @@
 #### Scenario: 组件源码进仓库
 
 - **WHEN** 查看 `apps/web/app/components/ui/`
-- **THEN** 已安装组件 MUST 是完整的 Base Nova 组件源码而不是 npm re-export
+- **THEN** `button`、`input`、`label`、`card`、`badge`、`avatar`、`dropdown-menu`、`dialog`、`sheet`、`tabs`、`table`、`tooltip`、`skeleton`、`sonner`、`form`、`select`、`native-select`、`textarea`、`alert-dialog`、`alert`、`pagination`、`empty`、`command` 和 `radio-group` MUST 是完整的 Base Nova 组件源码而不是 npm re-export
 - **AND** `components.json` MUST 让 shadcn CLI 将项目识别为 Base Nova 而不是 Radix `new-york`。
 
 #### Scenario: 页面使用一致的语义组件

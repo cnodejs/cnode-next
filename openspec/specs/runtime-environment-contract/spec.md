@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change standardize-runtime-environment-contract. Update Purpose after archive.
+定义 PostgreSQL、Redis 和其他运行时资源的统一环境变量命名、解析、注入及迁移契约，确保应用与 Compose 使用同一配置边界并以原子方式淘汰旧变量。
 
 ## Requirements
 

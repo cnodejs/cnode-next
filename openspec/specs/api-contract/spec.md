@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after archive.
+定义 CNode API 的响应、持久化、分页、可见性、搜索、Markdown 渲染和机器可读契约要求。
 
 ## Requirements
 

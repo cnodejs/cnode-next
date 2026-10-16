@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after archive.
+定义公开页面的 Open Graph、JSON-LD、Canonical URL、HTTPS 子资源和 Web App Manifest 元数据要求。
 
 ## Requirements
 

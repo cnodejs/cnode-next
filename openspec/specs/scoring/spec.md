@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after archive.
+定义社区积分和内容计数器的更新行为及相互独立的职责边界，确保用户贡献反馈与话题回复数量分别按既定事件准确持久化。
 
 ## Requirements
 

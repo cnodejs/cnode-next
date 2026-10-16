@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change rewrite-to-cnode-next. Update Purpose after archive.
+定义写入路径的限流行为以及后台限流配置的运行时消费要求，确保高风险操作受统一策略约束且管理员调整的配置会真实影响请求处理。
 
 ## Requirements
 
