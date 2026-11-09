@@ -17,6 +17,7 @@ flowchart LR
 ```
 
 - Active keyword rules apply to topic and reply submissions. Rule updates invalidate the runtime rule cache.
+- Keyword matching is strict and does not exempt ordinary meanings or compound words. Text and rules use Unicode NFKC and case-insensitive comparison; between each pair of rule characters, a match may contain at most 3 letters or numbers and at most 16 total Unicode code points, including whitespace, format characters, punctuation, symbols, and emoji.
 - Historical and incremental scans process topics and replies in bounded batches and deduplicate equivalent findings.
 - Findings are review records, not copies of the source content. Confirming a finding uses normal soft-delete semantics; permanent deletion remains a separate admin-only action.
 - A job-level bulk action remains permission checked, explicitly dangerous, and audited.

@@ -419,7 +419,12 @@ async function scanTopicBatch(job: any, words: SensitiveWordEntry[]) {
         authorId: row.authorId,
         field: field.name,
         hits: fieldHits,
-        preview: createHitPreview(field.value, fieldHits[0]?.index || 0),
+        preview: createHitPreview(
+          field.value,
+          fieldHits[0]?.index || 0,
+          80,
+          fieldHits[0]?.endIndex,
+        ),
       });
     }
   }
@@ -461,7 +466,7 @@ async function scanReplyBatch(job: any, words: SensitiveWordEntry[]) {
       authorId: row.authorId,
       field: "content",
       hits: fieldHits,
-      preview: createHitPreview(content, fieldHits[0]?.index || 0),
+      preview: createHitPreview(content, fieldHits[0]?.index || 0, 80, fieldHits[0]?.endIndex),
     });
   }
   const lastId = rows.at(-1)?.id ?? cursor;
