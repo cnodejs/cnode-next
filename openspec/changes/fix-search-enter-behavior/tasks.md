@@ -17,7 +17,7 @@
 
 - [x] 3.1 运行 `pnpm --filter @cnode/web test`、`pnpm --filter @cnode/web typecheck`、`pnpm --filter @cnode/web build` 和适用的 design-system governance 检查，修复所有本次变更导致的失败。
 - [x] 3.2 在可行时运行 `pnpm verify` 和 `openspec validate fix-search-enter-behavior --strict`，确认仓库验证通过、设计图与最终实现一致，并确认没有数据库、API、OpenAPI 或长期文档变更。
-- [ ] 3.3 使用 `cnode-deploy` 流程确认 CI 镜像构建成功、部署生产服务并检查生产健康状态；通过生产浏览器验证无匹配关键词、可模糊匹配关键词、方向键快捷操作、IME、Escape/焦点恢复及移动端搜索路径。
+- [x] 3.3 使用 `cnode-deploy` 流程确认 CI 镜像构建成功、部署生产服务并检查生产健康状态；通过生产浏览器验证无匹配关键词、可模糊匹配关键词、方向键快捷操作、IME、Escape/焦点恢复及移动端搜索路径。
 
 ## Workflow follow-up
 
