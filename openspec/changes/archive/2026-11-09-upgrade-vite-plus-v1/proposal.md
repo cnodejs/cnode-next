@@ -1,10 +1,10 @@
 ## Why
 
-工作区仍使用 Vite+ 0.2.8 和 Vitest 4.1.10。需要升级到 Vite+ 1.2.0，并在 Vitest 5 默认行为变化后保持现有测试意图与应用构建结果。
+工作区此前使用 Vite+ 0.2.8 和 Vitest 4.1.10。需要升级到 Vite+ 1.5.0 和 pnpm 12.18.0，并在 Vitest 5 默认行为变化后保持现有测试意图与应用构建结果。
 
 ## What Changes
 
-- 使用目标版本的迁移器更新 pnpm catalog、override、锁文件及测试配置。
+- 使用目标版本的迁移器更新 pnpm 版本声明、catalog、override、锁文件及测试配置。
 - 先保留迁移器生成的兼容配置验证基线，再逐项验证是否可以采用新默认值。
 - 保留现有 API TypeScript 构建、Web React Router SSR 构建及共享包源码导出。
 

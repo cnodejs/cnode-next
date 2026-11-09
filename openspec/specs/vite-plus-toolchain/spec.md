@@ -1,8 +1,14 @@
-## ADDED Requirements
+# vite-plus-toolchain Specification
+
+## Purpose
+
+定义 cnode-next 工作区统一的 Vite+、Vitest 与 pnpm 工具链版本及兼容性要求，确保 API、Web 和内部包使用相同且经过完整验证的开发、测试与构建入口。
+
+## Requirements
 
 ### Requirement: 统一工具链版本
 
-工作区 MUST 使用 Vite+ 1.2.0，并让 Vite alias、Vitest、catalog 与 override 指向该版本提供的工具链。
+工作区 MUST 使用 Vite+ 1.5.0 和 pnpm 12.18.0，并让 Vite alias、Vitest、catalog、override 与 package manager 声明指向对应工具链。
 
 #### Scenario: 安装工作区
 
