@@ -18,6 +18,13 @@ afterEach(() => {
 });
 
 describe("异步反馈", () => {
+  function renderSearch(initialEntry = "/search") {
+    const router = createMemoryRouter([{ path: "*", element: <Search /> }], {
+      initialEntries: [initialEntry],
+    });
+    return { ...render(<RouterProvider router={router} />), router };
+  }
+
   it("announces Turnstile readiness and verification", async () => {
     let options: Record<string, unknown> = {};
     window.turnstile = {
@@ -56,5 +63,47 @@ describe("异步反馈", () => {
     await userEvent.click(screen.getByRole("button", { name: "重试" }));
     await waitFor(() => expect(apiFetch).toHaveBeenCalledTimes(2));
     expect(await screen.findByText('未找到与 "node" 相关的内容')).toBeInTheDocument();
+  });
+
+  it.each(["keyboard", "button"])(
+    "normalizes and submits a search with the %s path",
+    async (submission) => {
+      const user = userEvent.setup();
+      apiFetch.mockResolvedValue({ success: true, data: [] });
+      const { router } = renderSearch();
+      const input = screen.getByRole("textbox", { name: "搜索话题" });
+
+      await user.type(input, "  node js  ");
+      if (submission === "keyboard") {
+        await user.keyboard("{Enter}");
+      } else {
+        await user.click(screen.getByRole("button", { name: "搜索" }));
+      }
+
+      await waitFor(() =>
+        expect(new URLSearchParams(router.state.location.search).get("q")).toBe("node js"),
+      );
+      await waitFor(() =>
+        expect(apiFetch).toHaveBeenCalledWith(
+          "/api/v1/search?q=node%20js&engine=local",
+          expect.objectContaining({ signal: expect.any(AbortSignal) }),
+        ),
+      );
+    },
+  );
+
+  it.each(["", "   "])("ignores an empty search query %p", async (query) => {
+    const user = userEvent.setup();
+    const { router } = renderSearch();
+    const input = screen.getByRole("textbox", { name: "搜索话题" });
+
+    if (query) await user.type(input, query);
+    await user.keyboard("{Enter}");
+
+    expect(router.state.location.pathname).toBe("/search");
+    expect(router.state.location.search).toBe("");
+    expect(apiFetch).not.toHaveBeenCalled();
+    expect(input).toHaveValue(query);
+    expect(input).toBeEnabled();
   });
 });

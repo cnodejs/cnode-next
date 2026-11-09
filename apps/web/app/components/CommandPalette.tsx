@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type RefObject,
+} from "react";
 import { useNavigate, useRouteLoaderData } from "react-router";
 import { FileText, Info, LayoutDashboard, MessageSquare, Pencil, X } from "lucide-react";
 import { Button } from "./ui/button";
@@ -36,6 +43,7 @@ export function CommandPalette({
   finalFocus?: RefObject<HTMLElement | null>;
 }) {
   const [query, setQuery] = useState("");
+  const hasExplicitCommandSelectionRef = useRef(false);
   const fallbackFinalFocusRef = useRef<HTMLElement | null>(null);
   const finalFocusRef = finalFocus ?? fallbackFinalFocusRef;
   const navigate = useNavigate();
@@ -64,15 +72,46 @@ export function CommandPalette({
   }, [finalFocusRef, onOpenChange, open]);
 
   useEffect(() => {
-    if (!open) setQuery("");
+    if (!open) {
+      setQuery("");
+      hasExplicitCommandSelectionRef.current = false;
+    }
   }, [open]);
 
-  function submit(event: React.FormEvent) {
-    event.preventDefault();
+  function search() {
     const value = query.trim();
     if (!value) return;
     onOpenChange(false);
     void navigate(`/search?q=${encodeURIComponent(value)}`);
+  }
+
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    search();
+  }
+
+  function updateQuery(value: string) {
+    hasExplicitCommandSelectionRef.current = false;
+    setQuery(value);
+  }
+
+  function handleCommandKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+    if (!(event.target instanceof HTMLInputElement)) return;
+
+    const isComposing = event.nativeEvent.isComposing || event.keyCode === 229;
+    if (isComposing) return;
+
+    if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+      hasExplicitCommandSelectionRef.current = Boolean(
+        event.currentTarget.querySelector('[cmdk-item]:not([aria-disabled="true"])'),
+      );
+      return;
+    }
+
+    if (event.key !== "Enter" || hasExplicitCommandSelectionRef.current) return;
+
+    event.preventDefault();
+    search();
   }
 
   function go(to: string) {
@@ -91,12 +130,12 @@ export function CommandPalette({
           <DialogTitle>搜索和快速操作</DialogTitle>
           <DialogDescription>搜索话题、用户，或跳转到常用页面。</DialogDescription>
         </DialogHeader>
-        <Command label="搜索命令">
+        <Command label="搜索命令" onKeyDown={handleCommandKeyDown}>
           <div data-slot="command-search-row" className="flex min-w-0 items-center gap-1 p-1 pb-0">
             <form onSubmit={submit} className="min-w-0 flex-1">
               <CommandInput
                 value={query}
-                onValueChange={setQuery}
+                onValueChange={updateQuery}
                 placeholder="搜索话题、用户，或输入关键词..."
                 aria-label="搜索命令"
                 autoFocus

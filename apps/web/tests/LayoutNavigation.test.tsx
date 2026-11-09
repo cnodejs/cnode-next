@@ -1,8 +1,8 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, MemoryRouter, RouterProvider } from "react-router";
 import { renderToString } from "react-dom/server";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it, vi } from "vite-plus/test";
 import { Footer, Header, Layout } from "~/components/Layout";
 import { CommandPalette } from "~/components/CommandPalette";
 import { AdminLayout } from "~/components/AdminLayout";
@@ -109,7 +109,87 @@ describe("公开导航收束", () => {
     expect(await screen.findByRole("status")).toHaveTextContent("没有匹配的快捷命令");
   });
 
-  it.each([375, 1280])(
+  it.each([
+    ["绝对不存在的命令", "绝对不存在的命令"],
+    ["node", "node"],
+    ["  node js  ", "node js"],
+  ])(
+    "searches for %p with Enter instead of activating an implicit command",
+    async (query, expected) => {
+      const user = userEvent.setup();
+      const onOpenChange = vi.fn();
+      const { router } = renderWithRoot(<CommandPalette open onOpenChange={onOpenChange} />);
+      const input = screen.getByRole("combobox", { name: "搜索命令" });
+
+      await user.type(input, query);
+      await user.keyboard("{Enter}");
+
+      await waitFor(() => expect(router.state.location.pathname).toBe("/search"));
+      expect(new URLSearchParams(router.state.location.search).get("q")).toBe(expected);
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+    },
+  );
+
+  it("resets explicit command selection when the query changes", async () => {
+    const user = userEvent.setup();
+    const { router } = renderWithRoot(<CommandPalette open onOpenChange={() => {}} />);
+    const input = screen.getByRole("combobox", { name: "搜索命令" });
+
+    await user.keyboard("{ArrowDown}");
+    await user.type(input, "node");
+    await user.keyboard("{Enter}");
+
+    await waitFor(() => expect(router.state.location.pathname).toBe("/search"));
+    expect(new URLSearchParams(router.state.location.search).get("q")).toBe("node");
+  });
+
+  it("keeps Enter available for search when arrow navigation has no matching command", async () => {
+    const user = userEvent.setup();
+    const { router } = renderWithRoot(<CommandPalette open onOpenChange={() => {}} />);
+    const input = screen.getByRole("combobox", { name: "搜索命令" });
+
+    await user.type(input, "绝对不存在的命令");
+    await user.keyboard("{ArrowDown}{Enter}");
+
+    await waitFor(() => expect(router.state.location.pathname).toBe("/search"));
+    expect(new URLSearchParams(router.state.location.search).get("q")).toBe("绝对不存在的命令");
+  });
+
+  it.each(["", "   "])("ignores an empty command search %p", async (query) => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+    const { router } = renderWithRoot(<CommandPalette open onOpenChange={onOpenChange} />);
+    const input = screen.getByRole("combobox", { name: "搜索命令" });
+
+    if (query) await user.type(input, query);
+    await user.keyboard("{Enter}");
+
+    expect(router.state.location.pathname).toBe("/");
+    expect(router.state.location.search).toBe("");
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    expect(input).toHaveValue(query);
+    expect(input).toBeEnabled();
+  });
+
+  it("does not submit or activate a command while an IME composition is active", async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+    const { router } = renderWithRoot(<CommandPalette open onOpenChange={onOpenChange} />);
+    const input = screen.getByRole("combobox", { name: "搜索命令" });
+    await user.type(input, "节点");
+
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter", isComposing: true });
+
+    expect(router.state.location.pathname).toBe("/");
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    expect(input).toHaveValue("节点");
+
+    await user.keyboard("{Enter}");
+    await waitFor(() => expect(router.state.location.pathname).toBe("/search"));
+    expect(new URLSearchParams(router.state.location.search).get("q")).toBe("节点");
+  });
+
+  it.each([375, 768, 1280, 1440])(
     "allocates a non-overlapping search row and touch-safe close control at %ipx",
     (width) => {
       window.innerWidth = width;
